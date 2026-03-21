@@ -1,0 +1,633 @@
+[
+    {
+        "id": "1770730409943",
+        "titre": "LES \u00c9OLIENNES IRANIENNES DE NASHTIFAN",
+        "titre_en": "IRANIAN WIND TURBINES IN NASHTIFAN",
+        "annee": "900 av JC",
+        "description": "Situ\u00e9 dans la r\u00e9gion de Khorasan, au Nord-Est de l\u2019IRAN, le petit village de Nashtifan est balay\u00e9 par des vents tr\u00e8s forts. Il y a plus de mille ans, les Perses locaux y ont utilis\u00e9 les mat\u00e9riaux locaux comme l\u2019argile, la paille et le bois pour construire un v\u00e9ritable village de moulins \u00e0 vent \u00e0 axes verticaux. \n\nMont\u00e9s sur des b\u00e2timents au design futuristes dignes des meilleurs planches du dessinateur Enki Bilal, ces \u00e9oliennes permettent de moudre le grain et de tirer de l\u2019eau, d\u2019exploiter la force m\u00e9canique des vents locaux. \n\nBien qu\u2019ils aient \u00e9t\u00e9 utilis\u00e9s pendant des si\u00e8cles, certains moulins \u00e9oliens certainement les plus low tech au monde sont encore en bon \u00e9tat et fonctionnent toujours. \nIl est possible de les voir en fonctionnement sur la vid\u00e9o BBC mise en ligne sur le site web paleo-energetique.org",
+        "description_en": "Located in the Khorasan region in northeastern Iran, the small village of Nashtifan is swept by very strong winds. Over a thousand years ago, the local Persians used local materials such as clay, straw, and wood to build a veritable village of vertical-axis windmills. \n\nMounted on futuristic buildings worthy of the best drawings by artist Enki Bilal, these wind turbines grind grain and draw water, harnessing the mechanical force of local winds. \n\nAlthough they have been in use for centuries, some of the world's most low-tech windmills are still in good condition and still working. You can see them in action in the BBC video posted on the paleo-energetique.org website.",
+        "exhume_par": "Yann Webb et Nicolas Duc",
+        "categories": [
+            "\u00c9olien",
+            "Agriculture"
+        ],
+        "categories_en": [
+            "Wind power",
+            "Agriculture"
+        ],
+        "url_qr": "",
+        "location": "Nashtifan",
+        "location_en": "Good morning",
+        "coords": {
+            "lat": 34.4337222,
+            "lng": 60.1777943
+        },
+        "image_path": "images\/IMG_3575.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T13:32:47.286Z",
+        "status": "pending_review"
+    },
+    {
+        "id": "1770730512979",
+        "titre": "JOHAD, SYST\u00c8ME DE COLLECTE DES PLUIES",
+        "titre_en": "JOHAD, RAINWATER HARVESTING SYSTEM",
+        "annee": "1500 av JC",
+        "description": "Les johads sont de petits barrages en terre construits \u00e0 travers des canaux saisonniers pour capter et stocker les eaux de pluie durant la mousson. L'eau ainsi collect\u00e9e s'infiltre progressivement dans le sol, rechargeant les nappes phr\u00e9atiques et assurant une disponibilit\u00e9 en eau pour les puits, l'irrigation agricole et les besoins domestiques tout au long de l'ann\u00e9e. Ce syst\u00e8me a \u00e9t\u00e9 largement utilis\u00e9 dans des r\u00e9gions arides telles que le Rajasthan, contribuant \u00e0 la r\u00e9silience des communaut\u00e9s face aux s\u00e9cheresses.\n\nCes syst\u00e8mes sont construits avec des mat\u00e9riaux locaux tels que la terre et la pierre, en utilisant des techniques accessibles aux communaut\u00e9s rurales. Ils renforcent les ressources en eau locales sans d\u00e9pendre de technologies modernes ou d'infrastructures co\u00fbteuses. En am\u00e9liorant la recharge des nappes phr\u00e9atiques, ces solutions soutiennent l\u2019agriculture locale et contribuent \u00e0 limiter l\u2019exode rural en assurant la s\u00e9curit\u00e9 hydrique.",
+        "description_en": "Johads are small earthen dams built across seasonal channels to capture and store rainwater during the monsoon season. The water collected gradually seeps into the ground, recharging aquifers and ensuring water availability for wells, agricultural irrigation, and domestic needs throughout the year. This system has been widely used in arid regions such as Rajasthan, contributing to the resilience of communities in the face of droughts.\n\nThese systems are built with local materials such as earth and stone, using techniques accessible to rural communities. They strengthen local water resources without relying on modern technologies or costly infrastructure. By improving groundwater recharge, these solutions support local agriculture and help limit rural exodus by ensuring water security.",
+        "exhume_par": "Loic Rogard",
+        "categories": [
+            "H2O",
+            "Agriculture"
+        ],
+        "categories_en": [
+            "Water",
+            "Agriculture"
+        ],
+        "url_qr": "",
+        "location": "Rajasthan",
+        "location_en": "Rajasthan",
+        "coords": {
+            "lat": 26.8105777,
+            "lng": 73.7684549
+        },
+        "image_path": "images\/IMG_3510.jpg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T13:35:12.979Z"
+    },
+    {
+        "id": "1770730646469",
+        "titre": "BADGUIR TOUR DU VENT",
+        "titre_en": "BADGUIR WIND TURBINE",
+        "annee": "XIII av JC",
+        "description": "Le Badguir est une tour traditionnelle d'architecture persane utilis\u00e9e depuis des si\u00e8cles pour cr\u00e9er une ventilation naturelle dans les b\u00e2timents.\n\nOn pense que ce capteur de vent fonctionne gr\u00e2ce \u00e0 la faible diff\u00e9rence de pression entre la base et le sommet \u00e0 l'int\u00e9rieur de la colonne. Ainsi, \u00e0 chaque fois qu'un faible souffle de vent passe au travers du sommet du badguir (on ne sent pas la diff\u00e9rence \u00e0 la base de la colonne), la diff\u00e9rence de pression aide \u00e0 remonter l'air chaud vers le sommet et \u00e0 amener de l'air frais vers le bas de la colonne. L'effet d'accumulation sur une p\u00e9riode de 24 heures est notable.\n",
+        "description_en": "The Badguir is a traditional Persian architectural tower that has been used for centuries to create natural ventilation in buildings. It is believed that this wind collector works thanks to the slight difference in pressure between the base and the top inside the column. Thus, whenever a slight breeze passes through the top of the badguir (the difference is not felt at the base of the column), the pressure difference helps to draw warm air up to the top and bring cool air down to the bottom of the column. The cumulative effect over a 24-hour period is significant. ",
+        "exhume_par": "Dehghan Kamaragi",
+        "categories": [
+            "Rafra\u00eechir",
+            "\u00c9olien"
+        ],
+        "categories_en": [
+            "Refresh",
+            "Wind power"
+        ],
+        "url_qr": "",
+        "location": "Empire Perse",
+        "location_en": "Empire Perse",
+        "coords": {
+            "lat": 29.6175265,
+            "lng": 52.519699
+        },
+        "image_path": "images\/IMG_3574.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T13:37:26.469Z"
+    },
+    {
+        "id": "1770730758337",
+        "titre": "LES QANATS",
+        "titre_en": "The Wells",
+        "annee": "XX Siecle av JC",
+        "description": "Les qanats sont des syst\u00e8mes d\u2019irrigation souterrains d\u00e9velopp\u00e9s il y a plus de 2 000 ans en Iran, au Moyen-Orient et en Afrique du Nord. Ce proc\u00e9d\u00e9 permet d\u2019acheminer l\u2019eau des nappes phr\u00e9atiques vers les zones habit\u00e9es et agricoles sans pompage ni perte excessive par \u00e9vaporation.\n\nCe syst\u00e8me repose sur un r\u00e9seau de galeries souterraines inclin\u00e9es, creus\u00e9es \u00e0 la main, qui collectent l\u2019eau et la guident par gravit\u00e9 sur de longues distances. Il permet d\u2019alimenter les villes et les cultures, m\u00eame dans des r\u00e9gions arides, en minimisant les pertes et en \u00e9vitant la surexploitation des ressources.\n\nAujourd\u2019hui, certaines communaut\u00e9s utilisent encore les qanats, et leur principe inspire de nouvelles approches en gestion durable de l\u2019eau. Des projets contemporains s\u2019appuient sur cette technologie pour favoriser une distribution \u00e9cologique et r\u00e9siliente des ressources en eau, notamment dans les r\u00e9gions touch\u00e9es par la s\u00e9cheresse.",
+        "description_en": "Qanats are underground irrigation systems developed over 2,000 years ago in Iran, the Middle East, and North Africa. This process allows water from aquifers to be transported to inhabited and agricultural areas without pumping or excessive evaporation losses.\n\nThe system is based on a network of sloping underground tunnels, dug by hand, which collect water and guide it by gravity over long distances. It supplies cities and crops, even in arid regions, while minimizing losses and avoiding overexploitation of resources.\n\nToday, some communities still use qanats, and their principle inspires new approaches to sustainable water management. Contemporary projects rely on this technology to promote ecological and resilient distribution of water resources, particularly in regions affected by drought.",
+        "exhume_par": "Simona Iliycheva",
+        "categories": [
+            "Agriculture",
+            "H2O"
+        ],
+        "categories_en": [
+            "Agriculture",
+            "Water"
+        ],
+        "url_qr": "https:\/\/whc.unesco.org\/en\/list\/1506\/",
+        "location": "Iran",
+        "location_en": "I ran",
+        "coords": {
+            "lat": 32.6475314,
+            "lng": 54.5643516
+        },
+        "image_path": "images\/IMG_3511.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T13:39:18.337Z"
+    },
+    {
+        "id": "1770730830604",
+        "titre": "L'ING\u00c9NIERIE HYDRAULIQUE ROMAINE",
+        "titre_en": "ROMAN HYDRAULIC ENGINEERING",
+        "annee": "IV Avant JC",
+        "description": "L\u2019ing\u00e9nierie hydraulique romaine constitue l\u2019un des fondements techniques de l\u2019expansion urbaine et agricole de l\u2019Empire. Les Romains ont con\u00e7u un r\u00e9seau complexe d\u2019ouvrages permettant la captation, le transport, le stockage et la distribution de l\u2019eau \u00e0 grande \u00e9chelle. \n\nParmi les dispositifs embl\u00e9matiques figurent les aqueducs gravitaires (certains longs de plus de 100 km) acheminant l\u2019eau depuis les sources jusqu\u2019aux cit\u00e9s. Celles-ci \u00e9taient ensuite desservies par un maillage de canalisations, de r\u00e9servoirs (castella), de fontaines, de thermes, mais aussi de syst\u00e8mes d\u2019irrigation. \nL\u2019usage du b\u00e9ton romain (opus caementicium) et l\u2019invention du specus vo\u00fbt\u00e9 ont permis une grande durabilit\u00e9 des structures. L\u2019expertise hydraulique s\u2019\u00e9tendait \u00e9galement aux \u00e9gouts, aux barrages (comme celui de Subiaco) et aux roues hydrauliques.\n\nCette ing\u00e9nierie, \u00e0 la fois pragmatique et sophistiqu\u00e9e, reposait sur une compr\u00e9hension fine des topographies et des \u00e9coulements. Elle a durablement influenc\u00e9 les infrastructures hydrauliques europ\u00e9ennes jusqu\u2019\u00e0 l\u2019\u00e9poque moderne.\n",
+        "description_en": "Roman hydraulic engineering was one of the technical foundations of the Empire's urban and agricultural expansion. The Romans designed a complex network of structures for the collection, transport, storage, and distribution of water on a large scale. \n\nAmong the most iconic structures were gravity-fed aqueducts (some over 100 km long) that carried water from its sources to cities. These cities were then served by a network of pipes, reservoirs (castella), fountains, thermal baths, and irrigation systems. \nThe use of Roman concrete (opus caementicium) and the invention of vaulted specus ensured the durability of these structures. Hydraulic expertise also extended to sewers, dams (such as the one at Subiaco), and water wheels.\n\nThis engineering, both pragmatic and sophisticated, was based on a detailed understanding of topography and water flow. It had a lasting influence on European hydraulic infrastructure until modern times. ",
+        "exhume_par": "C\u00e9dric Carles",
+        "categories": [
+            "Agriculture",
+            "H2O",
+            "Sant\u00e9"
+        ],
+        "categories_en": [
+            "Agriculture",
+            "Water",
+            "Health"
+        ],
+        "url_qr": "",
+        "location": "Rome",
+        "location_en": "Rome",
+        "coords": {
+            "lat": 41.8933203,
+            "lng": 12.4829321
+        },
+        "image_path": "images\/IMG_3512.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T13:40:30.604Z"
+    },
+    {
+        "id": "1770730960989",
+        "titre": "LES PAILLIS",
+        "titre_en": "THE STRAW",
+        "annee": "XVIII si\u00e8cle",
+        "description": "Le paillage, consistant \u00e0 recouvrir le sol de mat\u00e9riaux organiques tels que paille, foin, les feuilles mortes ou autour de Paris au XVIIIeme si\u00e8cle, de fumier de cheval.\n\nIl s\u2019agit d\u2019une technique agricole utilis\u00e9e depuis des si\u00e8cles offrant de multiples avantages : r\u00e9duction de l\u2019\u00e9vaporation de l\u2019eau, suppression des mauvaises herbes, r\u00e9gulation thermique du sol et am\u00e9lioration de sa structure. En se d\u00e9composant, le paillis enrichit le sol en mati\u00e8re organique, favorisant ainsi la biodiversit\u00e9 microbienne et la fertilit\u00e9. Dans les r\u00e9gions arides, notamment en Afrique, cette m\u00e9thode traditionnelle s\u2019av\u00e8re particuli\u00e8rement efficace pour conserver l\u2019humidit\u00e9 et prot\u00e9ger les cultures des conditions climatiques extr\u00eames.\n\nAujourd\u2019hui, le paillage est reconnu comme une pratique agro\u00e9cologique essentielle, combinant savoirs ancestraux et innovations modernes pour une agriculture durable et r\u00e9siliente.",
+        "description_en": "Mulching consists of covering the soil with organic materials such as straw, hay, dead leaves or, around Paris in the 18th century, horse manure.\n\nIt is an agricultural technique that has been used for centuries and offers many advantages: it reduces water evaporation, suppresses weeds, regulates soil temperature, and improves soil structure. As it decomposes, mulch enriches the soil with organic matter, promoting microbial biodiversity and fertility. In arid regions, particularly in Africa, this traditional method is particularly effective in conserving moisture and protecting crops from extreme weather conditions. Today, mulching is recognized as an essential agroecological practice, combining ancestral knowledge and modern innovations for sustainable and resilient agriculture.",
+        "exhume_par": "Rapha\u00ebl Luciani-Galais",
+        "categories": [
+            "Agriculture"
+        ],
+        "categories_en": [
+            "Agriculture"
+        ],
+        "url_qr": "",
+        "location": "Paris",
+        "location_en": "Paris",
+        "coords": {
+            "lat": 48.8588897,
+            "lng": 2.320041
+        },
+        "image_path": "images\/IMG_3579.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T13:42:40.989Z"
+    },
+    {
+        "id": "1770731173413",
+        "titre": "SYST\u00c8ME D\u2019IRRIGATION PAR JARRE : OLLA OU OYA",
+        "titre_en": "JAR IRRIGATION SYSTEM: OLLA OR OYA",
+        "annee": "2000 av JC",
+        "description": "Technique ancestrale, l\u2019origine de ce syst\u00e8me d\u2019irrigation remonte \u00e0 plusieurs milliers d\u2019ann\u00e9es. L'agronome Fan Shengzhi fait mention de l'irrigation par jarre il y a 2 000 ans en Chine. D\u2019autres travaux de recherches \u00e9voquent l\u2019utilisation de cette technique d\u2019irrigation durant l\u2019Empire romain. \nPar la suite, cette m\u00e9thode ancestrale va se r\u00e9pandre dans plusieurs continents, dont l\u2019Afrique et l\u2019Asie o\u00f9 elle deviendra une technique traditionnelle d\u2019arrosage des cultures. Elle est largement utilis\u00e9e aujourd\u2019hui en Am\u00e9rique latine, o\u00f9 elle prend son appellation \u00ab Oya \u00bb qui signifie \u00ab pot \u00bb en fran\u00e7ais.\n\nCette technique repose sur l'utilisation d'un pot d'argile cuit \u00e0 basse temp\u00e9rature que l'on enterre jusqu'au col et rempli d'eau pour irriguer les plantes plac\u00e9es autour. Les parois poreuses vont peu \u00e0 peu laisser s'\u00e9chapper l'eau qui sera absorb\u00e9e par les racines des plantes. L'irrigation par jarre est une technique d'irrigation souterraine stable et \u00e9conomique, particuli\u00e8rement adapt\u00e9e dans les zones arides, elle permet de r\u00e9duire de 60 % l\u2019utilisation d\u2019eau. Aujourd\u2019hui, avec une augmentation des m\u00e9thodes de cr\u00e9ation de permaculture et de jardin \u00e9cologique, ce syst\u00e8me attire de plus en plus les int\u00e9r\u00eats.\n",
+        "description_en": "An ancient technique, the origins of this irrigation system date back several thousand years. Agronomist Fan Shengzhi mentions jar irrigation in China 2,000 years ago. Other research refers to the use of this irrigation technique during the Roman Empire. \nThis ancient method subsequently spread to several continents, including Africa and Asia, where it became a traditional technique for watering crops. It is widely used today in Latin America, where it is known as \"Oya,\" which means \"pot\" in English.\n\nThis technique involves using a low-fired clay pot that is buried up to its neck and filled with water to irrigate the plants placed around it. The porous walls gradually allow the water to escape, which is then absorbed by the plant roots. Jar irrigation is a stable and economical underground irrigation technique, particularly suitable for arid areas, reducing water use by 60%. Today, with the rise of permaculture and ecological gardening methods, this system is attracting increasing interest. ",
+        "exhume_par": "Iswann Ali Benali",
+        "categories": [
+            "Agriculture",
+            "H2O"
+        ],
+        "categories_en": [
+            "Agriculture",
+            "Water"
+        ],
+        "url_qr": "https:\/\/www.poterie-jamet.com\/nos-produits\/ollas-oyas-irrigation\/les-oyas-ollas-comment-ca-marche\/#:~:text=L'irrigation%20par%20une%20poterie,irriguer%20les%20plantes%20plac%C3%A9es%20autour.",
+        "location": "Chine",
+        "location_en": "China",
+        "coords": {
+            "lat": 35.000074,
+            "lng": 104.999927
+        },
+        "image_path": "images\/IMG_3580.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T13:46:13.413Z"
+    },
+    {
+        "id": "1770731250077",
+        "titre": "Moulins-Bateaux",
+        "titre_en": "Mills-Boats",
+        "annee": "508",
+        "description": "Qui, en France, se souvient que sur nos rivi\u00e8res ont exist\u00e9 des moulins flottants et que la plupart ont disparu au milieu du XIX\u00e8me si\u00e8cle ? \n\nLe premier document \u00e9voquant les moulins-bateaux remonte en l'an 508, quand Clovis autorise la fondation de l'abbaye de Saint-Mesmin de Micy \u00e0 \u00e9tablir des moulins-bateaux sur les rivi\u00e8res de Loire et du Loiret.\n\nLe moulin-bateau a l'apparence ext\u00e9rieure d'un bateau, mais il fonctionne comme un moulin \u00e0 eau fix\u00e9 sur le bord de la rivi\u00e8re, avec sa roue \u00e0 aubes et ses machines pour la mouture. L\u2019avantage du moulin \u00e0 deux nefs est sa stabilit\u00e9. Ce type de moulin rendait possible l\u2019existence de ventelles servant \u00e0 r\u00e9guler l'arriv\u00e9e d'eau sur la roue \u00e0 aubes mais aussi de mieux contr\u00f4ler la vitesse du m\u00e9canisme du moulin.\n\nLes avantages du moulin-bateau, par rapport au moulin fixe install\u00e9 sur le bord des rivi\u00e8res est sa capacit\u00e9 \u00e0 \u00eatre d\u00e9plac\u00e9, il suit les fluctuations du niveau des eaux sans dommage pour le moulin-bateau alors que le moulin fixe subit les caprices des rivi\u00e8res, une forte crue peut causer d'importants d\u00e9g\u00e2ts, voire emporter toute la cabane et son syst\u00e8me de meunerie, ou se trouver inactif par une baisse des eaux. ",
+        "description_en": "Who in France remembers that there used to be floating mills on our rivers and that most of them disappeared in the mid-19th century? \n\nThe first document mentioning boat mills dates back to 508, when Clovis authorized the foundation of the Abbey of Saint-Mesmin de Micy to establish boat mills on the Loire and Loiret rivers.\n\nThe floating mill looks like a boat from the outside, but it functions like a water mill fixed to the riverbank, with its paddle wheel and grinding machinery. The advantage of the double-hulled mill is its stability. This type of mill made it possible to use sluice gates to regulate the flow of water to the water wheel and to better control the speed of the mill mechanism. The advantages of the boat mill, compared to the fixed mill installed on the banks of rivers, are its ability to be moved, it can follow fluctuations in water levels without damage to the boat mill, whereas fixed mills are subject to the whims of rivers; heavy flooding can cause significant damage, even sweeping away the entire cabin and its milling system, or rendering it inactive when the water level drops. ",
+        "exhume_par": "Les Bateliers des Vents d'Galerne",
+        "categories": [
+            "H2O",
+            "Agriculture"
+        ],
+        "categories_en": [
+            "Water",
+            "Agriculture"
+        ],
+        "url_qr": "https:\/\/www.bateliersdesventsdgalerne.fr\/",
+        "location": "Loiret",
+        "location_en": "Loiret",
+        "coords": {
+            "lat": 47.9138725,
+            "lng": 2.3075036
+        },
+        "image_path": "images\/IMG_3513.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T13:47:30.077Z"
+    },
+    {
+        "id": "1770731336556",
+        "titre": "LES ACEQUIAS",
+        "titre_en": "THE IRRIGATION DITCHES",
+        "annee": "VIII av JC",
+        "description": "Les acequias, anciens canaux d'irrigation m\u00e9di\u00e9vaux en Espagne, sont restaur\u00e9s pour lutter contre la s\u00e9cheresse due aux changements climatiques.\n\nCreus\u00e9es par les Maures entre le VIIIe et le Xe si\u00e8cle, ces infrastructures permettent de ralentir l'\u00e9coulement de l'eau et de la stocker dans les nappes phr\u00e9atiques, aidant ainsi \u00e0 irriguer les cultures durant les p\u00e9riodes s\u00e8ches.\n\nEn Andalousie, des b\u00e9n\u00e9voles et des chercheurs travaillent \u00e0 remettre en \u00e9tat ces syst\u00e8mes, soulignant leur importance historique et \u00e9cologique pour la r\u00e9gion.",
+        "description_en": "Acequias, ancient medieval irrigation channels in Spain, are being restored to combat drought caused by climate change.\n\nDug by the Moors between the 8th and 10th centuries, these infrastructures slow down the flow of water and store it in aquifers, helping to irrigate crops during dry periods. In Andalusia, volunteers and researchers are working to restore these systems, highlighting their historical and ecological importance for the region.",
+        "exhume_par": "Raphael Luciani-Galais",
+        "categories": [
+            "H2O",
+            "Agriculture"
+        ],
+        "categories_en": [
+            "Water",
+            "Agriculture"
+        ],
+        "url_qr": "https:\/\/patternenergy.com\/fr\/les-incroyables-acequias-dalbuquerque\/",
+        "location": "Espagne",
+        "location_en": "Spain",
+        "coords": {
+            "lat": 39.3260685,
+            "lng": -4.8379791
+        },
+        "image_path": "images\/IMG_3514.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T13:48:56.556Z"
+    },
+    {
+        "id": "1770731440080",
+        "titre": "HYDRO POMPE DE SAQIYA DE ISMAIL AL-JAZARI",
+        "titre_en": "ISMAIL AL-JAZARI'S SAQIYA WATER PUMP",
+        "annee": "1206",
+        "description": "Al-Jazari est un inventeur prolifique qui a con\u00e7u de nombreuses machines pour \u00e9lever l'eau, dont des moulins \u00e0 eau et des roues \u00e0 eau avec des cames sur leur essieu pour faire fonctionner des automates. \n\nOn lui attribue la premi\u00e8re utilisation connue d'un vilebrequin dans une pompe \u00e0 cha\u00eene. Ces m\u00e9canismes ont fourni de l\u2019eau \u00e0 Damas \u00e0 partir du 13\u00e8me si\u00e8cle jusqu'\u00e0 l'\u00e9poque moderne et \u00e9taient utilis\u00e9s dans tout le monde islamique m\u00e9di\u00e9val.",
+        "description_en": "Al-Jazari was a prolific inventor who designed numerous machines for raising water, including water mills and water wheels with cams on their axles to operate automata. \n\nHe is credited with the first known use of a crankshaft in a chain pump. These mechanisms supplied water to Damascus from the 13th century until modern times and were used throughout the medieval Islamic world.",
+        "exhume_par": "Cindy Fiorentino",
+        "categories": [
+            "H2O"
+        ],
+        "categories_en": [
+            "Water"
+        ],
+        "url_qr": "",
+        "location": "Damas",
+        "location_en": "Damas",
+        "coords": {
+            "lat": 33.5130695,
+            "lng": 36.3095814
+        },
+        "image_path": "images\/IMG_3515.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T13:50:40.080Z"
+    },
+    {
+        "id": "1770731518215",
+        "titre": "CHINAMPA - LES JARDINS FLOTTANTS",
+        "titre_en": "CHINAMPA - THE FLOATING GARDENS",
+        "annee": "XIII si\u00e8cle",
+        "description": "La technique du chinampa est d\u2019origine pr\u00e9colombienne, utilis\u00e9e par les Azt\u00e8ques d\u00e8s le XIIIe si\u00e8cle jusqu\u2019\u00e0 la conqu\u00eate (XIIIe\u2013XVIe si\u00e8cles).\n\nElle consiste \u00e0 cr\u00e9er des \u00eelots artificiels sur des plans d\u2019eau via un r\u00e9seau de canaux. La boue, riche en nutriments, extraite de ces canaux, \u00e9tait utilis\u00e9e pour fertiliser les \u00eelots, qui d\u00e9passaient d\u2019un m\u00e8tre la surface de l\u2019eau. Les semis \u00e9taient pr\u00e9par\u00e9s avec un m\u00e9lange de boue et de feuillage, et des arbres plant\u00e9s en bordure limitaient l\u2019\u00e9rosion.\n\nCe syst\u00e8me, combinant sols naturellement enrichis et gestion optimale de l\u2019eau, permettait des r\u00e9coltes abondantes sur de petites surfaces.\n\nReposant sur des mat\u00e9riaux et processus naturels, sans \u00e9quipements \u00e9nergivores, le chinampa valorise efficacement des ressources locales. Aujourd\u2019hui, face \u00e0 l\u2019urbanisation, il offre une solution low-tech pour am\u00e9nager des espaces cultivables en ville et soutenir l\u2019approvisionnement alimentaire.",
+        "description_en": "The chinampa technique is of pre-Columbian origin, used by the Aztecs from the 13th century until the conquest (13th\u201316th centuries).\n\nIt involves creating artificial islands on bodies of water via a network of canals. Nutrient-rich mud extracted from these canals was used to fertilize the islands, which rose one meter above the water's surface. Seedlings were prepared with a mixture of mud and foliage, and trees planted around the edges limited erosion.\n\nThis system, combining naturally enriched soils and optimal water management, allowed for abundant harvests on small areas. Based on natural materials and processes, without energy-intensive equipment, chinampa effectively makes use of local resources. Today, in the face of urbanization, it offers a low-tech solution for developing cultivable spaces in cities and supporting food supply.",
+        "exhume_par": "Loic Rogard",
+        "categories": [
+            "H2O",
+            "Agriculture"
+        ],
+        "categories_en": [
+            "Water",
+            "Agriculture"
+        ],
+        "url_qr": "",
+        "location": "Colombie",
+        "location_en": "Colombia",
+        "coords": {
+            "lat": 4.099917,
+            "lng": -72.9088133
+        },
+        "image_path": "images\/IMG_3516.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T13:51:58.215Z"
+    },
+    {
+        "id": "1770731577994",
+        "titre": "LES SUIKINKUTSU, BASSINS D\u2019INFILTRATION JAPONAIS",
+        "titre_en": "SUIKINKUTSU, JAPANESE INFILTRATION BASINS",
+        "annee": "XVII si\u00e8cle",
+        "description": "Les Suikinkutsu sont des bassins d\u2019infiltration japonais d\u00e9velopp\u00e9s au XVIIe si\u00e8cle, combinant gestion de l\u2019eau et esth\u00e9tique sonore dans les jardins traditionnels. Ces syst\u00e8mes, souvent dissimul\u00e9s sous des fontaines ou pr\u00e8s des lavabos rituels (ch\u014dzubachi), sont constitu\u00e9s d\u2019une jarre enterr\u00e9e contenant une petite ouverture \u00e0 sa base.\n\nLorsque l\u2019eau s\u2019infiltre goutte \u00e0 goutte dans cette cavit\u00e9, elle produit un son d\u00e9licat et cristallin, amplifi\u00e9 par la r\u00e9sonance de la jarre. Au-del\u00e0 de leur aspect esth\u00e9tique, les Suikinkutsu permettent une drainage naturel de l\u2019eau, \u00e9vitant l\u2019accumulation stagnante et favorisant la r\u00e9g\u00e9n\u00e9ration des sols.\n\nToujours pr\u00e9sents dans certains jardins japonais, ces dispositifs sont aujourd\u2019hui \u00e9tudi\u00e9s pour leur approche durable et biomim\u00e9tique de la gestion de l\u2019eau en milieu urbain, combinant efficacit\u00e9 hydraulique et bien-\u00eatre sensoriel.",
+        "description_en": "Suikinkutsu are Japanese infiltration basins developed in the 17th century, combining water management and sound aesthetics in traditional gardens. These systems, often hidden under fountains or near ritual washbasins (ch\u014dzubachi), consist of an underground jar with a small opening at its base.\n\nWhen water drips into this cavity, it produces a delicate, crystalline sound, amplified by the resonance of the jar. Beyond their aesthetic appeal, Suikinkutsu allow for natural water drainage, preventing stagnant accumulation and promoting soil regeneration.\n\nStill found in some Japanese gardens, these devices are now being studied for their sustainable and biomimetic approach to water management in urban environments, combining hydraulic efficiency with sensory well-being.",
+        "exhume_par": "Simona Iliycheva",
+        "categories": [
+            "H2O",
+            "Agriculture"
+        ],
+        "categories_en": [
+            "Water",
+            "Agriculture"
+        ],
+        "url_qr": "",
+        "location": "Japon",
+        "location_en": "Japanese",
+        "coords": {
+            "lat": 36.5748441,
+            "lng": 139.2394179
+        },
+        "image_path": "images\/IMG_3517.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T13:52:57.994Z"
+    },
+    {
+        "id": "1770731727033",
+        "titre": "LE STOOF VOORWERP DANS LES \u0152UVRES DE VERMEER",
+        "titre_en": "THE STOOF VOORWERP IN THE WORKS OF VERMEER",
+        "annee": "XVII si\u00e8cle",
+        "description": "Le c\u00e9l\u00e8bre ma\u00eetre hollandais a v\u00e9cu \u00e0 Delft au XVIIe si\u00e8cle. C\u2019est une ville situ\u00e9e au niveau de la mer avec un climat tr\u00e8s humide et froid. Dans le c\u00e9l\u00e8bre tableau la laiti\u00e8re, est repr\u00e9sent\u00e9 en bas \u00e0 droite un stoof voorwerp. C\u2019est un po\u00eale \u00e0 pied : une bo\u00eete en bois ouverte d'un c\u00f4t\u00e9, avec des trous ou une dalle en haut. On y place un bol en poterie ou en m\u00e9tal avec du charbon de bois br\u00fblant. Les pieds sont plac\u00e9s sur le dessus du po\u00eale pour se r\u00e9chauffer. En pla\u00e7ant une couverture ou un v\u00eatement sur les pieds, on peut isoler la chaleur et chauffer le bas des jambes. A la mort de Vermeer, l\u2019inventaire de ses biens nous apprend qu\u2019il a poss\u00e9d\u00e9 deux stoof voorwerp\u2026",
+        "description_en": "The famous Dutch master lived in Delft in the 17th century. It is a city located at sea level with a very humid and cold climate. In the famous painting The Milkmaid, a stoof voorwerp is depicted in the lower right corner. It is a foot stove: a wooden box open on one side, with holes or a slab on top. A pottery or metal bowl with burning charcoal is placed inside. The feet are placed on top of the stove to warm up. By placing a blanket or garment over the feet, the heat can be insulated and the lower legs warmed. Upon Vermeer's death, the inventory of his possessions reveals that he owned two stoof voorwerp...",
+        "exhume_par": "Ludovic Duhem",
+        "categories": [
+            "R\u00e9chauffer"
+        ],
+        "categories_en": [
+            "Reheat"
+        ],
+        "url_qr": "",
+        "location": "Pays-Bas",
+        "location_en": "Netherlands",
+        "coords": {
+            "lat": 52.2434979,
+            "lng": 5.6343227
+        },
+        "image_path": "images\/IMG_3583.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T13:55:27.033Z"
+    },
+    {
+        "id": "1770732203380",
+        "titre": "SYST\u00c8ME KABATA DE GESTION DE L\u2019EAU",
+        "titre_en": "KABATA WATER MANAGEMENT SYSTEM",
+        "annee": "XVII si\u00e8cle",
+        "description": "Le syst\u00e8me Kabata repose sur l\u2019utilisation d\u2019eau de source naturellement filtr\u00e9e par le milieu g\u00e9ologique. \u00c0 Harie, l\u2019eau circule \u00e0 travers les habitations via un r\u00e9seau de canaux et de bassins int\u00e9gr\u00e9s. Ce proc\u00e9d\u00e9 assure un approvisionnement constant en eau pure pour les usages domestiques, tout en cr\u00e9ant un microclimat : sa temp\u00e9rature stable apporte fra\u00eecheur en \u00e9t\u00e9 et douceur en hiver.\n\nLe syst\u00e8me valorise aussi l\u2019\u00e9cologie locale en r\u00e9gulant la qualit\u00e9 de l\u2019eau gr\u00e2ce \u00e0 des bassins peupl\u00e9s de carpes filtrantes.\nIl fonctionne selon des principes naturels, sans technologies \u00e9nergivores ni maintenance complexe.\n\nEn exploitant les ressources locales (eau de source) et la g\u00e9othermie passive (temp\u00e9rature stable de l\u2019eau), il r\u00e9duit le besoin d\u2019\u00e9quipements modernes de chauffage ou de rafra\u00eechissement.\n\nEn favorisant une gestion raisonn\u00e9e de l\u2019eau et en limitant le gaspillage, cette technique offre une solution inspirante pour la transition \u00e9nerg\u00e9tique et la pr\u00e9servation des ressources naturelles.",
+        "description_en": "The Kabata system relies on the use of spring water that is naturally filtered by the geological environment. In Harie, water flows through homes via a network of integrated canals and basins. This process ensures a constant supply of pure water for domestic use, while creating a microclimate: its stable temperature provides coolness in summer and warmth in winter.\n\nThe system also promotes local ecology by regulating water quality through basins populated with filter-feeding carp. It operates according to natural principles, without energy-intensive technologies or complex maintenance.\n\nBy exploiting local resources (spring water) and passive geothermal energy (stable water temperature), it reduces the need for modern heating or cooling equipment. By promoting rational water management and limiting waste, this technique offers an inspiring solution for energy transition and the preservation of natural resources.",
+        "exhume_par": "Thomas Ortiz",
+        "categories": [
+            "Agriculture",
+            "H2O"
+        ],
+        "categories_en": [
+            "Agriculture",
+            "Water"
+        ],
+        "url_qr": "",
+        "location": "Japon",
+        "location_en": "Japanese",
+        "coords": {
+            "lat": 36.5748441,
+            "lng": 139.2394179
+        },
+        "image_path": "images\/IMG_3518.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T14:03:23.380Z"
+    },
+    {
+        "id": "1770732303364",
+        "titre": "LE POTAGER EN CARR\u00c9S",
+        "titre_en": "THE SQUARE VEGETABLE GARDEN",
+        "annee": "XVII si\u00e9cle",
+        "description": "Issu des traditions monastiques et des jardins de cur\u00e9s, le potager en carr\u00e9s appara\u00eet comme une m\u00e9thode d\u2019organisation rationnelle de l\u2019espace de culture. \nChaque carr\u00e9 (souvent de 1,20 m de c\u00f4t\u00e9) est subdivis\u00e9 en parcelles plus petites, facilitant la rotation des cultures, l\u2019association b\u00e9n\u00e9fique des plantes et une gestion pr\u00e9cise de l\u2019arrosage et du compost. \n\nCe mod\u00e8le est utilis\u00e9 d\u00e8s le XVIIe si\u00e8cle dans les jardins aristocratiques, comme \u00e0 Versailles, pour allier ordre, productivit\u00e9 et esth\u00e9tisme.\n\nRed\u00e9couvert et popularis\u00e9 dans les ann\u00e9es 1980 par l\u2019Am\u00e9ricain Mel Bartholomew, il devient une r\u00e9ponse efficace aux besoins contemporains : gain d\u2019espace, faible consommation d\u2019eau, accessibilit\u00e9 urbaine.\nLe potager en carr\u00e9s s\u2019impose aujourd\u2019hui comme une solution low-tech, modulable et p\u00e9dagogique, adapt\u00e9e \u00e0 la r\u00e9silience alimentaire des foyers, des \u00e9coles ou des microfermes urbaines.\n",
+        "description_en": "Stemming from monastic traditions and parish gardens, the square foot garden is a rational method of organizing growing space. Each square (often 1.20 m on each side) is subdivided into smaller plots, facilitating crop rotation, beneficial plant combinations, and precise management of watering and compost. \n\nThis model has been used since the 17th century in aristocratic gardens, such as Versailles, to combine order, productivity, and aesthetics. Rediscovered and popularized in the 1980s by American Mel Bartholomew, it has become an effective response to contemporary needs: space savings, low water consumption, and urban accessibility.\nThe square foot garden is now establishing itself as a low-tech, modular, and educational solution, suited to the food resilience of households, schools, and urban microfarms. ",
+        "exhume_par": "Raphael Luciani-Galais ",
+        "categories": [
+            "Agriculture"
+        ],
+        "categories_en": [
+            "Agriculture"
+        ],
+        "url_qr": "",
+        "location": "France",
+        "location_en": "France",
+        "coords": {
+            "lat": 46.603354,
+            "lng": 1.8883335
+        },
+        "image_path": "images\/IMG_3587.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T14:05:03.364Z"
+    },
+    {
+        "id": "1770732419681",
+        "titre": "ORIGINES DU MARA\u00ceCHAGE",
+        "titre_en": "ORIGINS OF MARKET GARDENING",
+        "annee": "XVIII si\u00e8cle",
+        "description": "Le terme \u00ab mara\u00eechage \u00bb appara\u00eet au XVIIIe si\u00e8cle pour d\u00e9signer l\u2019activit\u00e9 des jardiniers cultivant des potagers situ\u00e9s sur des terrains mar\u00e9cageux autour de Paris.\n\nCes zones humides, progressivement ass\u00e9ch\u00e9es, ont permis l\u2019implantation de cultures intensives destin\u00e9es \u00e0 approvisionner la capitale en l\u00e9gumes frais.\nLes mara\u00eechers parisiens, organis\u00e9s en communaut\u00e9s structur\u00e9es, ont d\u00e9velopp\u00e9 des techniques culturales avanc\u00e9es, telles que l\u2019utilisation de ch\u00e2ssis et de cloches en verre pour prot\u00e9ger les cultures, et l\u2019amendement des sols avec du fumier provenant des voiries urbaines.\n\nCette profession, transmise de g\u00e9n\u00e9ration en g\u00e9n\u00e9ration, a jou\u00e9 un r\u00f4le essentiel dans l\u2019alimentation des citadins et a contribu\u00e9 \u00e0 l\u2019essor de l\u2019agriculture urbaine.",
+        "description_en": "The term \"mara\u00eechage\" appeared in the 18th century to describe the activity of gardeners cultivating vegetable gardens located on marshy land around Paris. These wetlands, which were gradually drained, allowed for the establishment of intensive crops intended to supply the capital with fresh vegetables.\nParisian market gardeners, organized into structured communities, developed advanced cultivation techniques, such as the use of frames and glass cloches to protect crops, and soil improvement with manure from urban roads.\n\nThis profession, passed down from generation to generation, played an essential role in feeding city dwellers and contributed to the rise of urban agriculture.",
+        "exhume_par": "Raphael Luciani-Galais ",
+        "categories": [
+            "Agriculture"
+        ],
+        "categories_en": [
+            "Agriculture"
+        ],
+        "url_qr": "",
+        "location": "Paris",
+        "location_en": "Paris",
+        "coords": {
+            "lat": 48.8588897,
+            "lng": 2.320041
+        },
+        "image_path": "images\/IMG_3586.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T14:06:59.681Z"
+    },
+    {
+        "id": "1770732724065",
+        "titre": "LA COUCHE CHAUDE AU FUMIER",
+        "titre_en": "THE HOT MANURE LAYER",
+        "annee": "XVIII si\u00e8cle",
+        "description": "Avant l\u2019apparition des serres chauff\u00e9es, les mara\u00eechers utilisaient la fermentation du fumier pour chauffer le sol. \nCette technique, appel\u00e9e \u00ab couche chaude \u00bb, consiste \u00e0 enfouir du fumier frais (souvent de cheval) sous une couche de terre, sur laquelle on s\u00e8me ou repique des plants. \n\nLa d\u00e9composition du fumier produit une chaleur constante pendant plusieurs semaines, cr\u00e9ant un microclimat propice \u00e0 la germination et \u00e0 la croissance des jeunes plantes, m\u00eame en hiver. \nTr\u00e8s r\u00e9pandue dans les ceintures mara\u00eech\u00e8res de Paris ou de Londres, cette m\u00e9thode low-tech permettait des cultures hors saison sans recours \u00e0 l\u2019\u00e9nergie fossile. Elle allie recyclage de d\u00e9chets organiques, autonomie \u00e9nerg\u00e9tique et ma\u00eetrise fine du vivant. \n\nRed\u00e9couverte aujourd\u2019hui par les jardiniers bio et la permaculture, la couche chaude incarne une agriculture sobre, adapt\u00e9e aux d\u00e9fis \u00e9nerg\u00e9tiques contemporains.",
+        "description_en": "Before heated greenhouses were invented, market gardeners used manure fermentation to heat the soil. This technique, known as \"hot bedding,\" involves burying fresh manure (often horse manure) under a layer of soil, on which seeds are sown or seedlings are transplanted. \n\nThe decomposition of the manure produces constant heat for several weeks, creating a microclimate conducive to germination and the growth of young plants, even in winter. \nWidely used in the market gardens around Paris and London, this low-tech method allowed crops to be grown out of season without the use of fossil fuels. It combines organic waste recycling, energy self-sufficiency, and precise control of living organisms. Rediscovered today by organic gardeners and permaculture practitioners, hotbeds embody a simple form of agriculture that is well-suited to contemporary energy challenges.",
+        "exhume_par": "Raphael Luciani-Galais ",
+        "categories": [
+            "Agriculture"
+        ],
+        "categories_en": [
+            "Agriculture"
+        ],
+        "url_qr": "",
+        "location": "Paris",
+        "location_en": "Paris",
+        "coords": {
+            "lat": 48.8588897,
+            "lng": 2.320041
+        },
+        "image_path": "images\/IMG_3588.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T14:12:04.065Z"
+    },
+    {
+        "id": "1770732851344",
+        "titre": "LES CLOCHES DE JARDIN",
+        "titre_en": "GARDEN BELLS",
+        "annee": "XVIII",
+        "description": "Avant l\u2019invention des serres modernes, les jardiniers utilisaient des cloches de jardin (des structures en verre \u00e9pais, h\u00e9misph\u00e9riques ou coniques) pour cr\u00e9er un microclimat favorable \u00e0 la croissance des plantes. En captant la chaleur solaire et en la conservant durant la nuit, ces dispositifs passifs prot\u00e9geaient semis et jeunes plants du froid, tout en acc\u00e9l\u00e9rant leur d\u00e9veloppement. \n\nTr\u00e8s r\u00e9pandues au XVIIIe et XIXe si\u00e8cle en Europe, notamment dans les potagers royaux ou monastiques, elles permettaient une production mara\u00eech\u00e8re pr\u00e9coce, sans apport \u00e9nerg\u00e9tique ext\u00e9rieur. \nFabriqu\u00e9es artisanalement, souvent souffl\u00e9es \u00e0 la bouche, les cloches repr\u00e9sentaient une solution low-tech efficace pour prolonger la saison agricole, aujourd\u2019hui r\u00e9habilit\u00e9e dans des d\u00e9marches de permaculture ou de sobri\u00e9t\u00e9 \u00e9nerg\u00e9tique. \n\nElles rappellent que la ma\u00eetrise fine des cycles naturels et des ressources locales a longtemps permis une agriculture r\u00e9siliente face aux al\u00e9as climatiques.",
+        "description_en": "Before the invention of modern greenhouses, gardeners used garden cloches (thick glass structures, hemispherical or conical in shape) to create a microclimate conducive to plant growth. By capturing solar heat and retaining it during the night, these passive devices protected seedlings and young plants from the cold, while accelerating their development. \n\nWidely used in 18th- and 19th-century Europe, particularly in royal and monastic vegetable gardens, they enabled early vegetable production without the need for external energy sources. \nHandcrafted, often mouth-blown, the cloches were an effective low-tech solution for extending the agricultural season, now rehabilitated in permaculture and energy efficiency initiatives. They remind us that a detailed understanding of natural cycles and local resources has long enabled agriculture to remain resilient in the face of climatic hazards.",
+        "exhume_par": "C\u00e9dric Carles",
+        "categories": [
+            "Solaire"
+        ],
+        "categories_en": [
+            "Solar"
+        ],
+        "url_qr": "https:\/\/potagersdantan.com\/2021\/09\/11\/les-cloches-de-jardin\/",
+        "location": "Europe",
+        "location_en": "Europe",
+        "coords": {
+            "lat": 51,
+            "lng": 10
+        },
+        "image_path": "images\/IMG_3589.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T14:14:11.344Z"
+    },
+    {
+        "id": "1770732907689",
+        "titre": "CULTURE SOUS CH\u00c2SSIS",
+        "titre_en": "CULTIVATION UNDER FRAME",
+        "annee": "1780",
+        "description": "Vers 1780, dans les environs de Paris, un mara\u00eecher nomm\u00e9 Fournier introduit l\u2019utilisation des ch\u00e2ssis vitr\u00e9s dans la culture mara\u00eech\u00e8re, marquant une avanc\u00e9e significative dans les techniques agricoles de l\u2019\u00e9poque. \nCes ch\u00e2ssis, constitu\u00e9s de cadres en bois surmont\u00e9s de vitres, permettent de cr\u00e9er un microclimat favorable \u00e0 la croissance des plantes en captant la chaleur solaire et en prot\u00e9geant les cultures des intemp\u00e9ries. \nCette innovation facilite la culture pr\u00e9coce de l\u00e9gumes tels que les laitues, les radis et les carottes, m\u00eame en dehors des saisons habituelles.\n\nL\u2019adoption des ch\u00e2ssis vitr\u00e9s se r\u00e9pand rapidement parmi les mara\u00eechers parisiens, contribuant \u00e0 l\u2019essor d\u2019une agriculture urbaine intensive et ing\u00e9nieuse. \nCette m\u00e9thode, d\u00e9taill\u00e9e dans le Manuel pratique de la culture mara\u00eech\u00e8re de Paris publi\u00e9 en 1845 par J.-G. Moreau et J.-J.  Daverne, illustre l\u2019ing\u00e9niosit\u00e9 des jardiniers de l\u2019\u00e9poque qui, sans recours aux engrais chimiques, parviennent \u00e0 approvisionner la capitale en l\u00e9gumes frais tout au long de l\u2019ann\u00e9e.",
+        "description_en": "Around 1780, in the Paris area, a market gardener named Fournier introduced the use of glass frames in market gardening, marking a significant advance in the agricultural techniques of the time. \nThese frames, made of wooden frames topped with glass panes, created a microclimate conducive to plant growth by capturing solar heat and protecting crops from the elements. This innovation facilitated the early cultivation of vegetables such as lettuce, radishes, and carrots, even outside the usual seasons.\n\nThe adoption of glass frames spread rapidly among Parisian market gardeners, contributing to the rise of intensive and ingenious urban agriculture. \nThis method, detailed in the Practical Manual of Market Gardening in Paris published in 1845 by J.-G. Moreau and J.-J. Daverne, illustrates the ingenuity of the gardeners of the time who, without the use of chemical fertilizers, managed to supply the capital with fresh vegetables throughout the year.",
+        "exhume_par": "Raphael Luciani-Galais ",
+        "categories": [
+            "Agriculture"
+        ],
+        "categories_en": [
+            "Agriculture"
+        ],
+        "url_qr": "",
+        "location": "Paris",
+        "location_en": "Paris",
+        "coords": {
+            "lat": 48.8588897,
+            "lng": 2.320041
+        },
+        "image_path": "images\/IMG_3590.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T14:15:07.690Z"
+    },
+    {
+        "id": "1770733013715",
+        "titre": "R\u00c9SEAU HYDRAULIQUE TRADITIONNEL DE JAIPUR",
+        "titre_en": "JAIPUR'S TRADITIONAL WATER NETWORK",
+        "annee": "1727",
+        "description": "Con\u00e7u sous l\u2019impulsion de Jai Singh II, ce syst\u00e8me est le fruit d\u2019un travail collectif entre architectes, ing\u00e9nieurs et urbanistes de l\u2019\u00e9poque, combinant savoirs hydrauliques, architecturaux et environnementaux. Le r\u00e9seau hydraulique de Jaipur repose sur une optimisation des ressources naturelles, prenant en compte les contraintes climatiques et les besoins de la population. Il s\u2019articule autour de plusieurs dispositifs compl\u00e9mentaires :\n \u2022 Stockage des eaux de pluie : Un syst\u00e8me de canaux et de r\u00e9servoirs interconnect\u00e9s capte et stocke l\u2019eau des pr\u00e9cipitations rares pour une utilisation tout au long de l\u2019ann\u00e9e.\n \u2022 Lacs artificiels et bassins urbains : Des ouvrages comme le lac Man Sagar, associ\u00e9 au Jal Mahal, permettent de r\u00e9guler l\u2019humidit\u00e9 locale et de servir de r\u00e9serves d\u2019eau en p\u00e9riode s\u00e8che.\n \u2022 Baoris et stepwells : Ces puits \u00e0 degr\u00e9s (ex. Chand Baori) offrent un acc\u00e8s direct \u00e0 l\u2019eau, limitent l\u2019\u00e9vaporation et facilitent la gestion communautaire des ressources.\n \u2022 R\u00e9seaux souterrains et citernes : L\u2019eau est achemin\u00e9e via des conduits gravitaires et stock\u00e9e dans des r\u00e9servoirs souterrains, garantissant une distribution efficace sans perte importante.\n\nCe mod\u00e8le a permis \u00e0 Jaipur de d\u00e9velopper une autonomie hydrique malgr\u00e9 des conditions climatiques extr\u00eames.",
+        "description_en": "Designed under the leadership of Jai Singh II, this system is the result of a collective effort between architects, engineers, and urban planners of the time, combining hydraulic, architectural, and environmental expertise. Jaipur's hydraulic network is based on the optimization of natural resources, taking into account climatic constraints and the needs of the population. It is structured around several complementary systems:\n \u2022 Rainwater storage: A system of interconnected canals and reservoirs captures and stores water from rare rainfall for use throughout the year. \u2022 Artificial lakes and urban basins: Structures such as Man Sagar Lake, associated with the Jal Mahal, regulate local humidity and serve as water reserves during dry periods.\n \u2022 Baoris and stepwells: These stepped wells (e.g., Chand Baori) provide direct access to water, limit evaporation, and facilitate community resource management. \u2022 Underground networks and cisterns: Water is conveyed via gravity pipes and stored in underground reservoirs, ensuring efficient distribution without significant loss.\n\nThis model has enabled Jaipur to develop water self-sufficiency despite extreme climatic conditions.",
+        "exhume_par": "Eric Dussert",
+        "categories": [
+            "H2O",
+            "Agriculture"
+        ],
+        "categories_en": [
+            "Water",
+            "Agriculture"
+        ],
+        "url_qr": "",
+        "location": "Jaipur",
+        "location_en": "Jaipur",
+        "coords": {
+            "lat": 26.9154576,
+            "lng": 75.8189817
+        },
+        "image_path": "images\/IMG_3519.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T14:16:53.715Z"
+    },
+    {
+        "id": "1770733137581",
+        "titre": "SEMELLES CHAUFFANTES LAVOISIER",
+        "titre_en": "LAVOISIER HEATED INSOLES",
+        "annee": "1780",
+        "description": "Le p\u00e8re de la chimie moderne \u00e9tait-il d\u00e9j\u00e0 atteint \u00e0 l'\u00e9poque par la pr\u00e9carit\u00e9 \u00e9nerg\u00e9tique ?\n\nOui, si l\u2019on en croit ces semelles chauffantes retrouv\u00e9es dans le laboratoire de Lavoisier. A la mani\u00e8re d'une bouillotte, les semelles peuvent se remplir d'eau chaude et tenir des pieds au chaud sous un bureau. Cette invention nous rappelle qu\u2019afin de se sentir chez soi, les individus mettent souvent en place des pratiques \u00e9nerg\u00e9tiques diverses, celles-ci \u00e9voluant et changeant en fonction des personnes. \n\nLes semelles chauffantes sont visibles au deuxi\u00e8me \u00e9tage du Mus\u00e9e des Arts et M\u00e9tiers \u00e0 Paris dans la reconstitution du laboratoire de Lavoisier. ",
+        "description_en": "Was the father of modern chemistry already affected by energy poverty at the time? Yes, if we are to believe these heated insoles found in Lavoisier's laboratory. Like a hot water bottle, the insoles can be filled with hot water and keep feet warm under a desk. This invention reminds us that in order to feel at home, people often implement various energy practices, which evolve and change depending on the individual. The heated insoles are on display on the second floor of the Mus\u00e9e des Arts et M\u00e9tiers in Paris in the reconstruction of Lavoisier's laboratory. ",
+        "exhume_par": "C\u00e9dric Carles",
+        "categories": [
+            "R\u00e9chauffer",
+            "H2O"
+        ],
+        "categories_en": [
+            "Reheat",
+            "Water"
+        ],
+        "url_qr": "",
+        "location": "Paris",
+        "location_en": "Paris",
+        "coords": {
+            "lat": 48.8588897,
+            "lng": 2.320041
+        },
+        "image_path": "images\/IMG_3520.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T14:18:57.581Z"
+    },
+    {
+        "id": "1770733212020",
+        "titre": "LES D\u00c9BUTS DU FOR\u00c7AGE MARAICHER",
+        "titre_en": "THE BEGINNINGS OF FORCED CULTIVATION",
+        "annee": "1792",
+        "description": "\u00c0 la charni\u00e8re des XVIIIe et XIXe si\u00e8cles, plusieurs mara\u00eechers parisiens initient des techniques de for\u00e7age innovantes, prolongeant la saison de culture des l\u00e9gumes en manipulant chaleur, lumi\u00e8re et microclimat. Vers 1792, Quentin force l\u2019asperge blanche, suivi peu apr\u00e8s par l\u2019asperge verte en 1800 avec son beau-fr\u00e8re Marie. Le chou-fleur, quant \u00e0 lui, est forc\u00e9 pour la premi\u00e8re fois par Besnard en 1811, alors que Dulac introduit la romaine pr\u00e9coce d\u00e8s 1812.\n\nCes m\u00e9thodes reposent sur l\u2019usage de couches chaudes \u00e0 base de fumier frais et de ch\u00e2ssis vitr\u00e9s, qui cr\u00e9ent un environnement favorable au d\u00e9veloppement des plantes en dehors des saisons naturelles. Ces pratiques, pr\u00e9cises et exigeantes, marquent l\u2019entr\u00e9e du mara\u00eechage parisien dans l\u2019agriculture climato-adaptative, sans recours \u00e0 la chaleur fossile. Elles t\u00e9moignent d\u2019un savoir-faire empirique, transmis oralement, qui permettait \u00e0 Paris d\u2019\u00eatre autonome en l\u00e9gumes frais une grande partie de l\u2019ann\u00e9e.",
+        "description_en": "At the turn of the 18th and 19th centuries, several Parisian market gardeners pioneered innovative forcing techniques, extending the vegetable growing season by manipulating heat, light, and microclimate. Around 1792, Quentin forced white asparagus, followed shortly thereafter by green asparagus in 1800 with his brother-in-law Marie. Cauliflower was forced for the first time by Besnard in 1811, while Dulac introduced early romaine lettuce in 1812. These methods relied on the use of hotbeds made from fresh manure and glass frames, which created an environment conducive to plant growth outside of the natural seasons. These precise and demanding practices marked the entry of Parisian market gardening into climate-adaptive agriculture, without the use of fossil fuels. They are evidence of empirical know-how, passed down orally, which enabled Paris to be self-sufficient in fresh vegetables for much of the year.",
+        "exhume_par": "Raphael Luciani-Galais",
+        "categories": [
+            "Agriculture"
+        ],
+        "categories_en": [
+            "Agriculture"
+        ],
+        "url_qr": "",
+        "location": "Paris",
+        "location_en": "Paris",
+        "coords": {
+            "lat": 48.8588897,
+            "lng": 2.320041
+        },
+        "image_path": "images\/IMG_3592.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T14:20:12.020Z"
+    },
+    {
+        "id": "1770733277290",
+        "titre": "B\u00c9LIER HYDRAULIQUE",
+        "titre_en": "HYDRAULIC RAM",
+        "annee": "1792",
+        "description": "Dans les ann\u00e9es 1790, dix ans apr\u00e8s les impressionnants premiers lancers de montgolfi\u00e8res, Joseph Montgolfier se tourne vers un autre projet. Il souhaite acheminer de l\u2019eau \u00e0 proximit\u00e9 de la papeterie familiale de Vidalon-l\u00e8s-Annonay en Ard\u00e8che. Constatant la force du choix d\u2019une interruption soudaine du flux d\u2019un liquide, il d\u00e9cide d\u2019utiliser celle-ci pour pomper l\u2019eau et l\u2019emmener vers le haut, sans autre \u00e9nergie n\u00e9cessaire que celle du courant de l\u2019eau. Sa machine, le b\u00e9lier hydraulique, permet donc de pousser de l\u2019eau \u00e0 partir d\u2019une source basse situ\u00e9e au niveau de la pompe et de l\u2019acheminer au-dessus via un tuyau vertical. Les \u201ccoups de b\u00e9lier\u201d sont provoqu\u00e9s par l\u2019augmentation de pression dans la chambre qui va d\u00e9compresser dans le tuyaux vertical. La gestion de cette m\u00e9canique des fluides se fait gr\u00e2ce \u00e0 des clapets, qui laissent cours ou interrompent successivement le d\u00e9bit de l\u2019eau de fa\u00e7on automatique. Ce syst\u00e8me est extr\u00eamement robuste et a pu fonctionner sur des communes pendant des dizaines d\u2019ann\u00e9es avec tr\u00e8s peu d\u2019entretien. \n\nCette invention ne n\u00e9cessite pas d\u2019autre apport d\u2019\u00e9nergie que celle de l\u2019eau que l\u2019on souhaite pomper. Peu co\u00fbteuse, elle est particuli\u00e8rement int\u00e9ressante pour les r\u00e9gions o\u00f9 les cours d\u2019eau sont nombreux. ",
+        "description_en": "In the 1790s, ten years after the impressive first hot air balloon launches, Joseph Montgolfier turned his attention to another project. He wanted to transport water to the family paper mill in Vidalon-l\u00e8s-Annonay in Ard\u00e8che. Noticing the force generated when a liquid flow is suddenly interrupted, he decided to use this to pump water upwards, using only the energy of the water current. His machine, the hydraulic ram, allowed water to be pushed from a low source at the pump and transported upwards via a vertical pipe. The \"water hammer\" effect was caused by the increase in pressure in the chamber, which would then decompress in the vertical pipe. This fluid mechanics is managed by valves, which automatically allow the water flow to pass or interrupt it in succession. This system is extremely robust and has been able to operate in communities for decades with very little maintenance. \n\nThis invention requires no energy input other than that of the water to be pumped. Inexpensive, it is particularly attractive for regions with numerous waterways. ",
+        "exhume_par": "Jo\u00ebl Tetard",
+        "categories": [
+            "H2O"
+        ],
+        "categories_en": [
+            "Water"
+        ],
+        "url_qr": "",
+        "location": "Ard\u00e8che",
+        "location_en": "Ard\u00e8che",
+        "coords": {
+            "lat": 44.815194,
+            "lng": 4.3986525
+        },
+        "image_path": "images\/IMG_3521.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T14:21:17.290Z"
+    },
+    {
+        "id": "1770733391687",
+        "titre": "BRISE-VENT MOBILES EN PAILLE DE SEIGLE",
+        "titre_en": "MOBILE WINDSCREENS MADE OF RYE STRAW",
+        "annee": "XIX",
+        "description": "Dans les marais non clos de murs, les mara\u00eechers parisiens ont recours \u00e0 une solution simple et efficace : des brise-vent mobiles en paille de seigle, hauts d\u2019environ 1,50 m\u00e8tre.\n\nFix\u00e9s sur des cadres l\u00e9gers, ils sont d\u00e9plac\u00e9s selon les besoins pour prot\u00e9ger les semis, jeunes plants ou cultures sensibles des vents froids, dess\u00e9chants ou violents. Leur usage permet aussi de cr\u00e9er des microclimats favorables \u00e0 la croissance, en particulier pour les primeurs.\n\nMoins performants que les murs de pierre pour emmagasiner la chaleur, ces dispositifs pr\u00e9sentent l\u2019avantage d\u2019\u00eatre l\u00e9gers, peu co\u00fbteux et adaptables \u00e0 toute parcelle. On en multiplie parfois les versions plus basses \u00e0 l\u2019int\u00e9rieur m\u00eame des jardins, pour optimiser l\u2019exposition au soleil ou att\u00e9nuer les effets de l\u2019\u00e9vaporation. Ces brise-vent t\u00e9moignent d\u2019une ma\u00eetrise fine de l\u2019environnement et d\u2019une conception modulaire de l\u2019espace agricole bien avant l\u2019\u00e8re du design climatique.",
+        "description_en": "In open marshes, Parisian market gardeners use a simple and effective solution: mobile windbreaks made of rye straw, approximately 1.50 meters high. Attached to lightweight frames, they can be moved as needed to protect seedlings, young plants, or sensitive crops from cold, drying, or strong winds. Their use also helps to create microclimates conducive to growth, particularly for early crops. Although less effective than stone walls at storing heat, these devices have the advantage of being lightweight, inexpensive, and adaptable to any plot of land. Lower versions are sometimes used within gardens to optimize sun exposure or mitigate the effects of evaporation. These windbreaks demonstrate a sophisticated understanding of the environment and a modular approach to agricultural space long before the era of climate design.",
+        "exhume_par": "Raphael Luciani-Galais ",
+        "categories": [
+            "Agriculture",
+            "\u00c9olien"
+        ],
+        "categories_en": [
+            "Agriculture",
+            "Wind power"
+        ],
+        "url_qr": "",
+        "location": "Paris",
+        "location_en": "Paris",
+        "coords": {
+            "lat": 48.8588897,
+            "lng": 2.320041
+        },
+        "image_path": "images\/IMG_3593.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T14:23:11.687Z"
+    }
+]

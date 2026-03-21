@@ -1,0 +1,191 @@
+[
+    {
+        "id": "1770720854050",
+        "titre": "tests 333",
+        "titre_en": "",
+        "annee": "2025",
+        "description": "",
+        "description_en": "",
+        "exhume_par": "",
+        "categories": [],
+        "categories_en": [],
+        "url_qr": "",
+        "location": "",
+        "location_en": "",
+        "coords": null,
+        "image_path": "",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T10:54:14.050Z",
+        "origin": "test",
+        "workshopId": "1770720803006",
+        "visible": false,
+        "status": "public_draft"
+    },
+    {
+        "id": "1770735959605",
+        "titre": "DISTILLATION DE L\u2019EAU DE MER POUR LA CUISINE",
+        "titre_en": "",
+        "annee": "1855",
+        "description": "Ce proc\u00e9d\u00e9 de distillation de l\u2019eau de mer, mis au point par M. Zambeaux et M. Gall\u00e9 en 1855, marque une avanc\u00e9e cruciale pour l\u2019approvisionnement en eau douce \u00e0 bord des navires. Dans un contexte o\u00f9 les marins d\u00e9pendaient de r\u00e9serves limit\u00e9es d\u2019eau douce pour les longs voyages, cette invention permettait de transformer l\u2019eau de mer en eau potable, r\u00e9pondant aux besoins quotidiens de l\u2019\u00e9quipage, notamment pour la cuisine.\n\nLe dispositif utilise la chaleur des chaudi\u00e8res du navire pour \u00e9vaporer l\u2019eau de mer. La vapeur d\u2019eau ainsi produite est ensuite condens\u00e9e, ce qui permet de r\u00e9cup\u00e9rer de l\u2019eau douce d\u00e9barrass\u00e9e de son sel et de ses impuret\u00e9s. Ce proc\u00e9d\u00e9 simple et efficace tire parti de l'\u00e9nergie thermique disponible, sans n\u00e9cessiter de carburant suppl\u00e9mentaire.",
+        "description_en": "",
+        "exhume_par": "Eric Dussert",
+        "categories": [
+            "H2O"
+        ],
+        "categories_en": [],
+        "url_qr": "",
+        "location": "",
+        "location_en": "",
+        "coords": null,
+        "image_path": "images\/IMG_3524.jpeg",
+        "date": "2026-02-10",
+        "created_at": "2026-02-10T15:05:59.605Z",
+        "status": "public_draft"
+    },
+    {
+        "id": "1770987467623",
+        "titre": "Le projet de r\u00e9am\u00e9nagement du canal Saint-Denis. Noues et jardin d\u2019eau.  (Proposition)",
+        "titre_en": "",
+        "annee": "2024",
+        "description": "A l\u2019occasion des Jeux olympiques de Paris 2024, un projet de r\u00e9am\u00e9nagement du canal Saint-Denis est n\u00e9. Il visait \u00e0 ouvrir l\u2019acc\u00e8s aux berges, \u00e0 renforcer l\u2019attractivit\u00e9 du territoire et faire de l\u2019espace un lieu d\u00e9di\u00e9 \u00e0 la mobilit\u00e9 douce. Les rives droite et gauche ont \u00e9t\u00e9 am\u00e9nag\u00e9es et deux passerelles ont \u00e9t\u00e9 install\u00e9es tout en favorisant l\u2019acc\u00e8s des personnes \u00e0 mobilit\u00e9 r\u00e9duite et la cohabitation de diff\u00e9rents types de mobilit\u00e9s douces. Le bilan carbone a \u00e9t\u00e9 limit\u00e9 par l\u2019utilisation de mat\u00e9riaux biosourc\u00e9s. Un jardin d\u2019eau et des noues (foss\u00e9s v\u00e9g\u00e9talis\u00e9s permettant de r\u00e9colter l\u2019eau de ruissellement) permettent de maintenir le r\u00f4le du canal Saint-Denis dans la trame bleue de Plaine Commune, de renforcer l\u2019effet d'\u00eelot de fra\u00eecheur, de limiter le ruissellement et de favoriser la biodiversit\u00e9. La gestion \u00e0 ciel ouvert de l\u2019eau permet de la rendre plus visible, et donc plus acceptable, pour les habitants. \n",
+        "description_en": "",
+        "exhume_par": "Anastasia Gu\u00e9guen",
+        "categories": [
+            "H2O"
+        ],
+        "categories_en": [],
+        "url_qr": " https:\/\/www.ouvrages-olympiques.fr\/canal-saint-denis",
+        "location": "Aubervilliers et Saint-Denis",
+        "location_en": "",
+        "coords": {
+            "lat": 48.9117116,
+            "lng": 2.3822612
+        },
+        "image_path": "images\/2048px-Passerelle_Lucie_Brard_-_Saint-Denis_FR93_-_2024-07-18_-_1.jpg",
+        "date": "2026-02-13",
+        "created_at": "2026-02-13T12:57:47.623Z",
+        "status": "pending_review"
+    },
+    {
+        "id": "1770988001177",
+        "titre": "Premi\u00e8re cours \"oasis\" de Seine-Saint-Denis au coll\u00e8ge Langevin-Wallon",
+        "titre_en": "",
+        "annee": "2020",
+        "description": "Ce projet, port\u00e9 par le d\u00e9partement Seine Saint-Denis, a pour objectif de cr\u00e9er des \u00eelots de fra\u00eecheur dans les cours des \u00e9tablissements scolaires. Pour ce faire sont install\u00e9s des grands arbres, des fontaines ou encore des jeux d\u2019e\tau. La premi\u00e8re est inaugur\u00e9e en 2020 au coll\u00e8ge Langevin-Wallon de Rosny-sous-Bois. L\u2019objectif est aussi de sensibiliser les \u00e9l\u00e8ves \u00e0 l\u2019environnement, dans le cas du coll\u00e8ge de Rosny-sous-Bois, avec la pr\u00e9sence d\u2019une mare et d\u2019un potager. Enfin, le sol perm\u00e9able et drainant permet \u00e9galement \u00e0 la cour oasis de retenir les eaux pluviales et de limiter leur apport dans les r\u00e9seaux d\u2019assainissement. Ce dispositif cours oasis a ensuite \u00e9t\u00e9 d\u00e9ploy\u00e9 dans une quinzaine d\u2019autres \u00e9tablissements scolaires du d\u00e9partement entre 2020 et 2024 comme au coll\u00e8ge Oum-Kalthoum de Montreuil, le coll\u00e8ge Evariste-Galois de Sevran\u202fou encore au coll\u00e8ge Victor-Hugo de Noisy-le-Grand. \u202f\n",
+        "description_en": "",
+        "exhume_par": "Atelier \u00e9tudiants Paris 1",
+        "categories": [
+            "H2O",
+            "Rafra\u00eechir"
+        ],
+        "categories_en": [],
+        "url_qr": "https:\/\/www.leparisien.fr\/seine-saint-denis-93\/des-cours-oasis-pour-eviter-les-coups-de-chaud-dans-les-colleges-de-seine-saint-denis-07-02-2020-8255130.php",
+        "location": "Rosny-sous-Bois",
+        "location_en": "",
+        "coords": {
+            "lat": 48.8716626,
+            "lng": 2.4875193
+        },
+        "image_path": "",
+        "date": "2026-02-13",
+        "created_at": "2026-02-13T13:06:41.177Z",
+        "status": "public_draft"
+    },
+    {
+        "id": "1770988261628",
+        "titre": "Lancement d\u2019une \u00e9tude pour \u00e9tudier le potentiel de r\u00e9cup\u00e9ration de chaleur provenant des eaux us\u00e9es en Seine-Saint-Denis",
+        "titre_en": "",
+        "annee": "2013",
+        "description": "Les eaux us\u00e9es ont une temp\u00e9rature stable pendant l'ann\u00e9e, ce qui permet d\u2019envisager de r\u00e9cup\u00e9rer une partie de cette chaleur pour chauffer ou climatiser des b\u00e2timents. Cette technologie est d\u00e9j\u00e0 utilis\u00e9e en Suisse (ex: maison de retraite Hofmatt pr\u00e8s de B\u00e2le) et en Allemagne notamment.  Pour que cette technologie soit \u00e9conomiquement viable, le d\u00e9bit des eaux us\u00e9es ne doit pas \u00eatre inf\u00e9rieur \u00e0 10 \u00e0 12 l\/s. Ce d\u00e9bit est souvent atteint proche des stations d\u2019\u00e9puration, dans des zones \u00e9loign\u00e9es des agglom\u00e9rations. La chaleur est donc transmise \u00e0 un \u00e9changeur de chaleur avant d\u2019\u00eatre r\u00e9utilis\u00e9e par des pompes \u00e0 chaleur classiques. Une \u00e9tude pour d\u00e9terminer le potentiel de r\u00e9cup\u00e9ration de chaleur en Seine Saint-Denis a \u00e9t\u00e9 r\u00e9alis\u00e9e en 2013, suivie d\u2019une seconde \u00e9tude en 2018. En 2019, une cartographie des r\u00e9seaux o\u00f9 de la r\u00e9cup\u00e9ration de chaleur est envisageable a \u00e9t\u00e9 r\u00e9alis\u00e9e. \n",
+        "description_en": "",
+        "exhume_par": "Groupama",
+        "categories": [
+            "H2O",
+            "R\u00e9chauffer"
+        ],
+        "categories_en": [],
+        "url_qr": "https:\/\/astee-tsm.fr\/articles\/tsm-1-2-2020-petrucci\/",
+        "location": "Seine-Saint-Denis",
+        "location_en": "",
+        "coords": {
+            "lat": 48.9098125,
+            "lng": 2.4528635
+        },
+        "image_path": "",
+        "date": "2026-02-13",
+        "created_at": "2026-02-13T13:11:01.628Z",
+        "status": "public_draft"
+    },
+    {
+        "id": "1770988552186",
+        "titre": "Programme TVGEP \u00ab Conception des Toitures V\u00e9g\u00e9talis\u00e9es pour la Gestion des Eaux Pluviales urbaines \u00bb",
+        "titre_en": "",
+        "annee": "2010",
+        "description": "L\u2019agglom\u00e9ration parisienne est l\u2019espace avec la plus grande proportion de sols artificialis\u00e9s de France. Cela a pour effet de renforcer les dynamiques de ruissellements et d\u2019augmenter le risque d\u2019inondation. La v\u00e9g\u00e9talisation des toitures est un moyen de limiter ces ruissellements. En effet, lors des \u00e9pisodes de pr\u00e9cipitations, une partie de l\u2019eau est \u00e9vapotranspir\u00e9e, une autre s\u2019\u00e9coule et une autre reste dans l\u2019horizon v\u00e9g\u00e9tale et sera \u00e9vapotranspir\u00e9e ou \u00e9coul\u00e9e ult\u00e9rieurement. La pr\u00e9sence d\u2019une toiture v\u00e9g\u00e9talis\u00e9e r\u00e9duit donc la quantit\u00e9 d\u2019eau ruissel\u00e9e.  Le programme TVGEP \u201cConception des toitures V\u00e9g\u00e9talis\u00e9es pour la Gestion des Eaux Pluviales urbaines\u201d encourage la mise en place de ce genre de toitures. Un exemple int\u00e9ressant est la toiture de la Direction de l\u2019Eau et de l\u2019Assainissement du conseil g\u00e9n\u00e9ral de la Seine-Saint-Denis \u00e0 Rosny-sous-Bois qui est recouvert de 20cm de terre v\u00e9g\u00e9tale et des gramin\u00e9s. Cette toiture permet de retenir 70% des pr\u00e9cipitations annuelles. ",
+        "description_en": "",
+        "exhume_par": "Anastasia Gu\u00e9guen",
+        "categories": [
+            "H2O"
+        ],
+        "categories_en": [],
+        "url_qr": "https:\/\/www.cerema.fr\/system\/files\/documents\/2023\/11\/guide_des_toitures_terrasses_vegetalisees_et_gestion_des_eaux_pluviales_-_2017.pdf",
+        "location": "France",
+        "location_en": "",
+        "coords": {
+            "lat": 46.603354,
+            "lng": 1.8883335
+        },
+        "image_path": "",
+        "date": "2026-02-13",
+        "created_at": "2026-02-13T13:15:52.186Z",
+        "status": "public_draft"
+    },
+    {
+        "id": "1770995246192",
+        "titre": "Le moulin \u00e0 mar\u00e9e \u00e0 roue horizontale de Landounic",
+        "titre_en": "",
+        "annee": "585-588",
+        "description": "A Saint-Pol-de-L\u00e9on, dans le Finist\u00e8re, ont \u00e9t\u00e9 d\u00e9couverts les restes du plus ancien moulin \u00e0 mar\u00e9e \u00e0 roue horizontale d\u2019Europe de l\u2019ouest, celui de Landounic. Avant cette d\u00e9couverte, c'\u00e9tait le moulin de Nemdrum en Irlande du Nord qui d\u00e9tenait ce titre avec une construction en 619. \nLe site de Landounic a \u00e9t\u00e9 d\u00e9couvert fortuitement en 2002 puis des fouilles ont \u00e9t\u00e9 r\u00e9alis\u00e9es en 2013. Des pi\u00e8ces en bois et en quartz formant autrefois un moulin, ainsi que les restes d\u2019une digue ont \u00e9t\u00e9 identifi\u00e9s. Les pi\u00e8ces de bois ont \u00e9t\u00e9 dat\u00e9es par dendrochronologie : la date la plus ancienne de mise en service du moulin a \u00e9t\u00e9 estim\u00e9e entre 585 et 588. De plus, d\u2019autres datations ont permis de d\u00e9montrer que le moulin avait suivi une restauration au d\u00e9but du VIIIe si\u00e8cle, sa dur\u00e9e de fonctionnement a donc \u00e9t\u00e9 de plus d\u2019un si\u00e8cle. \nLe moulin de Landounic \u00e9tait situ\u00e9 dans l\u2019estuaire de la Penz\u00e9 et recevait donc \u00e0 la fois de l\u2019eau douce et de l\u2019eau de mer. Les moulins \u00e0 mar\u00e9e sont pr\u00e9sents dans toute l\u2019Europe de l\u2019Ouest depuis au moins le Moyen-Age. Ils fonctionnent avec un syst\u00e8me de digues qui forment une retenue d\u2019eau. A mar\u00e9e montante, la mer remplit le bassin. A mar\u00e9e descendante, l\u2019eau est retenue dans le bassin par un syst\u00e8me de vannes. C\u2019est seulement lorsque la diff\u00e9rence de niveau entre le bassin et la mer est assez importante que les vannes sont ouvertes et actionnent alors la roue du moulin, qui sert alors \u00e0 moudre des c\u00e9r\u00e9ales. \n",
+        "description_en": "",
+        "exhume_par": "Marc Gu\u00e9guen",
+        "categories": [
+            "H2O"
+        ],
+        "categories_en": [],
+        "url_qr": "https:\/\/hal.science\/hal-03433688\/document",
+        "location": "Saint-Pol-de-L\u00e9on",
+        "location_en": "",
+        "coords": {
+            "lat": 48.6849601,
+            "lng": -3.9868641
+        },
+        "image_path": "",
+        "date": "2026-02-13",
+        "created_at": "2026-02-13T15:07:26.192Z",
+        "status": "public_draft"
+    },
+    {
+        "id": "1771240444443",
+        "titre": "Lancement de la collection BERGVATTNET par IKEA",
+        "titre_en": "",
+        "annee": "2025",
+        "description": "En 2025, l\u2019enseigne su\u00e9doise IKEA lance la collection BERGVATTNET, centr\u00e9e sur l\u2019\u00e9conomie d\u2019eau dans nos salles de bain. Dans cette gamme, on retrouve par exemple un saut de 8 litres, propos\u00e9 par la designer Hanna-Kaarina Heikkil\u00e4 et destin\u00e9 \u00e0 recueillir l\u2019eau non-utilis\u00e9e lorsqu\u2019on attend que notre douche chauffe. Cette eau peut ensuite \u00eatre r\u00e9employ\u00e9e, pour arroser des plantes par exemple. On retrouve \u00e9galement un compteur de douche indiquant, par le designer Marcus Arvonen, indiquant la consommation d\u2019eau ainsi que la temp\u00e9rature. L\u2019objectif est d\u2019inviter les utilisateurs \u00e0 prendre des douches plus courtes. ",
+        "description_en": "",
+        "exhume_par": "Lo\u00efc Rogard",
+        "categories": [
+            "H2O"
+        ],
+        "categories_en": [],
+        "url_qr": "https:\/\/www.ikea.com\/fr\/fr\/new\/collection-bergvattnet-pub373fc620\/",
+        "location": "Su\u00e8de",
+        "location_en": "",
+        "coords": {
+            "lat": 59.6749712,
+            "lng": 14.5208584
+        },
+        "image_path": "",
+        "date": "2026-02-16",
+        "created_at": "2026-02-16T11:14:04.443Z",
+        "status": "public_draft"
+    }
+]

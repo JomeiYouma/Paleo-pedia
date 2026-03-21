@@ -1,0 +1,95 @@
+{
+    "nav": {
+        "library": "Library",
+        "create": "New Cartel",
+        "drafts": "Ideas & Drafts",
+        "admin": "Admin",
+        "deleteAll": "Delete All"
+    },
+    "library": {
+        "title": "Filters & Actions",
+        "viewTimeline": "Timeline View",
+        "viewMap": "Map View",
+        "viewExport": "Export Mode",
+        "searchPlaceholder": "Search...",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "generateZip": "Generate Zip",
+        "deleteList": "Delete",
+        "empty": "No cartels to display.",
+        "loading": "Loading...",
+        "generating": "Generating..."
+    },
+    "create": {
+        "pageTitle": "Create / Edit Cartel",
+        "fieldTitle": "Title",
+        "fieldTitleEn": "Title (English)",
+        "fieldYear": "Year (e.g. 2024, 2024-01-15...)",
+        "fieldLocation": "Location (City, Country)",
+        "fieldLocationPlaceholder": "Ex: London, UK",
+        "fieldDesc": "Description",
+        "fieldDescEn": "Description (English)",
+        "fieldImage": "Image URL",
+        "fieldImageUpload": "Or upload an image",
+        "fieldUrlQR": "QR Code Link (Optional)",
+        "fieldExhume": "Exhumed by",
+        "fieldCategories": "Categories",
+        "btnSave": "Save Cartel",
+        "translating": "Auto-translating...",
+        "uploading": "Saving data...",
+        "btnUpdate": "Update",
+        "success": "Cartel saved!",
+        "located": "Located",
+        "notFound": "Location not found"
+    },
+    "cartel": {
+        "moreInfo": "Learn more",
+        "exhumeBy": "Exhumed by",
+        "viewTimeline": "View in Timeline",
+        "categories": "Categories",
+        "edit": "Edit",
+        "delete": "Delete",
+        "addLocation": "Add location"
+    },
+    "map": {
+        "clusterTitle": "{{count}} Cartels here:",
+        "backToList": "← Back to list",
+        "unlocated": "Unlocated"
+    },
+    "setup": {
+        "localMode": "LOCAL MODE",
+        "configTitle": "GitHub Configuration",
+        "tokenLabel": "GitHub Token (Repo/Public Scope)",
+        "openaiLabel": "API Key (OpenAI or DeepL)",
+        "ownerLabel": "Owner",
+        "repoLabel": "Repo",
+        "saveBtn": "Save"
+    },
+    "common": {
+        "back": "Back",
+        "otherCategory": "Other category",
+        "add": "Add",
+        "appTitle": "PALEO-ENERGETICS"
+    },
+    "messages": {
+        "editDraft": "Edit Draft",
+        "editCartel": "Edit Cartel",
+        "newDraft": "New Draft",
+        "saveDraft": "Save Draft",
+        "imageError": "Image upload error: ",
+        "confirmDelete": "Delete this draft?",
+        "publishConfirm": "Publish \"{{title}}\" to library?",
+        "publishSuccess": "Published successfully!",
+        "zipError": "Error generating Zip",
+        "bulkDeleteConfirm": "Do you really want to delete these cartels?",
+        "deleteConfirm": "Delete?"
+    },
+    "drafts": {
+        "title": "Ideas & Drafts",
+        "empty": "No drafts.",
+        "edit": "Edit",
+        "delete": "Delete",
+        "publish": "Publish",
+        "addIdea": "Add an idea"
+    }
+}

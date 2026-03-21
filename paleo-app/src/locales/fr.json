@@ -1,0 +1,98 @@
+{
+    "nav": {
+        "library": "Bibliothèque",
+        "create": "Nouveau cartel",
+        "drafts": "Idées & Brouillons",
+        "admin": "Admin",
+        "deleteAll": "Tout supprimer"
+    },
+    "library": {
+        "title": "Filtres & Actions",
+        "viewTimeline": "Vue Chronologique",
+        "viewMap": "Vue Carte",
+        "viewExport": "Mode Exportation",
+        "searchPlaceholder": "Rechercher...",
+        "selectAll": "Tout Sélectionner",
+        "deselectAll": "Tout Désélectionner",
+        "generateZip": "Générer Zip",
+        "deleteList": "Supprimer",
+        "empty": "Aucun cartel à afficher.",
+        "loading": "Chargement...",
+        "generating": "Génération en cours..."
+    },
+    "create": {
+        "pageTitle": "Créer / Modifier un cartel",
+        "fieldTitle": "Titre",
+        "fieldTitleEn": "Titre (Anglais)",
+        "fieldYear": "Année (ex: 2024, 2024-01-15...)",
+        "fieldLocation": "Localisation (Ville, Pays)",
+        "fieldLocationPlaceholder": "Ex: Paris, France",
+        "fieldDesc": "Description",
+        "fieldDescEn": "Description (Anglais)",
+        "fieldImage": "Image url",
+        "fieldImageUpload": "Ou uploader une image",
+        "fieldUrlQR": "Lien pour QR Code (Optionnel)",
+        "fieldExhume": "Exhumé par",
+        "fieldCategories": "Catégories",
+        "btnSave": "Enregistrer le cartel",
+        "translating": "Traduction automatique en cours...",
+        "uploading": "Sauvegarde des données...",
+        "btnUpdate": "Mettre à jour",
+        "success": "Cartel enregistré !",
+        "located": "Localisé",
+        "notFound": "Lieu introuvable"
+    },
+    "cartel": {
+        "moreInfo": "Pour aller plus loin",
+        "exhumeBy": "Exhumé par",
+        "viewTimeline": "Voir dans la chronologie",
+        "categories": "Catégories",
+        "edit": "Modifier",
+        "delete": "Supprimer",
+        "addLocation": "Ajouter lieu"
+    },
+    "map": {
+        "clusterTitle": "{{count}} Cartels ici :",
+        "backToList": "← Retour à la liste",
+        "unlocated": "Non localisés"
+    },
+    "setup": {
+        "localMode": "MODE LOCAL",
+        "configTitle": "Configuration GitHub",
+        "tokenLabel": "Token GitHub (Repo/Public Scope)",
+        "openaiLabel": "Clé API (OpenAI ou DeepL)",
+        "ownerLabel": "Propriétaire (Owner)",
+        "repoLabel": "Repo",
+        "saveBtn": "Sauvegarder"
+    },
+    "common": {
+        "back": "Retour",
+        "otherCategory": "Autre catégorie",
+        "add": "Ajouter",
+        "appTitle": "PALEO-ÉNERGÉTIQUE"
+    },
+    "messages": {
+        "editDraft": "Modifier le Brouillon",
+        "editCartel": "Modifier le Cartel",
+        "newDraft": "Nouveau Brouillon",
+        "saveDraft": "Sauvegarder Brouillon",
+        "imageError": "Erreur upload image: ",
+        "confirmDelete": "Supprimer ce brouillon ?",
+        "publishConfirm": "Publier \"{{title}}\" en bibliothèque ?",
+        "publishSuccess": "Publié avec succès !",
+        "zipError": "Erreur lors de la génération du Zip",
+        "bulkDeleteConfirm": "Voulez-vous vraiment supprimer ces cartels ?",
+        "deleteConfirm": "Supprimer ?"
+    },
+    "drafts": {
+        "title": "Idées & Brouillons",
+        "empty": "Aucun brouillon.",
+        "edit": "Modifier",
+        "delete": "Supprimer",
+        "publish": "Publier",
+        "addIdea": "Ajouter une idée"
+    },
+    "timeline": {
+        "scroll_instruction": "Zoomez avec la molette et déplacez-vous pour explorer le temps. (Flèches ← → pour naviguer)"
+    }
+}

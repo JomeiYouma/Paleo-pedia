@@ -1,0 +1,112 @@
+@import url('https://fonts.googleapis.com/css2?family=PT+Sans+Narrow:wght@400;700&family=PT+Serif:wght@400;700&display=swap');
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap');
+
+:root {
+  --color-pink: #FCEDEC;
+  --color-pink-darker: #E0B0B0;
+  --color-red-accent: #D65A5A;
+  --color-text: #222;
+  --color-background: #FAFAFA;
+  --color-black: #000000;
+  --color-white: #FFFFFF;
+
+  --font-heading: 'PT Sans Narrow', sans-serif;
+  --font-body: 'PT Serif', serif;
+
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 2rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+  line-height: 1.1;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+
+/* Utilities */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+.card {
+  background: var(--color-white);
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: var(--spacing-md);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Loading Spinner */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.85);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(2px);
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #eee;
+  border-top-color: var(--color-pink-darker);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Heuristic Mode Override */
+.heuristic-label {
+  fill: #000000 !important;
+  text-shadow: none !important;
+  font-family: var(--font-heading) !important;
+}

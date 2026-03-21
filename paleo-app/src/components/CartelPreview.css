@@ -1,0 +1,171 @@
+.cartel-container {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 0;
+    align-items: stretch;
+    /* Stretch to fill height, but respect max */
+    height: 100%;
+    /* Fill the wrapper */
+    overflow: hidden;
+    /* Prevent spill */
+}
+
+.cartel-image-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    justify-content: space-between;
+    /* Push credit to bottom if space allows */
+}
+
+.cartel-image-wrapper {
+    flex: 1;
+    /* Take available space */
+    min-height: 0;
+    /* Allow shrinking */
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.cartel-img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.cartel-no-image {
+    width: 100%;
+    height: 200px;
+    background-color: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    border-radius: 4px;
+}
+
+.cartel-credit {
+    font-size: 0.8em;
+    color: gray;
+    margin-top: 5px;
+}
+
+.cartel-content-column {
+    flex: 1;
+}
+
+.cartel-card {
+    background-color: var(--color-pink);
+    padding: 20px;
+    border-radius: 5px;
+    color: black;
+    min-height: 300px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.draft-badge {
+    background: gold;
+    color: black;
+    padding: 5px;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
+.cartel-year {
+    text-align: right;
+    font-weight: bold;
+    font-size: 1.2em;
+    font-family: var(--font-heading);
+}
+
+.cartel-title {
+    text-align: right;
+    font-weight: bold;
+    font-size: 1.5em;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    font-family: var(--font-heading);
+}
+
+.cartel-description {
+    font-family: var(--font-body);
+    font-size: 1em;
+    text-align: justify;
+    /* Justify text */
+    margin-bottom: 10px;
+    white-space: pre-wrap;
+    line-height: 1.4;
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 10px;
+    /* No fixed max-height, it fills flex */
+}
+
+.cartel-credit-overlay {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 2px 6px;
+    font-size: 0.7em;
+    border-radius: 4px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.cartel-image-wrapper:hover .cartel-credit-overlay {
+    opacity: 1;
+}
+
+/* Custom scrollbar for description */
+.cartel-description::-webkit-scrollbar {
+    width: 6px;
+}
+
+.cartel-description::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.cartel-description::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+.cartel-description::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.cartel-footer {
+    margin-top: 20px;
+}
+
+.cartel-qr-link {
+    margin-top: 15px;
+    text-align: right;
+}
+
+.cartel-qr-link a {
+    text-decoration: none;
+    background-color: black;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-family: sans-serif;
+    font-size: 0.8em;
+}

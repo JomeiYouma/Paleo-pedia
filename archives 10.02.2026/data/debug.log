@@ -1,0 +1,53 @@
+2026-02-09 16:48:28 Auth Check:
+Headers: Array
+(
+    [Remote-Ip] => 37.71.213.67
+    [Priority] => u=4
+    [Sec-Fetch-Site] => same-origin
+    [Sec-Fetch-Mode] => cors
+    [Sec-Fetch-Dest] => empty
+    [Referer] => https://laruga.fr/cartels/
+    [Accept-Encoding] => gzip, deflate, br, zstd
+    [Accept-Language] => fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3
+    [Accept] => */*
+    [User-Agent] => Mozilla/5.0 (X11; Linux x86_64; rv:142.0) Gecko/20100101 Firefox/142.0
+    [X-Ovhrequest-Id] => 396c9bca97e442c89843caab642c8328
+    [X-Forwarded-Proto] => https
+    [X-Forwarded-For] => 37.71.213.67
+    [X-Predictor] => 1
+    [Host] => laruga.fr
+    [Authorization] => 
+)
+
+_SERVER[HTTP_AUTHORIZATION]: 
+_GET[token]: None
+Derived Auth: 
+Provided Password: None
+2026-02-09 16:48:33 Auth Check:
+Headers: Array
+(
+    [Remote-Ip] => 37.71.213.67
+    [Priority] => u=4
+    [Sec-Fetch-Site] => same-origin
+    [Sec-Fetch-Mode] => cors
+    [Sec-Fetch-Dest] => empty
+    [Origin] => https://laruga.fr
+    [Content-Type] => application/json
+    [Referer] => https://laruga.fr/cartels/
+    [Accept-Encoding] => gzip, deflate, br, zstd
+    [Accept-Language] => fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3
+    [Accept] => */*
+    [User-Agent] => Mozilla/5.0 (X11; Linux x86_64; rv:142.0) Gecko/20100101 Firefox/142.0
+    [Content-Length] => 6480
+    [X-Ovhrequest-Id] => 9d64d2535834ca79dc31e05f5730b92b
+    [X-Forwarded-Proto] => https
+    [X-Forwarded-For] => 37.71.213.67
+    [X-Predictor] => 1
+    [Host] => laruga.fr
+    [Authorization] => Bearer PaleoA21
+)
+
+_SERVER[HTTP_AUTHORIZATION]: Bearer PaleoA21
+_GET[token]: PaleoA21
+Derived Auth: Bearer PaleoA21
+Provided Password: PaleoA21
