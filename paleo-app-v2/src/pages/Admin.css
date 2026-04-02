@@ -1,0 +1,148 @@
+/* Admin.css */
+
+.admin-page { padding-bottom: 80px; }
+
+.admin-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; flex-wrap: wrap; gap: 20px;
+  padding: 36px 0 28px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 0;
+}
+.admin-subtitle { font-size: 0.875rem; color: var(--color-text-muted); margin-top: 4px; }
+
+/* Tabs */
+.admin-tabs {
+  display: flex; gap: 0;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 32px;
+}
+
+.admin-tab {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 14px 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition);
+  margin-bottom: -1px;
+}
+.admin-tab:hover { color: var(--color-text); }
+.admin-tab.active { color: var(--color-accent-light); border-bottom-color: var(--color-accent); }
+
+.admin-tab-count {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 1px 7px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.admin-tab.active .admin-tab-count {
+  background: var(--color-accent-glow);
+  border-color: var(--color-accent);
+  color: var(--color-accent-light);
+}
+
+/* Section */
+.admin-section { display: block; }
+
+.admin-section-header {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.admin-section-header h2 { font-size: 1.2rem; }
+
+.admin-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 60px; color: var(--color-text-faint); text-align: center;
+}
+
+/* Proposals */
+.admin-proposals { display: flex; flex-direction: column; gap: 12px; }
+
+.proposal-card {
+  display: grid; grid-template-columns: auto 1fr auto;
+  gap: 0; background: var(--color-surface);
+  border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  overflow: hidden; transition: border-color var(--transition);
+}
+
+.proposal-img { width: 120px; }
+.proposal-img img { width: 100%; height: 100%; object-fit: cover; }
+
+.proposal-body { padding: 16px; flex: 1; }
+.proposal-cats { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+.proposal-title { font-size: 1rem; margin-bottom: 6px; }
+.proposal-meta { display: flex; gap: 12px; font-size: 0.75rem; color: var(--color-text-faint); margin-bottom: 8px; }
+.proposal-desc { font-size: 0.8rem; color: var(--color-text-muted); line-height: 1.5; }
+
+.proposal-actions {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 16px; border-left: 1px solid var(--color-border);
+  justify-content: center; min-width: 130px;
+}
+
+/* Categories */
+.cat-form { margin-bottom: 24px; }
+.cat-form h3 { margin-bottom: 16px; font-size: 1rem; }
+.cat-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+
+.admin-cats-list { display: flex; flex-direction: column; gap: 8px; }
+
+.admin-cat-row {
+  display: flex; overflow: hidden;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); transition: border-color var(--transition);
+}
+.admin-cat-row:hover { border-color: var(--accent, var(--color-border-light)); }
+
+.admin-cat-bar { width: 4px; flex-shrink: 0; background: var(--accent, var(--color-accent)); }
+
+.admin-cat-info {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 16px; flex: 1;
+}
+
+.admin-cat-icon {
+  width: 34px; height: 34px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+
+.admin-cat-meta {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; flex: 1;
+}
+.admin-cat-id { font-size: 0.72rem; color: var(--color-text-faint); }
+.admin-cat-desc { font-size: 0.78rem; color: var(--color-text-faint); width: 100%; }
+
+.admin-cat-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.admin-cat-edit-form { padding: 16px; flex: 1; }
+
+/* Users */
+.admin-users { display: flex; flex-direction: column; gap: 8px; }
+
+.user-row {
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.user-row-id {
+  font-family: monospace; font-size: 0.78rem;
+  color: var(--color-text-faint); flex: 0 0 90px;
+}
+
+.user-row-role { flex: 0 0 auto; }
+
+@media (max-width: 700px) {
+  .proposal-card { grid-template-columns: 1fr; }
+  .proposal-img { width: 100%; height: 160px; }
+  .proposal-actions { flex-direction: row; border-left: none; border-top: 1px solid var(--color-border); }
+  .cat-form-grid { grid-template-columns: 1fr; }
+  .admin-tab { padding: 12px 14px; font-size: 0.8rem; }
+}

@@ -1,0 +1,109 @@
+/* TimelineMode.css */
+
+.timeline-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--header-h) - 180px);
+  min-height: 520px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── Zone cartel principale ── */
+.timeline-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 24px 80px;
+}
+
+/* Boutons de navigation latéraux */
+.timeline-nav-btn {
+  position: absolute;
+  top: 50%; transform: translateY(-50%);
+  z-index: 30;
+  width: 44px; height: 44px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-muted);
+  transition: all var(--transition);
+  box-shadow: var(--shadow-md);
+}
+.timeline-nav-btn:hover:not(:disabled) {
+  background: var(--color-surface-3);
+  border-color: var(--color-accent);
+  color: var(--color-accent-light);
+}
+.timeline-nav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+.timeline-nav-prev { left: 16px; }
+.timeline-nav-next { right: 16px; }
+
+/* Zone cartel */
+.timeline-cartel-area {
+  width: 100%;
+  max-width: 1100px;
+  max-height: 100%;
+  overflow-y: auto;
+  border-radius: var(--radius-md);
+  position: relative;
+}
+
+/* Actions admin flottantes */
+.timeline-admin-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 12px 0 0;
+}
+
+/* ── Axe D3 ── */
+.timeline-axis-container {
+  height: 180px;
+  background: var(--color-surface-2);
+  border-top: 1px solid var(--color-border);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.timeline-axis-hint {
+  position: absolute;
+  top: 8px; left: 14px;
+  font-size: 0.68rem;
+  color: var(--color-text-faint);
+  pointer-events: none;
+  display: flex; gap: 4px; align-items: center;
+}
+
+.timeline-axis-hint kbd {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 16px;
+  background: var(--color-surface-3);
+  border: 1px solid var(--color-border-light);
+  border-radius: 3px;
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+}
+
+.timeline-counter {
+  position: absolute;
+  top: 8px; right: 14px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-accent-light);
+  opacity: 0.7;
+}
+
+.timeline-svg {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+.timeline-svg:active { cursor: grabbing; }
