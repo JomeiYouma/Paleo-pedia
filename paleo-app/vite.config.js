@@ -12,6 +12,10 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/deepl\/free/, ''),
       },
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true
+      },
       '/api/deepl/pro': {
         target: 'https://api.deepl.com/v2',
         changeOrigin: true,

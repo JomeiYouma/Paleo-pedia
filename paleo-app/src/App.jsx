@@ -8,7 +8,6 @@ import Drafts from './pages/Drafts';
 
 import Proposals from './pages/Proposals';
 import Admin from './pages/Admin';
-import TestSupabase from './pages/TestSupabase';
 
 import Presentation from './pages/Presentation';
 import Prestations from './pages/Prestations';
@@ -42,7 +41,6 @@ function App() {
             <Route path="proposals" element={<Proposals />} />
             <Route path="admin" element={<Admin />} />
             <Route path="admin/workshop/:workshopId" element={<Admin />} />
-            <Route path="test/supabase" element={<TestSupabase />} />
           </Route>
 
           {/* Compatibility Redirect for old Workshop Links */}
