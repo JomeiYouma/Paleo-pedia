@@ -418,17 +418,21 @@ const Create = () => {
                 <div>
                     <label>{t('create.fieldCategories')}</label>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '10px' }}>
-                        {Array.from(new Set([...(globalCats || []), ...(form.categories || [])])).map(cat => (
+                        {Array.from(new Set([
+                            // Les catégories globales sont des objets {id, name, ...} → on extrait .name
+                            ...(globalCats || []).map(c => (typeof c === 'object' ? c.name : c)),
+                            ...(form.categories || [])
+                        ])).map(catName => (
                             <button
                                 type="button"
-                                key={cat}
-                                onClick={() => handleCategoryToggle(cat)}
+                                key={catName}
+                                onClick={() => handleCategoryToggle(catName)}
                                 style={{
-                                    backgroundColor: (form.categories || []).includes(cat) ? 'var(--color-pink-darker)' : 'transparent',
+                                    backgroundColor: (form.categories || []).includes(catName) ? 'var(--color-pink-darker)' : 'transparent',
                                     border: '1px solid #ccc', borderRadius: '15px', fontSize: '0.8rem', padding: '4px 8px'
                                 }}
                             >
-                                {cat}
+                                {catName}
                             </button>
                         ))}
                     </div>

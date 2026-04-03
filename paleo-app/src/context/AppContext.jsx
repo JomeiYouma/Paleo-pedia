@@ -86,7 +86,7 @@ export const AppProvider = ({ children }) => {
         try {
             const allCartels = await api.cartels.getAll();
             setCartels(allCartels.filter(c => c.status === 'published' || c.visible));
-            setDrafts(allCartels.filter(c => c.status === 'draft' || c.status === 'pending_review'));
+            setDrafts(allCartels.filter(c => c.status !== 'published' && c.status !== null));
             
             try {
                 const cats = await api.categories.getAll();

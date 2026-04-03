@@ -1,13 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import CartelPreview from '../components/CartelPreview';
 import TimelineMode from '../components/TimelineMode';
 import MapMode from '../components/MapMode';
-import HeuristicMode from '../components/HeuristicMode'; // Import HeuristicMode
+import HeuristicMode from '../components/HeuristicMode';
 import { getYearForSort } from '../utils/helpers';
-import { Download, Trash2, CheckSquare, Square, Edit, LayoutList, CalendarDays, Map as MapIcon, FileText, Search, Eye, GitGraph } from 'lucide-react'; // Import GitGraph
+import { Download, Trash2, CheckSquare, Square, Edit, LayoutList, CalendarDays, Map as MapIcon, Search, Eye, GitGraph, ArrowLeft, Layers } from 'lucide-react';
 import { generateZip } from '../utils/zipGenerator';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import './Library.css';
 
@@ -16,13 +16,31 @@ const Library = () => {
     const { cartels, drafts, loading, deleteCartel, deleteCartels, updateCartel, isAdmin, currentWorkshop } = useApp();
     const [selectedIds, setSelectedIds] = useState(new Set());
     const [searchQuery, setSearchQuery] = useState('');
-    const [viewMode, setViewMode] = useState('timeline'); // list, timeline, map
+    const [viewMode, setViewMode] = useState('timeline');
     const [selectedCats, setSelectedCats] = useState([]);
     const [generatingZip, setGeneratingZip] = useState(false);
     const [progress, setProgress] = useState({ current: 0, total: 0 });
-    const [targetCartelId, setTargetCartelId] = useState(null); // For timeline navigation
+    const [targetCartelId, setTargetCartelId] = useState(null);
 
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    // Pré-filtrer par catégorie si ?category= est présent dans l'URL
+    useEffect(() => {
+        const catParam = searchParams.get('category');
+        if (catParam) {
+            setSelectedCats([decodeURIComponent(catParam)]);
+        }
+    }, [searchParams]);
+
+    // Titre dynamique : "Paléo H2O" si filtrage par 1 catégorie via URL
+    const urlCategoryFilter = searchParams.get('category');
+    const pageTitle = urlCategoryFilter ? `Paléo ${decodeURIComponent(urlCategoryFilter)}` : null;
+
+    const clearCategoryFilter = () => {
+        setSelectedCats([]);
+        setSearchParams({});
+    };
 
     const handleGoToTimeline = (id) => {
         setTargetCartelId(id);
@@ -177,6 +195,44 @@ const Library = () => {
 
     return (
         <div style={{ padding: '0 20px' }}>
+
+            {/* ── Titre Thématique ─────────────────────────────────── */}
+            {pageTitle && (
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    padding: '24px 0 8px 0',
+                    borderBottom: '2px solid var(--color-pink-darker, #C2185B)',
+                    marginBottom: '24px',
+                }}>
+                    <button
+                        onClick={clearCategoryFilter}
+                        title="Retour à tous les cartels"
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '6px',
+                            background: 'none', border: '1px solid #ddd',
+                            borderRadius: '20px', padding: '6px 14px',
+                            cursor: 'pointer', color: '#666', fontSize: '0.85rem',
+                            transition: 'all 0.2s',
+                        }}
+                    >
+                        <ArrowLeft size={14} /> Toutes les thématiques
+                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <Layers size={22} color="var(--color-pink-darker, #C2185B)" />
+                        <h1 style={{
+                            margin: 0,
+                            fontSize: '2rem',
+                            fontWeight: '800',
+                            color: 'var(--color-pink-darker, #C2185B)',
+                            letterSpacing: '-0.5px',
+                        }}>
+                            {pageTitle}
+                        </h1>
+                    </div>
+                </div>
+            )}
             {/* Progress Overlay */}
             {generatingZip && (
                 <div style={{

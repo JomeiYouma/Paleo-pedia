@@ -1,12 +1,27 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Lock, Unlock } from 'lucide-react';
+import LanguageSwitcher from './LanguageSwitcher';
+import { useApp } from '../context/AppContext';
 
 const SiteLayout = () => {
     const { t } = useTranslation();
     const location = useLocation();
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+    const { isAdmin, login, logout } = useApp();
+
+    const handleAdminToggle = async () => {
+        if (isAdmin) {
+            logout();
+        } else {
+            const pwd = window.prompt('Mot de passe (Admin) :');
+            if (pwd) {
+                const success = await login(pwd);
+                if (!success) alert('Mot de passe incorrect.');
+            }
+        }
+    };
 
     const links = [
         { path: '/', label: 'Accueil' },
@@ -74,6 +89,18 @@ const SiteLayout = () => {
                         <div style={{ width: '40px', height: '40px', background: 'var(--color-pink-darker, #C2185B)', borderRadius: '50%' }}></div>
                         <span style={{ fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '-0.5px' }}>Paléo-Énergétique</span>
                     </Link>
+                </div>
+
+                {/* Langue + Login */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <LanguageSwitcher />
+                    <button
+                        onClick={handleAdminToggle}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                        title={isAdmin ? 'Se déconnecter' : 'Connexion Admin'}
+                    >
+                        {isAdmin ? <Unlock size={22} color="black" /> : <Lock size={22} color="#aaa" />}
+                    </button>
                 </div>
             </header>
 
