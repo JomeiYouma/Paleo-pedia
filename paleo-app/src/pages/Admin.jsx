@@ -530,7 +530,7 @@ const Admin = () => {
                     style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
                 >
                     <option value="">Toutes Catégories</option>
-                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                    {categories.map(c => <option key={c.id || c} value={c.name || c}>{c.name || c}</option>)}
                 </select>
 
                 <select

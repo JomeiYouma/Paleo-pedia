@@ -51,8 +51,9 @@ const Library = () => {
     const allCategories = useMemo(() => {
         const set = new Set();
         const isEn = i18n.language === 'en';
-        if (Array.isArray(cartels)) {
-            cartels.forEach(c => {
+        const sourceData = [...(cartels || []), ...(drafts || [])];
+        if (Array.isArray(sourceData)) {
+            sourceData.forEach(c => {
                 if (!c) return;
                 const cats = isEn ? (c.categories_en || []) : (c.categories || []);
                 if (Array.isArray(cats)) {
@@ -92,8 +93,8 @@ const Library = () => {
                 }
             }
         } else {
-            // NORMAL MODE: Show visible ones (unless admin, but strictly following 'Public' view for Library)
-            data = cartels.filter(c => c && c.visible !== false);
+            // NORMAL MODE: Show all cartels, proposals, and drafts
+            data = [...(cartels || []), ...(drafts || [])];
         }
 
         const isEn = i18n.language === 'en';
@@ -142,7 +143,8 @@ const Library = () => {
         setGeneratingZip(true);
         setProgress({ current: 0, total: selectedIds.size });
         try {
-            const selectedItems = cartels.filter(c => selectedIds.has(c.id));
+            const allItems = [...(cartels || []), ...(drafts || [])];
+            const selectedItems = allItems.filter(c => selectedIds.has(c.id));
             await generateZip(selectedItems, t('lang', { defaultValue: i18n.language || 'fr' }) === 'en' ? 'en' : i18n.language || 'fr', (current, total) => {
                 setProgress({ current, total });
             });
@@ -180,7 +182,8 @@ const Library = () => {
         // The user asked "modifier la visibilité", like in Workshops.
         // In Workshop it's likely a toggle. I will implement a toggle: if ALL are visible => hide. Else => show.
 
-        const selectedItems = cartels.filter(c => selectedIds.has(c.id));
+        const allItems = [...(cartels || []), ...(drafts || [])];
+        const selectedItems = allItems.filter(c => selectedIds.has(c.id));
         const allVisible = selectedItems.every(c => c.visible !== false);
         const newStatus = !allVisible;
 

@@ -50,6 +50,8 @@ const Create = () => {
         url_qr: '',
         location: '',
         location_en: '',
+        lat: null,
+        lng: null,
         coords: null,
         imageUrl: '',
         image_path: ''
@@ -74,7 +76,8 @@ const Create = () => {
                     categories: existing.categories || [],
                     categories_en: existing.categories_en || []
                 }));
-                if (existing.coords) setGeoStatus('success');
+                if (existing.lat != null && existing.lng != null) setGeoStatus('success');
+                else if (existing.coords) setGeoStatus('success');
             }
         }
     }, [editId, isDraft, cartels, drafts]);
@@ -99,11 +102,11 @@ const Create = () => {
         setGeoStatus('loading');
         const result = await geocodingService.search(loc);
         if (result) {
-            setForm(prev => ({ ...prev, coords: { lat: result.lat, lng: result.lng } }));
+            setForm(prev => ({ ...prev, coords: { lat: result.lat, lng: result.lng }, lat: result.lat, lng: result.lng }));
             setGeoStatus('success');
         } else {
             setGeoStatus('error');
-            setForm(prev => ({ ...prev, coords: null }));
+            setForm(prev => ({ ...prev, coords: null, lat: null, lng: null }));
         }
     };
 
@@ -373,7 +376,7 @@ const Create = () => {
                             <MapPin size={20} />
                         </button>
                     </div>
-                    {geoStatus === 'success' && form.coords && <small style={{ color: 'green' }}>{t('create.located')} : {form.coords.lat.toFixed(4)}, {form.coords.lng.toFixed(4)}</small>}
+                    {geoStatus === 'success' && (form.lat != null || form.coords) && <small style={{ color: 'green' }}>{t('create.located')} : {(form.lat ?? form.coords?.lat).toFixed(4)}, {(form.lng ?? form.coords?.lng).toFixed(4)}</small>}
                     {geoStatus === 'error' && <small style={{ color: 'red' }}>{t('create.notFound')}</small>}
                 </div>
 

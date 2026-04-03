@@ -157,8 +157,8 @@ const MapMode = ({ cartels, onGoToTimeline, isAdmin }) => {
     const clusters = React.useMemo(() => {
         const groups = {};
         cartels.forEach(c => {
-            if (c.coords && c.coords.lat && c.coords.lng) {
-                const key = `${c.coords.lat},${c.coords.lng}`;
+            if (c.lat != null && c.lng != null) {
+                const key = `${c.lat},${c.lng}`;
                 if (!groups[key]) groups[key] = [];
                 groups[key].push(c);
             }
@@ -167,7 +167,7 @@ const MapMode = ({ cartels, onGoToTimeline, isAdmin }) => {
     }, [cartels]);
 
     const items = Object.values(clusters); // Array of arrays of cartels
-    const unlocatedCartels = cartels.filter(c => !c.coords || !c.coords.lat || !c.coords.lng);
+    const unlocatedCartels = cartels.filter(c => c.lat == null || c.lng == null);
 
     const defaultPosition = [46.603354, 1.888334]; // Center of France
 
@@ -198,7 +198,7 @@ const MapMode = ({ cartels, onGoToTimeline, isAdmin }) => {
                     />
 
                     {items.map((group, idx) => {
-                        const position = [group[0].coords.lat, group[0].coords.lng];
+                        const position = [group[0].lat, group[0].lng];
                         return (
                             <Marker key={idx} position={position} icon={getMarkerIcon(group.length)}>
                                 <Tooltip direction="top" offset={[0, -20]} opacity={1}>
