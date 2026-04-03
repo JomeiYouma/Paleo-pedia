@@ -1,7 +1,14 @@
 import { verifyToken } from '../lib/jwt.js';
-import { query } from '../lib/db.js';
 
-/** Vérifie le JWT et injecte req.user */
+/**
+ * Vérifie le JWT et injecte req.user directement depuis le payload.
+ * Les permissions (can_create_cartel, etc.) sont lues dans le token,
+ * ce qui évite un appel BDD à chaque requête authentifiée.
+ *
+ * Contrepartie assumée : si les droits d'un utilisateur sont modifiés
+ * via PATCH /users/:id, les changements ne prendront effet qu'à sa
+ * prochaine connexion (durée de vie du token : JWT_EXPIRES_IN).
+ */
 export async function authenticate(req, res, next) {
   const auth = req.headers.authorization;
   if (!auth?.startsWith('Bearer ')) {
@@ -9,12 +16,14 @@ export async function authenticate(req, res, next) {
   }
   try {
     const decoded = verifyToken(auth.slice(7));
-    const { rows } = await query(
-      'select id, email, role, can_create_cartel, can_publish_cartel, can_manage_admin from users where id = $1',
-      [decoded.id]
-    );
-    if (!rows[0]) return res.status(401).json({ error: 'Utilisateur introuvable' });
-    req.user = rows[0];
+    // Le payload contient déjà id, role, et les 3 permissions
+    req.user = {
+      id:                 decoded.id,
+      role:               decoded.role,
+      can_create_cartel:  !!decoded.can_create_cartel,
+      can_publish_cartel: !!decoded.can_publish_cartel,
+      can_manage_admin:   !!decoded.can_manage_admin,
+    };
     next();
   } catch {
     return res.status(401).json({ error: 'Token invalide ou expiré' });
