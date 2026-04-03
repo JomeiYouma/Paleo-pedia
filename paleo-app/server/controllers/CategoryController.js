@@ -4,7 +4,8 @@ export const CategoryController = {
 
   async getAll(req, res) {
     try {
-      res.json(await CategoryModel.findAll());
+      const usedOnly = req.query.used === 'true';
+      res.json(await CategoryModel.findAll({ usedOnly }));
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

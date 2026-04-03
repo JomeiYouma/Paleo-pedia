@@ -6,150 +6,150 @@ const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
     const [cartels, setCartels] = useState([]);
-    const [drafts, setDrafts] = useState([]);
-    const [workshops, setWorkshops] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [config, setConfig] = useState({ token: '', owner: '', repo: '', openaiKey: '' });
-    const [isConfigured, setIsConfigured] = useState(true);
-    const [isLocalMode, setIsLocalMode] = useState(true);
-    const [isAdmin, setIsAdmin] = useState(false);
-
-    const DEFAULT_CATEGORIES = [];
-    const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+    const [categories, setCategories] = useState([]);
+    const [workshops, setWorkshops] = useState([]);
+    const [user, setUser] = useState(null); // { id, email, role, can_manage_admin, ... }
+    const isAdmin = !!user?.can_manage_admin;
 
     const [currentWorkshopId, setCurrentWorkshopId] = useState(null);
-    const currentWorkshop = (currentWorkshopId && Array.isArray(workshops)) ? workshops.find(w => String(w.id) === String(currentWorkshopId)) : null;
+    const currentWorkshop = (currentWorkshopId && Array.isArray(workshops))
+        ? workshops.find(w => String(w.id) === String(currentWorkshopId))
+        : null;
 
     const location = useLocation();
     const navigate = useNavigate();
 
+    // Initialisation : restaurer session + charger données
     useEffect(() => {
-        const checkAuth = async () => {
+        const init = async () => {
+            // Tenter de restaurer la session depuis le token stocké
             try {
-                const user = await api.auth.me();
-                if (user) setIsAdmin(true);
-            } catch (e) {
-                setIsAdmin(false);
+                const me = await api.auth.me();
+                if (me) setUser(me);
+            } catch {
+                setUser(null);
             }
+            fetchData();
         };
-        checkAuth();
-        fetchData();
+        init();
     }, []);
 
+    // Détecter le workshop depuis l'URL
     useEffect(() => {
-        const matchApp = matchPath({ path: "/app/workshop/:id" }, location.pathname);
-        const matchRoot = matchPath({ path: "/workshop/:id" }, location.pathname);
-        const match = matchApp || matchRoot;
-
-        if (match && match.params.id) {
+        const matchApp = matchPath({ path: '/app/workshop/:id' }, location.pathname);
+        const match = matchApp;
+        if (match?.params.id) {
             setCurrentWorkshopId(match.params.id);
-            sessionStorage.setItem('paleo_workshop_id', match.params.id);
+        } else if (!location.pathname.includes('workshop')) {
+            setCurrentWorkshopId(null);
         }
     }, [location]);
 
-    const setWorkshopContext = (id) => setCurrentWorkshopId(id);
-
-    const login = async (password) => {
-        try {
-            // Note: the backend uses email/password. We assume password was used as a token in the old UI.
-            // If the UI only provides password, we might need a dummy email or the user will have to adapt it.
-            // For now, mapping admin / password:
-            await api.auth.login('admin@paleo.local', password); // Placeholder adapter
-            setIsAdmin(true);
-            return true;
-        } catch (e) {
-            console.error("Login failed", e);
-            return false;
-        }
+    // ── Auth ─────────────────────────────────────────────────
+    const login = async (email, password) => {
+        const data = await api.auth.login(email, password);
+        setUser(data.user);
+        return true;
     };
 
     const logout = () => {
         api.auth.logout();
-        setIsAdmin(false);
+        setUser(null);
     };
 
-    const addLocalCategory = async (newCat) => {
-        try {
-            await api.categories.create({ name: newCat });
-            await fetchData();
-        } catch (e) {
-            console.error("Error creating category", e);
-        }
-    };
-
-    const saveConfig = async (newConfig) => {
-        setConfig(newConfig);
-    };
-
+    // ── Data fetching ─────────────────────────────────────────
     const fetchData = async () => {
         setLoading(true);
         try {
+            // L'API renverra tout si on est admin (token présent),
+            // ou seulement les publiés si on est visiteur
             const allCartels = await api.cartels.getAll();
-            setCartels(allCartels.filter(c => c.status === 'published' || c.visible));
-            setDrafts(allCartels.filter(c => c.status !== 'published' && c.status !== null));
-            
-            try {
-                const cats = await api.categories.getAll();
-                setCategories(cats);
-            } catch (catErr) {
-                console.warn("Could not fetch categories", catErr);
-            }
-            
-            // Mocking workshops since they are not in the Node API yet
-            setWorkshops([]);
+            setCartels(Array.isArray(allCartels) ? allCartels : []);
 
+            const cats = await api.categories.getAll();
+            setCategories(Array.isArray(cats) ? cats : []);
+
+            const ws = await api.workshops.getAll();
+            setWorkshops(Array.isArray(ws) ? ws : []);
         } catch (err) {
-            console.error("Failed to fetch data", err);
+            console.error('fetchData error:', err.message);
         } finally {
             setLoading(false);
         }
     };
 
-    const addCartel = async (entry, isDraft = false) => {
+    // ── Cartels CRUD ─────────────────────────────────────────
+
+    /**
+     * Construire les données à envoyer à l'API :
+     * - Mappe category_ids depuis les catégories sélectionnées par nom
+     * - Nettoie les champs éphémères
+     */
+    const buildApiPayload = (entry) => {
+        const payload = { ...entry };
+        delete payload.imageUrl;       // champ éphémère React
+        delete payload.category_objects; // objets complets non nécessaires
+        delete payload.created_by_email;
+
+        // Construire category_ids depuis les noms si pas encore fait
+        if (!payload.category_ids && payload.categories?.length) {
+            payload.category_ids = categories
+                .filter(c => payload.categories.includes(c.name))
+                .map(c => c.id);
+        }
+        return payload;
+    };
+
+    const addCartel = async (entry) => {
         setLoading(true);
         try {
-            await api.cartels.create({
-                ...entry,
-                status: isDraft ? 'draft' : 'published',
-                visible: !isDraft
-            });
+            const created = await api.cartels.create(buildApiPayload(entry));
+            await fetchData();
+            return created;
+        } catch (e) {
+            console.error(e);
+            alert('Erreur sauvegarde : ' + e.message);
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const updateCartel = async (entry) => {
+        setLoading(true);
+        try {
+            const updated = await api.cartels.update(entry.id, buildApiPayload(entry));
+            await fetchData();
+            return updated;
+        } catch (e) {
+            console.error(e);
+            alert('Erreur mise à jour : ' + e.message);
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const deleteCartel = async (id) => {
+        setLoading(true);
+        try {
+            await api.cartels.delete(id);
             await fetchData();
             return true;
         } catch (e) {
             console.error(e);
-            alert("Erreur sauvegarde: " + e.message);
             return false;
         } finally {
             setLoading(false);
         }
     };
 
-    const updateCartel = async (entry, isDraft = false) => {
+    const deleteCartels = async (ids) => {
+        if (!Array.isArray(ids) || !ids.length) return;
         setLoading(true);
         try {
-            await api.cartels.update(entry.id, entry);
-            await fetchData();
-            return true;
-        } catch (e) {
-            console.error(e);
-            alert("Erreur m-a-j: " + e.message);
-            return false;
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const deleteCartel = async (id, isDraft = false) => {
-        return deleteCartels([id], isDraft);
-    };
-
-    const deleteCartels = async (ids, isDraft = false) => {
-        if (!Array.isArray(ids) || ids.length === 0) return;
-        setLoading(true);
-        try {
-            for (const id of ids) {
-                await api.cartels.delete(id);
-            }
+            for (const id of ids) await api.cartels.delete(id);
             await fetchData();
             return true;
         } catch (e) {
@@ -160,26 +160,72 @@ export const AppProvider = ({ children }) => {
         }
     };
 
-    const uploadImage = async (file, path) => {
-        // Not implemented in Node API yet, mock return
-        return "images/" + file.name;
+    // ── Image upload (via public/ servi par Vite) ─────────────
+    // L'image est copiée par l'admin dans public/images/ manuellement
+    // ou via un futur upload endpoint. Pour l'instant on retourne simplement le chemin.
+    const uploadImage = async (file) => {
+        return 'images/' + file.name;
     };
 
-    const addWorkshop = async () => null;
-    const deleteWorkshop = async () => false;
+    // ── Catégories ────────────────────────────────────────────
+    const addLocalCategory = async (name) => {
+        try {
+            const slug = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+            await api.categories.create({ id: slug, name, description: '' });
+            await fetchData();
+        } catch (e) {
+            console.error('Error creating category', e);
+        }
+    };
+
+    // ── Workshops ─────────────────────────────────────────────
+    const addWorkshop = async (name, cartelIds = [], options = {}) => {
+        try {
+            const ws = await api.workshops.create({ name, cartelIds, is_immersive: !!options.immersive });
+            await fetchData();
+            return ws.id;
+        } catch (e) {
+            console.error(e);
+            alert('Erreur création atelier : ' + e.message);
+            return null;
+        }
+    };
+
+    const deleteWorkshop = async (id) => {
+        try {
+            await api.workshops.delete(id);
+            await fetchData();
+            return true;
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
+    };
+
+    const setWorkshopContext = (id) => setCurrentWorkshopId(id);
 
     const quitWorkshop = () => {
         setCurrentWorkshopId(null);
-        sessionStorage.removeItem('paleo_workshop_id');
-        navigate('/');
+        navigate('/app');
     };
 
     return (
         <AppContext.Provider value={{
-            cartels, drafts, workshops, loading, isConfigured, isLocalMode, config, categories, isAdmin,
+            // Data
+            cartels, loading, categories, workshops, user,
+            // Computed
+            isAdmin,
             currentWorkshopId, currentWorkshop, setWorkshopContext,
-            saveConfig, fetchData, addCartel, updateCartel, deleteCartel, deleteCartels, uploadImage, addLocalCategory,
-            login, logout, addWorkshop, deleteWorkshop, quitWorkshop
+            // Auth
+            login, logout,
+            // Cartels CRUD
+            fetchData, addCartel, updateCartel, deleteCartel, deleteCartels, uploadImage,
+            // Categories
+            addLocalCategory,
+            // Workshops
+            addWorkshop, deleteWorkshop, quitWorkshop,
+            // Legacy compatibility (certains composants utilisent encore drafts)
+            drafts: cartels.filter(c => c.status === 'draft' || c.status === 'pending_review'),
         }}>
             {children}
         </AppContext.Provider>

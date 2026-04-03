@@ -2,7 +2,20 @@ import { query } from '../lib/db.js';
 
 export const CategoryModel = {
 
-  async findAll() {
+  async findAll({ usedOnly = false } = {}) {
+    if (usedOnly) {
+      const { rows } = await query(`
+        SELECT cat.*, COUNT(DISTINCT cc.cartel_id) AS cartel_count
+        FROM categories cat
+        INNER JOIN cartel_categories cc ON cc.category_id = cat.id
+        INNER JOIN cartels c ON c.id = cc.cartel_id
+          AND c.status = 'published' AND c.visible = 1
+        GROUP BY cat.id
+        HAVING cartel_count > 0
+        ORDER BY cat.name
+      `);
+      return rows;
+    }
     const { rows } = await query('SELECT * FROM categories ORDER BY name');
     return rows;
   },

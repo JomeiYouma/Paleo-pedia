@@ -83,7 +83,7 @@ export const CartelModel = {
     return parseCartel(rows[0]);
   },
 
-  async create(data, userId) {
+  async create(data, userId, submitterIp = null) {
     const client = await getClient();
     try {
       await client.query('START TRANSACTION');
@@ -93,10 +93,10 @@ export const CartelModel = {
         `INSERT INTO cartels (
            id, created_by, titre, titre_en, annee, description, description_en,
            exhume_par, location, location_en, lat, lng,
-           image_path, url_qr, date, status, visible
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           image_path, url_qr, date, status, visible, submitter_ip
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          id, userId,
+          id, userId ?? null,
           data.titre,            data.titre_en      ?? '',
           data.annee             ?? '',
           data.description       ?? '',
@@ -111,6 +111,7 @@ export const CartelModel = {
           data.date              ?? null,
           data.status            ?? 'draft',
           data.visible           ? 1 : 0,
+          submitterIp,
         ]
       );
 

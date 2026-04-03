@@ -257,7 +257,7 @@ const LandingPage = () => {
                                             background: cat.color || PINK,
                                             flexShrink: 0,
                                         }} />
-                                        <span>Paléo {cat.name}</span>
+                                        <span>{cat.name}</span>
                                     </div>
                                     <ChevronRight size={18} color="#ccc" />
                                 </button>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { translationService } from '../services/translation';
 import { geocodingService } from '../services/geocoding';
 import { Save, ArrowLeft, MapPin, Check, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -12,30 +11,21 @@ const Create = () => {
     const context = useApp() || {};
     const {
         cartels = [],
-        drafts = [],
         addCartel,
         updateCartel,
         deleteCartel,
         uploadImage,
         categories: globalCats = [],
         addLocalCategory,
-        config = {},
         isAdmin,
         currentWorkshop,
-        workshops = [] // Extract workshops list
     } = context;
 
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const editId = searchParams.get('edit');
-    const mode = searchParams.get('mode');
-    const source = searchParams.get('source');
     const workshopIdParam = searchParams.get('workshopId');
 
-    // Determine context workshop (Global Route vs Admin Param)
-    const activeWorkshopCtx = currentWorkshop || (workshopIdParam ? workshops.find(w => String(w.id) === String(workshopIdParam)) : null);
-
-    const isDraft = mode === 'draft';
     const isEn = i18n.language === 'en';
 
     const [form, setForm] = useState({
@@ -52,8 +42,6 @@ const Create = () => {
         location_en: '',
         lat: null,
         lng: null,
-        coords: null,
-        imageUrl: '',
         image_path: ''
     });
 
@@ -66,21 +54,19 @@ const Create = () => {
     // Load existing data
     useEffect(() => {
         if (editId) {
-            const collection = isDraft ? (drafts || []) : (cartels || []);
-            const existing = collection.find(c => c.id === editId);
+            const existing = cartels.find(c => c.id === editId);
             if (existing) {
                 setForm(prev => ({
                     ...prev,
                     ...existing,
-                    imageUrl: existing.image_path || existing.imageUrl || '',
+                    imageUrl: existing.image_path || '',
                     categories: existing.categories || [],
                     categories_en: existing.categories_en || []
                 }));
                 if (existing.lat != null && existing.lng != null) setGeoStatus('success');
-                else if (existing.coords) setGeoStatus('success');
             }
         }
-    }, [editId, isDraft, cartels, drafts]);
+    }, [editId, cartels]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -146,68 +132,17 @@ const Create = () => {
     };
 
     const handleBack = () => {
-        if (source === 'proposals') {
-            navigate('/app/proposals');
-        } else {
-            navigate(isDraft ? '/app/drafts' : '/app');
-        }
+        navigate('/app');
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSaving(true);
         setStatusMsg("Traitement en cours...");
-
-        // Wait for UI render
         await new Promise(r => setTimeout(r, 100));
 
         let data = { ...form };
         const action = e.nativeEvent.submitter.name;
-        // Logic: Translation only if Admin and NOT just saving a draft WIP
-        const isDraftSave = action === 'save_draft' || (isAdmin && isDraft && action === 'save');
-
-        // AUTO TRANSLATION
-        if (config && config.openaiKey && !isDraftSave && isAdmin) {
-            try {
-                setStatusMsg(t('create.translating', "Traduction auto..."));
-                if (isEn) {
-                    if (!data.titre || !data.description) {
-                        const res = await translationService.translateCartel({
-                            titre_en: data.titre_en,
-                            description_en: data.description_en,
-                            location_en: data.location_en,
-                            categories: []
-                        }, config.openaiKey, 'fr');
-                        if (!data.titre) data.titre = res.title;
-                        if (!data.description) data.description = res.description;
-                        if (!data.location) data.location = res.location;
-                    }
-                    if (data.categories?.length > 0) {
-                        const res = await translationService.translateCartel({ categories: data.categories }, config.openaiKey, 'en');
-                        data.categories_en = res.categories;
-                    }
-                } else {
-                    if (!data.titre_en || !data.description_en) {
-                        const res = await translationService.translateCartel({
-                            titre: data.titre,
-                            description: data.description,
-                            location: data.location,
-                            categories: []
-                        }, config.openaiKey, 'en');
-                        if (!data.titre_en) data.titre_en = res.title;
-                        if (!data.description_en) data.description_en = res.description;
-                        if (!data.location_en) data.location_en = res.location;
-                    }
-                    if (data.categories?.length > 0) {
-                        const res = await translationService.translateCartel({ categories: data.categories }, config.openaiKey, 'en');
-                        data.categories_en = res.categories;
-                    }
-                }
-            } catch (err) {
-                console.error("Translation fail", err);
-                // Continue anyway
-            }
-        }
 
         // IMAGE UPLOAD
         setStatusMsg(t('create.uploading', "Sauvegarde..."));
@@ -222,6 +157,9 @@ const Create = () => {
             }
         }
 
+        // Atelier
+        const activeWorkshopCtx = currentWorkshop || null;
+
         const entry = {
             id: editId || String(Date.now()),
             ...data,
@@ -230,92 +168,48 @@ const Create = () => {
             date: data.date || new Date().toISOString().split('T')[0],
             created_at: data.created_at || new Date().toISOString()
         };
-        delete entry.imageUrl; // cleanup ephemeral
+        delete entry.imageUrl;
+        delete entry.coords;
 
-        // WORKSHOP LOGIC
         if (activeWorkshopCtx) {
             entry.origin = activeWorkshopCtx.name;
-            entry.workshopId = activeWorkshopCtx.id; // Link specifically to ID
-            entry.visible = false;
+            entry.workshopId = activeWorkshopCtx.id;
         }
 
         if (editId) {
-            // ADMIN PUBLISHING DRAFT
-            if (isAdmin && isDraft && action === 'publish') {
-                // Ensure translation if manual publish
-                if (config && config.openaiKey) {
-                    try {
-                        if (!entry.titre_en && entry.titre) {
-                            const res = await translationService.translateCartel({ titre: entry.titre, description: entry.description, location: entry.location, categories: entry.categories }, config.openaiKey, 'en');
-                            entry.titre_en = res.title; entry.description_en = res.description; entry.location_en = res.location;
-                            if (!entry.categories_en) entry.categories_en = res.categories;
-                        } else if (!entry.titre && entry.titre_en) {
-                            const res = await translationService.translateCartel({ titre_en: entry.titre_en, description_en: entry.description_en, location_en: entry.location_en, categories: entry.categories }, config.openaiKey, 'fr');
-                            entry.titre = res.title; entry.description = res.description; entry.location = res.location;
-                            if (!entry.categories) entry.categories = res.categories;
-                        }
-                    } catch (e) { console.error("Publish Translation Error", e); }
-                }
-
-                // Cleanup suffixes
-                if (entry.titre) entry.titre = entry.titre.replace(/\s*\(Proposition\)$/i, '');
-                if (entry.titre_en) entry.titre_en = entry.titre_en.replace(/\s*\(Proposal\)$/i, '');
-
-                // New ID for published cartel
-                const newId = String(Date.now());
-                const finalEntry = { ...entry, id: newId };
-
-                await deleteCartel(String(editId), true); // Delete draft
-                await addCartel(finalEntry, false); // Add to Cartels
+            // Mise à jour d'un cartel existant
+            if (isAdmin && action === 'publish') {
+                entry.status = 'published';
+                entry.visible = true;
+            } else if (isAdmin) {
+                // Admin garde le statut actuel ou force draft
+                entry.status = entry.status || 'draft';
             } else {
-                // UPDATE EXISTING
-                if (!isAdmin) {
-                    if (action === 'save_draft') {
-                        entry.status = 'public_draft';
-                        await updateCartel(entry, true);
-                        alert("Brouillon sauvegardé !");
-                    } else {
-                        // Propose
-                        entry.status = 'pending_review';
-                        if (entry.titre && !entry.titre.includes('(Proposition)')) entry.titre += ' (Proposition)';
-                        await updateCartel(entry, true);
-                        alert("Proposition mise à jour !");
-                    }
-                } else {
-                    // Admin Update
-                    if (isDraft) entry.status = 'draft_wip';
-                    await updateCartel(entry, isDraft);
-                }
+                // Visiteur : propose ou sauvegarde
+                entry.status = action === 'save_draft' ? 'draft' : 'pending_review';
             }
+            await updateCartel(entry);
         } else {
-            // NEW ENTRY
-            if (!isAdmin) {
-                if (action === 'save_draft') {
-                    entry.status = 'public_draft';
-                } else {
-                    entry.status = 'pending_review';
-                    entry.created_at = new Date().toISOString();
-                    entry.titre = (entry.titre || 'Sans titre') + ' (Proposition)';
-                }
-                await addCartel(entry, true); // Always to drafts
-                if (action !== 'save_draft') alert(t('messages.proposalSaved', "Proposition envoyée !"));
+            // Nouveau cartel
+            if (isAdmin) {
+                entry.status = action === 'publish' ? 'published' : 'draft';
+                entry.visible = action === 'publish';
             } else {
-                if (isDraft) entry.status = 'draft_wip';
-                await addCartel(entry, isDraft);
+                entry.status = action === 'save_draft' ? 'draft' : 'pending_review';
+                entry.visible = false;
+                if (action !== 'save_draft') {
+                    setStatusMsg(t('messages.proposalSaved', "Proposition envoyée !"));
+                }
             }
+            await addCartel(entry);
         }
 
         setIsSaving(false);
-        // Correct Navigation
-        if (source === 'proposals') {
-            navigate('/app/proposals');
-        } else {
-            navigate(isDraft ? '/app/drafts' : '/app');
-        }
+        navigate('/app');
     };
 
     return (
-        <div className="container" style={{ paddingBottom: '100px' }}>
+        <div className="container" style={{ paddingBottom: '100px', maxWidth: '720px', margin: '0 auto' }}>
             {isSaving && (
                 <div className="loading-overlay">
                     <div className="spinner"></div>
@@ -329,7 +223,7 @@ const Create = () => {
                 </button>
             </div>
 
-            <h2>{editId ? (isDraft ? t('messages.editDraft') : t('messages.editCartel')) : (isDraft ? t('messages.newDraft') : t('create.pageTitle'))}</h2>
+            <h2>{editId ? t('messages.editCartel', 'Modifier le cartel') : t('create.pageTitle', 'Nouveau cartel')}</h2>
 
             <form onSubmit={handleSubmit} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
 
@@ -376,7 +270,7 @@ const Create = () => {
                             <MapPin size={20} />
                         </button>
                     </div>
-                    {geoStatus === 'success' && (form.lat != null || form.coords) && <small style={{ color: 'green' }}>{t('create.located')} : {(form.lat ?? form.coords?.lat).toFixed(4)}, {(form.lng ?? form.coords?.lng).toFixed(4)}</small>}
+                    {geoStatus === 'success' && form.lat != null && <small style={{ color: 'green' }}>{t('create.located')} : {form.lat.toFixed(4)}, {form.lng.toFixed(4)}</small>}
                     {geoStatus === 'error' && <small style={{ color: 'red' }}>{t('create.notFound')}</small>}
                 </div>
 
@@ -454,24 +348,20 @@ const Create = () => {
                 <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
                     {isAdmin && (
                         <>
-                            {isDraft && editId && (
-                                <button type="submit" name="publish" disabled={isSaving} style={{ flex: 1, backgroundColor: 'green', color: 'white', padding: '15px', border: 'none', display: 'flex', justifyContent: 'center', gap: '10px', opacity: isSaving ? 0.7 : 1 }}>
-                                    <Save /> Valider & Publier
-                                </button>
-                            )}
-                            <button type="submit" name="save" disabled={isSaving} style={{ flex: 1, backgroundColor: 'black', color: 'white', padding: '15px', border: 'none', display: 'flex', justifyContent: 'center', gap: '10px', opacity: isSaving ? 0.7 : 1 }}>
-                                <Save /> {isSaving ? statusMsg : (isDraft ? t('messages.saveDraft') : t('create.btnSave'))}
+                            <button type="submit" name="save" disabled={isSaving} style={{ flex: 1, backgroundColor: '#555', color: 'white', padding: '15px', border: 'none', borderRadius: '8px', display: 'flex', justifyContent: 'center', gap: '10px', opacity: isSaving ? 0.7 : 1, cursor: 'pointer' }}>
+                                <Save /> {isSaving ? statusMsg : 'Sauvegarder brouillon'}
+                            </button>
+                            <button type="submit" name="publish" disabled={isSaving} style={{ flex: 1, backgroundColor: 'black', color: 'white', padding: '15px', border: 'none', borderRadius: '8px', display: 'flex', justifyContent: 'center', gap: '10px', opacity: isSaving ? 0.7 : 1, cursor: 'pointer' }}>
+                                <Save /> {isSaving ? statusMsg : (editId ? t('create.btnSave') : 'Publier')}
                             </button>
                         </>
                     )}
                     {!isAdmin && (
                         <>
-                            {isDraft && (
-                                <button type="submit" name="save_draft" disabled={isSaving} style={{ flex: 1, backgroundColor: 'orange', color: 'white', padding: '15px', border: 'none', display: 'flex', justifyContent: 'center', gap: '10px', opacity: isSaving ? 0.7 : 1 }}>
-                                    <Save /> Sauvegarder Brouillon (Public)
-                                </button>
-                            )}
-                            <button type="submit" name="propose" disabled={isSaving} style={{ flex: 1, backgroundColor: 'green', color: 'white', padding: '15px', border: 'none', display: 'flex', justifyContent: 'center', gap: '10px', opacity: isSaving ? 0.7 : 1 }}>
+                            <button type="submit" name="save_draft" disabled={isSaving} style={{ flex: 1, backgroundColor: '#555', color: 'white', padding: '15px', border: 'none', borderRadius: '8px', display: 'flex', justifyContent: 'center', gap: '10px', opacity: isSaving ? 0.7 : 1, cursor: 'pointer' }}>
+                                <Save /> Sauvegarder brouillon
+                            </button>
+                            <button type="submit" name="propose" disabled={isSaving} style={{ flex: 1, backgroundColor: 'var(--color-pink-darker, #C2185B)', color: 'white', padding: '15px', border: 'none', borderRadius: '8px', display: 'flex', justifyContent: 'center', gap: '10px', opacity: isSaving ? 0.7 : 1, cursor: 'pointer' }}>
                                 <Check /> Envoyer la proposition
                             </button>
                         </>

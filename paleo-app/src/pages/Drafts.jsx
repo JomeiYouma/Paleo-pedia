@@ -1,213 +1,243 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import CartelPreview from '../components/CartelPreview';
-import { Trash2, Rocket, Plus, Edit, Clock } from 'lucide-react';
+import { Trash2, Check, X, Edit, Clock, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { translationService } from '../services/translation'; // Import service
+import api from '../services/apiClient';
+
+/**
+ * Page "En attente" pour l'admin.
+ * Regroupe tous les cartels non-publiés : brouillons (draft) + propositions (pending_review).
+ * Le visiteur n'a pas accès à cette page (redirection gérée via la navigation).
+ */
+
+const STATUS_LABELS = {
+    draft:          { label: '🖊️ Brouillon',      bg: '#f0f4ff', color: '#3b5bdb' },
+    pending_review: { label: '⏳ Proposition',     bg: '#fff4e0', color: '#e67e00' },
+    archived:       { label: '🗄️ Archivé',         bg: '#f8f8f8', color: '#888'   },
+};
 
 const Drafts = () => {
-    const { drafts, addCartel, deleteCartel, updateCartel, isAdmin, config, currentWorkshopId } = useApp(); // Get currentWorkshopId
+    const { cartels, fetchData, isAdmin } = useApp();
     const navigate = useNavigate();
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const [processingId, setProcessingId] = useState(null);
 
-    const handlePublish = async (draft) => {
-        // VISITOR MODE: Propose (Update status only)
-        if (!isAdmin) {
-            if (!confirm(t('messages.proposeConfirm', "Proposer ce cartel à la validation ?"))) return;
+    if (!isAdmin) {
+        return (
+            <div className="container" style={{ textAlign: 'center', padding: '60px 20px', color: '#888' }}>
+                <p>Accès réservé à l'administration.</p>
+            </div>
+        );
+    }
 
-            setProcessingId(draft.id);
-            const updatedDraft = {
-                ...draft,
-                status: 'pending_review',
-                // Optional: Tag title if needed, but status is better
-                titre: draft.titre && !draft.titre.includes('(Proposition)') ? `${draft.titre} (Proposition)` : draft.titre
-            };
+    // Tous les cartels non-publiés (draft + pending_review). L'API nous renvoie tout si admin.
+    const pendingCartels = (cartels || []).filter(c =>
+        c.status === 'draft' || c.status === 'pending_review'
+    );
 
-            const success = await updateCartel(updatedDraft, true); // true = isDraft
+    const drafts = pendingCartels.filter(c => c.status === 'draft');
+    const proposals = pendingCartels.filter(c => c.status === 'pending_review');
+
+    const handlePublish = async (cartel) => {
+        if (!confirm(`Publier "${cartel.titre}" ?`)) return;
+        setProcessingId(cartel.id);
+        try {
+            await api.cartels.publish(cartel.id);
+            await fetchData();
+        } catch (e) {
+            alert('Erreur : ' + e.message);
+        } finally {
             setProcessingId(null);
-
-            if (success) {
-                alert(t('messages.proposalSent', "Proposition envoyée ! Elle sera revue par l'administration."));
-                // Navigate away or refresh list handled by context
-            }
-            return;
         }
-
-        // ADMIN MODE: Publish (Move to Cartels)
-        if (!confirm(t('messages.publishConfirm', { title: draft.titre }))) return;
-
-        setProcessingId(draft.id);
-        const entry = { ...draft };
-
-        // 1. AUTO-TRANSLATION (Same logic as Create.jsx)
-        if (config && config.openaiKey) {
-            try {
-                const needsEn = !entry.titre_en;
-                const needsFr = !entry.titre;
-
-                // Simplified Translation Logic
-                if (needsEn && entry.titre) {
-                    const resultEn = await translationService.translateCartel({
-                        titre: entry.titre,
-                        description: entry.description,
-                        location: entry.location,
-                        categories: entry.categories
-                    }, config.openaiKey, 'en');
-                    entry.titre_en = resultEn.title;
-                    entry.description_en = resultEn.description;
-                    entry.location_en = resultEn.location;
-                    if (!entry.categories_en || entry.categories_en.length === 0) entry.categories_en = resultEn.categories;
-                }
-                else if (needsFr && entry.titre_en) {
-                    const resultFr = await translationService.translateCartel({
-                        titre_en: entry.titre_en,
-                        description_en: entry.description_en,
-                        location_en: entry.location_en,
-                        categories: entry.categories
-                    }, config.openaiKey, 'fr');
-                    entry.titre = resultFr.title;
-                    entry.description = resultFr.description;
-                    entry.location = resultFr.location;
-                    if (!entry.categories || entry.categories.length === 0) entry.categories = resultFr.categories;
-                }
-            } catch (err) {
-                console.error("Publish Translation Failed", err);
-                alert("Attention: Traduction auto échouée. " + err.message);
-            }
-        }
-
-        // 2. CLEANUP & PREPARE
-        // Remove "(Proposition)" suffix if present
-        if (entry.titre) entry.titre = entry.titre.replace(/\s*\(Proposition\)$/i, '');
-        if (entry.titre_en) entry.titre_en = entry.titre_en.replace(/\s*\(Proposal\)$/i, '');
-
-        // New Official Entry
-        const newEntry = {
-            ...entry,
-            id: String(Date.now()),
-            date: new Date().toISOString().split('T')[0],
-            created_at: undefined // Remove draft timestamp
-        };
-        if (newEntry.status) delete newEntry.status;
-
-        // 3. EXECUTE SAFE MOVE
-        // First ADD to cartels. If success, THEN delete from drafts.
-        const addSuccess = await addCartel(newEntry, false);
-
-        if (addSuccess) {
-            await deleteCartel(draft.id, true);
-            alert(t('messages.publishSuccess'));
-        } else {
-            alert("Erreur lors de la publication. Le brouillon n'a pas été supprimé.");
-        }
-
-        setProcessingId(null);
     };
 
-    // FILTER LOGIC
-    // Admin: Sees private drafts (draft_wip) AND public drafts (public_draft). Excludes Proposals.
-    // Visitor: Sees ONLY public drafts (public_draft).
-    // WORKSHOP: Filter by workshopId
-    const myDrafts = drafts.filter(d => {
-        const isProposal = d.status === 'pending_review' || d.titre?.includes('(Proposition)');
-        if (isProposal) return false;
-
-        // Context Filter
-        if (currentWorkshopId) {
-            // In a workshop: Only show drafts linked to this workshop
-            if (String(d.workshopId) !== String(currentWorkshopId)) return false;
-        } else {
-            // Global: Only show drafts NOT linked to a workshop
-            if (d.workshopId) return false;
+    const handleReject = async (cartel) => {
+        if (!confirm(`Refuser et supprimer "${cartel.titre}" ?`)) return;
+        setProcessingId(cartel.id);
+        try {
+            await api.cartels.delete(cartel.id);
+            await fetchData();
+        } catch (e) {
+            alert('Erreur : ' + e.message);
+        } finally {
+            setProcessingId(null);
         }
+    };
 
-        if (isAdmin) return true;
+    const handleRevertDraft = async (cartel) => {
+        if (!confirm(`Remettre "${cartel.titre}" en brouillon ?`)) return;
+        setProcessingId(cartel.id);
+        try {
+            await api.cartels.setStatus(cartel.id, 'draft');
+            await fetchData();
+        } catch (e) {
+            alert('Erreur : ' + e.message);
+        } finally {
+            setProcessingId(null);
+        }
+    };
 
-        return d.status === 'public_draft';
-    });
+    const handleArchive = async (cartel) => {
+        if (!confirm(`Archiver "${cartel.titre}" ?`)) return;
+        setProcessingId(cartel.id);
+        try {
+            await api.cartels.archive(cartel.id);
+            await fetchData();
+        } catch (e) {
+            alert('Erreur : ' + e.message);
+        } finally {
+            setProcessingId(null);
+        }
+    };
 
     return (
         <div className="container" style={{ paddingBottom: '100px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h2>{t('drafts.title')} ({myDrafts.length})</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                <div>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800' }}>En attente de publication</h2>
+                    <p style={{ margin: '4px 0 0', color: '#888', fontSize: '0.9rem' }}>
+                        {drafts.length} brouillon{drafts.length !== 1 ? 's' : ''} · {proposals.length} proposition{proposals.length !== 1 ? 's' : ''}
+                    </p>
+                </div>
                 <button
-                    onClick={() => navigate('/app/create?mode=draft')}
-                    style={{ display: 'flex', alignItems: 'center', gap: '5px', border: '1px solid black', padding: '8px', cursor: 'pointer', backgroundColor: 'var(--color-pink-darker)', color: 'white' }}
+                    onClick={() => navigate('/app/create')}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'black', color: 'white', border: 'none', borderRadius: '8px', padding: '10px 16px', cursor: 'pointer', fontWeight: '600' }}
                 >
-                    <Plus size={16} /> {t('drafts.addIdea')}
+                    <Plus size={16} /> Nouveau cartel
                 </button>
             </div>
 
-            {/* LIST OF ADMIN DRAFTS */}
-            <div>
-                {myDrafts.length === 0 ? (
-                    <p style={{ fontStyle: 'italic', color: '#888', textAlign: 'center' }}>{t('drafts.empty')}</p>
-                ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        {myDrafts.map(draft => (
-                            <DraftItem
-                                key={draft.id}
-                                draft={draft}
-                                isAdmin={isAdmin}
-                                isProcessing={processingId === draft.id}
-                                onPublish={() => handlePublish(draft)}
-                                onDelete={() => deleteCartel(draft.id, true)}
-                                onEdit={() => navigate(`/app/create?edit=${draft.id}&mode=draft`)}
+            {/* ── Propositions des visiteurs ── */}
+            {proposals.length > 0 && (
+                <section style={{ marginBottom: '40px' }}>
+                    <h3 style={{ borderBottom: '2px solid #e67e00', paddingBottom: '8px', color: '#e67e00', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        📥 Propositions de visiteurs <span style={{ fontSize: '0.85rem', fontWeight: '400', color: '#888' }}>— À modérer</span>
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
+                        {proposals.map(cartel => (
+                            <PendingCard
+                                key={cartel.id}
+                                cartel={cartel}
+                                isProcessing={processingId === cartel.id}
+                                onPublish={() => handlePublish(cartel)}
+                                onReject={() => handleReject(cartel)}
+                                onEdit={() => navigate(`/app/create?edit=${cartel.id}`)}
+                                onRevertDraft={() => handleRevertDraft(cartel)}
                                 t={t}
                             />
                         ))}
                     </div>
-                )}
-            </div>
+                </section>
+            )}
+
+            {/* ── Brouillons admin ── */}
+            {drafts.length > 0 && (
+                <section>
+                    <h3 style={{ borderBottom: '2px solid #3b5bdb', paddingBottom: '8px', color: '#3b5bdb', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        🖊️ Brouillons
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
+                        {drafts.map(cartel => (
+                            <PendingCard
+                                key={cartel.id}
+                                cartel={cartel}
+                                isProcessing={processingId === cartel.id}
+                                onPublish={() => handlePublish(cartel)}
+                                onReject={() => handleReject(cartel)}
+                                onEdit={() => navigate(`/app/create?edit=${cartel.id}`)}
+                                onArchive={() => handleArchive(cartel)}
+                                t={t}
+                            />
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {pendingCartels.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '60px 20px', color: '#aaa', background: '#fafafa', borderRadius: '12px' }}>
+                    <p style={{ fontSize: '1.1rem' }}>✅ Aucun cartel en attente</p>
+                    <small>Toutes les soumissions ont été traitées.</small>
+                </div>
+            )}
         </div>
     );
 };
 
-const DraftItem = ({ draft, onPublish, onDelete, onEdit, t, isAdmin, isProposal, isProcessing }) => {
-    // Format timestamp
-    const dateStr = draft.created_at
-        ? new Date(draft.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
-        : (draft.date || "Date inconnue");
+/** Carte d'un cartel en attente */
+const PendingCard = ({ cartel, isProcessing, onPublish, onReject, onEdit, onRevertDraft, onArchive, t }) => {
+    const dateStr = cartel.created_at
+        ? new Date(cartel.created_at).toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : '—';
 
-    const canManage = isAdmin || draft.status === 'public_draft';
+    const badge = STATUS_LABELS[cartel.status];
 
     return (
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', border: isProposal ? '1px solid orange' : '1px solid #eee', padding: '15px', borderRadius: '8px', position: 'relative' }}>
-            {isProposal && <div style={{ position: 'absolute', top: 0, right: 0, background: 'orange', color: 'white', padding: '2px 8px', fontSize: '0.7em', borderBottomLeftRadius: '8px' }}>PROPOSITION</div>}
-
-            <div style={{ flex: 1 }}>
-                {isProposal && (
-                    <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.9em', color: '#666' }}>
-                        <Clock size={14} /> Reçu le : <strong>{dateStr}</strong>
-                    </div>
-                )}
-                <CartelPreview data={draft} isDraft />
+        <div style={{
+            display: 'flex', gap: '16px', alignItems: 'flex-start',
+            border: `1px solid ${cartel.status === 'pending_review' ? '#ffd08a' : '#c5d0ff'}`,
+            borderRadius: '10px', padding: '16px', background: 'white'
+        }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: '10px', fontSize: '0.85rem', color: '#888', gap: '8px' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <Clock size={13} /> Créé le <strong>{dateStr}</strong>
+                    </span>
+                    {cartel.submitter_ip && (
+                        <span>IP : <code style={{ background: '#f5f5f5', padding: '1px 6px', borderRadius: '4px' }}>{cartel.submitter_ip}</code></span>
+                    )}
+                    {badge && (
+                        <span style={{ background: badge.bg, color: badge.color, padding: '2px 10px', borderRadius: '20px', fontWeight: '600', fontSize: '0.78rem' }}>
+                            {badge.label}
+                        </span>
+                    )}
+                </div>
+                <CartelPreview data={cartel} isDraft />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {canManage && (
-                    <button
-                        onClick={onPublish}
-                        disabled={isProcessing}
-                        title={isAdmin ? t('drafts.publish') : "Envoyer Proposition"}
-                        style={{ color: 'green', display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: isProcessing ? 0.5 : 1 }}
-                    >
-                        <Rocket size={20} />
-                        <span style={{ fontSize: '0.7em' }}>{isProcessing ? '...' : (isAdmin ? t('drafts.publish') : "Proposer")}</span>
-                    </button>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
+                <ActionBtn onClick={onPublish} disabled={isProcessing} color="green" title="Publier">
+                    <Check size={16} />
+                </ActionBtn>
+                <ActionBtn onClick={onEdit} color="#555" title="Éditer">
+                    <Edit size={16} />
+                </ActionBtn>
+                {onRevertDraft && (
+                    <ActionBtn onClick={onRevertDraft} disabled={isProcessing} color="#e67e00" title="Repasser en brouillon">
+                        ↩️
+                    </ActionBtn>
                 )}
-                <button onClick={onEdit} title={t('drafts.edit')}>
-                    <Edit size={20} />
-                </button>
-                {canManage && (
-                    <button onClick={() => { if (confirm(t('messages.confirmDelete'))) onDelete(); }} style={{ color: 'red' }} title={t('drafts.delete')}>
-                        <Trash2 size={20} />
-                    </button>
+                {onArchive && (
+                    <ActionBtn onClick={onArchive} disabled={isProcessing} color="#888" title="Archiver">
+                        🗄️
+                    </ActionBtn>
                 )}
+                <ActionBtn onClick={onReject} disabled={isProcessing} color="red" title="Supprimer">
+                    <X size={16} />
+                </ActionBtn>
             </div>
         </div>
     );
 };
+
+const ActionBtn = ({ onClick, disabled, color, title, children }) => (
+    <button
+        onClick={onClick}
+        disabled={disabled}
+        title={title}
+        style={{
+            width: '36px', height: '36px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: `1px solid ${color}`, borderRadius: '8px',
+            color, background: 'white', cursor: disabled ? 'wait' : 'pointer',
+            opacity: disabled ? 0.5 : 1, transition: 'background 0.15s',
+            fontSize: '1rem',
+        }}
+    >
+        {children}
+    </button>
+);
 
 export default Drafts;

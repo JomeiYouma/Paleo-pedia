@@ -5,10 +5,7 @@ import Layout from './components/Layout';
 import Library from './pages/Library';
 import Create from './pages/Create';
 import Drafts from './pages/Drafts';
-
-import Proposals from './pages/Proposals';
 import Admin from './pages/Admin';
-
 import Presentation from './pages/Presentation';
 import Prestations from './pages/Prestations';
 import Ouvrages from './pages/Ouvrages';
@@ -38,7 +35,6 @@ function App() {
             <Route path="workshop/:workshopId" element={<Library />} />
             <Route path="create" element={<Create />} />
             <Route path="drafts" element={<Drafts />} />
-            <Route path="proposals" element={<Proposals />} />
             <Route path="admin" element={<Admin />} />
             <Route path="admin/workshop/:workshopId" element={<Admin />} />
           </Route>

@@ -5,151 +5,128 @@ import TimelineMode from '../components/TimelineMode';
 import MapMode from '../components/MapMode';
 import HeuristicMode from '../components/HeuristicMode';
 import { getYearForSort } from '../utils/helpers';
-import { Download, Trash2, CheckSquare, Square, Edit, LayoutList, CalendarDays, Map as MapIcon, Search, Eye, GitGraph, ArrowLeft, Layers } from 'lucide-react';
+import { Download, Trash2, CheckSquare, Square, Edit, LayoutList, CalendarDays, Map as MapIcon, Search, GitGraph } from 'lucide-react';
 import { generateZip } from '../utils/zipGenerator';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import './Library.css';
 
+/** Badge de statut pour les cartels hors "published" (visible admin only) */
+const StatusBadge = ({ status }) => {
+    const styles = {
+        draft:          { background: '#f0f4ff', color: '#3b5bdb', label: '🖊️ Brouillon'    },
+        pending_review: { background: '#fff4e0', color: '#e67e00', label: '⏳ En attente'   },
+        archived:       { background: '#f8f8f8', color: '#888',    label: '🗄️ Archivé'      },
+    };
+    const s = styles[status];
+    if (!s) return null;
+    return (
+        <span style={{
+            display: 'inline-block', fontSize: '0.72rem', fontWeight: '600',
+            padding: '2px 8px', borderRadius: '20px',
+            background: s.background, color: s.color,
+            marginLeft: '8px', verticalAlign: 'middle',
+        }}>
+            {s.label}
+        </span>
+    );
+};
+
 const Library = () => {
     const { t, i18n } = useTranslation();
-    const { cartels, drafts, loading, deleteCartel, deleteCartels, updateCartel, isAdmin, currentWorkshop } = useApp();
-    const [selectedIds, setSelectedIds] = useState(new Set());
-    const [searchQuery, setSearchQuery] = useState('');
-    const [viewMode, setViewMode] = useState('timeline');
-    const [selectedCats, setSelectedCats] = useState([]);
+    // Source unique : tous les cartels depuis l'API (l'API filtre selon le rôle)
+    const { cartels, loading, deleteCartel, deleteCartels, isAdmin, currentWorkshop } = useApp();
+
+    const [selectedIds, setSelectedIds]     = useState(new Set());
+    const [searchQuery, setSearchQuery]     = useState('');
+    const [viewMode, setViewMode]           = useState('timeline');
+    const [selectedCats, setSelectedCats]   = useState([]);
     const [generatingZip, setGeneratingZip] = useState(false);
-    const [progress, setProgress] = useState({ current: 0, total: 0 });
+    const [progress, setProgress]           = useState({ current: 0, total: 0 });
     const [targetCartelId, setTargetCartelId] = useState(null);
 
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
-    // Pré-filtrer par catégorie si ?category= est présent dans l'URL
-    useEffect(() => {
-        const catParam = searchParams.get('category');
-        if (catParam) {
-            setSelectedCats([decodeURIComponent(catParam)]);
-        }
-    }, [searchParams]);
-
-    // Titre dynamique : "Paléo H2O" si filtrage par 1 catégorie via URL
+    // Pré-filtrer par catégorie si ?category= est dans l'URL
     const urlCategoryFilter = searchParams.get('category');
-    const pageTitle = urlCategoryFilter ? `Paléo ${decodeURIComponent(urlCategoryFilter)}` : null;
+    useEffect(() => {
+        if (urlCategoryFilter) setSelectedCats([decodeURIComponent(urlCategoryFilter)]);
+    }, [urlCategoryFilter]);
 
-    const clearCategoryFilter = () => {
-        setSelectedCats([]);
-        setSearchParams({});
-    };
+    const pageTitle = urlCategoryFilter ? decodeURIComponent(urlCategoryFilter) : null;
+    const clearCategoryFilter = () => { setSelectedCats([]); setSearchParams({}); };
+    const handleGoToTimeline = (id) => { setTargetCartelId(id); setViewMode('timeline'); };
 
-    const handleGoToTimeline = (id) => {
-        setTargetCartelId(id);
-        setViewMode('timeline');
-    };
-
-    // Extract all categories
+    // Toutes les catégories présentes dans les cartels
     const allCategories = useMemo(() => {
         const set = new Set();
         const isEn = i18n.language === 'en';
-        const sourceData = [...(cartels || []), ...(drafts || [])];
-        if (Array.isArray(sourceData)) {
-            sourceData.forEach(c => {
-                if (!c) return;
-                const cats = isEn ? (c.categories_en || []) : (c.categories || []);
-                if (Array.isArray(cats)) {
-                    cats.forEach(cat => set.add(cat));
-                }
-            });
-        }
+        (cartels || []).forEach(c => {
+            const cats = isEn ? (c.categories_en || []) : (c.categories || []);
+            cats.forEach(cat => set.add(cat));
+        });
         return Array.from(set).sort();
     }, [cartels, i18n.language]);
 
-    // Filter and Sort
+    // Construction de la liste filtrée
     const filteredCartels = useMemo(() => {
-        let data = [];
-        if (!Array.isArray(cartels)) return [];
+        let data = Array.isArray(cartels) ? [...cartels] : [];
 
-        // WORKSHOP MODE: Only show cartels belonging to this workshop
+        // Mode Atelier : seulement les cartels liés à cet atelier
         if (currentWorkshop) {
-            const allowedIds = currentWorkshop.cartelIds || [];
-            // Also include cartels that were created in this workshop (origin == workshop.id or name)
-            // Check string/number types carefully.
-            data = cartels.filter(c =>
-                c && (
-                    allowedIds.includes(String(c.id)) ||
-                    allowedIds.includes(Number(c.id))
-                )
-            );
-
-            // MERGE DRAFTS: Show proposals created in this workshop immediately
-            if (Array.isArray(drafts)) {
-                // Determine if a draft belongs here. 
-                // We rely on 'workshopId' matching the workshop ID.
-                const workshopDrafts = drafts.filter(d => String(d.workshopId) === String(currentWorkshop.id));
-                if (workshopDrafts.length > 0) {
-                    // Combine. Drafts usually go at the end or sorted by date?
-                    // We let the sorter handle it.
-                    data = [...data, ...workshopDrafts];
-                }
-            }
-        } else {
-            // NORMAL MODE: Show all cartels, proposals, and drafts
-            data = [...(cartels || []), ...(drafts || [])];
+            const allowedIds = new Set((currentWorkshop.cartelIds || []).map(String));
+            data = data.filter(c => allowedIds.has(String(c.id)));
+        } else if (!isAdmin) {
+            // Visiteur : seulement les publiés
+            data = data.filter(c => c.status === 'published' && c.visible);
         }
+        // Admin : voit tout (avec badges)
 
+        // Filtre catégories
         const isEn = i18n.language === 'en';
         if (selectedCats.length > 0) {
             data = data.filter(c => {
-                if (!c) return false;
                 const cats = isEn ? (c.categories_en || []) : (c.categories || []);
-                return cats && Array.isArray(cats) && cats.some(cat => selectedCats.includes(cat));
+                return cats.some(cat => selectedCats.includes(cat));
             });
         }
-        // TEXT SEARCH
+
+        // Filtre texte
         if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            data = data.filter(c => {
-                const title = (c.titre || '').toLowerCase();
-                const titleEn = (c.titre_en || '').toLowerCase();
-                const desc = (c.description || '').toLowerCase();
-                const descEn = (c.description_en || '').toLowerCase();
-                const loc = (c.location || '').toLowerCase();
-                const year = String(c.annee || '');
-                return title.includes(query) || titleEn.includes(query) || desc.includes(query) || descEn.includes(query) || loc.includes(query) || year.includes(query);
-            });
+            const q = searchQuery.toLowerCase();
+            data = data.filter(c =>
+                (c.titre || '').toLowerCase().includes(q) ||
+                (c.titre_en || '').toLowerCase().includes(q) ||
+                (c.description || '').toLowerCase().includes(q) ||
+                (c.location || '').toLowerCase().includes(q) ||
+                String(c.annee || '').includes(q)
+            );
         }
 
-        return [...data].sort((a, b) => getYearForSort(a) - getYearForSort(b));
-    }, [cartels, selectedCats, i18n.language, currentWorkshop, searchQuery]);
+        return data.sort((a, b) => getYearForSort(a) - getYearForSort(b));
+    }, [cartels, selectedCats, searchQuery, isAdmin, currentWorkshop, i18n.language]);
 
-    // Selection Handlers
+    // Sélection
     const toggleSelection = (id) => {
         const newSet = new Set(selectedIds);
-        if (newSet.has(id)) newSet.delete(id);
-        else newSet.add(id);
+        newSet.has(id) ? newSet.delete(id) : newSet.add(id);
         setSelectedIds(newSet);
     };
-
     const selectAll = () => {
-        if (selectedIds.size === filteredCartels.length) {
-            setSelectedIds(new Set());
-        } else {
-            setSelectedIds(new Set(filteredCartels.map(c => c.id)));
-        }
+        setSelectedIds(selectedIds.size === filteredCartels.length
+            ? new Set()
+            : new Set(filteredCartels.map(c => c.id)));
     };
 
     const handleZip = async () => {
-        if (selectedIds.size === 0) return;
+        if (!selectedIds.size) return;
         setGeneratingZip(true);
         setProgress({ current: 0, total: selectedIds.size });
         try {
-            const allItems = [...(cartels || []), ...(drafts || [])];
-            const selectedItems = allItems.filter(c => selectedIds.has(c.id));
-            await generateZip(selectedItems, t('lang', { defaultValue: i18n.language || 'fr' }) === 'en' ? 'en' : i18n.language || 'fr', (current, total) => {
-                setProgress({ current, total });
-            });
+            const items = cartels.filter(c => selectedIds.has(c.id));
+            await generateZip(items, i18n.language || 'fr', (current, total) => setProgress({ current, total }));
         } catch (e) {
-            console.error(e);
             alert(t('messages.zipError'));
         } finally {
             setGeneratingZip(false);
@@ -158,286 +135,156 @@ const Library = () => {
     };
 
     const handleBulkDelete = async () => {
-        if (selectedIds.size === 0) return;
-        if (!confirm(t('messages.bulkDeleteConfirm'))) return;
-
-        const idsToDelete = Array.from(selectedIds);
-        await deleteCartels(idsToDelete);
-
+        if (!selectedIds.size || !confirm(t('messages.bulkDeleteConfirm'))) return;
+        await deleteCartels(Array.from(selectedIds));
         setSelectedIds(new Set());
     };
 
-    const handleBulkVisibility = async () => {
-        if (selectedIds.size === 0) return;
-        if (!confirm(t('messages.bulkVisibilityConfirm', "Changer la visibilité des éléments sélectionnés ?"))) return;
-
-        // We toggle visibility. If mixed, we set all to visible? Or just inverse?
-        // Let's ask: Force Visible or Force Hidden?
-        // Simpler: Just toggle each one? No, inconsistent.
-        // Better: Dialog "Rendre Visible" vs "Rendre Incorrect"?
-        // Implementation: Toggle based on the first one, or just set to TRUE/FALSE?
-        // Let's use a simple toggle loop for now, or maybe default to 'Visible'.
-        // Let's set them all to VISIBLE (true) if they differ, or toggle if they are all same.
-        // Actually, let's just make them all VISIBLE for now as that's the most common use case for "Publication".
-        // The user asked "modifier la visibilité", like in Workshops.
-        // In Workshop it's likely a toggle. I will implement a toggle: if ALL are visible => hide. Else => show.
-
-        const allItems = [...(cartels || []), ...(drafts || [])];
-        const selectedItems = allItems.filter(c => selectedIds.has(c.id));
-        const allVisible = selectedItems.every(c => c.visible !== false);
-        const newStatus = !allVisible;
-
-        for (const item of selectedItems) {
-            await updateCartel({ ...item, visible: newStatus }, false); // false = not draft mode, direct update
-        }
-        alert(t('messages.bulkVisibilityDone', `Visibilité mise à jour : ${newStatus ? 'Visible' : 'Caché'}`));
-        setSelectedIds(new Set());
-    };
-
-    if (loading && cartels.length === 0) return <div className="container">{t('library.loading')}</div>;
+    if (loading && !cartels.length) return <div className="container">{t('library.loading')}</div>;
 
     return (
         <div style={{ padding: '0 20px' }}>
 
-            {/* ── Titre Thématique ─────────────────────────────────── */}
-            {pageTitle && (
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    padding: '24px 0 8px 0',
-                    borderBottom: '2px solid var(--color-pink-darker, #C2185B)',
-                    marginBottom: '24px',
-                }}>
-                    <button
-                        onClick={clearCategoryFilter}
-                        title="Retour à tous les cartels"
-                        style={{
-                            display: 'flex', alignItems: 'center', gap: '6px',
-                            background: 'none', border: '1px solid #ddd',
-                            borderRadius: '20px', padding: '6px 14px',
-                            cursor: 'pointer', color: '#666', fontSize: '0.85rem',
-                            transition: 'all 0.2s',
-                        }}
-                    >
-                        <ArrowLeft size={14} /> Toutes les thématiques
-                    </button>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Layers size={22} color="var(--color-pink-darker, #C2185B)" />
-                        <h1 style={{
-                            margin: 0,
-                            fontSize: '2rem',
-                            fontWeight: '800',
-                            color: 'var(--color-pink-darker, #C2185B)',
-                            letterSpacing: '-0.5px',
-                        }}>
-                            {pageTitle}
-                        </h1>
-                    </div>
-                </div>
-            )}
-            {/* Progress Overlay */}
+            {/* Progress overlay export ZIP */}
             {generatingZip && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(255,255,255,0.9)',
-                    zIndex: 9999,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--color-black)'
-                }}>
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(255,255,255,0.92)', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                     <h3>{t('library.generating')}</h3>
-                    <div style={{ fontSize: '2rem', fontWeight: 'bold', margin: '20px 0' }}>
-                        {progress.current} / {progress.total}
-                    </div>
-                    <div style={{ width: '300px', height: '10px', backgroundColor: '#eee', borderRadius: '5px', overflow: 'hidden' }}>
-                        <div style={{
-                            width: `${(progress.current / progress.total) * 100}%`,
-                            height: '100%',
-                            backgroundColor: 'var(--color-pink-darker)',
-                            transition: 'width 0.3s ease'
-                        }} />
+                    <div style={{ fontSize: '2rem', fontWeight: 'bold', margin: '20px 0' }}>{progress.current} / {progress.total}</div>
+                    <div style={{ width: '300px', height: '10px', background: '#eee', borderRadius: '5px', overflow: 'hidden' }}>
+                        <div style={{ width: `${(progress.current / progress.total) * 100}%`, height: '100%', background: 'var(--color-pink-darker)', transition: 'width 0.3s' }} />
                     </div>
                 </div>
             )}
 
             <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px', marginBottom: '20px' }}>
-                    {/* Search Bar */}
+                {/* Barre de contrôles */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
+                    {/* Recherche */}
                     <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
                         <input
                             type="text"
-                            placeholder={t('library.searchPlaceholder', "Rechercher (titre, année, lieu...)")}
+                            placeholder={t('library.searchPlaceholder', 'Rechercher (titre, année, lieu...)')}
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            style={{
-                                width: '100%',
-                                padding: '8px 10px 8px 35px',
-                                borderRadius: '20px',
-                                border: '1px solid #ccc',
-                                fontSize: '0.9rem'
-                            }}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            style={{ width: '100%', padding: '8px 40px 8px 36px', borderRadius: '20px', border: '1px solid #ddd', fontSize: '0.9rem', boxSizing: 'border-box' }}
                         />
-                        <Search size={18} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
+                        <Search size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#aaa' }} />
                         {filteredCartels.length > 0 && (
-                            <span style={{
-                                position: 'absolute',
-                                right: '10px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                background: '#eee',
-                                color: '#555',
-                                padding: '2px 8px',
-                                borderRadius: '10px',
-                                fontSize: '0.75rem',
-                                fontWeight: 'bold'
-                            }}>
+                            <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: '#eee', color: '#666', padding: '2px 8px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: '700' }}>
                                 {filteredCartels.length}
                             </span>
                         )}
                     </div>
 
-                    {/* View Toggle */}
+                    {/* Modes de vue */}
                     <div className="view-mode-container">
-                        <button
-                            onClick={() => setViewMode('timeline')}
-                            title={t('library.viewTimeline')}
-                            className={`view-mode-btn ${viewMode === 'timeline' ? 'active' : ''}`}
-                        >
-                            <CalendarDays size={18} />
-                            <span>{t('library.viewTimeline', "Frise")}</span>
+                        <button onClick={() => setViewMode('timeline')} className={`view-mode-btn ${viewMode === 'timeline' ? 'active' : ''}`}>
+                            <CalendarDays size={18} /><span>Frise</span>
                         </button>
-                        <button
-                            onClick={() => setViewMode('map')}
-                            title={t('library.viewMap')}
-                            className={`view-mode-btn ${viewMode === 'map' ? 'active' : ''}`}
-                        >
-                            <MapIcon size={18} />
-                            <span>{t('library.viewMap', "Carte")}</span>
+                        <button onClick={() => setViewMode('map')} className={`view-mode-btn ${viewMode === 'map' ? 'active' : ''}`}>
+                            <MapIcon size={18} /><span>Carte</span>
                         </button>
-                        <button
-                            onClick={() => setViewMode('heuristic')}
-                            title={t('library.viewHeuristic', "Heuristique")}
-                            className={`view-mode-btn ${viewMode === 'heuristic' ? 'active' : ''}`}
-                        >
-                            <GitGraph size={18} />
-                            <span>{t('library.viewHeuristic', "Heuristique")}</span>
+                        <button onClick={() => setViewMode('heuristic')} className={`view-mode-btn ${viewMode === 'heuristic' ? 'active' : ''}`}>
+                            <GitGraph size={18} /><span>Heuristique</span>
                         </button>
                         {isAdmin && (
-                            <button
-                                onClick={() => setViewMode('list')}
-                                title={t('library.viewExport')}
-                                className={`view-mode-btn ${viewMode === 'list' ? 'active' : ''}`}
-                            >
-                                <LayoutList size={18} />
-                                <span>{t('library.viewExport', "Liste / Export")}</span>
+                            <button onClick={() => setViewMode('list')} className={`view-mode-btn ${viewMode === 'list' ? 'active' : ''}`}>
+                                <LayoutList size={18} /><span>Liste</span>
                             </button>
                         )}
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                {/* Filtres catégories */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
                     {allCategories.map(cat => (
                         <button
                             key={cat}
-                            onClick={() => {
-                                if (selectedCats.includes(cat)) setSelectedCats(selectedCats.filter(c => c !== cat));
-                                else setSelectedCats([...selectedCats, cat]);
-                            }}
+                            onClick={() => selectedCats.includes(cat)
+                                ? setSelectedCats(selectedCats.filter(c => c !== cat))
+                                : setSelectedCats([...selectedCats, cat])}
                             style={{
-                                padding: '5px 10px',
-                                borderRadius: '15px',
-                                border: '1px solid #ccc',
-                                backgroundColor: selectedCats.includes(cat) ? 'var(--color-pink-darker)' : 'transparent',
-                                fontSize: '0.8rem'
+                                padding: '4px 12px', borderRadius: '20px', border: '1px solid #ddd',
+                                background: selectedCats.includes(cat) ? 'var(--color-pink-darker)' : 'transparent',
+                                color: selectedCats.includes(cat) ? 'white' : '#555',
+                                fontSize: '0.82rem', cursor: 'pointer', transition: 'all 0.15s'
                             }}
-                        >
-                            {cat}
-                        </button>
+                        >{cat}</button>
                     ))}
                 </div>
 
-                {/* Batch Actions only in List Mode */}
-                {viewMode === 'list' && (
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <button onClick={selectAll} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                {/* Actions batch (mode liste admin) */}
+                {viewMode === 'list' && isAdmin && (
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', paddingTop: '6px' }}>
+                        <button onClick={selectAll} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.88rem', padding: '6px 10px' }}>
                             {selectedIds.size === filteredCartels.length && filteredCartels.length > 0 ? <CheckSquare size={16} /> : <Square size={16} />}
-                            {selectedIds.size === filteredCartels.length ? t('library.deselectAll') : t('library.selectAll')}
+                            {selectedIds.size === filteredCartels.length ? 'Tout désélectionner' : 'Tout sélectionner'}
                         </button>
-
-                        <button onClick={handleZip} disabled={selectedIds.size === 0 || generatingZip} className={selectedIds.size > 0 ? "active-action" : ""}>
-                            <Download size={16} style={{ marginRight: '5px' }} />
-                            {generatingZip ? t('library.generating') : `${t('library.generateZip')} (${selectedIds.size})`}
+                        <button onClick={handleZip} disabled={!selectedIds.size || generatingZip} style={{ fontSize: '0.88rem', padding: '6px 10px' }}>
+                            <Download size={14} style={{ marginRight: 4 }} />
+                            ZIP ({selectedIds.size})
                         </button>
-
-                        {selectedIds.size > 0 && isAdmin && (
-                            <>
-                                <button onClick={handleBulkDelete} style={{ color: 'red', borderColor: 'red' }}>
-                                    <Trash2 size={16} style={{ marginRight: '5px' }} />
-                                    {t('library.deleteList')} ({selectedIds.size})
-                                </button>
-
-                                <button onClick={handleBulkVisibility} style={{ color: 'blue', borderColor: 'blue' }}>
-                                    <Eye size={16} style={{ marginRight: '5px' }} />
-                                    {t('library.toggleVisibility', "Visibilité")}
-                                </button>
-                            </>
+                        {selectedIds.size > 0 && (
+                            <button onClick={handleBulkDelete} style={{ color: 'red', borderColor: 'red', fontSize: '0.88rem', padding: '6px 10px' }}>
+                                <Trash2 size={14} style={{ marginRight: 4 }} />
+                                Supprimer ({selectedIds.size})
+                            </button>
                         )}
                     </div>
                 )}
             </div>
 
-            {/* View Content */}
-            {
-                viewMode === 'list' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        {filteredCartels.map(cartel => (
-                            <div key={cartel.id} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', borderTop: '1px solid #eee', paddingTop: '20px' }}>
-                                <div onClick={() => toggleSelection(cartel.id)} style={{ cursor: 'pointer', marginTop: '10px' }}>
-                                    {selectedIds.has(cartel.id) ? <CheckSquare /> : <Square color="#ccc" />}
+            {/* Contenu */}
+            {viewMode === 'list' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {filteredCartels.map(cartel => (
+                        <div key={cartel.id} style={{
+                            display: 'flex', gap: '10px', alignItems: 'flex-start',
+                            borderTop: '1px solid #eee', paddingTop: '16px',
+                            opacity: cartel.status === 'archived' ? 0.6 : 1
+                        }}>
+                            {isAdmin && (
+                                <div onClick={() => toggleSelection(cartel.id)} style={{ cursor: 'pointer', marginTop: '10px', flexShrink: 0 }}>
+                                    {selectedIds.has(cartel.id) ? <CheckSquare size={18} /> : <Square size={18} color="#ccc" />}
                                 </div>
-                                <div style={{ flex: 1 }}>
-                                    <CartelPreview data={cartel} />
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    {isAdmin && (
-                                        <>
-                                            <button onClick={() => navigate(`/app/create?edit=${cartel.id}`)} title={t('cartel.edit')}>
-                                                <Edit size={20} />
-                                            </button>
-                                            <button onClick={() => { if (confirm(t('messages.deleteConfirm'))) deleteCartel(cartel.id); }} style={{ color: 'red' }} title={t('cartel.delete')}>
-                                                <Trash2 size={20} />
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
+                            )}
+                            <div style={{ flex: 1 }}>
+                                {/* Badge statut pour l'admin */}
+                                {isAdmin && cartel.status !== 'published' && (
+                                    <div style={{ marginBottom: '6px' }}>
+                                        <StatusBadge status={cartel.status} />
+                                    </div>
+                                )}
+                                <CartelPreview data={cartel} />
                             </div>
-                        ))}
-                    </div>
-                )
-            }
+                            {isAdmin && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
+                                    <button onClick={() => navigate(`/app/create?edit=${cartel.id}`)} title="Éditer" style={{ padding: '6px', border: 'none', background: 'none', cursor: 'pointer' }}>
+                                        <Edit size={18} />
+                                    </button>
+                                    <button onClick={() => { if (confirm(t('messages.deleteConfirm'))) deleteCartel(cartel.id); }} style={{ color: 'red', padding: '6px', border: 'none', background: 'none', cursor: 'pointer' }}>
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                    {filteredCartels.length === 0 && (
+                        <p style={{ textAlign: 'center', color: '#aaa', padding: '40px 0' }}>Aucun cartel ne correspond à ces filtres.</p>
+                    )}
+                </div>
+            )}
 
-            {
-                viewMode === 'timeline' && (
-                    <TimelineMode cartels={filteredCartels} onDelete={deleteCartel} targetId={targetCartelId} isAdmin={isAdmin} />
-                )
-            }
-
-            {
-                viewMode === 'map' && (
-                    <MapMode cartels={filteredCartels} onGoToTimeline={handleGoToTimeline} isAdmin={isAdmin} />
-                )
-            }
-
-            {
-                viewMode === 'heuristic' && (
-                    <HeuristicMode cartels={filteredCartels} />
-                )
-            }
-        </div >
+            {viewMode === 'timeline' && (
+                <TimelineMode cartels={filteredCartels} onDelete={deleteCartel} targetId={targetCartelId} isAdmin={isAdmin} />
+            )}
+            {viewMode === 'map' && (
+                <MapMode cartels={filteredCartels} onGoToTimeline={handleGoToTimeline} isAdmin={isAdmin} />
+            )}
+            {viewMode === 'heuristic' && (
+                <HeuristicMode cartels={filteredCartels} />
+            )}
+        </div>
     );
 };
 

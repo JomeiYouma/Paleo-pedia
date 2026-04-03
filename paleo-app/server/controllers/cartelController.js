@@ -6,13 +6,25 @@ export const CartelController = {
 
   async getAll(req, res) {
     try {
-      const { status, visible, category, search, limit, offset } = req.query;
-      const cartels = await CartelModel.findAll({
-        status, visible: visible === 'true' ? true : visible === 'false' ? false : undefined,
+      // Lire le token si présent (auth optionnelle sur cette route)
+      const isAdmin = req.user?.can_manage_admin;
+
+      const { category, search, limit, offset } = req.query;
+
+      let filters = {
         category, search,
-        limit: limit ? parseInt(limit) : 50,
+        limit:  limit  ? parseInt(limit)  : 200,
         offset: offset ? parseInt(offset) : 0,
-      });
+      };
+
+      // Visiteur anonyme ou non-admin → seulement le contenu publié visible
+      if (!isAdmin) {
+        filters.status  = 'published';
+        filters.visible = true;
+      }
+      // Admin → tout (drafts, pending_review, published, archived)
+
+      const cartels = await CartelModel.findAll(filters);
       res.json(cartels);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -31,7 +43,11 @@ export const CartelController = {
 
   async create(req, res) {
     try {
-      const cartel = await CartelModel.create(req.body, req.user.id);
+      const cartel = await CartelModel.create(
+        req.body,
+        req.user?.id ?? null,
+        req.submitterIp ?? null
+      );
       res.status(201).json(cartel);
     } catch (err) {
       res.status(500).json({ error: err.message });
