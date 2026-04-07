@@ -4,8 +4,8 @@ import { AppProvider } from './context/AppContext';
 import Layout from './components/Layout';
 import Library from './pages/Library';
 import Create from './pages/Create';
-import Drafts from './pages/Drafts';
-import Admin from './pages/Admin';
+import ManageCartels from './pages/ManageCartels';   // ← NOUVEAU (remplace Admin + Drafts)
+import AdminSettings from './pages/AdminSettings';   // ← NOUVEAU
 import Presentation from './pages/Presentation';
 import Prestations from './pages/Prestations';
 import Ouvrages from './pages/Ouvrages';
@@ -19,27 +19,40 @@ function App() {
     <HashRouter>
       <AppProvider>
         <Routes>
-          {/* Public Site Routes */}
+          {/* ── Site public ──────────────────────────────── */}
           <Route path="/" element={<SiteLayout />}>
             <Route index element={<LandingPage />} />
             <Route path="presentation" element={<Presentation />} />
-            <Route path="prestations" element={<Prestations />} />
-            <Route path="ouvrages" element={<Ouvrages />} />
-            <Route path="museum" element={<Museum />} />
-            <Route path="contact" element={<Contact />} />
+            <Route path="prestations"  element={<Prestations />} />
+            <Route path="ouvrages"     element={<Ouvrages />} />
+            <Route path="museum"       element={<Museum />} />
+            <Route path="contact"      element={<Contact />} />
           </Route>
 
-          {/* Application Routes */}
+          {/* ── Application (frise + gestion) ────────────── */}
           <Route path="/app" element={<Layout />}>
+            {/* Frise */}
             <Route index element={<Library />} />
             <Route path="workshop/:workshopId" element={<Library />} />
+
+            {/* Création / édition */}
             <Route path="create" element={<Create />} />
-            <Route path="drafts" element={<Drafts />} />
-            <Route path="admin" element={<Admin />} />
-            <Route path="admin/workshop/:workshopId" element={<Admin />} />
+
+            {/* Gestion des cartels (brouillons / propositions / publiés)
+                L'onglet actif est contrôlé par ?tab=drafts|pending|published */}
+            <Route path="manage/drafts"    element={<ManageCartels />} />
+            <Route path="manage/pending"   element={<ManageCartels />} />
+            <Route path="manage/published" element={<ManageCartels />} />
+
+            {/* Paramètres admin */}
+            <Route path="admin" element={<AdminSettings />} />
+
+            {/* ── Rétrocompatibilité avec anciens liens ─── */}
+            <Route path="admin/workshop/:workshopId" element={<ManageCartels />} />
+            <Route path="drafts" element={<Navigate to="/app/manage/pending" replace />} />
           </Route>
 
-          {/* Compatibility Redirect for old Workshop Links */}
+          {/* Redirect workshops (anciens liens partagés) */}
           <Route path="/workshop/:workshopId" element={<WorkshopRedirect />} />
         </Routes>
       </AppProvider>
@@ -47,7 +60,6 @@ function App() {
   );
 }
 
-// Redirect Helper Component
 function WorkshopRedirect() {
   const { workshopId } = useParams();
   return <Navigate to={`/app/workshop/${workshopId}`} replace />;

@@ -1,47 +1,71 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, NavLink } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Menu, X, Lock, LogIn, LogOut } from 'lucide-react';
+import {
+    Menu, X, Lock, LogIn, LogOut,
+    Library, PlusCircle, ClipboardList, Settings2, LayoutDashboard
+} from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useNavigate } from 'react-router-dom';
 
-const NAV_LINKS = [
-    { path: '/',            label: 'Accueil' },
-    { path: '/app',         label: 'La Frise', end: true },
-    { path: '/presentation',label: 'Présentation' },
-    { path: '/prestations', label: 'Prestations' },
-    { path: '/ouvrages',    label: 'Ouvrages' },
-    { path: '/museum',      label: 'Museum' },
-    { path: '/contact',     label: 'Contact' },
+// ── Liens du site public ─────────────────────────────────────
+const SITE_NAV = [
+    { path: '/',             label: 'Accueil' },
+    { path: '/presentation', label: 'Présentation' },
+    { path: '/prestations',  label: 'Prestations' },
+    { path: '/ouvrages',     label: 'Ouvrages' },
+    { path: '/museum',       label: 'Museum' },
+    { path: '/contact',      label: 'Contact' },
+];
+
+// ── Liens de l'application (frise) ───────────────────────────
+const APP_NAV_VISITOR = [
+    { path: '/app',        label: 'Frise',  icon: Library,       end: true },
+    { path: '/app/create', label: 'Proposer', icon: PlusCircle },
+];
+
+const APP_NAV_ADMIN = [
+    { path: '/app',              label: 'Frise',         icon: Library,         end: true },
+    { path: '/app/manage/drafts',   label: 'Brouillons',   icon: ClipboardList },
+    { path: '/app/manage/pending',  label: 'Propositions', icon: ClipboardList },
+    { path: '/app/manage/published',label: 'Publiés',      icon: LayoutDashboard },
+    { path: '/app/admin',           label: 'Admin',        icon: Settings2 },
 ];
 
 /**
- * Composant Header partagé entre SiteLayout et Layout (app).
- * Quand mode="app" : affiche la navigation de l'appli interne.
- * Quand mode="site" : affiche les liens du site public en burger.
+ * Header unifié — un seul header pour tout le site.
+ *
+ * Bande 1 : logo + burger site + langue + auth  (toujours visible)
+ * Bande 2 : navigation app                      (visible UNIQUEMENT sur /app/*)
+ *
+ * Props (toutes optionnelles, lues depuis le contexte) :
+ *   currentWorkshop, quitWorkshop
  */
-const SharedHeader = ({ mode = 'site', appNavSlot, currentWorkshop, quitWorkshop }) => {
+const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
     const { user, isAdmin, login, logout } = useApp();
     const navigate = useNavigate();
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [showLoginModal, setShowLoginModal] = useState(false);
-    const [loginEmail, setLoginEmail] = useState('');
-    const [loginPassword, setLoginPassword] = useState('');
-    const [loginError, setLoginError] = useState('');
-    const [loginLoading, setLoginLoading] = useState(false);
     const location = useLocation();
 
-    const handleLoginSubmit = async (e) => {
+    const [isMenuOpen,     setIsMenuOpen]     = useState(false);
+    const [showLogin,      setShowLogin]       = useState(false);
+    const [loginEmail,     setLoginEmail]      = useState('');
+    const [loginPassword,  setLoginPassword]   = useState('');
+    const [loginError,     setLoginError]      = useState('');
+    const [loginLoading,   setLoginLoading]    = useState(false);
+
+    // Détermine si on est dans la zone /app
+    const isInApp = location.pathname.startsWith('/app');
+
+    const handleLogin = async (e) => {
         e.preventDefault();
         setLoginError('');
         setLoginLoading(true);
         try {
             await login(loginEmail, loginPassword);
-            setShowLoginModal(false);
+            setShowLogin(false);
             setLoginEmail('');
             setLoginPassword('');
-            // Si sur le site public et admin → aller sur la gestion
-            if (mode === 'site') navigate('/app/admin');
+            navigate('/app/admin');
         } catch (err) {
             setLoginError(err.message || 'Identifiants incorrects');
         } finally {
@@ -49,208 +73,467 @@ const SharedHeader = ({ mode = 'site', appNavSlot, currentWorkshop, quitWorkshop
         }
     };
 
-    const handleLogout = () => {
-        logout();
-        setShowLoginModal(false);
-    };
+    const appLinks = isAdmin ? APP_NAV_ADMIN : APP_NAV_VISITOR;
 
     return (
         <>
-            {/* Workshop Banner */}
+            {/* ── Bandeau atelier ─────────────────────────────── */}
             {currentWorkshop && !currentWorkshop.is_immersive && (
-                <div style={{ background: '#e0f7fa', color: '#006064', padding: '10px', textAlign: 'center', fontWeight: 'bold', fontSize: '0.9rem' }}>
-                    Mode Atelier : {currentWorkshop.name}
-                    <button onClick={quitWorkshop} style={{ marginLeft: '16px', fontSize: '0.8em', color: '#006064', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+                <div style={{
+                    background: 'linear-gradient(90deg, #006064, #00838f)',
+                    color: 'white',
+                    padding: '8px 24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '16px',
+                    fontSize: '0.88rem',
+                    fontWeight: '600',
+                    letterSpacing: '0.3px',
+                }}>
+                    <span>⚗️ Mode Atelier : {currentWorkshop.name}</span>
+                    <button
+                        onClick={quitWorkshop}
+                        style={{
+                            background: 'rgba(255,255,255,0.2)',
+                            border: '1px solid rgba(255,255,255,0.4)',
+                            color: 'white',
+                            borderRadius: '20px',
+                            padding: '3px 12px',
+                            cursor: 'pointer',
+                            fontSize: '0.8rem',
+                        }}
+                    >
                         Quitter
                     </button>
                 </div>
             )}
 
+            {/* ════════════════════════════════════════════════
+                BANDE 1 — Navigation du site public
+            ════════════════════════════════════════════════ */}
             <header style={{
                 background: 'white',
-                padding: '16px 32px',
-                boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-                position: 'sticky', top: 0, zIndex: 1000,
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                gap: '16px',
+                borderBottom: isInApp ? '1px solid #f0f0f0' : '1px solid #eee',
+                position: 'sticky',
+                top: 0,
+                zIndex: 1000,
             }}>
-                {/* ── Gauche : burger + logo ── */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{ position: 'relative' }}>
-                        <button
-                            onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            style={{ background: 'white', border: '1px solid #eee', borderRadius: '8px', padding: '9px', cursor: 'pointer', display: 'flex', alignItems: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}
-                            title="Menu"
-                        >
-                            {isMenuOpen ? <X size={22} color="#333" /> : <Menu size={22} color="#333" />}
-                        </button>
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '14px 28px',
+                    gap: '16px',
+                    maxWidth: '1600px',
+                    margin: '0 auto',
+                }}>
+                    {/* ── Gauche : burger + logo ── */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                        {/* Burger site public */}
+                        <div style={{ position: 'relative' }}>
+                            <button
+                                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                style={{
+                                    background: '#f8f8f8',
+                                    border: '1px solid #e8e8e8',
+                                    borderRadius: '10px',
+                                    padding: '8px 10px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    fontSize: '0.78rem',
+                                    fontWeight: '600',
+                                    color: '#555',
+                                    letterSpacing: '0.4px',
+                                    textTransform: 'uppercase',
+                                    transition: 'all 0.15s',
+                                }}
+                                title="Menu du site"
+                            >
+                                {isMenuOpen ? <X size={16} /> : <Menu size={16} />}
+                                <span style={{ display: 'none' }}>Menu</span>
+                            </button>
 
-                        {isMenuOpen && (
-                            <div style={{
-                                position: 'absolute', top: '120%', left: 0, zIndex: 2000,
-                                background: 'white', border: '1px solid #eee', borderRadius: '10px',
-                                boxShadow: '0 6px 24px rgba(0,0,0,0.1)', minWidth: '230px',
-                                display: 'flex', flexDirection: 'column', padding: '6px 0',
-                                animation: 'fadeIn 0.2s ease-out',
-                            }}>
-                                {NAV_LINKS.map(link => (
+                            {/* Dropdown menu site */}
+                            {isMenuOpen && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: 'calc(100% + 8px)',
+                                    left: 0,
+                                    zIndex: 2000,
+                                    background: 'white',
+                                    border: '1px solid #eee',
+                                    borderRadius: '14px',
+                                    boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                                    minWidth: '220px',
+                                    padding: '8px',
+                                    animation: 'menuFadeIn 0.18s ease-out',
+                                }}>
+                                    {SITE_NAV.map(link => (
+                                        <Link
+                                            key={link.path}
+                                            to={link.path}
+                                            onClick={() => setIsMenuOpen(false)}
+                                            style={{
+                                                display: 'block',
+                                                padding: '10px 14px',
+                                                borderRadius: '8px',
+                                                textDecoration: 'none',
+                                                color: location.pathname === link.path ? 'var(--color-pink-darker, #C2185B)' : '#333',
+                                                fontWeight: location.pathname === link.path ? '700' : '500',
+                                                fontSize: '0.93rem',
+                                                background: location.pathname === link.path ? '#fce4ec' : 'transparent',
+                                                transition: 'all 0.12s',
+                                            }}
+                                            onMouseEnter={e => { if (location.pathname !== link.path) e.currentTarget.style.background = '#f5f5f5'; }}
+                                            onMouseLeave={e => { if (location.pathname !== link.path) e.currentTarget.style.background = 'transparent'; }}
+                                        >
+                                            {link.label}
+                                        </Link>
+                                    ))}
+
+                                    {/* Séparateur + lien vers la frise */}
+                                    <div style={{ borderTop: '1px solid #f0f0f0', margin: '6px 0' }} />
                                     <Link
-                                        key={link.path}
-                                        to={link.path}
+                                        to="/app"
                                         onClick={() => setIsMenuOpen(false)}
-                                        className="site-menu-item"
                                         style={{
-                                            display: 'block', padding: '11px 20px',
-                                            textDecoration: 'none', color: '#333',
-                                            fontSize: '0.95rem', transition: 'all 0.15s',
-                                            borderLeft: '3px solid transparent',
-                                            fontWeight: location.pathname === link.path ? '700' : '400',
+                                            display: 'block',
+                                            padding: '10px 14px',
+                                            borderRadius: '8px',
+                                            textDecoration: 'none',
+                                            color: '#C2185B',
+                                            fontWeight: '700',
+                                            fontSize: '0.93rem',
+                                            background: isInApp ? '#fce4ec' : 'transparent',
                                         }}
+                                    >
+                                        🗓 La Frise Chronologique
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Logo */}
+                        <Link
+                            to="/"
+                            style={{
+                                textDecoration: 'none',
+                                color: 'inherit',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                            }}
+                        >
+                            <div style={{
+                                width: '32px',
+                                height: '32px',
+                                background: 'var(--color-pink-darker, #C2185B)',
+                                borderRadius: '50%',
+                                flexShrink: 0,
+                            }} />
+                            <span style={{
+                                fontSize: '1.1rem',
+                                fontWeight: '800',
+                                letterSpacing: '-0.4px',
+                                color: '#1a1a1a',
+                            }}>
+                                {currentWorkshop ? currentWorkshop.name : 'Paléo-Énergétique'}
+                            </span>
+                        </Link>
+                    </div>
+
+                    {/* ── Centre : liens rapides site (compacts, pas en app) ── */}
+                    {!isInApp && (
+                        <nav style={{
+                            display: 'flex',
+                            gap: '4px',
+                            flexWrap: 'wrap',
+                        }}>
+                            {['/presentation', '/prestations', '/museum'].map(p => {
+                                const link = SITE_NAV.find(l => l.path === p);
+                                if (!link) return null;
+                                return (
+                                    <Link
+                                        key={p}
+                                        to={p}
+                                        style={{
+                                            padding: '7px 16px',
+                                            borderRadius: '20px',
+                                            textDecoration: 'none',
+                                            fontWeight: '600',
+                                            fontSize: '0.83rem',
+                                            color: location.pathname === p ? 'white' : '#555',
+                                            background: location.pathname === p ? 'var(--color-red-accent, #D65A5A)' : 'transparent',
+                                            transition: 'all 0.15s',
+                                            letterSpacing: '0.2px',
+                                        }}
+                                        onMouseEnter={e => { if (location.pathname !== p) e.currentTarget.style.background = '#f5f5f5'; }}
+                                        onMouseLeave={e => { if (location.pathname !== p) e.currentTarget.style.background = 'transparent'; }}
                                     >
                                         {link.label}
                                     </Link>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    <Link
-                        to="/"
-                        style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
-                        className="site-logo-link"
-                    >
-                        <div style={{ width: '34px', height: '34px', background: 'var(--color-pink-darker, #C2185B)', borderRadius: '50%', flexShrink: 0 }} />
-                        <span style={{ fontSize: '1.2rem', fontWeight: '800', letterSpacing: '-0.5px', color: '#1a1a1a', transition: 'color 0.15s' }}>
-                            {currentWorkshop ? currentWorkshop.name : 'Paléo-Énergétique'}
-                        </span>
-                    </Link>
-                </div>
-
-                {/* ── Centre : navigation ── */}
-                <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-                    {appNavSlot ? appNavSlot : (
-                        // Mode site : liens rapides vers l'app en style pill
-                        <nav style={{ display: 'flex', background: 'white', borderRadius: '50px', padding: '5px', gap: '4px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' }}>
-                            {NAV_LINKS.filter(l => ['/app', '/presentation', '/prestations'].includes(l.path)).map(link => (
-                                <Link
-                                    key={link.path}
-                                    to={link.path}
-                                    style={{
-                                        padding: '8px 18px', borderRadius: '30px',
-                                        textDecoration: 'none', fontWeight: '700',
-                                        fontSize: '0.82rem', letterSpacing: '0.5px',
-                                        color: location.pathname === link.path ? 'white' : '#444',
-                                        background: location.pathname === link.path ? 'var(--color-red-accent, #C2185B)' : 'transparent',
-                                        transition: 'all 0.2s', whiteSpace: 'nowrap',
-                                    }}
-                                >
-                                    {link.label}
-                                </Link>
-                            ))}
+                                );
+                            })}
                         </nav>
                     )}
-                </div>
 
-                {/* ── Droite : langue + auth ── */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-                    <LanguageSwitcher />
+                    {/* ── Droite : langue + auth ── */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                        <LanguageSwitcher />
 
-                    {!currentWorkshop && (
-                        user ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                {/* Email cliquable → vers la gestion ou l'admin */}
+                        {!currentWorkshop && (
+                            user ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <button
+                                        onClick={() => navigate(isAdmin ? '/app/admin' : '/app')}
+                                        style={{
+                                            background: '#f8f8f8',
+                                            border: '1px solid #e8e8e8',
+                                            borderRadius: '8px',
+                                            padding: '6px 12px',
+                                            cursor: 'pointer',
+                                            fontSize: '0.8rem',
+                                            color: '#444',
+                                            maxWidth: '160px',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            whiteSpace: 'nowrap',
+                                            fontFamily: 'inherit',
+                                        }}
+                                    >
+                                        {isAdmin && <span style={{ color: '#C2185B', marginRight: '4px' }}>●</span>}
+                                        {user.email}
+                                    </button>
+                                    <button
+                                        onClick={() => { logout(); navigate('/'); }}
+                                        title="Se déconnecter"
+                                        style={{
+                                            background: 'none',
+                                            border: '1px solid #e0e0e0',
+                                            borderRadius: '8px',
+                                            padding: '6px 10px',
+                                            cursor: 'pointer',
+                                            color: '#888',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        <LogOut size={14} />
+                                    </button>
+                                </div>
+                            ) : (
                                 <button
-                                    onClick={() => navigate(isAdmin ? '/app/admin' : '/app')}
-                                    title={isAdmin ? 'Aller à la gestion' : 'Mon espace'}
+                                    onClick={() => setShowLogin(true)}
                                     style={{
-                                        background: '#f8f8f8', border: '1px solid #eee', borderRadius: '8px',
-                                        padding: '5px 10px', cursor: 'pointer', fontSize: '0.82rem',
-                                        color: '#555', maxWidth: '150px', overflow: 'hidden',
-                                        textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                        background: 'none',
+                                        border: '1px solid #ddd',
+                                        borderRadius: '8px',
+                                        padding: '7px 14px',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        color: '#666',
+                                        fontSize: '0.84rem',
                                         fontFamily: 'inherit',
                                     }}
                                 >
-                                    {user.email}
+                                    <Lock size={13} color="#aaa" /> Connexion
                                 </button>
-                                <button
-                                    onClick={handleLogout}
-                                    title="Se déconnecter"
-                                    style={{
-                                        background: 'none', border: '1px solid #ddd', borderRadius: '8px',
-                                        padding: '6px 10px', cursor: 'pointer', display: 'flex',
-                                        alignItems: 'center', gap: '5px', color: '#666', fontSize: '0.82rem',
-                                    }}
-                                >
-                                    <LogOut size={15} />
-                                </button>
-                            </div>
-                        ) : (
-                            <button
-                                onClick={() => setShowLoginModal(true)}
-                                title="Se connecter"
-                                style={{
-                                    background: 'none', border: '1px solid #ddd', borderRadius: '8px',
-                                    padding: '6px 12px', cursor: 'pointer', display: 'flex',
-                                    alignItems: 'center', gap: '6px', color: '#666', fontSize: '0.85rem',
-                                }}
-                            >
-                                <Lock size={14} color="#aaa" /> Connexion
-                            </button>
-                        )
-                    )}
+                            )
+                        )}
+                    </div>
                 </div>
+
+                {/* ════════════════════════════════════════════════
+                    BANDE 2 — Navigation de l'application (frise)
+                    Visible uniquement sur /app/*
+                ════════════════════════════════════════════════ */}
+                {isInApp && (
+                    <div style={{
+                        background: 'linear-gradient(180deg, #fafafa 0%, #f4f4f4 100%)',
+                        borderTop: '1px solid #ececec',
+                        padding: '0 28px',
+                    }}>
+                        <div style={{
+                            maxWidth: '1600px',
+                            margin: '0 auto',
+                            display: 'flex',
+                            alignItems: 'stretch',
+                            gap: '2px',
+                            height: '44px',
+                        }}>
+                            {appLinks.map(link => {
+                                const Icon = link.icon;
+                                // Détection active manuelle pour éviter le conflit /app vs /app/...
+                                const isActive = link.end
+                                    ? location.pathname === link.path
+                                    : location.pathname.startsWith(link.path);
+
+                                return (
+                                    <Link
+                                        key={link.path}
+                                        to={link.path}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            padding: '0 16px',
+                                            textDecoration: 'none',
+                                            fontSize: '0.8rem',
+                                            fontWeight: '700',
+                                            letterSpacing: '0.5px',
+                                            textTransform: 'uppercase',
+                                            fontFamily: 'var(--font-heading, sans-serif)',
+                                            color: isActive ? 'var(--color-red-accent, #D65A5A)' : '#666',
+                                            borderBottom: isActive
+                                                ? '2px solid var(--color-red-accent, #D65A5A)'
+                                                : '2px solid transparent',
+                                            transition: 'all 0.15s',
+                                            whiteSpace: 'nowrap',
+                                        }}
+                                        onMouseEnter={e => {
+                                            if (!isActive) {
+                                                e.currentTarget.style.color = '#333';
+                                                e.currentTarget.style.borderBottomColor = '#ddd';
+                                            }
+                                        }}
+                                        onMouseLeave={e => {
+                                            if (!isActive) {
+                                                e.currentTarget.style.color = '#666';
+                                                e.currentTarget.style.borderBottomColor = 'transparent';
+                                            }
+                                        }}
+                                    >
+                                        <Icon size={14} />
+                                        {link.label}
+                                    </Link>
+                                );
+                            })}
+
+                            {/* Lien "Créer" pour les admins aussi */}
+                            {isAdmin && (
+                                <>
+                                    <div style={{ flex: 1 }} />
+                                    <Link
+                                        to="/app/create"
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            padding: '0 16px',
+                                            textDecoration: 'none',
+                                            fontSize: '0.8rem',
+                                            fontWeight: '700',
+                                            letterSpacing: '0.5px',
+                                            textTransform: 'uppercase',
+                                            fontFamily: 'var(--font-heading, sans-serif)',
+                                            color: location.pathname === '/app/create' ? 'white' : 'white',
+                                            background: 'var(--color-red-accent, #D65A5A)',
+                                            margin: '8px 0',
+                                            borderRadius: '8px',
+                                        }}
+                                    >
+                                        <PlusCircle size={14} />
+                                        Nouveau cartel
+                                    </Link>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
             </header>
 
-            {/* ── Login Modal ── */}
-            {showLoginModal && (
+            {/* ── Modal Connexion ──────────────────────────────── */}
+            {showLogin && (
                 <div
-                    onClick={() => { setShowLoginModal(false); setLoginError(''); }}
-                    style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}
+                    onClick={() => { setShowLogin(false); setLoginError(''); }}
+                    style={{
+                        position: 'fixed', inset: 0,
+                        background: 'rgba(0,0,0,0.55)',
+                        zIndex: 3000,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backdropFilter: 'blur(4px)',
+                    }}
                 >
                     <div
                         onClick={e => e.stopPropagation()}
-                        style={{ background: 'white', borderRadius: '16px', padding: '36px 40px', width: '100%', maxWidth: '400px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)', animation: 'modalIn 0.25s ease-out' }}
+                        style={{
+                            background: 'white',
+                            borderRadius: '18px',
+                            padding: '40px',
+                            width: '100%',
+                            maxWidth: '400px',
+                            boxShadow: '0 24px 80px rgba(0,0,0,0.2)',
+                        }}
                     >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px' }}>
                             <div>
-                                <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700' }}>Connexion</h2>
-                                <p style={{ margin: '4px 0 0', color: '#888', fontSize: '0.85rem' }}>Accès administrateur</p>
+                                <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '800' }}>Connexion</h2>
+                                <p style={{ margin: '4px 0 0', color: '#999', fontSize: '0.85rem' }}>Accès administrateur</p>
                             </div>
-                            <button onClick={() => { setShowLoginModal(false); setLoginError(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb' }}>
+                            <button onClick={() => { setShowLogin(false); setLoginError(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb' }}>
                                 <X size={22} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#555', marginBottom: '5px' }}>Email</label>
+                                <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: '700', color: '#555', marginBottom: '6px' }}>Email</label>
                                 <input
-                                    type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)}
-                                    placeholder="admin@example.com" required autoFocus
-                                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.95rem', boxSizing: 'border-box' }}
+                                    type="email"
+                                    value={loginEmail}
+                                    onChange={e => setLoginEmail(e.target.value)}
+                                    placeholder="admin@example.com"
+                                    required
+                                    autoFocus
+                                    style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #ddd', fontSize: '0.95rem', boxSizing: 'border-box' }}
                                 />
                             </div>
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#555', marginBottom: '5px' }}>Mot de passe</label>
+                                <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: '700', color: '#555', marginBottom: '6px' }}>Mot de passe</label>
                                 <input
-                                    type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)}
-                                    placeholder="••••••••" required
-                                    style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.95rem', boxSizing: 'border-box' }}
+                                    type="password"
+                                    value={loginPassword}
+                                    onChange={e => setLoginPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    required
+                                    style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #ddd', fontSize: '0.95rem', boxSizing: 'border-box' }}
                                 />
                             </div>
 
                             {loginError && (
-                                <div style={{ background: '#fff0f0', border: '1px solid #ffcccc', borderRadius: '8px', padding: '10px 14px', color: '#c0392b', fontSize: '0.88rem' }}>
+                                <div style={{ background: '#fff0f0', border: '1px solid #fcc', borderRadius: '8px', padding: '10px 14px', color: '#c0392b', fontSize: '0.87rem' }}>
                                     {loginError}
                                 </div>
                             )}
 
                             <button
-                                type="submit" disabled={loginLoading}
-                                style={{ background: loginLoading ? '#aaa' : 'black', color: 'white', border: 'none', borderRadius: '8px', padding: '12px', fontSize: '1rem', fontWeight: '600', cursor: loginLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                                type="submit"
+                                disabled={loginLoading}
+                                style={{
+                                    background: loginLoading ? '#ccc' : '#1a1a1a',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '10px',
+                                    padding: '13px',
+                                    fontSize: '0.95rem',
+                                    fontWeight: '700',
+                                    cursor: loginLoading ? 'not-allowed' : 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '8px',
+                                    marginTop: '4px',
+                                }}
                             >
-                                <LogIn size={17} />
-                                {loginLoading ? 'Connexion...' : 'Se connecter'}
+                                <LogIn size={16} />
+                                {loginLoading ? 'Connexion…' : 'Se connecter'}
                             </button>
                         </form>
                     </div>
@@ -258,11 +541,10 @@ const SharedHeader = ({ mode = 'site', appNavSlot, currentWorkshop, quitWorkshop
             )}
 
             <style>{`
-                .site-menu-item:hover { background: #f9f9f9 !important; color: var(--color-pink-darker, #C2185B) !important; border-left-color: var(--color-pink-darker, #C2185B) !important; padding-left: 25px !important; }
-                .site-logo-link:hover span { color: var(--color-pink-darker, #C2185B) !important; }
-                .site-logo-link:hover { opacity: 0.9; }
-                @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-                @keyframes modalIn { from { opacity: 0; transform: translateY(-16px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+                @keyframes menuFadeIn {
+                    from { opacity: 0; transform: translateY(-6px); }
+                    to   { opacity: 1; transform: translateY(0); }
+                }
             `}</style>
         </>
     );
