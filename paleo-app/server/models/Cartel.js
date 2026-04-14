@@ -63,13 +63,11 @@ export const CartelModel = {
     }
 
     const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
-    values.push(limit, offset);
-
     const { rows } = await query(
       `${SELECT_FULL} ${where}
-       GROUP BY c.id, u.email
+       GROUP BY c.id
        ORDER BY c.created_at DESC
-       LIMIT ? OFFSET ?`,
+       LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}`,
       values
     );
     return rows.map(parseCartel);
@@ -77,7 +75,7 @@ export const CartelModel = {
 
   async findById(id) {
     const { rows } = await query(
-      `${SELECT_FULL} WHERE c.id = ? GROUP BY c.id, u.email`,
+      `${SELECT_FULL} WHERE c.id = ? GROUP BY c.id`,
       [id]
     );
     return parseCartel(rows[0]);

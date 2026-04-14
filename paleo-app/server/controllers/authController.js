@@ -23,6 +23,7 @@ function buildToken(user) {
     can_create_cartel:  !!user.can_create_cartel,
     can_publish_cartel: !!user.can_publish_cartel,
     can_manage_admin:   !!user.can_manage_admin,
+    can_create_subsite: !!user.can_create_subsite,
   });
 }
 

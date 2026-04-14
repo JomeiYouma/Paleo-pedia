@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `can_create_cartel`   TINYINT(1)    NOT NULL DEFAULT 1,
   `can_publish_cartel`  TINYINT(1)    NOT NULL DEFAULT 0,
   `can_manage_admin`    TINYINT(1)    NOT NULL DEFAULT 0,
+  `can_create_subsite`  TINYINT(1)    NOT NULL DEFAULT 0,
   `created_at`          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),

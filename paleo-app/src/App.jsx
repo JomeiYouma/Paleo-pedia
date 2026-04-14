@@ -4,8 +4,8 @@ import { AppProvider } from './context/AppContext';
 import Layout from './components/Layout';
 import Library from './pages/Library';
 import Create from './pages/Create';
-import ManageCartels from './pages/ManageCartels';   // ← NOUVEAU (remplace Admin + Drafts)
-import AdminSettings from './pages/AdminSettings';   // ← NOUVEAU
+import ManageCartels from './pages/ManageCartels';
+import AdminSettings from './pages/AdminSettings';
 import Presentation from './pages/Presentation';
 import Prestations from './pages/Prestations';
 import Ouvrages from './pages/Ouvrages';
@@ -13,6 +13,10 @@ import Museum from './pages/Museum';
 import Contact from './pages/Contact';
 import LandingPage from './pages/LandingPage';
 import SiteLayout from './components/SiteLayout';
+import SubsiteLayout from './layouts/SubsiteLayout';
+import SubsiteHome from './pages/SubsiteHome';
+import SubsiteFrise from './pages/SubsiteFrise';
+import SubsitePartners from './pages/SubsitePartners';
 
 function App() {
   return (
@@ -29,25 +33,24 @@ function App() {
             <Route path="contact"      element={<Contact />} />
           </Route>
 
+          {/* ── Sous-sites (/site/:slug/*) ────────────────── */}
+          <Route path="/site/:slug" element={<SubsiteLayout />}>
+            <Route index                   element={<SubsiteHome />} />
+            <Route path="frise"            element={<SubsiteFrise />} />
+            <Route path="presentation"     element={<Presentation />} />
+            <Route path="partenaires"      element={<SubsitePartners />} />
+            <Route path="mentions"         element={<Presentation />} />
+          </Route>
+
           {/* ── Application (frise + gestion) ────────────── */}
           <Route path="/app" element={<Layout />}>
-            {/* Frise */}
             <Route index element={<Library />} />
             <Route path="workshop/:workshopId" element={<Library />} />
-
-            {/* Création / édition */}
             <Route path="create" element={<Create />} />
-
-            {/* Gestion des cartels (brouillons / propositions / publiés)
-                L'onglet actif est contrôlé par ?tab=drafts|pending|published */}
-            <Route path="manage/drafts"    element={<ManageCartels />} />
-            <Route path="manage/pending"   element={<ManageCartels />} />
-            <Route path="manage/published" element={<ManageCartels />} />
-
-            {/* Paramètres admin */}
-            <Route path="admin" element={<AdminSettings />} />
-
-            {/* ── Rétrocompatibilité avec anciens liens ─── */}
+            <Route path="manage/drafts"     element={<ManageCartels />} />
+            <Route path="manage/pending"    element={<ManageCartels />} />
+            <Route path="manage/published"  element={<ManageCartels />} />
+            <Route path="admin"             element={<AdminSettings />} />
             <Route path="admin/workshop/:workshopId" element={<ManageCartels />} />
             <Route path="drafts" element={<Navigate to="/app/manage/pending" replace />} />
           </Route>

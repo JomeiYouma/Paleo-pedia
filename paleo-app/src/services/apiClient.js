@@ -104,6 +104,23 @@ export const users = {
   delete:  (id)       => del(`/users/${id}`),
 };
 
+// ── Sous-sites ────────────────────────────────────────────────
+export const subsites = {
+  getAll:  ()           => get('/subsites'),
+  getOne:  (slug)       => get(`/subsites/${slug}`),
+  create:  (data)       => post('/subsites', data),
+  update:  (slug, data) => patch(`/subsites/${slug}`, data),
+  delete:  (slug)       => del(`/subsites/${slug}`),
+};
+
+// ── Partenaires ───────────────────────────────────────────────
+export const partners = {
+  getAll:  ()           => get('/partners'),
+  create:  (data)       => post('/partners', data),
+  update:  (id, data)   => patch(`/partners/${id}`, data),
+  delete:  (id)         => del(`/partners/${id}`),
+};
+
 // ── Upload image ──────────────────────────────────────────────
 export const media = {
   /** Envoie un fichier image au serveur, retourne { url } */
@@ -175,5 +192,5 @@ export const io = {
   },
 };
 
-const api = { auth, cartels, categories, workshops, settings, users, media, translate, io };
+const api = { auth, cartels, categories, workshops, settings, users, media, translate, io, subsites, partners };
 export default api;

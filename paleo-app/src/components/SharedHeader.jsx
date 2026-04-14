@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, NavLink } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import {
@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useNavigate } from 'react-router-dom';
+import { subsites as subsitesApi } from '../services/apiClient';
 
 // ── Liens du site public ─────────────────────────────────────
 const SITE_NAV = [
@@ -52,9 +53,18 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
     const [loginPassword,  setLoginPassword]   = useState('');
     const [loginError,     setLoginError]      = useState('');
     const [loginLoading,   setLoginLoading]    = useState(false);
+    const [subsites,       setSubsites]        = useState([]);
 
-    // Détermine si on est dans la zone /app
     const isInApp = location.pathname.startsWith('/app');
+
+    // Charger les sous-sites lors du premier clic burger
+    const handleMenuOpen = () => {
+        const next = !isMenuOpen;
+        setIsMenuOpen(next);
+        if (next && subsites.length === 0) {
+            subsitesApi.getAll().then(d => setSubsites(Array.isArray(d) ? d : [])).catch(() => {});
+        }
+    };
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -131,9 +141,9 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                     {/* ── Gauche : burger + logo ── */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                         {/* Burger site public */}
-                        <div style={{ position: 'relative' }}>
+                        <div className="mobile-burger" style={{ position: 'relative' }}>
                             <button
-                                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                onClick={handleMenuOpen}
                                 style={{
                                     background: '#f8f8f8',
                                     border: '1px solid #e8e8e8',
@@ -167,10 +177,11 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                     border: '1px solid #eee',
                                     borderRadius: '14px',
                                     boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-                                    minWidth: '220px',
+                                    minWidth: '240px',
                                     padding: '8px',
                                     animation: 'menuFadeIn 0.18s ease-out',
                                 }}>
+                                    {/* Liens site principal */}
                                     {SITE_NAV.map(link => (
                                         <Link
                                             key={link.path}
@@ -194,7 +205,25 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                         </Link>
                                     ))}
 
-                                    {/* Séparateur + lien vers la frise */}
+                                    {/* Sous-sites / Thématiques */}
+                                    {subsites.length > 0 && (
+                                        <div style={{ borderTop: '1px solid #f0f0f0', margin: '6px 0', paddingTop: '6px' }}>
+                                            <div style={{ fontSize: '0.72rem', fontWeight: '700', color: '#bbb', padding: '2px 14px 6px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Thématiques</div>
+                                            {subsites.map(s => (
+                                                <Link key={s.slug} to={`/site/${s.slug}`}
+                                                    onClick={() => setIsMenuOpen(false)}
+                                                    style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 14px', borderRadius: '8px', textDecoration: 'none', color: '#333', fontSize: '0.9rem', fontWeight: '600', transition: 'background 0.12s' }}
+                                                    onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                >
+                                                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: s.primary_color, flexShrink: 0 }} />
+                                                    {s.name}
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Lien vers la frise */}
                                     <div style={{ borderTop: '1px solid #f0f0f0', margin: '6px 0' }} />
                                     <Link
                                         to="/app"
@@ -247,14 +276,12 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
 
                     {/* ── Centre : liens rapides site (compacts, pas en app) ── */}
                     {!isInApp && (
-                        <nav style={{
-                            display: 'flex',
+                        <nav className="desktop-nav" style={{
                             gap: '4px',
                             flexWrap: 'wrap',
                         }}>
-                            {['/presentation', '/prestations', '/museum'].map(p => {
-                                const link = SITE_NAV.find(l => l.path === p);
-                                if (!link) return null;
+                            {SITE_NAV.map(link => {
+                                const p = link.path;
                                 return (
                                     <Link
                                         key={p}
@@ -544,6 +571,12 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                 @keyframes menuFadeIn {
                     from { opacity: 0; transform: translateY(-6px); }
                     to   { opacity: 1; transform: translateY(0); }
+                }
+                .desktop-nav { display: flex; }
+                .mobile-burger { display: none; }
+                @media (max-width: 900px) {
+                    .desktop-nav { display: none !important; }
+                    .mobile-burger { display: block !important; }
                 }
             `}</style>
         </>

@@ -11,7 +11,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 --    (enregistre l'IP des soumissions anonymes)
 -- ============================================================
 ALTER TABLE `cartels`
-  ADD COLUMN IF NOT EXISTS `submitter_ip` VARCHAR(45) NULL DEFAULT NULL
+  ADD COLUMN `submitter_ip` VARCHAR(45) NULL DEFAULT NULL
   AFTER `published_at`;
 
 -- ============================================================

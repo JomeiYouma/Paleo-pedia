@@ -1,24 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, BookOpen, Map, PenTool, Layers, X, ChevronRight } from 'lucide-react';
-import { categories as categoriesApi } from '../services/apiClient';
+import { ArrowRight, BookOpen, Map, PenTool, Layers, X, ChevronRight, ExternalLink } from 'lucide-react';
+import { categories as categoriesApi, subsites as subsitesApi } from '../services/apiClient';
 
 const PINK = 'var(--color-pink-darker, #C2185B)';
 
 const LandingPage = () => {
     const navigate = useNavigate();
     const [showCategoryModal, setShowCategoryModal] = useState(false);
-    const [cats, setCats] = useState([]);
-    const [loadingCats, setLoadingCats] = useState(false);
+    const [cats,         setCats]         = useState([]);
+    const [subsiteMap,   setSubsiteMap]   = useState({}); // category_id -> subsite
+    const [loadingCats,  setLoadingCats]  = useState(false);
 
-    // Charger les catégories à la demande
+    // Charger les catégories + sous-sites à la demande
     const openCategoryModal = async () => {
         setShowCategoryModal(true);
         if (cats.length > 0) return;
         setLoadingCats(true);
         try {
-            const data = await categoriesApi.getAll();
+            const [data, subs] = await Promise.all([categoriesApi.getAll(), subsitesApi.getAll()]);
             setCats(Array.isArray(data) ? data : []);
+            const map = {};
+            (Array.isArray(subs) ? subs : []).forEach(s => { map[s.category_id] = s; });
+            setSubsiteMap(map);
         } catch (e) {
             console.error('Impossible de charger les catégories', e);
         } finally {
@@ -28,7 +32,12 @@ const LandingPage = () => {
 
     const handleCategoryClick = (cat) => {
         setShowCategoryModal(false);
-        navigate(`/app?category=${encodeURIComponent(cat.name)}`);
+        // Si un sous-site est associé à cette catégorie, y aller directement
+        if (subsiteMap[cat.id]) {
+            navigate(`/site/${subsiteMap[cat.id].slug}`);
+        } else {
+            navigate(`/app?category=${encodeURIComponent(cat.name)}`);
+        }
     };
 
     // Fermer le modal sur Escape
@@ -218,7 +227,9 @@ const LandingPage = () => {
                         )}
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            {cats.map(cat => (
+                            {cats.map(cat => {
+                                const sub = subsiteMap[cat.id];
+                                return (
                                 <button
                                     key={cat.id}
                                     id={`cat-btn-${cat.id}`}
@@ -229,8 +240,8 @@ const LandingPage = () => {
                                         justifyContent: 'space-between',
                                         padding: '16px 20px',
                                         borderRadius: '12px',
-                                        border: '2px solid #f0f0f0',
-                                        background: 'white',
+                                        border: sub ? `2px solid ${sub.primary_color}40` : '2px solid #f0f0f0',
+                                        background: sub ? `${sub.primary_color}08` : 'white',
                                         cursor: 'pointer',
                                         textAlign: 'left',
                                         transition: 'all 0.2s',
@@ -239,29 +250,29 @@ const LandingPage = () => {
                                         color: '#1a1a1a',
                                     }}
                                     onMouseEnter={e => {
-                                        e.currentTarget.style.borderColor = cat.color || PINK;
+                                        e.currentTarget.style.borderColor = sub ? sub.primary_color : (cat.color || PINK);
                                         e.currentTarget.style.background = '#fafafa';
                                         e.currentTarget.style.transform = 'translateX(4px)';
                                     }}
                                     onMouseLeave={e => {
-                                        e.currentTarget.style.borderColor = '#f0f0f0';
-                                        e.currentTarget.style.background = 'white';
+                                        e.currentTarget.style.borderColor = sub ? `${sub.primary_color}40` : '#f0f0f0';
+                                        e.currentTarget.style.background = sub ? `${sub.primary_color}08` : 'white';
                                         e.currentTarget.style.transform = 'translateX(0)';
                                     }}
                                 >
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                                        {/* Pastille couleur */}
-                                        <div style={{
-                                            width: '14px', height: '14px',
-                                            borderRadius: '50%',
-                                            background: cat.color || PINK,
-                                            flexShrink: 0,
-                                        }} />
+                                        <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: cat.color || PINK, flexShrink: 0 }} />
                                         <span>{cat.name}</span>
+                                        {sub && (
+                                            <span style={{ fontSize:'0.72rem', fontWeight:'700', padding:'2px 7px', borderRadius:'10px', background: sub.primary_color, color:'white' }}>
+                                                {sub.name} →
+                                            </span>
+                                        )}
                                     </div>
                                     <ChevronRight size={18} color="#ccc" />
                                 </button>
-                            ))}
+                                );
+                            })}
                         </div>
 
                         {/* Lien vers tous les cartels sans filtre */}

@@ -32,7 +32,7 @@ const StatusBadge = ({ status }) => {
     );
 };
 
-const Library = () => {
+const Library = ({ fixedCategory = null }) => {
     const { t, i18n } = useTranslation();
     // Source unique : tous les cartels depuis l'API (l'API filtre selon le rôle)
     const { cartels, loading, deleteCartel, deleteCartels, isAdmin, currentWorkshop } = useApp();
@@ -48,14 +48,14 @@ const Library = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
-    // Pré-filtrer par catégorie si ?category= est dans l'URL
-    const urlCategoryFilter = searchParams.get('category');
+    // Pré-filtrer par catégorie si ?category= est dans l'URL ou si fixedCategory est passé
+    const urlCategoryFilter = fixedCategory || searchParams.get('category');
     useEffect(() => {
         if (urlCategoryFilter) setSelectedCats([decodeURIComponent(urlCategoryFilter)]);
     }, [urlCategoryFilter]);
 
     const pageTitle = urlCategoryFilter ? decodeURIComponent(urlCategoryFilter) : null;
-    const clearCategoryFilter = () => { setSelectedCats([]); setSearchParams({}); };
+    const clearCategoryFilter = () => { if (!fixedCategory) { setSelectedCats([]); setSearchParams({}); } };
     const handleGoToTimeline = (id) => { setTargetCartelId(id); setViewMode('timeline'); };
 
     // Toutes les catégories présentes dans les cartels

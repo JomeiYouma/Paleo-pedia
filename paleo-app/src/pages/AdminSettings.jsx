@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import {
     Shield, Users, Key, Save, RefreshCw,
-    ToggleLeft, ToggleRight, Clock, Hash, AlertCircle, CheckCircle2
+    ToggleLeft, ToggleRight, Clock, Hash, AlertCircle, CheckCircle2,
+    Globe, Plus, Trash2, Edit, ExternalLink
 } from 'lucide-react';
 import api from '../services/apiClient';
+import SubsiteEditor from '../components/SubsiteEditor';
 
 // ── Composants de formulaire ─────────────────────────────────
 const Field = ({ label, hint, children }) => (
@@ -106,7 +108,14 @@ const AdminSettings = () => {
     const [openaiKey, setOpenaiKey] = useState('');
     const [loading, setLoading]     = useState(true);
     const [saving, setSaving]       = useState(false);
-    const [toast, setToast]         = useState(null); // { type: 'success'|'error', msg }
+    const [toast, setToast]         = useState(null);
+
+    // Sous-sites
+    const [subsites,    setSubsites]    = useState([]);
+    const [editSubsite, setEditSubsite] = useState(null); // null | 'new' | {subsite}
+
+    const loadSubsites = () => api.subsites.getAll().then(d => setSubsites(Array.isArray(d) ? d : [])).catch(() => {});
+    useEffect(() => { loadSubsites(); }, []);
 
     // Champs du formulaire
     const [allowAnon,     setAllowAnon]     = useState(true);
@@ -178,6 +187,15 @@ const AdminSettings = () => {
 
     return (
         <div style={{ maxWidth: '780px', margin: '0 auto', padding: '28px 24px 80px' }}>
+
+            {/* ── Modale sous-site ─────────────────────────── */}
+            {editSubsite && (
+                <SubsiteEditor
+                    subsite={editSubsite === 'new' ? null : editSubsite}
+                    onClose={() => setEditSubsite(null)}
+                    onSaved={() => { loadSubsites(); showToast('success', 'Sous-site sauvegardé !'); }}
+                />
+            )}
 
             {/* ── Toast ─────────────────────────────────────── */}
             {toast && (
@@ -405,6 +423,39 @@ const AdminSettings = () => {
                                 </div>
                             ))}
                         </div>
+                    </Section>
+                    {/* ── Section 4 : Sous-sites ──────────── */}
+                    <Section icon={Globe} title="Sous-sites thématiques" color="#6741d9">
+                        <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+                            <button onClick={() => setEditSubsite('new')}
+                                style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#6741d9', color: 'white', border: 'none', borderRadius: '10px', padding: '10px 16px', cursor: 'pointer', fontWeight: '700', fontSize: '0.88rem', fontFamily: 'inherit' }}>
+                                <Plus size={14} /> Nouveau sous-site
+                            </button>
+                        </div>
+                        {subsites.length === 0 ? (
+                            <p style={{ color: '#bbb', textAlign: 'center', padding: '24px 0' }}>Aucun sous-site configuré.</p>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                {subsites.map(s => (
+                                    <div key={s.slug} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#fafafa', border: '1px solid #eee', borderRadius: '10px', padding: '12px 16px' }}>
+                                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: s.primary_color, flexShrink: 0 }} />
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontWeight: '700', fontSize: '0.95rem' }}>{s.name}</div>
+                                            <div style={{ color: '#aaa', fontSize: '0.78rem' }}>/site/{s.slug} · {s.category_name}</div>
+                                        </div>
+                                        <a href={`#/site/${s.slug}`} target="_blank" rel="noopener" title="Ouvrir" style={{ color: '#aaa', display: 'flex' }}><ExternalLink size={14} /></a>
+                                        <button onClick={() => setEditSubsite(s)} title="Modifier"
+                                            style={{ background: 'none', border: '1px solid #ddd', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', color: '#555', display: 'flex', alignItems: 'center' }}>
+                                            <Edit size={13} />
+                                        </button>
+                                        <button onClick={async () => { if (!confirm(`Supprimer "${s.name}" ?`)) return; await api.subsites.delete(s.slug); loadSubsites(); }} title="Supprimer"
+                                            style={{ background: 'none', border: '1px solid #fcc', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', color: '#d32f2f', display: 'flex', alignItems: 'center' }}>
+                                            <Trash2 size={13} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </Section>
                 </>
             )}

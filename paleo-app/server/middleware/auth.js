@@ -23,6 +23,7 @@ export async function authenticate(req, res, next) {
       can_create_cartel:  !!decoded.can_create_cartel,
       can_publish_cartel: !!decoded.can_publish_cartel,
       can_manage_admin:   !!decoded.can_manage_admin,
+      can_create_subsite: !!decoded.can_create_subsite,
     };
     next();
   } catch {

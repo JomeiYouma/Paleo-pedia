@@ -11,6 +11,8 @@ import { ImportController }    from '../controllers/importController.js';
 import { ExportController }    from '../controllers/exportController.js';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
 import { submissionGuard } from '../middleware/submissionGuard.js';
+import { SubsiteController }  from '../controllers/subsiteController.js';
+import { PartnerController }  from '../controllers/partnerController.js';
 
 const router = Router();
 
@@ -76,5 +78,18 @@ router.post('/import', authenticate, requireAdmin, ImportController.middleware, 
 
 // ── Export archive (admin) ───────────────────────────────────
 router.get('/export', authenticate, requireAdmin, ExportController.exportArchive);
+
+// ── Sous-sites (public GET, admin write) ─────────────────────
+router.get   ('/subsites',       SubsiteController.getAll);
+router.get   ('/subsites/:slug', SubsiteController.getOne);
+router.post  ('/subsites',       authenticate, requireAdmin, SubsiteController.create);
+router.patch ('/subsites/:slug', authenticate, requireAdmin, SubsiteController.update);
+router.delete('/subsites/:slug', authenticate, requireAdmin, SubsiteController.remove);
+
+// ── Partenaires (public GET, admin write) ────────────────────
+router.get   ('/partners',       PartnerController.getAll);
+router.post  ('/partners',       authenticate, requireAdmin, PartnerController.create);
+router.patch ('/partners/:id',   authenticate, requireAdmin, PartnerController.update);
+router.delete('/partners/:id',   authenticate, requireAdmin, PartnerController.remove);
 
 export default router;
