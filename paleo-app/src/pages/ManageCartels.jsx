@@ -72,14 +72,6 @@ const ManageCartels = () => {
     const [generatingZip,   setGeneratingZip]    = useState(false);
     const [progress,        setProgress]         = useState({ current: 0, total: 0 });
 
-    if (!isAdmin) {
-        return (
-            <div style={{ textAlign: 'center', padding: '80px 20px', color: '#aaa' }}>
-                <p>Accès réservé à l'administration.</p>
-            </div>
-        );
-    }
-
     const currentTabDef = TABS.find(t => t.key === activeTab) || TABS[0];
 
     // Comptages par onglet
@@ -124,6 +116,14 @@ const ManageCartels = () => {
 
         return data;
     }, [cartels, currentTabDef, search, filterCategory, sortConfig]);
+
+    if (!isAdmin) {
+        return (
+            <div style={{ textAlign: 'center', padding: '80px 20px', color: '#aaa' }}>
+                <p>Accès réservé à l'administration.</p>
+            </div>
+        );
+    }
 
     // ── Actions ──────────────────────────────────────────────
 
