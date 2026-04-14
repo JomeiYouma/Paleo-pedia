@@ -1,12 +1,13 @@
 import 'dotenv/config';
 import express from 'express';
 import routes from './routes/index.js';
+import { UPLOADS_DIR } from './controllers/uploadController.js';
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
 
 // ── Middleware ───────────────────────────────────────────────
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
@@ -14,6 +15,9 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
+
+// ── Servir les images uploadées ───────────────────────────────
+app.use('/api/images', express.static(UPLOADS_DIR));
 
 // ── Routes ───────────────────────────────────────────────────
 app.use('/api', routes);

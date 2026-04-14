@@ -160,11 +160,39 @@ export const AppProvider = ({ children }) => {
         }
     };
 
-    // ── Image upload (via public/ servi par Vite) ─────────────
-    // L'image est copiée par l'admin dans public/images/ manuellement
-    // ou via un futur upload endpoint. Pour l'instant on retourne simplement le chemin.
+    const translateCartel = async (cartelData) => {
+        setLoading(true);
+        try {
+            const translated = await api.translate.cartel({
+                titre: cartelData.titre, description: cartelData.description, location: cartelData.location,
+            });
+            const updated = await api.cartels.update(cartelData.id, translated);
+            await fetchData();
+            return updated;
+        } catch (e) {
+            console.error(e);
+            throw e; // Laisser le composant gérer l'alerte
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // ── Image upload (POST /api/upload) ────────────────────────────
     const uploadImage = async (file) => {
-        return 'images/' + file.name;
+        const formData = new FormData();
+        formData.append('image', file);
+        const t = localStorage.getItem('paleo_token');
+        const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: t ? { Authorization: `Bearer ${t}` } : {},
+            body: formData,
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error ?? 'Erreur upload image');
+        }
+        const { url } = await res.json();
+        return url; // ex: /api/images/1713456789-abc123.jpg
     };
 
     // ── Catégories ────────────────────────────────────────────
@@ -219,7 +247,7 @@ export const AppProvider = ({ children }) => {
             // Auth
             login, logout,
             // Cartels CRUD
-            fetchData, addCartel, updateCartel, deleteCartel, deleteCartels, uploadImage,
+            fetchData, addCartel, updateCartel, deleteCartel, deleteCartels, uploadImage, translateCartel,
             // Categories
             addLocalCategory,
             // Workshops

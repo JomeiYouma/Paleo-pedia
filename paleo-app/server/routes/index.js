@@ -1,11 +1,15 @@
 import { Router } from 'express';
-import { AuthController }     from '../controllers/authController.js';
-import { CartelController }   from '../controllers/cartelController.js';
-import { CategoryController } from '../controllers/CategoryController.js';
-import { UserController }     from '../controllers/userController.js';
-import { WorkshopController } from '../controllers/workshopController.js';
-import { SettingController }  from '../controllers/settingController.js';
-import { authenticate, requireCreate, requirePublish, requireAdmin } from '../middleware/auth.js';
+import { AuthController }      from '../controllers/authController.js';
+import { CartelController }    from '../controllers/cartelController.js';
+import { CategoryController }  from '../controllers/CategoryController.js';
+import { UserController }      from '../controllers/userController.js';
+import { WorkshopController }  from '../controllers/workshopController.js';
+import { SettingController }   from '../controllers/settingController.js';
+import { UploadController, upload } from '../controllers/uploadController.js';
+import { TranslateController } from '../controllers/translateController.js';
+import { ImportController }    from '../controllers/importController.js';
+import { ExportController }    from '../controllers/exportController.js';
+import { authenticate, requireAdmin } from '../middleware/auth.js';
 import { submissionGuard } from '../middleware/submissionGuard.js';
 
 const router = Router();
@@ -60,5 +64,17 @@ router.get   ('/users',              authenticate, requireAdmin, UserController.
 router.get   ('/users/:id',          authenticate, requireAdmin, UserController.getOne);
 router.patch ('/users/:id',          authenticate, requireAdmin, UserController.update);
 router.delete('/users/:id',          authenticate, requireAdmin, UserController.delete);
+
+// ── Upload image ─────────────────────────────────────────────
+router.post('/upload', authenticate, upload.single('image'), UploadController.uploadImage);
+
+// ── Traduction (admin) ───────────────────────────────────────
+router.post('/translate', authenticate, requireAdmin, TranslateController.translate);
+
+// ── Import ZIP (admin) ───────────────────────────────────────
+router.post('/import', authenticate, requireAdmin, ImportController.middleware, ImportController.importZip);
+
+// ── Export archive (admin) ───────────────────────────────────
+router.get('/export', authenticate, requireAdmin, ExportController.exportArchive);
 
 export default router;
