@@ -17,7 +17,7 @@ export const TranslateController = {
       res.json(translations);
     } catch (err) {
       // Ne pas planter l'app si la clé est manquante : retourner un 503 clair
-      const status = err.message.includes('Clé OpenAI') ? 503 : 500;
+      const status = err.message.includes('Clé API non configurée') ? 503 : 500;
       res.status(status).json({ error: err.message });
     }
   },

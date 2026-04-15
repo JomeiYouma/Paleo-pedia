@@ -4,7 +4,9 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: './',
+  // En production sur serveur : utiliser '/' (chemins absolus).
+  // './' causait des 404 sur les assets lors d'un rechargement de routes imbriquées.
+  base: '/',
   server: {
     proxy: {
       '/api/deepl/free': {
