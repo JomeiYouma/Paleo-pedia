@@ -335,7 +335,7 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                         display: 'flex',
                         flexDirection: 'column'
                     }}>
-                        <div style={{ flex: 1, overflow: 'hidden', padding: '20px' }}>
+                        <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
                             <CartelPreview key={currentCartel.id} data={currentCartel} />
                         </div>
 

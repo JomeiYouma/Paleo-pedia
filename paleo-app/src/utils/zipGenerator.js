@@ -208,6 +208,27 @@ export const generateZip = async (cartels, lang = 'fr', onProgress) => {
 };
 
 /**
+ * Export en image d'un cartel individuel (téléchargement direct).
+ * @param {Object}   cartel
+ * @param {string}   lang       'fr' | 'en'
+ */
+export const generateImage = async (cartel, lang = 'fr') => {
+  const container = setupContainer();
+  try {
+    const canvas = await renderCartelToCanvas(cartel, container, lang);
+    const blob   = await new Promise(r => canvas.toBlob(r, 'image/png'));
+    const isEn   = lang && lang.startsWith('en');
+    const t      = (isEn && cartel.titre_en) ? cartel.titre_en : cartel.titre;
+    const safe   = (t || 'sans-titre').replace(/[^a-z0-9]/gi, '_').substring(0, 50);
+    saveAs(blob, `${safe}.png`);
+  } catch (e) {
+    console.error(`IMAGE : erreur cartel ${cartel.id}`, e);
+  } finally {
+    document.body.removeChild(container);
+  }
+};
+
+/**
  * Export PDF A4 paysage (toutes les pages).
  * @param {Array}    cartels
  * @param {string}   lang       'fr' | 'en'
