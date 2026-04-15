@@ -1,10 +1,12 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { useTranslation } from 'react-i18next';
 import './Navigation.css';
 
 const Navigation = () => {
     const { isAdmin, currentWorkshop } = useApp();
+    const { t } = useTranslation();
     const location = useLocation();
 
     return (
@@ -15,7 +17,7 @@ const Navigation = () => {
                 className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                 end
             >
-                BIBLIOTHÈQUE
+                {t('nav.library')}
             </NavLink>
 
             {/* Visiteur non connecté et connecté non-admin */}
@@ -24,7 +26,7 @@ const Navigation = () => {
                     to="/app/create"
                     className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                 >
-                    CRÉER
+                    {t('nav.create')}
                 </NavLink>
             )}
 
@@ -35,13 +37,13 @@ const Navigation = () => {
                         to="/app/admin"
                         className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                     >
-                        GESTION
+                        {t('nav.management')}
                     </NavLink>
                     <NavLink
                         to="/app/drafts"
                         className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                     >
-                        EN ATTENTE
+                        {t('nav.pending')}
                     </NavLink>
                 </>
             )}

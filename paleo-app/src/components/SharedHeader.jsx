@@ -446,7 +446,8 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                 <>
                                     <div style={{ flex: 1 }} />
                                     <Link
-                                        to="/app/create"
+                                        to={{ pathname: '/app/create' }}
+                                        state={{ returnTo: location.pathname }}
                                         style={{
                                             display: 'flex',
                                             alignItems: 'center',

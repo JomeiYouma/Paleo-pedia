@@ -1,9 +1,11 @@
 {
     "nav": {
         "library": "Bibliothèque",
-        "create": "Nouveau cartel",
+        "create": "Créer",
         "drafts": "Idées & Brouillons",
-        "admin": "Admin",
+        "admin": "Gestion",
+        "management": "Gestion",
+        "pending": "En attente",
         "deleteAll": "Tout supprimer"
     },
     "library": {
@@ -40,7 +42,9 @@
         "btnUpdate": "Mettre à jour",
         "success": "Cartel enregistré !",
         "located": "Localisé",
-        "notFound": "Lieu introuvable"
+        "notFound": "Lieu introuvable",
+        "saveDraft": "Sauvegarder brouillon",
+        "sendProposal": "Envoyer la proposition"
     },
     "cartel": {
         "moreInfo": "Pour aller plus loin",
@@ -94,5 +98,50 @@
     },
     "timeline": {
         "scroll_instruction": "Zoomez avec la molette et déplacez-vous pour explorer le temps. (Flèches ← → pour naviguer)"
+    },
+    "status": {
+        "draft": "🖊️ Brouillon",
+        "pending_review": "⏳ En attente",
+        "archived": "🗄️ Archivé"
+    },
+    "pages": {
+        "presentation": {
+            "title": "À Propos",
+            "subtitle": "LA PALÉO-ÉNERGÉTIQUE : une contre-histoire de l'énergie",
+            "intro": "Ressusciter les techniques disparues, montrer la capacité d'innovation, revaloriser des innovations oubliées et une capacité d'innovation sociale, vernaculaire, décentralisée, inattendue.",
+            "mission": "Notre Mission",
+            "examples": "Quelques exemples :",
+            "about": "À propos de cette recherche",
+            "examples_intro": "L'histoire de l'énergie n'est ni linéaire, ni darwinienne. Elle regorge d'innovations fantastiques oubliées qui n'ont pas été généralisées à leur époque, alors qu'elles répondaient déjà à des problématiques contemporaines."
+        },
+        "prestations": {
+            "title": "Nos Prestations",
+            "subtitle": "Innovation collaborative, Recherche & Formation",
+            "challenges": "Challenges Rétrofutur",
+            "workshops": "Ateliers de Formation",
+            "consulting": "Conseil"
+        },
+        "contact": {
+            "title": "Contact",
+            "intro": "Vous avez une question, une suggestion ou vous souhaitez participer au projet ? Écrivez-nous !",
+            "name": "Nom et Prénom",
+            "email": "Email",
+            "subject": "Sujet",
+            "message": "Message",
+            "send": "Envoyer"
+        }
+    },
+    "admin": {
+        "title": "Gestion des cartels",
+        "propose": "Envoyer la proposition",
+        "create": "Créer",
+        "workshop": "Atelier",
+        "createWorkshop": "Créer un Atelier",
+        "noCartels": "Aucun cartel dans la bibliothèque."
+    },
+    "subsiteEditor": {
+        "saving": "Sauvegarde…",
+        "create": "Créer le sous-site",
+        "edit": "Enregistrer"
     }
 }

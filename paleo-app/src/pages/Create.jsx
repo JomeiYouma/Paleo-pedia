@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { geocodingService } from '../services/geocoding';
 import { Save, ArrowLeft, MapPin, Check, X } from 'lucide-react';
@@ -23,8 +23,10 @@ const Create = () => {
 
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const editId = searchParams.get('edit');
     const workshopIdParam = searchParams.get('workshopId');
+    const returnTo = location.state?.returnTo || '/app';
 
     const isEn = i18n.language === 'en';
 
@@ -132,7 +134,7 @@ const Create = () => {
     };
 
     const handleBack = () => {
-        navigate('/app');
+        navigate(returnTo);
     };
 
     const handleSubmit = async (e) => {
@@ -205,7 +207,7 @@ const Create = () => {
         }
 
         setIsSaving(false);
-        navigate('/app');
+        navigate(returnTo);
     };
 
     return (
@@ -359,10 +361,10 @@ const Create = () => {
                     {!isAdmin && (
                         <>
                             <button type="submit" name="save_draft" disabled={isSaving} style={{ flex: 1, backgroundColor: '#555', color: 'white', padding: '15px', border: 'none', borderRadius: '8px', display: 'flex', justifyContent: 'center', gap: '10px', opacity: isSaving ? 0.7 : 1, cursor: 'pointer' }}>
-                                <Save /> Sauvegarder brouillon
+                                <Save /> {t('create.saveDraft')}
                             </button>
                             <button type="submit" name="propose" disabled={isSaving} style={{ flex: 1, backgroundColor: 'var(--color-pink-darker, #C2185B)', color: 'white', padding: '15px', border: 'none', borderRadius: '8px', display: 'flex', justifyContent: 'center', gap: '10px', opacity: isSaving ? 0.7 : 1, cursor: 'pointer' }}>
-                                <Check /> Envoyer la proposition
+                                <Check /> {t('create.sendProposal')}
                             </button>
                         </>
                     )}

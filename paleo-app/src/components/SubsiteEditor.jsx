@@ -4,6 +4,7 @@
  * Permet : nom, slug, catégorie, couleur primaire, blocs de contenu, partenaires.
  */
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Plus, Trash2, GripVertical, Type, AlignLeft, Image as ImgIcon, Upload } from 'lucide-react';
 import api from '../services/apiClient';
 
@@ -21,6 +22,7 @@ const BLOCK_TYPES = [
 
 const SubsiteEditor = ({ subsite = null, onClose, onSaved }) => {
     const isEdit = !!subsite;
+    const { t } = useTranslation();
 
     const [name,          setName]          = useState(subsite?.name          ?? '');
     const [slug,          setSlug]          = useState(subsite?.slug          ?? '');
@@ -203,7 +205,7 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved }) => {
                     <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', borderTop: '1px solid #f0f0f0', paddingTop: '16px' }}>
                         <button onClick={onClose} style={{ padding: '11px 20px', borderRadius: '10px', border: '1px solid #ddd', cursor: 'pointer', fontFamily: 'inherit' }}>Annuler</button>
                         <button onClick={handleSave} disabled={saving} style={{ padding: '11px 24px', borderRadius: '10px', border: 'none', background: saving ? '#ccc' : color, color: 'white', cursor: saving ? 'not-allowed' : 'pointer', fontWeight: '700', fontFamily: 'inherit' }}>
-                            {saving ? 'Sauvegarde…' : isEdit ? 'Enregistrer' : 'Créer le sous-site'}
+                            {saving ? t('subsiteEditor.saving') : isEdit ? t('subsiteEditor.edit') : t('subsiteEditor.create')}
                         </button>
                     </div>
                 </div>

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Edit, Trash2, Eye, EyeOff, Check, X, Clock,
     Download, Square, CheckSquare, Search,
@@ -13,6 +13,24 @@ import { generateZip, generatePdf, generateArchive } from '../utils/zipGenerator
 import CartelPreview from '../components/CartelPreview';
 import { getYearForSort } from '../utils/helpers';
 import api from '../services/apiClient';
+
+const HEX_COLORS = {
+    neutral: '#4b5563',
+};
+
+function hexToRgba(hex, alpha) {
+    if (!hex || typeof hex !== 'string' || !hex.startsWith('#')) return `rgba(75, 85, 99, ${alpha})`;
+    const raw = hex.slice(1);
+    const normalized = raw.length === 3
+        ? raw.split('').map(c => c + c).join('')
+        : raw;
+    if (normalized.length !== 6) return `rgba(75, 85, 99, ${alpha})`;
+
+    const r = parseInt(normalized.slice(0, 2), 16);
+    const g = parseInt(normalized.slice(2, 4), 16);
+    const b = parseInt(normalized.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 // ── Onglets ──────────────────────────────────────────────────
 const TABS = [
@@ -106,7 +124,7 @@ const ImportModal = ({ onClose, onDone }) => {
             <div onClick={e => e.stopPropagation()} style={{ background:'white', borderRadius:'16px', padding:'28px', maxWidth:'480px', width:'100%', position:'relative' }}>
                 <button onClick={onClose} style={{ position:'absolute', top:'16px', right:'16px', background:'#f5f5f5', border:'none', borderRadius:'50%', width:'32px', height:'32px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={16} /></button>
 
-                <h3 style={{ margin:'0 0 8px', fontSize:'1.1rem', fontWeight:'800' }}>📦 Importer une archive ZIP</h3>
+                <h3 style={{ margin:'0 0 8px', fontSize:'1.1rem', fontWeight:'800' }}>Importer une archive ZIP</h3>
                 <p style={{ color:'#888', fontSize:'0.85rem', margin:'0 0 20px', lineHeight:'1.4' }}>
                     L'archive doit contenir un fichier <code>cartels.json</code> à la racine.<br/>
                     Les images peuvent être placées à la racine ou dans un dossier <code>images/</code>.<br/>
@@ -134,7 +152,7 @@ const ImportModal = ({ onClose, onDone }) => {
                 ) : (
                     <div>
                         <div style={{ background:'#e8f5e9', borderRadius:'10px', padding:'16px', marginBottom:'16px' }}>
-                            <div style={{ fontWeight:'800', color:'#2e7d32', fontSize:'1.1rem', marginBottom:'4px' }}>✅ Import terminé</div>
+                            <div style={{ fontWeight:'800', color:'#2e7d32', fontSize:'1.1rem', marginBottom:'4px' }}>Import terminé</div>
                             <div style={{ fontSize:'0.9rem', color:'#555' }}>{result.created} cartel(s) créé(s) en brouillon.</div>
                         </div>
                         {result.errors?.length > 0 && (
@@ -155,11 +173,26 @@ const ImportModal = ({ onClose, onDone }) => {
 const ManageCartels = () => {
     const { cartels, fetchData, deleteCartel, deleteCartels, updateCartel, isAdmin, categories } = useApp();
     const navigate = useNavigate();
+    const location = useLocation();
     const { t, i18n } = useTranslation();
-    const [searchParams, setSearchParams] = useSearchParams();
 
-    const activeTab = searchParams.get('tab') || 'drafts';
-    const setActiveTab = (key) => setSearchParams({ tab: key });
+    const pathToTab = {
+        '/app/manage/drafts': 'drafts',
+        '/app/manage/pending': 'pending',
+        '/app/manage/published': 'published',
+    };
+    const tabToPath = {
+        drafts: '/app/manage/drafts',
+        pending: '/app/manage/pending',
+        published: '/app/manage/published',
+    };
+
+    const activeTab = pathToTab[location.pathname] || 'drafts';
+    const setActiveTab = (key) => navigate(tabToPath[key] || '/app/manage/drafts');
+    const goToCreate = (editId) => {
+        const target = editId ? `/app/create?edit=${editId}` : '/app/create';
+        navigate(target, { state: { returnTo: location.pathname } });
+    };
 
     const [search,         setSearch]         = useState('');
     const [filterCategory, setFilterCategory] = useState('');
@@ -355,19 +388,19 @@ const ManageCartels = () => {
             {/* ── En-tête ────────────────────────────────────── */}
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'28px 0 20px', flexWrap:'wrap', gap:'12px' }}>
                 <div>
-                    <h1 style={{ margin:0, fontSize:'1.6rem', fontWeight:'800', color:'#1a1a1a' }}>Gestion des cartels</h1>
+                    <h1 style={{ margin:0, fontSize:'1.6rem', fontWeight:'800', color:'#1a1a1a' }}>{t('admin.title')}</h1>
                     <p style={{ margin:'4px 0 0', color:'#999', fontSize:'0.88rem' }}>{cartels.length} cartel{cartels.length !== 1 ? 's' : ''} au total</p>
                 </div>
                 <div style={{ display:'flex', gap:'8px', flexWrap:'wrap' }}>
                     <button
                         onClick={() => setShowImport(true)}
-                        style={{ display:'flex', alignItems:'center', gap:'6px', background:'#555', color:'white', border:'none', borderRadius:'10px', padding:'10px 16px', cursor:'pointer', fontWeight:'700', fontSize:'0.88rem', fontFamily:'inherit' }}
+                        style={{ display:'flex', alignItems:'center', gap:'6px', background:'#6b7280', color:'white', border:'none', borderRadius:'10px', padding:'10px 16px', cursor:'pointer', fontWeight:'700', fontSize:'0.88rem', fontFamily:'inherit' }}
                     >
                         <Upload size={15} /> Importer
                     </button>
                     <button
-                        onClick={() => navigate('/app/create')}
-                        style={{ display:'flex', alignItems:'center', gap:'6px', background:'#1a1a1a', color:'white', border:'none', borderRadius:'10px', padding:'10px 16px', cursor:'pointer', fontWeight:'700', fontSize:'0.88rem', fontFamily:'inherit' }}
+                        onClick={() => goToCreate()}
+                        style={{ display:'flex', alignItems:'center', gap:'6px', background:'var(--color-red-accent, #D65A5A)', color:'white', border:'none', borderRadius:'10px', padding:'10px 16px', cursor:'pointer', fontWeight:'700', fontSize:'0.88rem', fontFamily:'inherit' }}
                     >
                         <Plus size={15} /> Nouveau cartel
                     </button>
@@ -565,8 +598,8 @@ const ManageCartels = () => {
                                         {/* Actions */}
                                         <td style={{ padding:'10px' }}>
                                             <div style={{ display:'flex', gap:'4px', justifyContent:'center', flexWrap:'wrap' }}>
-                                                <ActionBtn onClick={() => setPreviewCartel(cartel)} title="Aperçu" color="#555"><ScanEye size={15} /></ActionBtn>
-                                                <ActionBtn onClick={() => navigate(`/app/create?edit=${cartel.id}`)} title="Éditer" color="#3b5bdb"><Edit size={15} /></ActionBtn>
+                                                <ActionBtn onClick={() => setPreviewCartel(cartel)} title="Aperçu du cartel" color={HEX_COLORS.neutral}><ScanEye size={15} /></ActionBtn>
+                                                <ActionBtn onClick={() => goToCreate(cartel.id)} title="Modifier le cartel" color="#3b5bdb"><Edit size={15} /></ActionBtn>
 
                                                 {/* Retraduire */}
                                                 <ActionBtn onClick={() => handleTranslate(cartel)} title="Retraduire en anglais (IA)" color="#6741d9" disabled={isTrans}>
@@ -574,15 +607,15 @@ const ManageCartels = () => {
                                                 </ActionBtn>
 
                                                 {(cartel.status === 'draft' || cartel.status === 'pending_review') && (
-                                                    <ActionBtn onClick={() => handlePublish(cartel)} title="Publier" color="#2e7d32" disabled={isProc}><Check size={15} /></ActionBtn>
+                                                    <ActionBtn onClick={() => handlePublish(cartel)} title="Publier sur la frise" color="#2e7d32" disabled={isProc}><Check size={15} /></ActionBtn>
                                                 )}
                                                 {(cartel.status === 'pending_review' || cartel.status === 'published') && (
                                                     <ActionBtn onClick={() => handleToDraft(cartel)} title="Repasser en brouillon" color="#e67e00" disabled={isProc}><FileText size={15} /></ActionBtn>
                                                 )}
                                                 {cartel.status === 'published' && (
-                                                    <ActionBtn onClick={() => handleArchive(cartel)} title="Archiver" color="#888" disabled={isProc}><X size={15} /></ActionBtn>
+                                                    <ActionBtn onClick={() => handleArchive(cartel)} title="Archiver (masquer)" color="#6b7280" disabled={isProc}><X size={15} /></ActionBtn>
                                                 )}
-                                                <ActionBtn onClick={() => handleDelete(cartel.id)} title="Supprimer" color="#d32f2f" disabled={isProc}><Trash2 size={15} /></ActionBtn>
+                                                <ActionBtn onClick={() => handleDelete(cartel.id)} title="Supprimer définitivement" color="#d32f2f" disabled={isProc}><Trash2 size={15} /></ActionBtn>
                                             </div>
                                         </td>
                                     </tr>
@@ -603,7 +636,7 @@ const ManageCartels = () => {
                             <CartelPreview data={previewCartel} />
                         </div>
                         <div style={{ display:'flex', gap:'10px', marginTop:'16px', justifyContent:'flex-end' }}>
-                            <button onClick={() => { setPreviewCartel(null); navigate(`/app/create?edit=${previewCartel.id}`); }}
+                            <button onClick={() => { setPreviewCartel(null); goToCreate(previewCartel.id); }}
                                 style={{ display:'flex', alignItems:'center', gap:'6px', background:'#3b5bdb', color:'white', border:'none', padding:'10px 18px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', fontFamily:'inherit' }}>
                                 <Edit size={15} /> Éditer
                             </button>
@@ -621,13 +654,70 @@ const ManageCartels = () => {
 };
 
 // ── Bouton action compact ─────────────────────────────────────
-const ActionBtn = ({ onClick, title, color, disabled, children }) => (
-    <button onClick={onClick} disabled={disabled} title={title}
-        style={{ width:'30px', height:'30px', display:'flex', alignItems:'center', justifyContent:'center', border:`1px solid ${color}20`, borderRadius:'6px', background:`${color}10`, color, cursor: disabled ? 'wait' : 'pointer', opacity: disabled ? 0.5 : 1, transition:'all 0.12s' }}
-        onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background = color; e.currentTarget.style.color = 'white'; } }}
-        onMouseLeave={e => { e.currentTarget.style.background = `${color}10`; e.currentTarget.style.color = color; }}>
-        {children}
-    </button>
-);
+const ActionBtn = ({ onClick, title, color, disabled, children }) => {
+    const [isHover, setIsHover] = useState(false);
+    const [showTip, setShowTip] = useState(false);
+    const baseColor = color || HEX_COLORS.neutral;
+
+    const style = {
+        width: '40px',
+        height: '40px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: `1px solid ${hexToRgba(baseColor, 0.25)}`,
+        borderRadius: '10px',
+        background: disabled
+            ? '#f3f4f6'
+            : isHover
+                ? baseColor
+                : hexToRgba(baseColor, 0.12),
+        color: disabled ? '#9ca3af' : (isHover ? 'white' : baseColor),
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.9 : 1,
+        transition: 'all 0.12s ease',
+    };
+
+    return (
+        <div style={{ position: 'relative', display: 'inline-flex' }}>
+            <button
+                onClick={onClick}
+                disabled={disabled}
+                aria-label={title}
+                style={style}
+                onMouseEnter={() => { setIsHover(true); setShowTip(true); }}
+                onMouseLeave={() => { setIsHover(false); setShowTip(false); }}
+                onFocus={() => setShowTip(true)}
+                onBlur={() => setShowTip(false)}
+            >
+                {children}
+            </button>
+
+            {showTip && (
+                <div
+                    role="tooltip"
+                    style={{
+                        position: 'absolute',
+                        bottom: 'calc(100% + 8px)',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        background: '#111827',
+                        color: 'white',
+                        fontSize: '0.74rem',
+                        fontWeight: '600',
+                        padding: '6px 8px',
+                        borderRadius: '6px',
+                        whiteSpace: 'nowrap',
+                        pointerEvents: 'none',
+                        zIndex: 20,
+                        boxShadow: '0 6px 18px rgba(0,0,0,0.22)',
+                    }}
+                >
+                    {title}
+                </div>
+            )}
+        </div>
+    );
+};
 
 export default ManageCartels;

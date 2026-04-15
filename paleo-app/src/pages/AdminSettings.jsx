@@ -337,7 +337,7 @@ const AdminSettings = () => {
                                         color: '#3b5bdb',
                                         fontWeight: '600',
                                     }}>
-                                        📋 Règle active : chaque IP peut soumettre au maximum{' '}
+                                        Règle active : chaque IP peut soumettre au maximum{' '}
                                         <strong>{maxWindow} cartel{maxWindow > 1 ? 's' : ''}</strong> toutes les{' '}
                                         <strong>
                                             {windowMinutes >= 60
@@ -370,7 +370,7 @@ const AdminSettings = () => {
                                         borderRadius: '8px',
                                         border: '1px solid #ddd',
                                         fontSize: '0.9rem',
-                                        fontFamily: 'monospace',
+                                        fontFamily: 'inherit',
                                     }}
                                 />
                                 <button
@@ -391,7 +391,7 @@ const AdminSettings = () => {
                             </div>
                             {aiKey && (
                                 <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: '#aaa' }}>
-                                    {aiKey.startsWith('sk-') ? '✅ Format OpenAI détecté' : aiKey.endsWith(':fx') ? '✅ Format DeepL Free détecté' : '⚠️ Format non reconnu'}
+                                    {aiKey.startsWith('sk-') ? 'Format OpenAI détecté' : aiKey.endsWith(':fx') ? 'Format DeepL Free détecté' : 'Format non reconnu'}
                                 </p>
                             )}
                         </Field>
@@ -401,10 +401,10 @@ const AdminSettings = () => {
                     <Section icon={Shield} title="Informations système" color="#888">
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                             {[
-                                { label: 'Soumissions anonymes',  value: allowAnon ? '✅ Autorisées' : '🚫 Bloquées' },
+                                { label: 'Soumissions anonymes',  value: allowAnon ? 'Autorisées' : 'Bloquées' },
                                 { label: 'Limite globale / IP',   value: `${maxTotal} cartels` },
                                 { label: 'Limite sur fenêtre',    value: `${maxWindow} cartels / ${windowMinutes} min` },
-                                { label: 'Clé IA configurée',     value: aiKey ? '✅ Oui' : '❌ Non' },
+                                { label: 'Clé IA configurée',     value: aiKey ? 'Oui' : 'Non' },
                             ].map(({ label, value }) => (
                                 <div
                                     key={label}

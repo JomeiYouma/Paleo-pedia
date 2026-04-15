@@ -12,14 +12,15 @@ import { useTranslation } from 'react-i18next';
 import './Library.css';
 
 /** Badge de statut pour les cartels hors "published" (visible admin only) */
-const StatusBadge = ({ status }) => {
+const StatusBadge = ({ status, t }) => {
     const styles = {
-        draft:          { background: '#f0f4ff', color: '#3b5bdb', label: '🖊️ Brouillon'    },
-        pending_review: { background: '#fff4e0', color: '#e67e00', label: '⏳ En attente'   },
-        archived:       { background: '#f8f8f8', color: '#888',    label: '🗄️ Archivé'      },
+        draft:          { background: '#f0f4ff', color: '#3b5bdb' },
+        pending_review: { background: '#fff4e0', color: '#e67e00' },
+        archived:       { background: '#f8f8f8', color: '#888' },
     };
     const s = styles[status];
     if (!s) return null;
+    const label = t(`status.${status}`);
     return (
         <span style={{
             display: 'inline-block', fontSize: '0.72rem', fontWeight: '600',
@@ -27,7 +28,7 @@ const StatusBadge = ({ status }) => {
             background: s.background, color: s.color,
             marginLeft: '8px', verticalAlign: 'middle',
         }}>
-            {s.label}
+            {label}
         </span>
     );
 };
@@ -252,7 +253,7 @@ const Library = ({ fixedCategory = null }) => {
                                 {/* Badge statut pour l'admin */}
                                 {isAdmin && cartel.status !== 'published' && (
                                     <div style={{ marginBottom: '6px' }}>
-                                        <StatusBadge status={cartel.status} />
+                                        <StatusBadge status={cartel.status} t={t} />
                                     </div>
                                 )}
                                 <CartelPreview data={cartel} />

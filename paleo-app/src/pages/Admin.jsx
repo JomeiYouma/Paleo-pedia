@@ -272,7 +272,7 @@ const Admin = () => {
                             <span>Atelier : {activeWorkshop.name}</span>
                         </>
                     ) : (
-                        "🛠️ Gestion Globale"
+                        "🛠️ " + t('admin.title')
                     )}
                 </h2>
 
@@ -298,7 +298,7 @@ const Admin = () => {
                                 cursor: selectedIds.size > 0 ? 'pointer' : 'not-allowed',
                             }}
                         >
-                            + Créer Atelier ({selectedIds.size})
+                            + {t('admin.createWorkshop')} ({selectedIds.size})
                         </button>
                     )}
 
@@ -464,8 +464,8 @@ const Admin = () => {
                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
                     <div style={{ background: 'white', padding: '20px', borderRadius: '8px', minWidth: '300px' }}>
-                        <h3>Créer un Atelier</h3>
-                        <p>Créer un atelier avec les <b>{selectedIds.size}</b> cartels sélectionnés.</p>
+                        <h3>{t('admin.createWorkshop')}</h3>
+                        <p>{t('admin.create')} atelier avec les <b>{selectedIds.size}</b> cartels sélectionnés.</p>
                         <input
                             type="text"
                             placeholder="Nom de l'atelier (ex: Atelier Solaire)"
@@ -487,7 +487,7 @@ const Admin = () => {
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                             <button onClick={() => setShowWorkshopModal(false)}>Annuler</button>
-                            <button onClick={handleCreateWorkshop} style={{ background: 'blue', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '4px' }}>Créer</button>
+                            <button onClick={handleCreateWorkshop} style={{ background: 'blue', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '4px' }}>{t('admin.create')}</button>
                         </div>
                     </div>
                 </div>

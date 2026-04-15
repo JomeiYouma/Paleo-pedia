@@ -1,9 +1,11 @@
 {
     "nav": {
         "library": "Library",
-        "create": "New Cartel",
+        "create": "Create",
         "drafts": "Ideas & Drafts",
-        "admin": "Admin",
+        "admin": "Management",
+        "management": "Management",
+        "pending": "Pending",
         "deleteAll": "Delete All"
     },
     "library": {
@@ -40,7 +42,9 @@
         "btnUpdate": "Update",
         "success": "Cartel saved!",
         "located": "Located",
-        "notFound": "Location not found"
+        "notFound": "Location not found",
+        "saveDraft": "Save Draft",
+        "sendProposal": "Send Proposal"
     },
     "cartel": {
         "moreInfo": "Learn more",
@@ -91,5 +95,50 @@
         "delete": "Delete",
         "publish": "Publish",
         "addIdea": "Add an idea"
+    },
+    "status": {
+        "draft": "📝 Draft",
+        "pending_review": "⏳ Pending",
+        "archived": "🗄️ Archived"
+    },
+    "pages": {
+        "presentation": {
+            "title": "About",
+            "subtitle": "PALEO-ENERGETICS: A Counter-History of Energy",
+            "intro": "Resurrect forgotten techniques, demonstrate innovation capacity, revive overlooked innovations and unexpected social, vernacular, decentralized capabilities.",
+            "mission": "Our Mission",
+            "examples": "A few examples:",
+            "about": "About this research",
+            "examples_intro": "Energy history is neither linear nor Darwinian. It is full of fantastic forgotten innovations that were not generalized in their day, even though they already addressed contemporary issues."
+        },
+        "prestations": {
+            "title": "Our Services",
+            "subtitle": "Collaborative Innovation, Research & Training",
+            "challenges": "Retrofutur Challenges",
+            "workshops": "Training Workshops",
+            "consulting": "Consulting"
+        },
+        "contact": {
+            "title": "Contact",
+            "intro": "Do you have a question, suggestion or would like to participate in the project? Write to us!",
+            "name": "First and Last Name",
+            "email": "Email",
+            "subject": "Subject",
+            "message": "Message",
+            "send": "Send"
+        }
+    },
+    "admin": {
+        "title": "Cartel Management",
+        "propose": "Send proposal",
+        "create": "Create",
+        "workshop": "Workshop",
+        "createWorkshop": "Create Workshop",
+        "noCartels": "No cartels in the library."
+    },
+    "subsiteEditor": {
+        "saving": "Saving...",
+        "create": "Create Subsite",
+        "edit": "Save"
     }
 }
