@@ -26,9 +26,8 @@ const HeuristicMode = ({ cartels = [] }) => {
         if (!Array.isArray(cartels)) return { nodes: [], links: [] };
 
         cartels.forEach(c => {
-            // Only visible cartels in this mode? Let's follow general rules (visible or admin)
-            const isVisible = c.visible !== false || isAdmin;
-            if (!isVisible) return;
+            // Public mode: only published. Admin mode: show everything.
+            if (!isAdmin && c.status !== 'published') return;
 
             const cats = isEn && c.categories_en ? c.categories_en : (c.categories || []);
 

@@ -24,7 +24,7 @@ export const ExportController = {
         cartels = cartels.filter(Boolean);
       } else {
         // Par défaut : tous les publiés
-        cartels = await CartelModel.findAll({ status: 'published', visible: true, limit: 5000 });
+        cartels = await CartelModel.findAll({ status: 'published', limit: 5000 });
       }
 
       if (!cartels.length) {
@@ -65,6 +65,7 @@ export const ExportController = {
           lng:            c.lng,
           url_qr:         c.url_qr,
           image_path:     cleanedImagePath ? path.basename(cleanedImagePath) : '',
+          imageCredit:    c.imageCredit || '',
           categories:     (c.categories || []),
           status:         c.status,
         };

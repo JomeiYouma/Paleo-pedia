@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS `cartels` (
 
   -- Médias
   `image_path`     VARCHAR(512)  NOT NULL DEFAULT '',
+  `image_credit`   TEXT          NULL,
   `url_qr`         VARCHAR(512)  NOT NULL DEFAULT '',
 
   -- Dates

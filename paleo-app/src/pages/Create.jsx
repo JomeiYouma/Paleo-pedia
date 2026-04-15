@@ -182,7 +182,6 @@ const Create = () => {
             // Mise à jour d'un cartel existant
             if (isAdmin && action === 'publish') {
                 entry.status = 'published';
-                entry.visible = true;
             } else if (isAdmin) {
                 // Admin garde le statut actuel ou force draft
                 entry.status = entry.status || 'draft';
@@ -195,10 +194,8 @@ const Create = () => {
             // Nouveau cartel
             if (isAdmin) {
                 entry.status = action === 'publish' ? 'published' : 'draft';
-                entry.visible = action === 'publish';
             } else {
                 entry.status = action === 'save_draft' ? 'draft' : 'pending_review';
-                entry.visible = false;
                 if (action !== 'save_draft') {
                     setStatusMsg(t('messages.proposalSaved', "Proposition envoyée !"));
                 }

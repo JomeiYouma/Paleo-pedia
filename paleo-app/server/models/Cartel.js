@@ -40,6 +40,8 @@ function parseCartel(row) {
     row.category_objects = [];
   }
   delete row.categories_raw;
+  row.imageCredit = row.image_credit || '';
+  delete row.image_credit;
   // Convertir TINYINT(1) en boolean
   row.visible = !!row.visible;
   return row;
@@ -91,8 +93,8 @@ export const CartelModel = {
         `INSERT INTO cartels (
            id, created_by, titre, titre_en, annee, description, description_en,
            exhume_par, location, location_en, lat, lng,
-           image_path, url_qr, date, status, visible, submitter_ip
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           image_path, image_credit, url_qr, date, status, visible, submitter_ip
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id, userId ?? null,
           data.titre,            data.titre_en      ?? '',
@@ -105,6 +107,7 @@ export const CartelModel = {
           data.lat               ?? null,
           data.lng               ?? null,
           data.image_path        ?? '',
+          data.imageCredit       ?? data.image_credit ?? '',
           data.url_qr            ?? '',
           data.date              ?? null,
           data.status            ?? 'draft',
@@ -137,6 +140,13 @@ export const CartelModel = {
           values.push(field === 'visible' ? (data[field] ? 1 : 0) : data[field]);
         }
       }
+      if ('imageCredit' in data) {
+        sets.push('image_credit = ?');
+        values.push(data.imageCredit ?? '');
+      } else if ('image_credit' in data) {
+        sets.push('image_credit = ?');
+        values.push(data.image_credit ?? '');
+      }
       if (sets.length) {
         values.push(id);
         await client.query(`UPDATE cartels SET ${sets.join(', ')} WHERE id = ?`, values);
@@ -157,16 +167,12 @@ export const CartelModel = {
   },
 
   async setStatus(id, status) {
-    let extra = '';
-    const values = [status];
-
+    const values = [status, id];
     if (status === 'published') {
-      extra = ', published_at = NOW(), visible = 1';
+      await query('UPDATE cartels SET status = ?, published_at = NOW() WHERE id = ?', values);
     } else {
-      extra = ', visible = 0';
+      await query('UPDATE cartels SET status = ? WHERE id = ?', values);
     }
-
-    await query(`UPDATE cartels SET status = ? ${extra} WHERE id = ?`, [...values, id]);
     return this.findById(id);
   },
 

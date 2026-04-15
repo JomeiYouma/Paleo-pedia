@@ -6,9 +6,10 @@ import { useTranslation } from 'react-i18next';
 import { generateZip } from '../utils/zipGenerator';
 import CartelPreview from '../components/CartelPreview';
 import { getYearForSort } from '../utils/helpers'; // Import helper
+import api from '../services/apiClient';
 
 const Admin = () => {
-    const { cartels, deleteCartel, deleteCartels, updateCartel, isAdmin, categories, addWorkshop, deleteWorkshop, workshops } = useApp();
+    const { cartels, deleteCartel, deleteCartels, fetchData, isAdmin, categories, addWorkshop, deleteWorkshop, workshops } = useApp();
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
     const isEn = i18n.language === 'en';
@@ -130,9 +131,10 @@ const Admin = () => {
         }
     };
 
-    const handleVisibility = async (cartel) => {
-        const currentVisibility = cartel.visible !== false;
-        await updateCartel({ ...cartel, visible: !currentVisibility });
+    const handleTogglePublished = async (cartel) => {
+        const nextStatus = cartel.status === 'published' ? 'draft' : 'published';
+        await api.cartels.setStatus(cartel.id, nextStatus);
+        await fetchData();
     };
 
     const handleDelete = async (id) => {
@@ -185,33 +187,35 @@ const Admin = () => {
 
     const handleBulkPublish = async () => {
         if (selectedIds.size === 0) return;
-        const confirmMsg = `Voulez-vous rendre ces ${selectedIds.size} cartels visibles sur la frise générale ?`;
+        const confirmMsg = `Voulez-vous publier ces ${selectedIds.size} cartels ?`;
         if (confirm(confirmMsg)) {
             let count = 0;
             for (const id of selectedIds) {
                 const c = cartels.find(x => x.id === id);
-                if (c && c.visible === false) {
-                    await updateCartel({ ...c, visible: true });
+                if (c && c.status !== 'published') {
+                    await api.cartels.publish(c.id);
                     count++;
                 }
             }
-            alert(`${count} cartels publiés sur la frise générale !`);
+            await fetchData();
+            alert(`${count} cartels publiés.`);
             setSelectedIds(new Set());
         }
     };
 
     const handleBulkUndisclose = async () => {
         if (selectedIds.size === 0) return;
-        if (confirm(`Voulez-vous masquer ces ${selectedIds.size} cartels de la frise générale ?`)) {
+        if (confirm(`Voulez-vous repasser en brouillon ces ${selectedIds.size} cartels ?`)) {
             let count = 0;
             for (const id of selectedIds) {
                 const c = cartels.find(x => x.id === id);
-                if (c && c.visible !== false) {
-                    await updateCartel({ ...c, visible: false });
+                if (c && c.status === 'published') {
+                    await api.cartels.setStatus(c.id, 'draft');
                     count++;
                 }
             }
-            alert(`${count} cartels masqués.`);
+            await fetchData();
+            alert(`${count} cartels remis en brouillon.`);
             setSelectedIds(new Set());
         }
     };
@@ -324,9 +328,9 @@ const Admin = () => {
                             cursor: selectedIds.size > 0 ? 'pointer' : 'not-allowed',
                             display: 'flex', alignItems: 'center', gap: '5px'
                         }}
-                        title="Masquer de la frise générale"
+                        title="Repasser en brouillon"
                     >
-                        <EyeOff size={18} /> Masquer ({selectedIds.size})
+                        <EyeOff size={18} /> Brouillon ({selectedIds.size})
                     </button>
 
                     <button
@@ -581,7 +585,7 @@ const Admin = () => {
                                 </div>
                             </th>
 
-                            <th style={{ padding: '12px', textAlign: 'center' }}>Visible</th>
+                            <th style={{ padding: '12px', textAlign: 'center' }}>Statut</th>
                             <th style={{ padding: '12px', textAlign: 'center', width: '100px' }}>Actions</th>
                         </tr>
                     </thead>
@@ -589,10 +593,15 @@ const Admin = () => {
                         {filteredCartels.map(cartel => {
                             const hasEn = !!cartel.titre_en;
                             const hasFr = !!cartel.titre;
-                            const isVisible = cartel.visible !== false; // Default true
+                            const isPublished = cartel.status === 'published';
+                            const statusLabel = cartel.status || 'draft';
+                            const statusColor =
+                                statusLabel === 'published' ? '#1a7f37' :
+                                statusLabel === 'pending_review' ? '#b26a00' :
+                                statusLabel === 'archived' ? '#666' : '#2754c5';
 
                             return (
-                                <tr key={cartel.id} style={{ borderBottom: '1px solid #eee', background: isVisible ? 'white' : '#fcfcfc', opacity: isVisible ? 1 : 0.7 }}>
+                                <tr key={cartel.id} style={{ borderBottom: '1px solid #eee', background: 'white' }}>
                                     <td style={{ padding: '10px', textAlign: 'center' }}>
                                         <div onClick={() => toggleSelection(cartel.id)} style={{ cursor: 'pointer' }}>
                                             {selectedIds.has(cartel.id) ? <CheckSquare size={18} color="blue" /> : <Square size={18} color="#ccc" />}
@@ -647,13 +656,26 @@ const Admin = () => {
                                         ) : '-'}
                                     </td>
                                     <td style={{ padding: '10px', textAlign: 'center' }}>
-                                        <button
-                                            onClick={() => handleVisibility(cartel)}
-                                            style={{ border: 'none', background: 'none', cursor: 'pointer', color: isVisible ? 'green' : '#ccc' }}
-                                            title={isVisible ? 'Visible (Click to Hide)' : 'Hidden (Click to Show)'}
-                                        >
-                                            {isVisible ? <Eye size={18} /> : <EyeOff size={18} />}
-                                        </button>
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                                            <span style={{
+                                                border: `1px solid ${statusColor}`,
+                                                color: statusColor,
+                                                borderRadius: '999px',
+                                                padding: '2px 8px',
+                                                fontSize: '0.75rem',
+                                                fontWeight: 600,
+                                                textTransform: 'uppercase'
+                                            }}>
+                                                {statusLabel}
+                                            </span>
+                                            <button
+                                                onClick={() => handleTogglePublished(cartel)}
+                                                style={{ border: 'none', background: 'none', cursor: 'pointer', color: isPublished ? '#b26a00' : '#1a7f37' }}
+                                                title={isPublished ? 'Repasser en brouillon' : 'Publier'}
+                                            >
+                                                {isPublished ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            </button>
+                                        </div>
                                     </td>
                                     <td style={{ padding: '10px', textAlign: 'center' }}>
                                         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>

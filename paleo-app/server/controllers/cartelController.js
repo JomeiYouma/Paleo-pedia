@@ -13,14 +13,13 @@ export const CartelController = {
 
       let filters = {
         category, search,
-        limit:  limit  ? parseInt(limit)  : 200,
+        limit:  limit  ? parseInt(limit)  : 5000,
         offset: offset ? parseInt(offset) : 0,
       };
 
-      // Visiteur anonyme ou non-admin → seulement le contenu publié visible
+      // Visiteur anonyme ou non-admin → seulement le contenu publié
       if (!isAdmin) {
         filters.status  = 'published';
-        filters.visible = true;
       }
       // Admin → tout (drafts, pending_review, published, archived)
 

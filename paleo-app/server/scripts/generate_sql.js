@@ -1,10 +1,35 @@
 import fs from 'fs';
 import path from 'path';
 
-// Define paths
-const CARTELS_PATH = path.resolve('../archives 17.02.2026/data/db_cartels.json');
-const DRAFTS_PATH = path.resolve('../archives 17.02.2026/data/db_drafts.json');
-const SQL_OUTPUT_PATH = path.resolve('./server/data_import.sql');
+// CLI usage:
+// node server/scripts/generate_sql.js --cartels <path> --drafts <path> --out <path>
+const args = process.argv.slice(2);
+const getArgValue = (name) => {
+    const idx = args.indexOf(name);
+    if (idx === -1 || idx === args.length - 1) return null;
+    return args[idx + 1];
+};
+
+const projectRoot = process.cwd();
+const CARTELS_PATH = path.resolve(
+    projectRoot,
+    getArgValue('--cartels') || '../cartels/data/db_cartels.json'
+);
+const DRAFTS_PATH = path.resolve(
+    projectRoot,
+    getArgValue('--drafts') || '../cartels/data/db_drafts.json'
+);
+const SQL_OUTPUT_PATH = path.resolve(
+    projectRoot,
+    getArgValue('--out') || 'server/data_import.sql'
+);
+
+if (!fs.existsSync(CARTELS_PATH)) {
+    throw new Error(`Cartels JSON not found: ${CARTELS_PATH}`);
+}
+if (!fs.existsSync(DRAFTS_PATH)) {
+    throw new Error(`Drafts JSON not found: ${DRAFTS_PATH}`);
+}
 
 // Read JSON files
 const cartelsRaw = fs.readFileSync(CARTELS_PATH, 'utf-8');
@@ -85,12 +110,13 @@ const generateCartelSQL = (item, status) => {
     const lng = item.coords && item.coords.lng ? item.coords.lng : 'NULL';
     const numLat = isNaN(parseFloat(lat)) ? 'NULL' : parseFloat(lat);
     const numLng = isNaN(parseFloat(lng)) ? 'NULL' : parseFloat(lng);
+    const visible = status === 'published' ? 1 : 0;
 
-    let sql = `INSERT INTO cartels (id, titre, titre_en, annee, description, description_en, exhume_par, location, location_en, lat, lng, image_path, url_qr, date, status, visible, created_at, updated_at) VALUES (\n`;
+    let sql = `INSERT INTO cartels (id, titre, titre_en, annee, description, description_en, exhume_par, location, location_en, lat, lng, image_path, image_credit, url_qr, date, status, visible, created_at, updated_at) VALUES (\n`;
     sql += `  ${esc(id)}, ${esc(item.titre)}, ${esc(item.titre_en)}, ${esc(item.annee)},\n`;
     sql += `  ${esc(item.description)}, ${esc(item.description_en)}, ${esc(item.exhume_par)},\n`;
     sql += `  ${esc(loc)}, ${esc(locEn)}, ${numLat}, ${numLng},\n`;
-    sql += `  ${esc(item.image_path)}, ${esc(item.url_qr)}, ${dateStr}, ${esc(status)}, 1, ${createdAt}, ${createdAt}\n`;
+    sql += `  ${esc(item.image_path)}, ${esc(item.imageCredit ?? item.image_credit ?? '')}, ${esc(item.url_qr)}, ${dateStr}, ${esc(status)}, ${visible}, ${createdAt}, ${createdAt}\n`;
     sql += `);\n`;
 
     if (item.categories && item.categories.length > 0) {
