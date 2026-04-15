@@ -64,6 +64,7 @@ const renderCartelToCanvas = async (cartel, container, lang) => {
     ? (cartel.location_en || cartel.location || '')
     : (cartel.location    || cartel.location_en || '');
   const cats  = (isEn ? cartel.categories_en : cartel.categories) || [];
+  const imageCredit = (cartel.imageCredit || cartel.image_credit || '').trim();
 
   // QR Code
   let qrDataUrl = '';
@@ -78,6 +79,7 @@ const renderCartelToCanvas = async (cartel, container, lang) => {
   const moreText    = isEn ? 'Read more'   : 'Pour aller plus loin';
   const exhumeText  = isEn ? 'Exhumed by'  : 'Exhumé par';
   const catText     = isEn ? 'Categories'  : 'Catégories';
+  const creditText  = isEn ? 'Image source' : 'Source image';
   const unknownText = isEn ? 'Unknown'     : 'Inconnu';
 
   const descHtml = desc.split('\n').map(l => `<p style="margin:0">${l}</p>`).join('<br/>');
@@ -92,6 +94,7 @@ const renderCartelToCanvas = async (cartel, container, lang) => {
   const qr_x          = MARGIN;
   const qr_y          = A4_HEIGHT_PX - MARGIN - qr_size;
   const footer_text_x = MARGIN + qr_size + 20;
+  const footer_max_w  = Math.max(260, mid_x - footer_text_x - 20);
   const img_limit_y   = qr_y - 30;
 
   // Image
@@ -121,9 +124,10 @@ const renderCartelToCanvas = async (cartel, container, lang) => {
       .pz { position:absolute; right:0; top:0; width:50%; height:100%; background:${PINK_HEX}; z-index:0; }
       .psb { font-family:'PT Sans Narrow',sans-serif; font-weight:700; color:black; }
       .psr { font-family:'PT Serif',serif;            font-weight:400; color:#141414; }
-      .fi  { position:absolute; left:${footer_text_x}px; top:${qr_y}px; height:${qr_size}px; display:flex; flex-direction:column; justify-content:center; z-index:10; }
+      .fi  { position:absolute; left:${footer_text_x}px; top:${qr_y}px; min-height:${qr_size}px; display:flex; flex-direction:column; justify-content:center; z-index:10; width:${footer_max_w}px; max-width:${footer_max_w}px; }
       .ml  { font-family:'PT Sans Narrow',sans-serif; font-weight:700; font-size:35px; color:#000; margin-bottom:5px; display:flex; align-items:center; }
       .cl  { font-family:'PT Sans Narrow',sans-serif; font-weight:400; font-size:30px; color:#505050; }
+      .sl  { font-family:'PT Sans Narrow',sans-serif; font-weight:400; font-size:22px; color:#666; line-height:1.2; margin-top:4px; width:100%; max-width:100%; white-space:normal; word-break:break-word; overflow-wrap:anywhere; }
       .tc  { position:absolute; left:${text_start_x}px; top:${initial_y}px; width:${text_width}px; display:flex; flex-direction:column; align-items:flex-end; z-index:10; }
       .yl  { font-size:90px; margin-bottom:5px; }
       .ll  { font-size:50px; margin-bottom:20px; font-family:'PT Serif',serif; font-style:italic; color:#333; }
@@ -139,6 +143,7 @@ const renderCartelToCanvas = async (cartel, container, lang) => {
       <div class="fi">
         ${qrDataUrl ? `<div class="ml"><span style="margin-right:10px;font-size:1.2em">←</span> ${moreText}</div>` : ''}
         <div class="cl">${exhumeText} ${cartel.exhume_par || unknownText}</div>
+        ${imageCredit ? `<div class="sl">${creditText}: ${imageCredit}</div>` : ''}
       </div>
       <div class="tc">
         <div class="yl psb">${formatYear(cartel.annee, lang)}</div>
@@ -280,6 +285,7 @@ export const generateArchive = async (cartels, onProgress) => {
     lng:            c.lng,
     url_qr:         c.url_qr,
     image_path:     c.image_path ? c.image_path.split('/').pop() : '',
+    imageCredit:    c.imageCredit || c.image_credit || '',
     categories:     c.categories || [],
     status:         c.status,
   }));

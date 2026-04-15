@@ -39,11 +39,15 @@
         "fieldCategories": "Catégories",
         "btnSave": "Enregistrer le cartel",
         "translating": "Traduction automatique en cours...",
+        "processing": "Traitement en cours...",
+        "optimizingImage": "Optimisation image...",
         "uploading": "Sauvegarde des données...",
         "btnUpdate": "Mettre à jour",
         "success": "Cartel enregistré !",
         "located": "Localisé",
         "notFound": "Lieu introuvable",
+        "imageCredit": "Crédit image",
+        "imageCreditPlaceholder": "ex: Wikimedia Commons, Auteur inconnu...",
         "saveDraft": "Sauvegarder brouillon",
         "sendProposal": "Envoyer la proposition"
     },
@@ -87,7 +91,9 @@
         "publishSuccess": "Publié avec succès !",
         "zipError": "Erreur lors de la génération du Zip",
         "bulkDeleteConfirm": "Voulez-vous vraiment supprimer ces cartels ?",
-        "deleteConfirm": "Supprimer ?"
+        "deleteConfirm": "Supprimer?",
+        "imageUploadError": "Erreur upload image : ",
+        "autoTranslateWarning": "Traduction automatique non disponible : "
     },
     "drafts": {
         "title": "Idées & Brouillons",
@@ -115,6 +121,19 @@
     "manageCartels": {
         "import": "Importer",
         "newCartel": "Nouveau cartel",
+        "draftsDescription": "Cartels en cours de rédaction",
+        "pendingDescription": "Soumissions de visiteurs à modérer",
+        "publishedDescription": "Cartels publiés",
+        "adminOnly": "Accès réservé à l'administration.",
+        "totalCount": "{{count}} cartels au total",
+        "importHelp1": "L'archive doit contenir un fichier",
+        "importHelp2": "à la racine.",
+        "importHelp3": "Les images peuvent être placées à la racine ou dans un dossier",
+        "importHelp4": "Les cartels importés seront créés en",
+        "chooseZip": "Choisir une archive .zip",
+        "importing": "Import en cours...",
+        "importCreated": "{{count}} cartel(s) créé(s) en brouillon.",
+        "preparingArchive": "Préparation archive...",
         "search": "Rechercher...",
         "allCategories": "Toutes catégories",
         "selectAll": "Tout sélectionner",
@@ -148,15 +167,10 @@
         "scroll_instruction": "Zoomez avec la molette et déplacez-vous pour explorer le temps. (Flèches ← → pour naviguer)"
     },
     "status": {
-        "draft": "🖊️ Brouillon",
+        "draft": "Brouillon",
         "pending_review": "⏳ En attente",
-        "published": "✅ Publié",
+        "published": "Publié",
         "archived": "🗄️ Archivé"
-    },
-    "manageCartels": {
-        "draftsDescription": "Cartels en cours de rédaction (non visibles)",
-        "pendingDescription": "Soumissions de visiteurs à modérer",
-        "publishedDescription": "Cartels visibles sur la frise"
     },
     "pages": {
         "presentation": {

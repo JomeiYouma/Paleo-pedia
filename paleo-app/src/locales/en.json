@@ -39,11 +39,15 @@
         "fieldCategories": "Categories",
         "btnSave": "Save Cartel",
         "translating": "Auto-translating...",
+        "processing": "Processing...",
+        "optimizingImage": "Optimizing image...",
         "uploading": "Saving data...",
         "btnUpdate": "Update",
         "success": "Cartel saved!",
         "located": "Located",
         "notFound": "Location not found",
+        "imageCredit": "Image credit",
+        "imageCreditPlaceholder": "e.g. Wikimedia Commons, Unknown author...",
         "saveDraft": "Save Draft",
         "sendProposal": "Send Proposal"
     },
@@ -87,7 +91,9 @@
         "publishSuccess": "Published successfully!",
         "zipError": "Error generating Zip",
         "bulkDeleteConfirm": "Do you really want to delete these cartels?",
-        "deleteConfirm": "Delete?"
+        "deleteConfirm": "Delete?",
+        "imageUploadError": "Image upload error: ",
+        "autoTranslateWarning": "Auto-translation unavailable: "
     },
     "drafts": {
         "title": "Ideas & Drafts",
@@ -115,6 +121,19 @@
     "manageCartels": {
         "import": "Import",
         "newCartel": "New Cartel",
+        "draftsDescription": "Cartels in progress",
+        "pendingDescription": "Visitor submissions to review",
+        "publishedDescription": "Published cartels",
+        "adminOnly": "Admin access only.",
+        "totalCount": "{{count}} cartels total",
+        "importHelp1": "The archive must contain a",
+        "importHelp2": "file at root.",
+        "importHelp3": "Images can be placed at root or inside",
+        "importHelp4": "Imported cartels will be created as",
+        "chooseZip": "Choose a .zip archive",
+        "importing": "Importing...",
+        "importCreated": "{{count}} cartel(s) created as draft.",
+        "preparingArchive": "Preparing archive...",
         "search": "Search...",
         "allCategories": "All categories",
         "selectAll": "Select all",
@@ -145,15 +164,10 @@
         "importClose": "Close"
     },
     "status": {
-        "draft": "📝 Draft",
+        "draft": "Draft",
         "pending_review": "⏳ Pending",
-        "published": "✅ Published",
+        "published": "Published",
         "archived": "🗄️ Archived"
-    },
-    "manageCartels": {
-        "draftsDescription": "Cartels in progress (not visible)",
-        "pendingDescription": "Visitor submissions to review",
-        "publishedDescription": "Cartels visible on the timeline"
     },
     "pages": {
         "presentation": {

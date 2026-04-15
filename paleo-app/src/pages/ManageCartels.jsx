@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-    Edit, Trash2, Eye, EyeOff, Check, X, Clock,
+    Edit, Trash2, Check, X, Clock,
     Download, Square, CheckSquare, Search,
     ArrowUpDown, ArrowUp, ArrowDown,
     FileText, Inbox, Globe, Plus, ScanEye, MapPin, Image as ImageIcon,
@@ -126,9 +126,9 @@ const ImportModal = ({ onClose, onDone, t }) => {
 
                 <h3 style={{ margin:'0 0 8px', fontSize:'1.1rem', fontWeight:'800' }}>{t('manageCartels.importZip')}</h3>
                 <p style={{ color:'#888', fontSize:'0.85rem', margin:'0 0 20px', lineHeight:'1.4' }}>
-                    L'archive doit contenir un fichier <code>cartels.json</code> à la racine.<br/>
-                    Les images peuvent être placées à la racine ou dans un dossier <code>images/</code>.<br/>
-                    Les cartels importés seront créés en <strong>brouillon</strong>.
+                    {t('manageCartels.importHelp1')} <code>cartels.json</code> {t('manageCartels.importHelp2')}<br/>
+                    {t('manageCartels.importHelp3')} <code>images/</code>.<br/>
+                    {t('manageCartels.importHelp4')} <strong>{t('status.draft')}</strong>.
                 </p>
 
                 {!result ? (
@@ -137,7 +137,7 @@ const ImportModal = ({ onClose, onDone, t }) => {
                             <input type="file" accept=".zip" style={{ display:'none' }} onChange={e => setFile(e.target.files[0] ?? null)} />
                             <Upload size={28} color={file ? '#2e7d32' : '#aaa'} style={{ marginBottom:'8px' }} />
                             <div style={{ fontSize:'0.9rem', fontWeight:'600', color: file ? '#2e7d32' : '#555' }}>
-                                {file ? file.name : 'Choisir une archive .zip'}
+                                {file ? file.name : t('manageCartels.chooseZip')}
                             </div>
                             {file && <div style={{ fontSize:'0.78rem', color:'#888', marginTop:'4px' }}>{(file.size / 1024 / 1024).toFixed(1)} Mo</div>}
                         </label>
@@ -145,7 +145,7 @@ const ImportModal = ({ onClose, onDone, t }) => {
                         <div style={{ display:'flex', gap:'10px', marginTop:'20px', justifyContent:'flex-end' }}>
                             <button onClick={onClose} style={{ padding:'10px 18px', borderRadius:'8px', border:'1px solid #ddd', cursor:'pointer', fontFamily:'inherit' }}>{t('common.back')}</button>
                             <button onClick={handleImport} disabled={!file || busy} style={{ padding:'10px 18px', borderRadius:'8px', border:'none', background: file ? '#1a1a1a' : '#ccc', color:'white', cursor: file ? 'pointer' : 'not-allowed', fontWeight:'700', fontFamily:'inherit', display:'flex', alignItems:'center', gap:'6px' }}>
-                                {busy ? 'Import en cours…' : <><Upload size={14} /> {t('manageCartels.import')}</>}
+                                {busy ? t('manageCartels.importing') : <><Upload size={14} /> {t('manageCartels.import')}</>}
                             </button>
                         </div>
                     </>
@@ -153,7 +153,7 @@ const ImportModal = ({ onClose, onDone, t }) => {
                     <div>
                         <div style={{ background:'#e8f5e9', borderRadius:'10px', padding:'16px', marginBottom:'16px' }}>
                             <div style={{ fontWeight:'800', color:'#2e7d32', fontSize:'1.1rem', marginBottom:'4px' }}>{t('messages.publishSuccess')}</div>
-                            <div style={{ fontSize:'0.9rem', color:'#555' }}>{result.created} cartel(s) créé(s) en brouillon.</div>
+                            <div style={{ fontSize:'0.9rem', color:'#555' }}>{t('manageCartels.importCreated', { count: result.created })}</div>
                         </div>
                         {result.errors?.length > 0 && (
                             <div style={{ background:'#fff3e0', borderRadius:'10px', padding:'12px', marginBottom:'16px', fontSize:'0.82rem' }}>
@@ -244,7 +244,7 @@ const ManageCartels = () => {
     }, [cartels, currentTabDef, search, filterCategory, sortConfig]);
 
     if (!isAdmin) {
-        return <div style={{ textAlign:'center', padding:'80px 20px', color:'#aaa' }}><p>Accès réservé à l'administration.</p></div>;
+        return <div style={{ textAlign:'center', padding:'80px 20px', color:'#aaa' }}><p>{t('manageCartels.adminOnly')}</p></div>;
     }
 
     // ── Actions unitaires ─────────────────────────────────────
@@ -259,10 +259,6 @@ const ManageCartels = () => {
     const handleToDraft   = (c) => { if (!confirm(`Repasser "${c.titre}" en brouillon ?`)) return; act(c.id, () => api.cartels.setStatus(c.id, 'draft')); };
     const handleArchive   = (c) => { if (!confirm(`Archiver "${c.titre}" ?`)) return; act(c.id, () => api.cartels.archive(c.id)); };
     const handleDelete    = (id) => { if (!confirm(t('messages.confirmDelete', 'Supprimer ?'))) return; act(id, () => api.cartels.delete(id)); };
-    const handleVisibility = async (c) => {
-        if (!confirm(`Masquer "${c.titre}" et le passer en brouillon ?`)) return;
-        await act(c.id, () => api.cartels.setStatus(c.id, 'draft'));
-    };
 
     // ── Traduction unitaire ───────────────────────────────────
     const handleTranslate = async (cartel) => {
@@ -393,7 +389,7 @@ const ManageCartels = () => {
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'28px 0 20px', flexWrap:'wrap', gap:'12px' }}>
                 <div>
                     <h1 style={{ margin:0, fontSize:'1.6rem', fontWeight:'800', color:'#1a1a1a' }}>{t('admin.title')}</h1>
-                    <p style={{ margin:'4px 0 0', color:'#999', fontSize:'0.88rem' }}>{cartels.length} cartel{cartels.length !== 1 ? 's' : ''} au total</p>
+                    <p style={{ margin:'4px 0 0', color:'#999', fontSize:'0.88rem' }}>{t('manageCartels.totalCount', { count: cartels.length })}</p>
                 </div>
                 <div style={{ display:'flex', gap:'8px', flexWrap:'wrap' }}>
                     <button
@@ -493,7 +489,7 @@ const ManageCartels = () => {
                 {selectedIds.size === 0 && (
                     <DropdownButton label={t('manageCartels.exportAll')} icon={Download} color="#666">
                         {close => (<>
-                            <DropItem icon={Package}  label={t('manageCartels.fullArchive')} onClick={() => { close(); withBusy('Préparation archive…', () => api.io.exportArchive([])); }} />
+                            <DropItem icon={Package}  label={t('manageCartels.fullArchive')} onClick={() => { close(); withBusy(t('manageCartels.preparingArchive'), () => api.io.exportArchive([])); }} />
                         </>)}
                     </DropdownButton>
                 )}
@@ -523,12 +519,11 @@ const ManageCartels = () => {
                         <tbody>
                             {filteredCartels.map(cartel => {
                                 const badge   = STATUS_BADGE[cartel.status] || {};
-                                const isVis   = cartel.visible !== false;
                                 const isProc  = processingId === cartel.id;
                                 const isTrans = translating.has(cartel.id);
 
                                 return (
-                                    <tr key={cartel.id} style={{ borderBottom:'1px solid #f0f0f0', background: isProc ? '#fffbf0' : (isVis ? 'white' : '#fcfcfc'), opacity: isProc ? 0.7 : 1 }}>
+                                    <tr key={cartel.id} style={{ borderBottom:'1px solid #f0f0f0', background: isProc ? '#fffbf0' : 'white', opacity: isProc ? 0.7 : 1 }}>
 
                                         {/* Checkbox */}
                                         <td style={{ padding:'10px', textAlign:'center' }}>
@@ -586,16 +581,10 @@ const ManageCartels = () => {
                                             </td>
                                         )}
 
-                                        {/* Statut + visibilité */}
+                                        {/* Statut */}
                                         <td style={{ padding:'10px', textAlign:'center' }}>
                                             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px' }}>
-                                                <span style={{ background:badge.bg, color:badge.color, borderRadius:'20px', padding:'2px 8px', fontSize:'0.75rem', fontWeight:'700' }}>{badge.label}</span>
-                                                {activeTab === 'published' && (
-                                                    <button onClick={() => handleVisibility(cartel)} title={isVis ? `${t('manageCartels.visible')} · ${t('manageCartels.hide')}` : `${t('manageCartels.hidden')} · ${t('manageCartels.show')}`}
-                                                        style={{ background:'none', border:'none', cursor:'pointer', color: isVis ? '#2e7d32' : '#ccc' }}>
-                                                        {isVis ? <Eye size={15} /> : <EyeOff size={15} />}
-                                                    </button>
-                                                )}
+                                                <span style={{ background:badge.bg, color:badge.color, borderRadius:'20px', padding:'2px 8px', fontSize:'0.75rem', fontWeight:'700' }}>{badge.labelKey ? t(badge.labelKey) : ''}</span>
                                             </div>
                                         </td>
 
@@ -603,7 +592,7 @@ const ManageCartels = () => {
                                         <td style={{ padding:'10px' }}>
                                             <div style={{ display:'flex', gap:'4px', justifyContent:'center', flexWrap:'wrap' }}>
                                                 <ActionBtn onClick={() => setPreviewCartel(cartel)} title={t('manageCartels.preview')} color={HEX_COLORS.neutral}><ScanEye size={15} /></ActionBtn>
-                                                <ActionBtn onClick={() => goToCreate(cartel.id)} title="Modifier le cartel" color="#3b5bdb"><Edit size={15} /></ActionBtn>
+                                                <ActionBtn onClick={() => goToCreate(cartel.id)} title={t('manageCartels.edit')} color="#3b5bdb"><Edit size={15} /></ActionBtn>
 
                                                 {/* Retraduire */}
                                                 <ActionBtn onClick={() => handleTranslate(cartel)} title={t('manageCartels.retranslate')} color="#6741d9" disabled={isTrans}>
@@ -611,13 +600,13 @@ const ManageCartels = () => {
                                                 </ActionBtn>
 
                                                 {(cartel.status === 'draft' || cartel.status === 'pending_review') && (
-                                                    <ActionBtn onClick={() => handlePublish(cartel)} title="Publier sur la frise" color="#2e7d32" disabled={isProc}><Check size={15} /></ActionBtn>
+                                                    <ActionBtn onClick={() => handlePublish(cartel)} title={t('manageCartels.publish')} color="#2e7d32" disabled={isProc}><Check size={15} /></ActionBtn>
                                                 )}
                                                 {(cartel.status === 'pending_review' || cartel.status === 'published') && (
                                                     <ActionBtn onClick={() => handleToDraft(cartel)} title={t('status.draft')} color="#e67e00" disabled={isProc}><FileText size={15} /></ActionBtn>
                                                 )}
                                                 {cartel.status === 'published' && (
-                                                    <ActionBtn onClick={() => handleArchive(cartel)} title="Archiver (masquer)" color="#6b7280" disabled={isProc}><X size={15} /></ActionBtn>
+                                                    <ActionBtn onClick={() => handleArchive(cartel)} title={t('manageCartels.archive')} color="#6b7280" disabled={isProc}><X size={15} /></ActionBtn>
                                                 )}
                                                 <ActionBtn onClick={() => handleDelete(cartel.id)} title={t('manageCartels.delete')} color="#d32f2f" disabled={isProc}><Trash2 size={15} /></ActionBtn>
                                             </div>

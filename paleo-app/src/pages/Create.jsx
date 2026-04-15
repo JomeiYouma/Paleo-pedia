@@ -5,6 +5,7 @@ import { geocodingService } from '../services/geocoding';
 import { Save, ArrowLeft, MapPin, Check, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { compressImage } from '../utils/imageProcessor';
+import api from '../services/apiClient';
 
 const Create = () => {
     const { t, i18n } = useTranslation();
@@ -122,7 +123,7 @@ const Create = () => {
             const url = URL.createObjectURL(file);
             setForm(prev => ({ ...prev, imageUrl: url }));
             try {
-                setStatusMsg("Optimisation image...");
+                setStatusMsg(t('create.optimizingImage'));
                 const compressed = await compressImage(file);
                 setImageFile(compressed);
                 setStatusMsg("");
@@ -140,7 +141,7 @@ const Create = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSaving(true);
-        setStatusMsg("Traitement en cours...");
+        setStatusMsg(t('create.processing'));
         await new Promise(r => setTimeout(r, 100));
 
         let data = { ...form };
@@ -153,7 +154,7 @@ const Create = () => {
             try {
                 finalImagePath = await uploadImage(imageFile);
             } catch (err) {
-                alert("Erreur upload image: " + err.message);
+                alert(t('messages.imageUploadError') + err.message);
                 setIsSaving(false);
                 return;
             }
@@ -176,6 +177,29 @@ const Create = () => {
         if (activeWorkshopCtx) {
             entry.origin = activeWorkshopCtx.name;
             entry.workshopId = activeWorkshopCtx.id;
+        }
+
+        // Sur création initiale d'un cartel admin en FR, auto-traduire vers EN si champs EN manquants.
+        if (!editId && isAdmin) {
+            const hasFrContent = [entry.titre, entry.description, entry.location].some(v => (v || '').trim() !== '');
+            const needsEn = [entry.titre_en, entry.description_en, entry.location_en].some(v => (v || '').trim() === '');
+            if (hasFrContent && needsEn) {
+                setStatusMsg(t('create.translating'));
+                try {
+                    const translated = await api.translate.cartel({
+                        titre: entry.titre || '',
+                        description: entry.description || '',
+                        location: entry.location || '',
+                    });
+                    entry.titre_en = translated.titre_en || entry.titre_en || '';
+                    entry.description_en = translated.description_en || entry.description_en || '';
+                    entry.location_en = translated.location_en || entry.location_en || '';
+                } catch (err) {
+                    // On n'interrompt pas la sauvegarde, mais on informe l'admin.
+                    console.error('Auto translation failed', err);
+                    alert(t('messages.autoTranslateWarning') + err.message);
+                }
+            }
         }
 
         if (editId) {
@@ -304,7 +328,7 @@ const Create = () => {
                             name="imageCredit"
                             value={form.imageCredit || ''}
                             onChange={handleInputChange}
-                            placeholder="ex: Wikimedia Commons, Auteur Inconnu..."
+                            placeholder={t('create.imageCreditPlaceholder')}
                             style={{ width: '100%', padding: '5px', marginTop: '5px', borderRadius: '4px', border: '1px solid #ccc' }}
                         />
                     </div>
@@ -348,10 +372,10 @@ const Create = () => {
                     {isAdmin && (
                         <>
                             <button type="submit" name="save" disabled={isSaving} style={{ flex: 1, backgroundColor: '#555', color: 'white', padding: '15px', border: 'none', borderRadius: '8px', display: 'flex', justifyContent: 'center', gap: '10px', opacity: isSaving ? 0.7 : 1, cursor: 'pointer' }}>
-                                <Save /> {isSaving ? statusMsg : 'Sauvegarder brouillon'}
+                                <Save /> {isSaving ? statusMsg : t('create.saveDraft')}
                             </button>
                             <button type="submit" name="publish" disabled={isSaving} style={{ flex: 1, backgroundColor: 'black', color: 'white', padding: '15px', border: 'none', borderRadius: '8px', display: 'flex', justifyContent: 'center', gap: '10px', opacity: isSaving ? 0.7 : 1, cursor: 'pointer' }}>
-                                <Save /> {isSaving ? statusMsg : (editId ? t('create.btnSave') : 'Publier')}
+                                <Save /> {isSaving ? statusMsg : (editId ? t('create.btnSave') : t('manageCartels.publish'))}
                             </button>
                         </>
                     )}

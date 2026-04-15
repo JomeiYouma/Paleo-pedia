@@ -17,10 +17,30 @@ export const romanToInt = (s) => {
 };
 
 export const getYearForSort = (entry) => {
-    const text = String(entry.annee || '9999').toLowerCase().trim();
-    const isBc = text.includes('av') || text.includes('bc') || text.includes('bef') || text.startsWith('-');
+    const raw = String(entry.annee || '9999').trim();
+    const text = raw.toLowerCase();
+    const normalized = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const isBc = normalized.includes('av') || normalized.includes('bc') || normalized.includes('bef') || normalized.includes('before') || normalized.startsWith('-');
 
-    // Check for digits
+    // 1) Century formats (FR + EN), e.g. "XXIe siècle", "XXIth century", "21st century"
+    const arabicCentury = normalized.match(/\b(\d{1,2})(?:er|e|eme|eme|st|nd|rd|th)?\s*(?:siecle|century)\b/i);
+    if (arabicCentury) {
+        const c = parseInt(arabicCentury[1], 10);
+        // Place at the middle of the century for timeline ordering
+        let val = (c - 1) * 100 + 50;
+        if (isBc) val = -Math.abs(val);
+        return val;
+    }
+
+    const romanCentury = normalized.match(/\b([mdclxvi]+)(?:er|e|eme|st|nd|rd|th)?\s*(?:siecle|century)\b/i);
+    if (romanCentury) {
+        const c = romanToInt(romanCentury[1]);
+        let val = (c - 1) * 100 + 50;
+        if (isBc) val = -Math.abs(val);
+        return val;
+    }
+
+    // 2) Explicit year digits (e.g. 2025)
     const matchDigit = text.match(/\d+/);
     if (matchDigit) {
         let val = parseInt(matchDigit[0], 10);
@@ -28,12 +48,10 @@ export const getYearForSort = (entry) => {
         return val;
     }
 
-    // Check for roman
+    // 3) Standalone roman tokens fallback
     const matchRoman = text.match(/\b[mdclxvi]+\b/i);
     if (matchRoman) {
-        let val = romanToInt(matchRoman[0]) * 100; // Rough century estimation if needed or logic from python
-        // Python code: roman_to_int(...) * 100 ?? Wait, let's check python code.
-        // Python: val = roman_to_int(match_roman.group()) * 100. YES.
+        let val = romanToInt(matchRoman[0]) * 100;
         if (isBc) val = -Math.abs(val);
         return val;
     }
