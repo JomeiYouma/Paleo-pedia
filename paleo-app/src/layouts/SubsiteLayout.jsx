@@ -16,13 +16,14 @@ import api from '../services/apiClient';
 export const SubsiteContext = createContext(null);
 export const useSubsite = () => useContext(SubsiteContext);
 
-// ── Nav links du sous-site ────────────────────────────────────
+// ── Nav links du sous-site (Accueil · Frise · Présentation · Partenaires) ─
 const NAV = (slug) => [
-    { to: `/site/${slug}`,             label: 'Accueil',       end: true },
-    { to: `/site/${slug}/frise`,       label: 'Frise'                   },
-    { to: `/site/${slug}/presentation`,label: 'Présentation'            },
-    { to: `/site/${slug}/partenaires`, label: 'Partenaires'             },
+    { to: `/site/${slug}`,              label: 'Accueil',       end: true },
+    { to: `/site/${slug}/frise`,        label: 'Frise'                    },
+    { to: `/site/${slug}/presentation`, label: 'Présentation'             },
+    { to: `/site/${slug}/partenaires`,  label: 'Partenaires'              },
 ];
+
 
 const SubsiteLayout = () => {
     const { slug } = useParams();
@@ -42,11 +43,22 @@ const SubsiteLayout = () => {
             .finally(() => setLoading(false));
     }, [slug]);
 
-    // Injecter la couleur primaire en CSS variable
+    // Injecter la couleur primaire en CSS variable + surcharger les tokens globaux
     useEffect(() => {
         if (!subsite) return;
-        document.documentElement.style.setProperty('--subsite-color', subsite.primary_color);
-        return () => document.documentElement.style.removeProperty('--subsite-color');
+        const el = document.documentElement;
+        el.style.setProperty('--subsite-color', subsite.primary_color);
+        // Surcharger les tokens globaux pour que les composants partagés héritent de la bonne couleur
+        el.style.setProperty('--color-pink-darker', subsite.primary_color);
+        el.style.setProperty('--color-red-accent', subsite.primary_color);
+        // Version très atténuée pour les fonds (ex: cartel-card)
+        el.style.setProperty('--color-pink', `color-mix(in srgb, ${subsite.primary_color} 12%, white)`);
+        return () => {
+            el.style.removeProperty('--subsite-color');
+            el.style.removeProperty('--color-pink-darker');
+            el.style.removeProperty('--color-red-accent');
+            el.style.removeProperty('--color-pink');
+        };
     }, [subsite]);
 
     if (loading) return (

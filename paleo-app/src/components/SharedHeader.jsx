@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { subsites as subsitesApi } from '../services/apiClient';
 import { useTranslation } from 'react-i18next';
 
-// ── Liens du site public ─────────────────────────────────────
+// ── Liens du site public (inclut la frise) ──────────────────
 const SITE_NAV = [
     { path: '/',             labelKey: 'header.home' },
     { path: '/presentation', labelKey: 'header.presentation' },
@@ -18,6 +18,7 @@ const SITE_NAV = [
     { path: '/ouvrages',     labelKey: 'header.ouvrages' },
     { path: '/museum',       labelKey: 'header.museum' },
     { path: '/contact',      labelKey: 'header.contact' },
+    { path: '/app',          labelKey: 'header.timeline' },
 ];
 
 // ── Liens de l'application (frise) ───────────────────────────
@@ -142,7 +143,7 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                 }}>
                     {/* ── Gauche : burger + logo ── */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                        {/* Burger site public */}
+                        {/* Burger — visible sur mobile uniquement (desktop a la nav centrale) */}
                         <div className="mobile-burger" style={{ position: 'relative' }}>
                             <button
                                 onClick={handleMenuOpen}
@@ -183,66 +184,121 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                     padding: '8px',
                                     animation: 'menuFadeIn 0.18s ease-out',
                                 }}>
-                                    {/* Liens site principal */}
-                                    {SITE_NAV.map(link => (
-                                        <Link
-                                            key={link.path}
-                                            to={link.path}
-                                            onClick={() => setIsMenuOpen(false)}
-                                            style={{
-                                                display: 'block',
-                                                padding: '10px 14px',
-                                                borderRadius: '8px',
-                                                textDecoration: 'none',
-                                                color: location.pathname === link.path ? 'var(--color-pink-darker, #C2185B)' : '#333',
-                                                fontWeight: location.pathname === link.path ? '700' : '500',
-                                                fontSize: '0.93rem',
-                                                background: location.pathname === link.path ? '#fce4ec' : 'transparent',
-                                                transition: 'all 0.12s',
-                                            }}
-                                            onMouseEnter={e => { if (location.pathname !== link.path) e.currentTarget.style.background = '#f5f5f5'; }}
-                                            onMouseLeave={e => { if (location.pathname !== link.path) e.currentTarget.style.background = 'transparent'; }}
-                                        >
-                                            {t(link.labelKey)}
-                                        </Link>
-                                    ))}
-
-                                    {/* Sous-sites / Thématiques */}
-                                    {subsites.length > 0 && (
-                                        <div style={{ borderTop: '1px solid #f0f0f0', margin: '6px 0', paddingTop: '6px' }}>
-                                            <div style={{ fontSize: '0.72rem', fontWeight: '700', color: '#bbb', padding: '2px 14px 6px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>{t('header.themes')}</div>
-                                            {subsites.map(s => (
-                                                <Link key={s.slug} to={`/site/${s.slug}`}
+                                    {/* En mode app : liens de l'application */}
+                                    {isInApp ? (
+                                        <>
+                                            <div style={{ fontSize: '0.72rem', fontWeight: '700', color: '#bbb', padding: '4px 14px 6px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                                                {t('header.navigation', 'Navigation')}
+                                            </div>
+                                            {appLinks.map(link => {
+                                                const Icon = link.icon;
+                                                const isActive = link.end
+                                                    ? location.pathname === link.path
+                                                    : location.pathname.startsWith(link.path);
+                                                return (
+                                                    <Link
+                                                        key={link.path}
+                                                        to={link.path}
+                                                        onClick={() => setIsMenuOpen(false)}
+                                                        style={{
+                                                            display: 'flex', alignItems: 'center', gap: '10px',
+                                                            padding: '10px 14px', borderRadius: '8px',
+                                                            textDecoration: 'none',
+                                                            color: isActive ? 'var(--color-red-accent, #D65A5A)' : '#333',
+                                                            fontWeight: isActive ? '700' : '500',
+                                                            fontSize: '0.93rem',
+                                                            background: isActive ? '#fff0f0' : 'transparent',
+                                                            transition: 'all 0.12s',
+                                                        }}
+                                                        onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = '#f5f5f5'; }}
+                                                        onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+                                                    >
+                                                        <Icon size={15} />
+                                                        {t(link.labelKey)}
+                                                    </Link>
+                                                );
+                                            })}
+                                            <div style={{ borderTop: '1px solid #f0f0f0', margin: '6px 0' }} />
+                                            <Link
+                                                to="/"
+                                                onClick={() => setIsMenuOpen(false)}
+                                                style={{
+                                                    display: 'block', padding: '10px 14px', borderRadius: '8px',
+                                                    textDecoration: 'none', color: '#888',
+                                                    fontSize: '0.88rem', fontWeight: '500',
+                                                }}
+                                                onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                            >
+                                                ← {t('header.backToSite', 'Retour au site')}
+                                            </Link>
+                                        </>
+                                    ) : (
+                                        <>
+                                            {/* Liens site principal */}
+                                            {SITE_NAV.map(link => (
+                                                <Link
+                                                    key={link.path}
+                                                    to={link.path}
                                                     onClick={() => setIsMenuOpen(false)}
-                                                    style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 14px', borderRadius: '8px', textDecoration: 'none', color: '#333', fontSize: '0.9rem', fontWeight: '600', transition: 'background 0.12s' }}
-                                                    onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
-                                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                    style={{
+                                                        display: 'block',
+                                                        padding: '10px 14px',
+                                                        borderRadius: '8px',
+                                                        textDecoration: 'none',
+                                                        color: location.pathname === link.path ? 'var(--color-pink-darker, #C2185B)' : '#333',
+                                                        fontWeight: location.pathname === link.path ? '700' : '500',
+                                                        fontSize: '0.93rem',
+                                                        background: location.pathname === link.path ? '#fce4ec' : 'transparent',
+                                                        transition: 'all 0.12s',
+                                                    }}
+                                                    onMouseEnter={e => { if (location.pathname !== link.path) e.currentTarget.style.background = '#f5f5f5'; }}
+                                                    onMouseLeave={e => { if (location.pathname !== link.path) e.currentTarget.style.background = 'transparent'; }}
                                                 >
-                                                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: s.primary_color, flexShrink: 0 }} />
-                                                    {s.name}
+                                                    {t(link.labelKey)}
                                                 </Link>
                                             ))}
-                                        </div>
-                                    )}
 
-                                    {/* Lien vers la frise */}
-                                    <div style={{ borderTop: '1px solid #f0f0f0', margin: '6px 0' }} />
-                                    <Link
-                                        to="/app"
-                                        onClick={() => setIsMenuOpen(false)}
-                                        style={{
-                                            display: 'block',
-                                            padding: '10px 14px',
-                                            borderRadius: '8px',
-                                            textDecoration: 'none',
-                                            color: '#C2185B',
-                                            fontWeight: '700',
-                                            fontSize: '0.93rem',
-                                            background: isInApp ? '#fce4ec' : 'transparent',
-                                        }}
-                                    >
-                                        🗓 {t('header.timeline')}
-                                    </Link>
+                                            {/* Sous-sites / Thématiques */}
+                                            {subsites.length > 0 && (
+                                                <div style={{ borderTop: '1px solid #f0f0f0', margin: '6px 0', paddingTop: '6px' }}>
+                                                    <div style={{ fontSize: '0.72rem', fontWeight: '700', color: '#bbb', padding: '2px 14px 6px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>{t('header.themes')}</div>
+                                                    {subsites.map(s => (
+                                                        <Link key={s.slug} to={`/site/${s.slug}`}
+                                                            onClick={() => setIsMenuOpen(false)}
+                                                            style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 14px', borderRadius: '8px', textDecoration: 'none', color: '#333', fontSize: '0.9rem', fontWeight: '600', transition: 'background 0.12s' }}
+                                                            onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                                                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                        >
+                                                            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: s.primary_color, flexShrink: 0 }} />
+                                                            {s.name}
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Lien vers la frise */}
+                                            <div style={{ borderTop: '1px solid #f0f0f0', margin: '6px 0' }} />
+                                            <Link
+                                                to="/app"
+                                                onClick={() => setIsMenuOpen(false)}
+                                                style={{
+                                                    display: 'block',
+                                                    padding: '10px 14px',
+                                                    borderRadius: '8px',
+                                                    textDecoration: 'none',
+                                                    color: '#C2185B',
+                                                    fontWeight: '700',
+                                                    fontSize: '0.93rem',
+                                                    background: 'transparent',
+                                                }}
+                                                onMouseEnter={e => e.currentTarget.style.background = '#fce4ec'}
+                                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                            >
+                                                🗓 {t('header.timeline')}
+                                            </Link>
+                                        </>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -276,38 +332,39 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                         </Link>
                     </div>
 
-                    {/* ── Centre : liens rapides site (compacts, pas en app) ── */}
-                    {!isInApp && (
-                        <nav className="desktop-nav" style={{
-                            gap: '4px',
-                            flexWrap: 'wrap',
-                        }}>
-                            {SITE_NAV.map(link => {
-                                const p = link.path;
-                                return (
-                                    <Link
-                                        key={p}
-                                        to={p}
-                                        style={{
-                                            padding: '7px 16px',
-                                            borderRadius: '20px',
-                                            textDecoration: 'none',
-                                            fontWeight: '600',
-                                            fontSize: '0.83rem',
-                                            color: location.pathname === p ? 'white' : '#555',
-                                            background: location.pathname === p ? 'var(--color-red-accent, #D65A5A)' : 'transparent',
-                                            transition: 'all 0.15s',
-                                            letterSpacing: '0.2px',
-                                        }}
-                                        onMouseEnter={e => { if (location.pathname !== p) e.currentTarget.style.background = '#f5f5f5'; }}
-                                        onMouseLeave={e => { if (location.pathname !== p) e.currentTarget.style.background = 'transparent'; }}
-                                    >
-                                        {t(link.labelKey)}
-                                    </Link>
-                                );
-                            })}
-                        </nav>
-                    )}
+                    {/* ── Centre : liens rapides (toujours visibles sur desktop) ── */}
+                    <nav className="desktop-nav" style={{
+                        gap: '4px',
+                        flexWrap: 'wrap',
+                    }}>
+                        {SITE_NAV.map(link => {
+                            const p = link.path;
+                            const isActive = p === '/app'
+                                ? location.pathname.startsWith('/app')
+                                : location.pathname === p;
+                            return (
+                                <Link
+                                    key={p}
+                                    to={p}
+                                    style={{
+                                        padding: '7px 16px',
+                                        borderRadius: '20px',
+                                        textDecoration: 'none',
+                                        fontWeight: '600',
+                                        fontSize: '0.83rem',
+                                        color: isActive ? 'white' : '#555',
+                                        background: isActive ? 'var(--color-red-accent, #D65A5A)' : 'transparent',
+                                        transition: 'all 0.15s',
+                                        letterSpacing: '0.2px',
+                                    }}
+                                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = '#f5f5f5'; }}
+                                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+                                >
+                                    {t(link.labelKey)}
+                                </Link>
+                            );
+                        })}
+                    </nav>
 
                     {/* ── Droite : langue + auth ── */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
@@ -575,8 +632,12 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                     from { opacity: 0; transform: translateY(-6px); }
                     to   { opacity: 1; transform: translateY(0); }
                 }
+                /* Nav desktop : visible partout sauf /app/* */
                 .desktop-nav { display: flex; }
+                /* Burger mobile : visible seulement sur petit écran */
                 .mobile-burger { display: none; }
+                /* Burger app : toujours visible (desktop + mobile) quand dans /app/* */
+                .app-burger { display: block; }
                 @media (max-width: 900px) {
                     .desktop-nav { display: none !important; }
                     .mobile-burger { display: block !important; }

@@ -10,7 +10,7 @@ import Library from './Library';
 const SubsiteFrise = () => {
     const subsite = useSubsite();
     if (!subsite) return null;
-    return <Library fixedCategory={subsite.category_id} />;
+    return <Library fixedCategory={subsite.category_name} />;
 };
 
 export default SubsiteFrise;

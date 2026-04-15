@@ -51,42 +51,77 @@ const Library = ({ fixedCategory = null }) => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
-    // Pré-filtrer par catégorie si ?category= est dans l'URL ou si fixedCategory est passé
-    const urlCategoryFilter = fixedCategory || searchParams.get('category');
+    // Pré-filtrer par catégorie si ?category= est dans l'URL (seulement sans fixedCategory)
+    const urlCategoryFilter = !fixedCategory ? searchParams.get('category') : null;
     useEffect(() => {
         if (urlCategoryFilter) setSelectedCats([decodeURIComponent(urlCategoryFilter)]);
     }, [urlCategoryFilter]);
 
-    const pageTitle = urlCategoryFilter ? decodeURIComponent(urlCategoryFilter) : null;
+    const pageTitle = fixedCategory || (urlCategoryFilter ? decodeURIComponent(urlCategoryFilter) : null);
     const clearCategoryFilter = () => { if (!fixedCategory) { setSelectedCats([]); setSearchParams({}); } };
     const handleGoToTimeline = (id) => { setTargetCartelId(id); setViewMode('timeline'); };
 
-    // Toutes les catégories présentes dans les cartels
-    const allCategories = useMemo(() => {
-        const set = new Set();
-        const isEn = i18n.language === 'en';
-        (cartels || []).forEach(c => {
-            const cats = isEn ? (c.categories_en || []) : (c.categories || []);
-            cats.forEach(cat => set.add(cat));
-        });
-        return Array.from(set).sort();
-    }, [cartels, i18n.language]);
-
-    // Construction de la liste filtrée
-    const filteredCartels = useMemo(() => {
+    // Dataset de base : cartels visibles selon le rôle, PRÉ-filtrés par la catégorie fixe du sous-site
+    const baseCartels = useMemo(() => {
         let data = Array.isArray(cartels) ? [...cartels] : [];
 
-        // Mode Atelier : seulement les cartels liés à cet atelier
+        // Mode Atelier
         if (currentWorkshop) {
             const allowedIds = new Set((currentWorkshop.cartelIds || []).map(String));
             data = data.filter(c => allowedIds.has(String(c.id)));
         } else if (!isAdmin) {
-            // Visiteur : seulement les publiés
             data = data.filter(c => c.status === 'published' && c.visible);
         }
-        // Admin : voit tout (avec badges)
 
-        // Filtre catégories
+        // Si un sous-site impose une catégorie : on filtre en dur ici
+        // fixedCategory est toujours le nom FR (category_name du JOIN SQL)
+        // → on compare TOUJOURS contre c.categories (FR), quelle que soit la langue d'affichage
+        if (fixedCategory) {
+            data = data.filter(c =>
+                (c.categories || []).some(cat => cat.toLowerCase() === fixedCategory.toLowerCase())
+            );
+        }
+
+        return data;
+    }, [cartels, currentWorkshop, isAdmin, fixedCategory]);
+
+    // Catégories disponibles dans le dataset de base (sous-ensemble cohérent)
+    const allCategories = useMemo(() => {
+        const set = new Set();
+        const isEn = i18n.language === 'en';
+
+        // Récupérer le nom EN de la catégorie fixe (pour l'exclure des chips secondaires en mode EN)
+        // fixedCategory est toujours le nom FR
+        let fixedCategoryEn = null;
+        if (fixedCategory && isEn && baseCartels.length > 0) {
+            for (const c of baseCartels) {
+                const obj = (c.category_objects || []).find(
+                    o => o.name?.toLowerCase() === fixedCategory.toLowerCase()
+                );
+                if (obj) { fixedCategoryEn = (obj.name_en || obj.name).toLowerCase(); break; }
+            }
+        }
+
+        baseCartels.forEach(c => {
+            const cats = isEn ? (c.categories_en || []) : (c.categories || []);
+            cats.forEach(cat => {
+                // Exclure la catégorie fixe (comparaison FR en mode FR, EN en mode EN)
+                const excluded = fixedCategory && (
+                    isEn
+                        ? (fixedCategoryEn ? cat.toLowerCase() === fixedCategoryEn : false)
+                        : cat.toLowerCase() === fixedCategory.toLowerCase()
+                );
+                if (!excluded) set.add(cat);
+            });
+        });
+        return Array.from(set).sort();
+    }, [baseCartels, i18n.language, fixedCategory]);
+
+    // Construction de la liste filtrée (sur le dataset de base déjà contraint)
+    const filteredCartels = useMemo(() => {
+        let data = [...baseCartels];
+
+        // Filtre catégories additionnelles (hors catégorie fixe)
         const isEn = i18n.language === 'en';
         if (selectedCats.length > 0) {
             data = data.filter(c => {
@@ -108,7 +143,7 @@ const Library = ({ fixedCategory = null }) => {
         }
 
         return data.sort((a, b) => getYearForSort(a) - getYearForSort(b));
-    }, [cartels, selectedCats, searchQuery, isAdmin, currentWorkshop, i18n.language]);
+    }, [baseCartels, selectedCats, searchQuery, i18n.language]);
 
     // Sélection
     const toggleSelection = (id) => {
@@ -205,21 +240,48 @@ const Library = ({ fixedCategory = null }) => {
                 </div>
 
                 {/* Filtres catégories */}
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
-                    {allCategories.map(cat => (
-                        <button
-                            key={cat}
-                            onClick={() => selectedCats.includes(cat)
-                                ? setSelectedCats(selectedCats.filter(c => c !== cat))
-                                : setSelectedCats([...selectedCats, cat])}
-                            style={{
-                                padding: '4px 12px', borderRadius: '20px', border: '1px solid #ddd',
-                                background: selectedCats.includes(cat) ? 'var(--color-pink-darker)' : 'transparent',
-                                color: selectedCats.includes(cat) ? 'white' : '#555',
-                                fontSize: '0.82rem', cursor: 'pointer', transition: 'all 0.15s'
-                            }}
-                        >{cat}</button>
-                    ))}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px', alignItems: 'center' }}>
+                    {/* Chip catégorie fixe du sous-site (non supprimable) */}
+                    {fixedCategory && (
+                        <span style={{
+                            padding: '4px 12px', borderRadius: '20px',
+                            background: 'var(--subsite-color, var(--color-pink-darker))',
+                            color: 'white',
+                            fontSize: '0.82rem', fontWeight: '700',
+                            display: 'inline-flex', alignItems: 'center', gap: '5px',
+                            boxShadow: '0 2px 8px color-mix(in srgb, var(--subsite-color, #C2185B) 40%, transparent)',
+                        }}>
+                            {fixedCategory}
+                        </span>
+                    )}
+
+                    {/* Séparateur si catégorie fixe + catégories secondaires */}
+                    {fixedCategory && allCategories.length > 0 && (
+                        <span style={{ color: '#ddd', fontSize: '0.8rem' }}>·</span>
+                    )}
+
+                    {/* Chips catégories secondaires (filtrables) */}
+                    {allCategories.map(cat => {
+                        const isActive = selectedCats.includes(cat);
+                        const activeColor = fixedCategory
+                            ? 'var(--subsite-color, var(--color-pink-darker))'
+                            : 'var(--color-pink-darker)';
+                        return (
+                            <button
+                                key={cat}
+                                onClick={() => isActive
+                                    ? setSelectedCats(selectedCats.filter(c => c !== cat))
+                                    : setSelectedCats([...selectedCats, cat])}
+                                style={{
+                                    padding: '4px 12px', borderRadius: '20px',
+                                    border: `1px solid ${isActive ? activeColor : '#ddd'}`,
+                                    background: isActive ? activeColor : 'transparent',
+                                    color: isActive ? 'white' : '#555',
+                                    fontSize: '0.82rem', cursor: 'pointer', transition: 'all 0.15s'
+                                }}
+                            >{cat}</button>
+                        );
+                    })}
                 </div>
 
                 {/* Actions batch (mode liste admin) */}

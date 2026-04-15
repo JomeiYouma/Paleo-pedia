@@ -169,7 +169,7 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
             .attr("class", "selection-ring")
             .attr("r", 12)
             .attr("fill", "none")
-            .attr("stroke", "var(--color-pink-darker)")
+            .attr("stroke", () => getComputedStyle(document.documentElement).getPropertyValue('--color-pink-darker').trim() || '#C2185B')
             .attr("stroke-width", 2)
             .attr("opacity", 0); // Hidden by default
 
@@ -231,18 +231,20 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
         const xz = transform.rescaleX(xBase);
 
         // Update Markers Styles
+        const activeColor = getComputedStyle(document.documentElement).getPropertyValue('--color-pink-darker').trim() || '#C2185B';
         g.selectAll(".timeline-marker")
-            .attr("fill", (d, i) => i === selectedIndex ? "var(--color-pink-darker)" : "#999")
+            .attr("fill", (d, i) => i === selectedIndex ? activeColor : "#999")
             .attr("stroke", (d, i) => i === selectedIndex ? "white" : "none")
             .attr("stroke-width", 2)
             .attr("r", (d, i) => i === selectedIndex ? 8 : 6)
             .raise(); // Bring selected to front
 
-        // Update Selection Ring Position
+        // Update Selection Ring Position + couleur (peut avoir changé si sous-site)
         const selectedData = validCartels[selectedIndex];
         if (selectedData) {
             g.select(".selection-ring")
                 .attr("opacity", 1)
+                .attr("stroke", activeColor)
                 .attr("cx", xz(selectedData.year))
                 .attr("cy", (height / 2) + selectedData.yOffset)
                 .raise();
