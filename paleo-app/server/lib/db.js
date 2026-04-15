@@ -12,7 +12,7 @@ const pool = mysql.createPool({
 /** Exécute une requête paramétrée (utiliser ? comme placeholders) */
 export async function query(text, params = []) {
   const start = Date.now();
-  const [rows] = await pool.execute(text, params);
+  const [rows] = await pool.query(text, params);
   if (process.env.NODE_ENV === 'development') {
     console.log(`[SQL] ${text.slice(0, 60)}... (${Date.now() - start}ms)`);
   }
@@ -24,7 +24,7 @@ export async function getClient() {
   const conn = await pool.getConnection();
   return {
     query: async (text, params = []) => {
-      const [rows] = await conn.execute(text, params);
+      const [rows] = await conn.query(text, params);
       return { rows: Array.isArray(rows) ? rows : [rows] };
     },
     release: () => conn.release(),

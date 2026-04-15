@@ -74,6 +74,9 @@ export const AppProvider = ({ children }) => {
             setWorkshops(Array.isArray(ws) ? ws : []);
         } catch (err) {
             console.error('fetchData error:', err.message);
+            setCartels([]);
+            setCategories([]);
+            setWorkshops([]);
         } finally {
             setLoading(false);
         }
