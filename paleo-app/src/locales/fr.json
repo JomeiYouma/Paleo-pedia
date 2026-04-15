@@ -3,9 +3,10 @@
         "library": "Bibliothèque",
         "create": "Créer",
         "drafts": "Idées & Brouillons",
+        "published": "Publiés",
+        "pending": "En attente",
         "admin": "Gestion",
         "management": "Gestion",
-        "pending": "En attente",
         "deleteAll": "Tout supprimer"
     },
     "library": {
@@ -96,13 +97,66 @@
         "publish": "Publier",
         "addIdea": "Ajouter une idée"
     },
+    "header": {
+        "home": "Accueil",
+        "presentation": "Présentation",
+        "prestations": "Prestations",
+        "ouvrages": "Ouvrages",
+        "museum": "Museum",
+        "contact": "Contact",
+        "themes": "Thématiques",
+        "timeline": "Frise Chronologique",
+        "login": "Connexion",
+        "logout": "Se déconnecter",
+        "workspaceMode": "Mode Atelier",
+        "exit": "Quitter",
+        "adminAccess": "Accès administrateur"
+    },
+    "manageCartels": {
+        "import": "Importer",
+        "newCartel": "Nouveau cartel",
+        "search": "Rechercher...",
+        "allCategories": "Toutes catégories",
+        "selectAll": "Tout sélectionner",
+        "selected": "sélectionné",
+        "export": "Exporter",
+        "exportAll": "Exporter tout",
+        "imagesZip": "Images (ZIP)",
+        "pdfPrint": "PDF impression",
+        "fullArchive": "Archive complète (JSON + Images)",
+        "delete": "Supprimer",
+        "noCartelsTab": "Aucun cartel dans cet onglet.",
+        "year": "Année",
+        "title": "Titre",
+        "categories": "Catégories",
+        "location": "Lieu",
+        "status": "Statut",
+        "actions": "Actions",
+        "publish": "Publier",
+        "retranslate": "Retraduire",
+        "edit": "Éditer",
+        "preview": "Aperçu",
+        "archive": "Archiver",
+        "hide": "Masquer",
+        "show": "Afficher",
+        "visible": "Visible",
+        "hidden": "Masqué",
+        "importZip": "Importer une archive ZIP",
+        "importClose": "Fermer"
+    },
     "timeline": {
         "scroll_instruction": "Zoomez avec la molette et déplacez-vous pour explorer le temps. (Flèches ← → pour naviguer)"
     },
     "status": {
         "draft": "🖊️ Brouillon",
         "pending_review": "⏳ En attente",
+        "published": "✅ Publié",
         "archived": "🗄️ Archivé"
+    },
+    "manageCartels": {
+        "draftsDescription": "Cartels en cours de rédaction (non visibles)",
+        "pendingDescription": "Soumissions de visiteurs à modérer",
+        "publishedDescription": "Cartels visibles sur la frise"
     },
     "pages": {
         "presentation": {

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 const LanguageSwitcher = () => {
     const { i18n } = useTranslation();
+    const activeLanguage = i18n.language === 'gb' ? 'en' : i18n.language;
 
     const changeLanguage = (lng) => {
         i18n.changeLanguage(lng);
@@ -14,30 +15,30 @@ const LanguageSwitcher = () => {
             <button
                 onClick={() => changeLanguage('fr')}
                 style={{
-                    border: i18n.language === 'fr' ? '2px solid black' : '1px solid #ccc',
+                    border: activeLanguage === 'fr' ? '2px solid black' : '1px solid #ccc',
                     borderRadius: '4px',
                     padding: '5px',
-                    background: i18n.language === 'fr' ? '#fff' : 'transparent',
+                    background: activeLanguage === 'fr' ? '#fff' : 'transparent',
                     cursor: 'pointer',
-                    opacity: i18n.language === 'fr' ? 1 : 0.6
+                    opacity: activeLanguage === 'fr' ? 1 : 0.6
                 }}
                 title="Français"
             >
-                🇫🇷
+                FR
             </button>
             <button
                 onClick={() => changeLanguage('en')}
                 style={{
-                    border: i18n.language === 'en' ? '2px solid black' : '1px solid #ccc',
+                    border: activeLanguage === 'en' ? '2px solid black' : '1px solid #ccc',
                     borderRadius: '4px',
                     padding: '5px',
-                    background: i18n.language === 'en' ? '#fff' : 'transparent',
+                    background: activeLanguage === 'en' ? '#fff' : 'transparent',
                     cursor: 'pointer',
-                    opacity: i18n.language === 'en' ? 1 : 0.6
+                    opacity: activeLanguage === 'en' ? 1 : 0.6
                 }}
                 title="English"
             >
-                🇬🇧
+                EN
             </button>
         </div>
     );

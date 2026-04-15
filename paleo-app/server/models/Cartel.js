@@ -162,7 +162,7 @@ export const CartelModel = {
 
     if (status === 'published') {
       extra = ', published_at = NOW(), visible = 1';
-    } else if (status === 'archived') {
+    } else {
       extra = ', visible = 0';
     }
 

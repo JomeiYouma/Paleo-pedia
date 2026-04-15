@@ -5,7 +5,8 @@ import fr from './locales/fr.json';
 import en from './locales/en.json';
 
 // Detect language from localStorage or browser
-const savedLanguage = localStorage.getItem('paleo-app-lang') || 'fr';
+const rawSavedLanguage = localStorage.getItem('paleo-app-lang') || 'fr';
+const savedLanguage = rawSavedLanguage === 'gb' ? 'en' : rawSavedLanguage;
 
 i18n
     .use(initReactI18next)

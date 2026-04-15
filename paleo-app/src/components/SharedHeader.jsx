@@ -8,29 +8,30 @@ import {
 import LanguageSwitcher from './LanguageSwitcher';
 import { useNavigate } from 'react-router-dom';
 import { subsites as subsitesApi } from '../services/apiClient';
+import { useTranslation } from 'react-i18next';
 
 // ── Liens du site public ─────────────────────────────────────
 const SITE_NAV = [
-    { path: '/',             label: 'Accueil' },
-    { path: '/presentation', label: 'Présentation' },
-    { path: '/prestations',  label: 'Prestations' },
-    { path: '/ouvrages',     label: 'Ouvrages' },
-    { path: '/museum',       label: 'Museum' },
-    { path: '/contact',      label: 'Contact' },
+    { path: '/',             labelKey: 'header.home' },
+    { path: '/presentation', labelKey: 'header.presentation' },
+    { path: '/prestations',  labelKey: 'header.prestations' },
+    { path: '/ouvrages',     labelKey: 'header.ouvrages' },
+    { path: '/museum',       labelKey: 'header.museum' },
+    { path: '/contact',      labelKey: 'header.contact' },
 ];
 
 // ── Liens de l'application (frise) ───────────────────────────
 const APP_NAV_VISITOR = [
-    { path: '/app',        label: 'Frise',  icon: Library,       end: true },
-    { path: '/app/create', label: 'Proposer', icon: PlusCircle },
+    { path: '/app',        labelKey: 'nav.library',  icon: Library,       end: true },
+    { path: '/app/create', labelKey: 'nav.create', icon: PlusCircle },
 ];
 
 const APP_NAV_ADMIN = [
-    { path: '/app',              label: 'Frise',         icon: Library,         end: true },
-    { path: '/app/manage/drafts',   label: 'Brouillons',   icon: ClipboardList },
-    { path: '/app/manage/pending',  label: 'Propositions', icon: ClipboardList },
-    { path: '/app/manage/published',label: 'Publiés',      icon: LayoutDashboard },
-    { path: '/app/admin',           label: 'Admin',        icon: Settings2 },
+    { path: '/app',              labelKey: 'nav.library',         icon: Library,         end: true },
+    { path: '/app/manage/drafts',   labelKey: 'nav.drafts',   icon: ClipboardList },
+    { path: '/app/manage/pending',  labelKey: 'nav.pending', icon: ClipboardList },
+    { path: '/app/manage/published',labelKey: 'nav.published',      icon: LayoutDashboard },
+    { path: '/app/admin',           labelKey: 'nav.admin',        icon: Settings2 },
 ];
 
 /**
@@ -44,6 +45,7 @@ const APP_NAV_ADMIN = [
  */
 const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
     const { user, isAdmin, login, logout } = useApp();
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -101,7 +103,7 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                     fontWeight: '600',
                     letterSpacing: '0.3px',
                 }}>
-                    <span>⚗️ Mode Atelier : {currentWorkshop.name}</span>
+                    <span>⚗️ {t('header.workspaceMode')} : {currentWorkshop.name}</span>
                     <button
                         onClick={quitWorkshop}
                         style={{
@@ -114,7 +116,7 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                             fontSize: '0.8rem',
                         }}
                     >
-                        Quitter
+                        {t('header.exit')}
                     </button>
                 </div>
             )}
@@ -160,10 +162,10 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                     textTransform: 'uppercase',
                                     transition: 'all 0.15s',
                                 }}
-                                title="Menu du site"
+                                title={t('header.home')}
                             >
                                 {isMenuOpen ? <X size={16} /> : <Menu size={16} />}
-                                <span style={{ display: 'none' }}>Menu</span>
+                                <span style={{ display: 'none' }}>{t('header.home')}</span>
                             </button>
 
                             {/* Dropdown menu site */}
@@ -201,14 +203,14 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                             onMouseEnter={e => { if (location.pathname !== link.path) e.currentTarget.style.background = '#f5f5f5'; }}
                                             onMouseLeave={e => { if (location.pathname !== link.path) e.currentTarget.style.background = 'transparent'; }}
                                         >
-                                            {link.label}
+                                            {t(link.labelKey)}
                                         </Link>
                                     ))}
 
                                     {/* Sous-sites / Thématiques */}
                                     {subsites.length > 0 && (
                                         <div style={{ borderTop: '1px solid #f0f0f0', margin: '6px 0', paddingTop: '6px' }}>
-                                            <div style={{ fontSize: '0.72rem', fontWeight: '700', color: '#bbb', padding: '2px 14px 6px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Thématiques</div>
+                                            <div style={{ fontSize: '0.72rem', fontWeight: '700', color: '#bbb', padding: '2px 14px 6px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>{t('header.themes')}</div>
                                             {subsites.map(s => (
                                                 <Link key={s.slug} to={`/site/${s.slug}`}
                                                     onClick={() => setIsMenuOpen(false)}
@@ -239,7 +241,7 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                             background: isInApp ? '#fce4ec' : 'transparent',
                                         }}
                                     >
-                                        🗓 La Frise Chronologique
+                                        🗓 {t('header.timeline')}
                                     </Link>
                                 </div>
                             )}
@@ -300,7 +302,7 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                         onMouseEnter={e => { if (location.pathname !== p) e.currentTarget.style.background = '#f5f5f5'; }}
                                         onMouseLeave={e => { if (location.pathname !== p) e.currentTarget.style.background = 'transparent'; }}
                                     >
-                                        {link.label}
+                                        {t(link.labelKey)}
                                     </Link>
                                 );
                             })}
@@ -336,7 +338,7 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                     </button>
                                     <button
                                         onClick={() => { logout(); navigate('/'); }}
-                                        title="Se déconnecter"
+                                        title={t('header.logout')}
                                         style={{
                                             background: 'none',
                                             border: '1px solid #e0e0e0',
@@ -368,7 +370,7 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                         fontFamily: 'inherit',
                                     }}
                                 >
-                                    <Lock size={13} color="#aaa" /> Connexion
+                                    <Lock size={13} color="#aaa" /> {t('header.login')}
                                 </button>
                             )
                         )}
@@ -436,7 +438,7 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                         }}
                                     >
                                         <Icon size={14} />
-                                        {link.label}
+                                        {t(link.labelKey)}
                                     </Link>
                                 );
                             })}
@@ -466,7 +468,7 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                         }}
                                     >
                                         <PlusCircle size={14} />
-                                        Nouveau cartel
+                                        {t('manageCartels.newCartel')}
                                     </Link>
                                 </>
                             )}
@@ -502,8 +504,8 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                     >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px' }}>
                             <div>
-                                <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '800' }}>Connexion</h2>
-                                <p style={{ margin: '4px 0 0', color: '#999', fontSize: '0.85rem' }}>Accès administrateur</p>
+                                <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '800' }}>{t('header.login')}</h2>
+                                <p style={{ margin: '4px 0 0', color: '#999', fontSize: '0.85rem' }}>{t('header.adminAccess')}</p>
                             </div>
                             <button onClick={() => { setShowLogin(false); setLoginError(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb' }}>
                                 <X size={22} />
@@ -561,7 +563,7 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                 }}
                             >
                                 <LogIn size={16} />
-                                {loginLoading ? 'Connexion…' : 'Se connecter'}
+                                {loginLoading ? `${t('header.login')}…` : t('header.login')}
                             </button>
                         </form>
                     </div>

@@ -34,16 +34,16 @@ function hexToRgba(hex, alpha) {
 
 // ── Onglets ──────────────────────────────────────────────────
 const TABS = [
-    { key: 'drafts',    label: 'Brouillons',   icon: FileText, color: '#3b5bdb', bg: '#f0f4ff', description: 'Cartels en cours de rédaction (non visibles)',      filter: c => c.status === 'draft' },
-    { key: 'pending',   label: 'Propositions', icon: Inbox,    color: '#e67e00', bg: '#fff4e0', description: 'Soumissions de visiteurs à modérer',                 filter: c => c.status === 'pending_review' },
-    { key: 'published', label: 'Publiés',      icon: Globe,    color: '#2e7d32', bg: '#e8f5e9', description: 'Cartels visibles sur la frise',                      filter: c => c.status === 'published' || c.status === 'archived' },
+    { key: 'drafts',    labelKey: 'nav.drafts',    icon: FileText, color: '#3b5bdb', bg: '#f0f4ff', descriptionKey: 'manageCartels.draftsDescription',      filter: c => c.status === 'draft' },
+    { key: 'pending',   labelKey: 'nav.pending',   icon: Inbox,    color: '#e67e00', bg: '#fff4e0', descriptionKey: 'manageCartels.pendingDescription',     filter: c => c.status === 'pending_review' },
+    { key: 'published', labelKey: 'nav.published', icon: Globe,    color: '#2e7d32', bg: '#e8f5e9', descriptionKey: 'manageCartels.publishedDescription',   filter: c => c.status === 'published' || c.status === 'archived' },
 ];
 
 const STATUS_BADGE = {
-    draft:          { label: 'Brouillon',   bg: '#f0f4ff', color: '#3b5bdb' },
-    pending_review: { label: 'Proposition', bg: '#fff4e0', color: '#e67e00' },
-    published:      { label: 'Publié',      bg: '#e8f5e9', color: '#2e7d32' },
-    archived:       { label: 'Archivé',     bg: '#f5f5f5', color: '#888'   },
+    draft:          { labelKey: 'status.draft',          bg: '#f0f4ff', color: '#3b5bdb' },
+    pending_review: { labelKey: 'status.pending_review', bg: '#fff4e0', color: '#e67e00' },
+    published:      { labelKey: 'status.published',      bg: '#e8f5e9', color: '#2e7d32' },
+    archived:       { labelKey: 'status.archived',       bg: '#f5f5f5', color: '#888'   },
 };
 
 // ── Overlay de progression ────────────────────────────────────
@@ -98,7 +98,7 @@ const DropItem = ({ icon: Icon, label, onClick, danger }) => (
 );
 
 // ── Modal Import ZIP ─────────────────────────────────────────
-const ImportModal = ({ onClose, onDone }) => {
+const ImportModal = ({ onClose, onDone, t }) => {
     const [file,    setFile]    = useState(null);
     const [busy,    setBusy]    = useState(false);
     const [result,  setResult]  = useState(null);
@@ -124,7 +124,7 @@ const ImportModal = ({ onClose, onDone }) => {
             <div onClick={e => e.stopPropagation()} style={{ background:'white', borderRadius:'16px', padding:'28px', maxWidth:'480px', width:'100%', position:'relative' }}>
                 <button onClick={onClose} style={{ position:'absolute', top:'16px', right:'16px', background:'#f5f5f5', border:'none', borderRadius:'50%', width:'32px', height:'32px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={16} /></button>
 
-                <h3 style={{ margin:'0 0 8px', fontSize:'1.1rem', fontWeight:'800' }}>Importer une archive ZIP</h3>
+                <h3 style={{ margin:'0 0 8px', fontSize:'1.1rem', fontWeight:'800' }}>{t('manageCartels.importZip')}</h3>
                 <p style={{ color:'#888', fontSize:'0.85rem', margin:'0 0 20px', lineHeight:'1.4' }}>
                     L'archive doit contenir un fichier <code>cartels.json</code> à la racine.<br/>
                     Les images peuvent être placées à la racine ou dans un dossier <code>images/</code>.<br/>
@@ -143,16 +143,16 @@ const ImportModal = ({ onClose, onDone }) => {
                         </label>
                         {error && <p style={{ color:'#d32f2f', fontSize:'0.85rem', marginTop:'12px' }}>{error}</p>}
                         <div style={{ display:'flex', gap:'10px', marginTop:'20px', justifyContent:'flex-end' }}>
-                            <button onClick={onClose} style={{ padding:'10px 18px', borderRadius:'8px', border:'1px solid #ddd', cursor:'pointer', fontFamily:'inherit' }}>Annuler</button>
+                            <button onClick={onClose} style={{ padding:'10px 18px', borderRadius:'8px', border:'1px solid #ddd', cursor:'pointer', fontFamily:'inherit' }}>{t('common.back')}</button>
                             <button onClick={handleImport} disabled={!file || busy} style={{ padding:'10px 18px', borderRadius:'8px', border:'none', background: file ? '#1a1a1a' : '#ccc', color:'white', cursor: file ? 'pointer' : 'not-allowed', fontWeight:'700', fontFamily:'inherit', display:'flex', alignItems:'center', gap:'6px' }}>
-                                {busy ? 'Import en cours…' : <><Upload size={14} /> Importer</>}
+                                {busy ? 'Import en cours…' : <><Upload size={14} /> {t('manageCartels.import')}</>}
                             </button>
                         </div>
                     </>
                 ) : (
                     <div>
                         <div style={{ background:'#e8f5e9', borderRadius:'10px', padding:'16px', marginBottom:'16px' }}>
-                            <div style={{ fontWeight:'800', color:'#2e7d32', fontSize:'1.1rem', marginBottom:'4px' }}>Import terminé</div>
+                            <div style={{ fontWeight:'800', color:'#2e7d32', fontSize:'1.1rem', marginBottom:'4px' }}>{t('messages.publishSuccess')}</div>
                             <div style={{ fontSize:'0.9rem', color:'#555' }}>{result.created} cartel(s) créé(s) en brouillon.</div>
                         </div>
                         {result.errors?.length > 0 && (
@@ -161,7 +161,7 @@ const ImportModal = ({ onClose, onDone }) => {
                                 {result.errors.map((e, i) => <div key={i} style={{ color:'#e67e00', marginTop:'4px' }}>• {e.titre || `Ligne ${e.index+1}`} : {e.error}</div>)}
                             </div>
                         )}
-                        <button onClick={onClose} style={{ width:'100%', padding:'12px', borderRadius:'8px', border:'none', background:'#1a1a1a', color:'white', cursor:'pointer', fontWeight:'700', fontFamily:'inherit' }}>Fermer</button>
+                        <button onClick={onClose} style={{ width:'100%', padding:'12px', borderRadius:'8px', border:'none', background:'#1a1a1a', color:'white', cursor:'pointer', fontWeight:'700', fontFamily:'inherit' }}>{t('manageCartels.importClose')}</button>
                     </div>
                 )}
             </div>
@@ -259,7 +259,10 @@ const ManageCartels = () => {
     const handleToDraft   = (c) => { if (!confirm(`Repasser "${c.titre}" en brouillon ?`)) return; act(c.id, () => api.cartels.setStatus(c.id, 'draft')); };
     const handleArchive   = (c) => { if (!confirm(`Archiver "${c.titre}" ?`)) return; act(c.id, () => api.cartels.archive(c.id)); };
     const handleDelete    = (id) => { if (!confirm(t('messages.confirmDelete', 'Supprimer ?'))) return; act(id, () => api.cartels.delete(id)); };
-    const handleVisibility = (c) => { updateCartel({ ...c, visible: !c.visible }); };
+    const handleVisibility = async (c) => {
+        if (!confirm(`Masquer "${c.titre}" et le passer en brouillon ?`)) return;
+        await act(c.id, () => api.cartels.setStatus(c.id, 'draft'));
+    };
 
     // ── Traduction unitaire ───────────────────────────────────
     const handleTranslate = async (cartel) => {
@@ -380,6 +383,7 @@ const ManageCartels = () => {
             {/* Modal import */}
             {showImport && (
                 <ImportModal
+                    t={t}
                     onClose={() => setShowImport(false)}
                     onDone={() => { fetchData(); setShowImport(false); }}
                 />
@@ -396,13 +400,13 @@ const ManageCartels = () => {
                         onClick={() => setShowImport(true)}
                         style={{ display:'flex', alignItems:'center', gap:'6px', background:'#6b7280', color:'white', border:'none', borderRadius:'10px', padding:'10px 16px', cursor:'pointer', fontWeight:'700', fontSize:'0.88rem', fontFamily:'inherit' }}
                     >
-                        <Upload size={15} /> Importer
+                        <Upload size={15} /> {t('manageCartels.import')}
                     </button>
                     <button
                         onClick={() => goToCreate()}
                         style={{ display:'flex', alignItems:'center', gap:'6px', background:'var(--color-red-accent, #D65A5A)', color:'white', border:'none', borderRadius:'10px', padding:'10px 16px', cursor:'pointer', fontWeight:'700', fontSize:'0.88rem', fontFamily:'inherit' }}
                     >
-                        <Plus size={15} /> Nouveau cartel
+                        <Plus size={15} /> {t('manageCartels.newCartel')}
                     </button>
                 </div>
             </div>
@@ -415,7 +419,7 @@ const ManageCartels = () => {
                     return (
                         <button key={tab.key} onClick={() => { setActiveTab(tab.key); setSelectedIds(new Set()); }} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:'8px', padding:'12px 16px', borderRadius:'10px', border:'none', cursor:'pointer', fontWeight:'700', fontSize:'0.88rem', fontFamily:'inherit', background: active ? 'white' : 'transparent', color: active ? tab.color : '#888', boxShadow: active ? '0 2px 8px rgba(0,0,0,0.08)' : 'none', transition:'all 0.15s' }}>
                             <Icon size={15} />
-                            {tab.label}
+                            {t(tab.labelKey)}
                             <span style={{ background: active ? tab.bg : '#e8e8e8', color: active ? tab.color : '#999', borderRadius:'20px', padding:'1px 8px', fontSize:'0.78rem', fontWeight:'800', minWidth:'22px', textAlign:'center' }}>
                                 {counts[tab.key] ?? 0}
                             </span>
@@ -426,7 +430,7 @@ const ManageCartels = () => {
 
             {/* Description onglet */}
             <p style={{ background:currentTabDef.bg, color:currentTabDef.color, borderRadius:'8px', padding:'10px 16px', fontSize:'0.85rem', fontWeight:'600', margin:'0 0 20px' }}>
-                {currentTabDef.description}
+                {t(currentTabDef.descriptionKey)}
             </p>
 
             {/* ── Barre filtres + actions ───────────────────── */}
@@ -435,7 +439,7 @@ const ManageCartels = () => {
                 {/* Recherche */}
                 <div style={{ position:'relative', flex:'1', minWidth:'180px' }}>
                     <Search size={15} style={{ position:'absolute', left:'10px', top:'50%', transform:'translateY(-50%)', color:'#aaa' }} />
-                    <input type="text" placeholder="Rechercher…" value={search} onChange={e => setSearch(e.target.value)}
+                    <input type="text" placeholder={t('manageCartels.search')} value={search} onChange={e => setSearch(e.target.value)}
                         style={{ width:'100%', padding:'8px 36px', borderRadius:'8px', border:'1px solid #ddd', fontSize:'0.88rem', boxSizing:'border-box' }} />
                     {filteredCartels.length > 0 && (
                         <span style={{ position:'absolute', right:'10px', top:'50%', transform:'translateY(-50%)', background:'#eee', color:'#666', borderRadius:'10px', padding:'1px 7px', fontSize:'0.75rem', fontWeight:'700' }}>
@@ -447,7 +451,7 @@ const ManageCartels = () => {
                 {/* Filtre catégorie */}
                 <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)}
                     style={{ padding:'8px 12px', borderRadius:'8px', border:'1px solid #ddd', fontSize:'0.88rem', background:'white' }}>
-                    <option value="">Toutes catégories</option>
+                    <option value="">{t('manageCartels.allCategories')}</option>
                     {categories.map(c => <option key={c.id || c} value={c.name || c}>{c.name || c}</option>)}
                 </select>
 
@@ -456,7 +460,7 @@ const ManageCartels = () => {
                     {selectedIds.size > 0 && selectedIds.size === filteredCartels.length
                         ? <CheckSquare size={15} color="#3b5bdb" />
                         : <Square size={15} color="#aaa" />}
-                    {selectedIds.size > 0 ? `${selectedIds.size} sélectionné${selectedIds.size > 1 ? 's' : ''}` : 'Tout sélectionner'}
+                    {selectedIds.size > 0 ? `${selectedIds.size} ${t('manageCartels.selected')}${selectedIds.size > 1 ? 's' : ''}` : t('manageCartels.selectAll')}
                 </button>
 
                 {/* Actions batch */}
@@ -464,32 +468,32 @@ const ManageCartels = () => {
                     <div style={{ display:'flex', gap:'6px', flexWrap:'wrap' }}>
                         {activeTab !== 'published' && (
                             <button onClick={handleBulkPublish} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'8px 12px', borderRadius:'8px', border:'none', background:'#2e7d32', color:'white', cursor:'pointer', fontSize:'0.85rem', fontWeight:'600', fontFamily:'inherit' }}>
-                                <Check size={14} /> Publier ({selectedIds.size})
+                                <Check size={14} /> {t('manageCartels.publish')} ({selectedIds.size})
                             </button>
                         )}
                         {/* Retraduire batch */}
                         <button onClick={handleBulkTranslate} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'8px 12px', borderRadius:'8px', border:'none', background:'#6741d9', color:'white', cursor:'pointer', fontSize:'0.85rem', fontWeight:'600', fontFamily:'inherit' }}>
-                            <Languages size={14} /> Retraduire ({selectedIds.size})
+                            <Languages size={14} /> {t('manageCartels.retranslate')} ({selectedIds.size})
                         </button>
                         {/* Export dropdown */}
-                        <DropdownButton label="Exporter" icon={Download} color="#444">
+                        <DropdownButton label={t('manageCartels.export')} icon={Download} color="#444">
                             {close => (<>
-                                <DropItem icon={ImgIcon}   label="Images (ZIP)" onClick={() => handleExportImages(close)} />
-                                <DropItem icon={FileText}  label="PDF impression" onClick={() => handleExportPdf(close)} />
-                                <DropItem icon={Package}   label="Archive complète (JSON + Images)" onClick={() => handleExportArchive(close)} />
+                                <DropItem icon={ImgIcon}   label={t('manageCartels.imagesZip')} onClick={() => handleExportImages(close)} />
+                                <DropItem icon={FileText}  label={t('manageCartels.pdfPrint')} onClick={() => handleExportPdf(close)} />
+                                <DropItem icon={Package}   label={t('manageCartels.fullArchive')} onClick={() => handleExportArchive(close)} />
                             </>)}
                         </DropdownButton>
                         <button onClick={handleBulkDelete} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'8px 12px', borderRadius:'8px', border:'none', background:'#d32f2f', color:'white', cursor:'pointer', fontSize:'0.85rem', fontWeight:'600', fontFamily:'inherit' }}>
-                            <Trash2 size={14} /> Supprimer
+                            <Trash2 size={14} /> {t('manageCartels.delete')}
                         </button>
                     </div>
                 )}
 
                 {/* Export sans sélection → tout exporter */}
                 {selectedIds.size === 0 && (
-                    <DropdownButton label="Exporter tout" icon={Download} color="#666">
+                    <DropdownButton label={t('manageCartels.exportAll')} icon={Download} color="#666">
                         {close => (<>
-                            <DropItem icon={Package}  label="Archive complète (JSON + Images)" onClick={() => { close(); withBusy('Préparation archive…', () => api.io.exportArchive([])); }} />
+                            <DropItem icon={Package}  label={t('manageCartels.fullArchive')} onClick={() => { close(); withBusy('Préparation archive…', () => api.io.exportArchive([])); }} />
                         </>)}
                     </DropdownButton>
                 )}
@@ -499,7 +503,7 @@ const ManageCartels = () => {
             <div style={{ background:'white', borderRadius:'12px', border:'1px solid #eee', overflow:'hidden', boxShadow:'0 2px 8px rgba(0,0,0,0.04)' }}>
                 {filteredCartels.length === 0 ? (
                     <div style={{ textAlign:'center', padding:'60px 20px', color:'#bbb' }}>
-                        <p style={{ fontSize:'1.1rem' }}>Aucun cartel dans cet onglet.</p>
+                        <p style={{ fontSize:'1.1rem' }}>{t('manageCartels.noCartelsTab')}</p>
                     </div>
                 ) : (
                     <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'0.88rem' }}>
@@ -507,13 +511,13 @@ const ManageCartels = () => {
                             <tr>
                                 <th style={{ padding:'12px', width:'36px' }} />
                                 <th style={{ padding:'12px', width:'50px', textAlign:'left' }}>Img</th>
-                                <th onClick={() => handleSort('date')}  style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none', whiteSpace:'nowrap' }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>Année <SortIcon k="date" /></div></th>
-                                <th onClick={() => handleSort('titre')} style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none' }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>Titre <SortIcon k="titre" /></div></th>
-                                <th style={{ padding:'12px', textAlign:'left' }}>Catégories</th>
-                                <th onClick={() => handleSort('loc')}   style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none' }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>Lieu <SortIcon k="loc" /></div></th>
+                                <th onClick={() => handleSort('date')}  style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none', whiteSpace:'nowrap' }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.year')} <SortIcon k="date" /></div></th>
+                                <th onClick={() => handleSort('titre')} style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none' }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.title')} <SortIcon k="titre" /></div></th>
+                                <th style={{ padding:'12px', textAlign:'left' }}>{t('manageCartels.categories')}</th>
+                                <th onClick={() => handleSort('loc')}   style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none' }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.location')} <SortIcon k="loc" /></div></th>
                                 {activeTab === 'pending' && <th style={{ padding:'12px', textAlign:'left' }}>IP</th>}
-                                <th style={{ padding:'12px', textAlign:'center' }}>Statut</th>
-                                <th style={{ padding:'12px', textAlign:'center' }}>Actions</th>
+                                <th style={{ padding:'12px', textAlign:'center' }}>{t('manageCartels.status')}</th>
+                                <th style={{ padding:'12px', textAlign:'center' }}>{t('manageCartels.actions')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -587,7 +591,7 @@ const ManageCartels = () => {
                                             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px' }}>
                                                 <span style={{ background:badge.bg, color:badge.color, borderRadius:'20px', padding:'2px 8px', fontSize:'0.75rem', fontWeight:'700' }}>{badge.label}</span>
                                                 {activeTab === 'published' && (
-                                                    <button onClick={() => handleVisibility(cartel)} title={isVis ? 'Visible · cliquer pour masquer' : 'Masqué · cliquer pour afficher'}
+                                                    <button onClick={() => handleVisibility(cartel)} title={isVis ? `${t('manageCartels.visible')} · ${t('manageCartels.hide')}` : `${t('manageCartels.hidden')} · ${t('manageCartels.show')}`}
                                                         style={{ background:'none', border:'none', cursor:'pointer', color: isVis ? '#2e7d32' : '#ccc' }}>
                                                         {isVis ? <Eye size={15} /> : <EyeOff size={15} />}
                                                     </button>
@@ -598,11 +602,11 @@ const ManageCartels = () => {
                                         {/* Actions */}
                                         <td style={{ padding:'10px' }}>
                                             <div style={{ display:'flex', gap:'4px', justifyContent:'center', flexWrap:'wrap' }}>
-                                                <ActionBtn onClick={() => setPreviewCartel(cartel)} title="Aperçu du cartel" color={HEX_COLORS.neutral}><ScanEye size={15} /></ActionBtn>
+                                                <ActionBtn onClick={() => setPreviewCartel(cartel)} title={t('manageCartels.preview')} color={HEX_COLORS.neutral}><ScanEye size={15} /></ActionBtn>
                                                 <ActionBtn onClick={() => goToCreate(cartel.id)} title="Modifier le cartel" color="#3b5bdb"><Edit size={15} /></ActionBtn>
 
                                                 {/* Retraduire */}
-                                                <ActionBtn onClick={() => handleTranslate(cartel)} title="Retraduire en anglais (IA)" color="#6741d9" disabled={isTrans}>
+                                                <ActionBtn onClick={() => handleTranslate(cartel)} title={t('manageCartels.retranslate')} color="#6741d9" disabled={isTrans}>
                                                     {isTrans ? <Clock size={15} /> : <Languages size={15} />}
                                                 </ActionBtn>
 
@@ -610,12 +614,12 @@ const ManageCartels = () => {
                                                     <ActionBtn onClick={() => handlePublish(cartel)} title="Publier sur la frise" color="#2e7d32" disabled={isProc}><Check size={15} /></ActionBtn>
                                                 )}
                                                 {(cartel.status === 'pending_review' || cartel.status === 'published') && (
-                                                    <ActionBtn onClick={() => handleToDraft(cartel)} title="Repasser en brouillon" color="#e67e00" disabled={isProc}><FileText size={15} /></ActionBtn>
+                                                    <ActionBtn onClick={() => handleToDraft(cartel)} title={t('status.draft')} color="#e67e00" disabled={isProc}><FileText size={15} /></ActionBtn>
                                                 )}
                                                 {cartel.status === 'published' && (
                                                     <ActionBtn onClick={() => handleArchive(cartel)} title="Archiver (masquer)" color="#6b7280" disabled={isProc}><X size={15} /></ActionBtn>
                                                 )}
-                                                <ActionBtn onClick={() => handleDelete(cartel.id)} title="Supprimer définitivement" color="#d32f2f" disabled={isProc}><Trash2 size={15} /></ActionBtn>
+                                                <ActionBtn onClick={() => handleDelete(cartel.id)} title={t('manageCartels.delete')} color="#d32f2f" disabled={isProc}><Trash2 size={15} /></ActionBtn>
                                             </div>
                                         </td>
                                     </tr>
@@ -631,20 +635,20 @@ const ManageCartels = () => {
                 <div onClick={() => setPreviewCartel(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', zIndex:1100, display:'flex', alignItems:'center', justifyContent:'center', padding:'20px' }}>
                     <div onClick={e => e.stopPropagation()} style={{ background:'white', borderRadius:'16px', padding:'24px', maxWidth:'700px', width:'100%', maxHeight:'90vh', overflowY:'auto', position:'relative' }}>
                         <button onClick={() => setPreviewCartel(null)} style={{ position:'absolute', top:'16px', right:'16px', background:'#f5f5f5', border:'none', borderRadius:'50%', width:'32px', height:'32px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={16} /></button>
-                        <h3 style={{ margin:'0 0 16px', fontSize:'1rem', fontWeight:'700' }}>Aperçu</h3>
+                        <h3 style={{ margin:'0 0 16px', fontSize:'1rem', fontWeight:'700' }}>{t('manageCartels.preview')}</h3>
                         <div style={{ border:'1px solid #eee', borderRadius:'10px', padding:'12px', height:'400px', overflow:'hidden' }}>
                             <CartelPreview data={previewCartel} />
                         </div>
                         <div style={{ display:'flex', gap:'10px', marginTop:'16px', justifyContent:'flex-end' }}>
                             <button onClick={() => { setPreviewCartel(null); goToCreate(previewCartel.id); }}
                                 style={{ display:'flex', alignItems:'center', gap:'6px', background:'#3b5bdb', color:'white', border:'none', padding:'10px 18px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', fontFamily:'inherit' }}>
-                                <Edit size={15} /> Éditer
+                                <Edit size={15} /> {t('manageCartels.edit')}
                             </button>
                             <button onClick={() => handleTranslate(previewCartel)}
                                 style={{ display:'flex', alignItems:'center', gap:'6px', background:'#6741d9', color:'white', border:'none', padding:'10px 18px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', fontFamily:'inherit' }}>
-                                <Languages size={15} /> Retraduire
+                                <Languages size={15} /> {t('manageCartels.retranslate')}
                             </button>
-                            <button onClick={() => setPreviewCartel(null)} style={{ padding:'10px 18px', borderRadius:'8px', border:'1px solid #ddd', cursor:'pointer', fontFamily:'inherit' }}>Fermer</button>
+                            <button onClick={() => setPreviewCartel(null)} style={{ padding:'10px 18px', borderRadius:'8px', border:'1px solid #ddd', cursor:'pointer', fontFamily:'inherit' }}>{t('manageCartels.importClose')}</button>
                         </div>
                     </div>
                 </div>

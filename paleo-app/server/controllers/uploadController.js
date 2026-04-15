@@ -1,7 +1,7 @@
 /**
  * uploadController.js
  * Gestion des uploads d'images via multer.
- * Les fichiers sont stockés dans server/uploads/ et servis par Express.
+ * Les fichiers sont stockés dans public/images/ et servis par Express.
  */
 
 import multer from 'multer';
@@ -11,9 +11,10 @@ import { randomUUID } from 'crypto';
 import fs from 'fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
+export const UPLOADS_DIR = path.join(__dirname, '..', '..', 'public', 'images');
+export const LEGACY_UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
 
-// Créer le dossier uploads s'il n'existe pas
+// Créer le dossier d'images s'il n'existe pas
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }

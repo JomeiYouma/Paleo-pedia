@@ -10,7 +10,7 @@ import JSZip from 'jszip';
 import path from 'path';
 import fs from 'fs';
 import { CartelModel } from '../models/Cartel.js';
-import { UPLOADS_DIR } from './uploadController.js';
+import { UPLOADS_DIR, LEGACY_UPLOADS_DIR } from './uploadController.js';
 
 export const ExportController = {
   async exportArchive(req, res) {
@@ -42,8 +42,12 @@ export const ExportController = {
         if (cleanedImagePath) {
           // Extraire le nom de fichier de l'URL /api/images/<filename>
           const filename = path.basename(cleanedImagePath);
-          const localPath = path.join(UPLOADS_DIR, filename);
-          if (fs.existsSync(localPath)) {
+          const localPaths = [
+            path.join(UPLOADS_DIR, filename),
+            path.join(LEGACY_UPLOADS_DIR, filename),
+          ];
+          const localPath = localPaths.find(candidate => fs.existsSync(candidate));
+          if (localPath) {
             imgFolder.file(filename, fs.readFileSync(localPath));
           }
         }

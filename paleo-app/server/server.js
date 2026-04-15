@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import routes from './routes/index.js';
-import { UPLOADS_DIR } from './controllers/uploadController.js';
+import { UPLOADS_DIR, LEGACY_UPLOADS_DIR } from './controllers/uploadController.js';
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -18,6 +18,7 @@ app.use((req, res, next) => {
 
 // ── Servir les images uploadées ───────────────────────────────
 app.use('/api/images', express.static(UPLOADS_DIR));
+app.use('/api/images', express.static(LEGACY_UPLOADS_DIR));
 
 // ── Routes ───────────────────────────────────────────────────
 app.use('/api', routes);

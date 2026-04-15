@@ -3,9 +3,10 @@
         "library": "Library",
         "create": "Create",
         "drafts": "Ideas & Drafts",
+        "published": "Published",
+        "pending": "Pending",
         "admin": "Management",
         "management": "Management",
-        "pending": "Pending",
         "deleteAll": "Delete All"
     },
     "library": {
@@ -96,10 +97,63 @@
         "publish": "Publish",
         "addIdea": "Add an idea"
     },
+    "header": {
+        "home": "Home",
+        "presentation": "About",
+        "prestations": "Services",
+        "ouvrages": "Books",
+        "museum": "Museum",
+        "contact": "Contact",
+        "themes": "Themes",
+        "timeline": "Chronological Timeline",
+        "login": "Login",
+        "logout": "Log out",
+        "workspaceMode": "Workshop Mode",
+        "exit": "Exit",
+        "adminAccess": "Admin access"
+    },
+    "manageCartels": {
+        "import": "Import",
+        "newCartel": "New Cartel",
+        "search": "Search...",
+        "allCategories": "All categories",
+        "selectAll": "Select all",
+        "selected": "selected",
+        "export": "Export",
+        "exportAll": "Export all",
+        "imagesZip": "Images (ZIP)",
+        "pdfPrint": "PDF print",
+        "fullArchive": "Full archive (JSON + Images)",
+        "delete": "Delete",
+        "noCartelsTab": "No cartels in this tab.",
+        "year": "Year",
+        "title": "Title",
+        "categories": "Categories",
+        "location": "Location",
+        "status": "Status",
+        "actions": "Actions",
+        "publish": "Publish",
+        "retranslate": "Retranslate",
+        "edit": "Edit",
+        "preview": "Preview",
+        "archive": "Archive",
+        "hide": "Hide",
+        "show": "Show",
+        "visible": "Visible",
+        "hidden": "Hidden",
+        "importZip": "Import ZIP archive",
+        "importClose": "Close"
+    },
     "status": {
         "draft": "📝 Draft",
         "pending_review": "⏳ Pending",
+        "published": "✅ Published",
         "archived": "🗄️ Archived"
+    },
+    "manageCartels": {
+        "draftsDescription": "Cartels in progress (not visible)",
+        "pendingDescription": "Visitor submissions to review",
+        "publishedDescription": "Cartels visible on the timeline"
     },
     "pages": {
         "presentation": {
