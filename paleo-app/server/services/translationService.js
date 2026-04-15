@@ -33,7 +33,7 @@ Input:
 ${JSON.stringify(payload, null, 2)}`;
 
     const chat = await client.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: 'You translate JSON from French to English. Output only valid JSON.' },
         { role: 'user',   content: prompt },

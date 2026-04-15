@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import * as d3 from 'd3';
 import CartelPreview from './CartelPreview';
+import ConfirmModal from './ConfirmModal';
 import { getYearForSort } from '../utils/helpers';
 import { ChevronLeft, ChevronRight, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -14,9 +15,15 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
     const containerRef = useRef(null);
     // Store zoom transform to persist across re-renders
     const zoomTransformRef = useRef(d3.zoomIdentity);
+    // Store the zoom behavior instance to avoid recreating it on every selection change
+    const zoomRef = useRef(null);
+    // Store current language in a ref so D3 closures can read it without stale values
+    const langRef = useRef(i18n.language);
+    useEffect(() => { langRef.current = i18n.language; }, [i18n.language]);
 
     // Maintain selection state
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const [confirmState, setConfirmState] = useState(null);
 
     // Filter valid cartels with years AND calculate stacking
     const validCartels = useMemo(() => {
@@ -85,15 +92,6 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
             .domain([minYear - padding, maxYear + padding])
             .range([margin.left, width - margin.right]);
 
-        // Zoom Behavior
-        const zoom = d3.zoom()
-            .scaleExtent([1, 50]) // Min zoom 1 ensures we don't zoom out past intial view
-            .translateExtent([[0, 0], [width, height]])
-            .extent([[0, 0], [width, height]])
-            .on("zoom", (event) => {
-                zoomTransformRef.current = event.transform; // Persist
-                updateChart(event.transform);
-            });
 
         // Structure
         const g = svg.append("g");
@@ -137,13 +135,16 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                 // Remove any existing label first
                 g.selectAll(".timeline-hover-label").remove();
 
+                // Titre localisé selon la langue active
+                const label = (langRef.current === 'en' && d.titre_en) ? d.titre_en : d.titre;
+
                 // Add Label
                 g.append("text")
                     .attr("class", "timeline-hover-label")
                     .attr("x", d3.select(this).attr("cx"))
                     .attr("y", parseFloat(d3.select(this).attr("cy")) - 12) // Above the point
                     .attr("text-anchor", "middle")
-                    .text(d.titre)
+                    .text(label)
                     .style("font-size", "10px")
                     .style("font-weight", "bold")
                     .style("fill", "black")
@@ -172,7 +173,17 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
             .attr("stroke-width", 2)
             .attr("opacity", 0); // Hidden by default
 
-        // Attach Zoom
+        // Attach Zoom (store in ref so update effect can reuse it)
+        const zoom = d3.zoom()
+            .scaleExtent([1, 50])
+            .translateExtent([[0, 0], [width, height]])
+            .extent([[0, 0], [width, height]])
+            .on("zoom", (event) => {
+                zoomTransformRef.current = event.transform;
+                updateChart(event.transform);
+            });
+
+        zoomRef.current = zoom;
         svg.call(zoom);
 
         // Restore zoom if exists (or reset)
@@ -243,12 +254,10 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
         g.selectAll(".timeline-marker")
             .classed("active-marker", (d, i) => i === selectedIndex);
 
-        // Re-bind Zoom to update active ring position dynamically
-        const zoom = d3.zoom()
-            .scaleExtent([1, 50])
-            .translateExtent([[0, 0], [width, height]])
-            .extent([[0, 0], [width, height]])
-            .on("zoom", (event) => {
+        // Re-use the zoom behavior stored in ref (do NOT recreate it here to avoid stacking listeners)
+        if (zoomRef.current) {
+            // Update the zoom handler so it has access to the new xBase + selectedIndex
+            zoomRef.current.on("zoom", (event) => {
                 zoomTransformRef.current = event.transform;
                 const newXz = event.transform.rescaleX(xBase);
 
@@ -267,8 +276,8 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                         .attr("cy", (height / 2) + d.yOffset);
                 }
             });
-
-        svg.call(zoom).call(zoom.transform, transform);
+            svg.call(zoomRef.current).call(zoomRef.current.transform, transform);
+        }
 
     }, [validCartels, selectedIndex]); // This runs on selection change
 
@@ -354,7 +363,10 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                                         <Edit size={24} color="#333" />
                                     </button>
                                     <button
-                                        onClick={() => { if (confirm('Supprimer ?')) onDelete(currentCartel.id); }}
+                                        onClick={() => setConfirmState({
+                                            message: t('messages.deleteConfirm', 'Supprimer ce cartel ?'),
+                                            onConfirm: () => { onDelete(currentCartel.id); setConfirmState(null); },
+                                        })}
                                         title={t('cartel.delete')}
                                         style={{ border: 'none', background: 'white', cursor: 'pointer', padding: '12px', borderRadius: '50%', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}
                                     >
@@ -397,6 +409,17 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                 </div>
                 <svg ref={svgRef} style={{ width: '100%', height: '100%', cursor: 'grab' }}></svg>
             </div>
+
+            {/* Modale de confirmation (remplace window.confirm) */}
+            {confirmState && (
+                <ConfirmModal
+                    message={confirmState.message}
+                    confirmLabel={t('action.delete', 'Supprimer')}
+                    cancelLabel={t('action.cancel', 'Annuler')}
+                    onConfirm={confirmState.onConfirm}
+                    onCancel={() => setConfirmState(null)}
+                />
+            )}
         </div>
     );
 };

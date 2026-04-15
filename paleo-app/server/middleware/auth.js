@@ -46,3 +46,29 @@ export function require(permission) {
 export const requireCreate  = require('can_create_cartel');
 export const requirePublish = require('can_publish_cartel');
 export const requireAdmin   = require('can_manage_admin');
+
+/**
+ * Auth optionnelle : tente de décoder le token JWT si présent.
+ * N'échoue jamais — req.user reste null si token absent ou invalide.
+ * Utiliser sur les routes publiques qui ont un comportement enrichi pour les admins.
+ */
+export function optionalAuth(req, res, next) {
+  const auth = req.headers.authorization;
+  req.user = null;
+  if (auth?.startsWith('Bearer ')) {
+    try {
+      const decoded = verifyToken(auth.slice(7));
+      req.user = {
+        id:                 decoded.id,
+        role:               decoded.role,
+        can_create_cartel:  !!decoded.can_create_cartel,
+        can_publish_cartel: !!decoded.can_publish_cartel,
+        can_manage_admin:   !!decoded.can_manage_admin,
+        can_create_subsite: !!decoded.can_create_subsite,
+      };
+    } catch {
+      req.user = null;
+    }
+  }
+  next();
+}

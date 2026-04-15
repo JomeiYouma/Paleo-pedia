@@ -4,6 +4,7 @@ import CartelPreview from '../components/CartelPreview';
 import TimelineMode from '../components/TimelineMode';
 import MapMode from '../components/MapMode';
 import HeuristicMode from '../components/HeuristicMode';
+import ConfirmModal from '../components/ConfirmModal';
 import { getYearForSort } from '../utils/helpers';
 import { Download, Trash2, CheckSquare, Square, Edit, LayoutList, CalendarDays, Map as MapIcon, Search, GitGraph } from 'lucide-react';
 import { generateZip } from '../utils/zipGenerator';
@@ -45,6 +46,7 @@ const Library = ({ fixedCategory = null }) => {
     const [generatingZip, setGeneratingZip] = useState(false);
     const [progress, setProgress]           = useState({ current: 0, total: 0 });
     const [targetCartelId, setTargetCartelId] = useState(null);
+    const [confirmState, setConfirmState]   = useState(null);
 
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -136,9 +138,15 @@ const Library = ({ fixedCategory = null }) => {
     };
 
     const handleBulkDelete = async () => {
-        if (!selectedIds.size || !confirm(t('messages.bulkDeleteConfirm'))) return;
-        await deleteCartels(Array.from(selectedIds));
-        setSelectedIds(new Set());
+        if (!selectedIds.size) return;
+        setConfirmState({
+            message: t('messages.bulkDeleteConfirm', `Supprimer les ${selectedIds.size} cartels sélectionnés ?`),
+            onConfirm: async () => {
+                await deleteCartels(Array.from(selectedIds));
+                setSelectedIds(new Set());
+                setConfirmState(null);
+            },
+        });
     };
 
     if (loading && !cartels.length) return <div className="container">{t('library.loading')}</div>;
@@ -180,17 +188,17 @@ const Library = ({ fixedCategory = null }) => {
                     {/* Modes de vue */}
                     <div className="view-mode-container">
                         <button onClick={() => setViewMode('timeline')} className={`view-mode-btn ${viewMode === 'timeline' ? 'active' : ''}`}>
-                            <CalendarDays size={18} /><span>Frise</span>
+                            <CalendarDays size={18} /><span>{t('library.viewFrise', 'Frise')}</span>
                         </button>
                         <button onClick={() => setViewMode('map')} className={`view-mode-btn ${viewMode === 'map' ? 'active' : ''}`}>
-                            <MapIcon size={18} /><span>Carte</span>
+                            <MapIcon size={18} /><span>{t('library.viewMap', 'Carte')}</span>
                         </button>
                         <button onClick={() => setViewMode('heuristic')} className={`view-mode-btn ${viewMode === 'heuristic' ? 'active' : ''}`}>
-                            <GitGraph size={18} /><span>Heuristique</span>
+                            <GitGraph size={18} /><span>{t('library.viewHeuristic', 'Heuristique')}</span>
                         </button>
                         {isAdmin && (
                             <button onClick={() => setViewMode('list')} className={`view-mode-btn ${viewMode === 'list' ? 'active' : ''}`}>
-                                <LayoutList size={18} /><span>Liste</span>
+                                <LayoutList size={18} /><span>{t('library.viewList', 'Liste')}</span>
                             </button>
                         )}
                     </div>
@@ -219,7 +227,9 @@ const Library = ({ fixedCategory = null }) => {
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', paddingTop: '6px' }}>
                         <button onClick={selectAll} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.88rem', padding: '6px 10px' }}>
                             {selectedIds.size === filteredCartels.length && filteredCartels.length > 0 ? <CheckSquare size={16} /> : <Square size={16} />}
-                            {selectedIds.size === filteredCartels.length ? 'Tout désélectionner' : 'Tout sélectionner'}
+                            {selectedIds.size === filteredCartels.length && filteredCartels.length > 0
+                                ? t('library.deselectAll', 'Tout désélectionner')
+                                : t('library.selectAll', 'Tout sélectionner')}
                         </button>
                         <button onClick={handleZip} disabled={!selectedIds.size || generatingZip} style={{ fontSize: '0.88rem', padding: '6px 10px' }}>
                             <Download size={14} style={{ marginRight: 4 }} />
@@ -228,7 +238,7 @@ const Library = ({ fixedCategory = null }) => {
                         {selectedIds.size > 0 && (
                             <button onClick={handleBulkDelete} style={{ color: 'red', borderColor: 'red', fontSize: '0.88rem', padding: '6px 10px' }}>
                                 <Trash2 size={14} style={{ marginRight: 4 }} />
-                                Supprimer ({selectedIds.size})
+                                {t('library.deleteCount', { count: selectedIds.size, defaultValue: `Supprimer (${selectedIds.size})` })}
                             </button>
                         )}
                     </div>
@@ -263,7 +273,13 @@ const Library = ({ fixedCategory = null }) => {
                                     <button onClick={() => navigate(`/app/create?edit=${cartel.id}`)} title="Éditer" style={{ padding: '6px', border: 'none', background: 'none', cursor: 'pointer' }}>
                                         <Edit size={18} />
                                     </button>
-                                    <button onClick={() => { if (confirm(t('messages.deleteConfirm'))) deleteCartel(cartel.id); }} style={{ color: 'red', padding: '6px', border: 'none', background: 'none', cursor: 'pointer' }}>
+                                    <button
+                                        onClick={() => setConfirmState({
+                                            message: t('messages.deleteConfirm', 'Supprimer ce cartel ?'),
+                                            onConfirm: () => { deleteCartel(cartel.id); setConfirmState(null); },
+                                        })}
+                                        style={{ color: 'red', padding: '6px', border: 'none', background: 'none', cursor: 'pointer' }}
+                                    >
                                         <Trash2 size={18} />
                                     </button>
                                 </div>
@@ -271,7 +287,7 @@ const Library = ({ fixedCategory = null }) => {
                         </div>
                     ))}
                     {filteredCartels.length === 0 && (
-                        <p style={{ textAlign: 'center', color: '#aaa', padding: '40px 0' }}>Aucun cartel ne correspond à ces filtres.</p>
+                        <p style={{ textAlign: 'center', color: '#aaa', padding: '40px 0' }}>{t('library.empty')}</p>
                     )}
                 </div>
             )}
@@ -284,6 +300,17 @@ const Library = ({ fixedCategory = null }) => {
             )}
             {viewMode === 'heuristic' && (
                 <HeuristicMode cartels={filteredCartels} />
+            )}
+
+            {/* Modale de confirmation (remplace window.confirm) */}
+            {confirmState && (
+                <ConfirmModal
+                    message={confirmState.message}
+                    confirmLabel={t('action.delete', 'Supprimer')}
+                    cancelLabel={t('action.cancel', 'Annuler')}
+                    onConfirm={confirmState.onConfirm}
+                    onCancel={() => setConfirmState(null)}
+                />
             )}
         </div>
     );
