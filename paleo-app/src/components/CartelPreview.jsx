@@ -30,16 +30,19 @@ const CartelPreview = ({ data, isDraft = false }) => {
     // Normalize image path
     let imgSrc = data.imageUrl || data.image_path;
     if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('data:') && !imgSrc.startsWith('blob:')) {
-        // Since we use HashRouter, relative paths like "images/foo.jpg" are relative to index.html
-        // We just need to clean up "../" which comes from PHP context.
-        // We also DO NOT start with "/" to support subfolder deployments.
-
-        // Remove known prefixes if they exist to normalize
-        imgSrc = imgSrc.replace(/^(\.\.\/)+/, '').replace(/^\//, '');
-
-        // Ensure it starts with images/ if it looks like an image path
-        if (!imgSrc.startsWith('images/') && (imgSrc.endsWith('.jpg') || imgSrc.endsWith('.png') || imgSrc.endsWith('.jpeg') || imgSrc.endsWith('.webp'))) {
-            imgSrc = 'images/' + imgSrc;
+        // Les URLs /api/images/... sont des chemins absolus valides → les garder tels quels.
+        // On ne traite que les anciens chemins relatifs hérités de l'ère PHP (ex: "../images/foo.jpg").
+        const isApiPath = imgSrc.startsWith('/api/') || imgSrc.startsWith('api/');
+        if (!isApiPath) {
+            // Supprimer les préfixes "../" issus du contexte PHP
+            imgSrc = imgSrc.replace(/^(\.\.\/)+/, '');
+            // S'assurer que le chemin ne commence pas par "/" (déploiement en sous-dossier)
+            imgSrc = imgSrc.replace(/^\//, '');
+            // Ajouter le préfixe "images/" uniquement pour les anciens chemins relatifs
+            if (!imgSrc.startsWith('images/') &&
+                (imgSrc.endsWith('.jpg') || imgSrc.endsWith('.png') || imgSrc.endsWith('.jpeg') || imgSrc.endsWith('.webp'))) {
+                imgSrc = 'images/' + imgSrc;
+            }
         }
     }
     const [imgError, setImgError] = useState(false);
