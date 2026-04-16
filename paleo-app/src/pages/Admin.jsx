@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Edit, Trash2, Globe, MapPin, Image as ImageIcon, Eye, EyeOff, Download, Square, CheckSquare, Search, ScanEye, X, Link, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { generateZip } from '../utils/zipGenerator';
@@ -11,6 +11,7 @@ import api from '../services/apiClient';
 const Admin = () => {
     const { cartels, deleteCartel, deleteCartels, fetchData, isAdmin, categories, addWorkshop, deleteWorkshop, workshops } = useApp();
     const navigate = useNavigate();
+    const location = useLocation();
     const { t, i18n } = useTranslation();
     const isEn = i18n.language === 'en';
 
@@ -450,7 +451,7 @@ const Admin = () => {
                             <CartelPreview data={previewCartel} />
                         </div>
                         <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                            <button onClick={() => { setPreviewCartel(null); navigate(`/app/create?edit=${previewCartel.id}`); }}
+                            <button onClick={() => { setPreviewCartel(null); navigate(`/app/create?edit=${previewCartel.id}`, { state: { returnTo: `${location.pathname}${location.search}#${previewCartel.id}` } }); }}
                                 style={{ background: 'blue', color: 'white', border: 'none', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer' }}>
                                 <Edit size={16} style={{ marginRight: '5px', verticalAlign: 'text-bottom' }} /> Editer
                             </button>
@@ -687,7 +688,7 @@ const Admin = () => {
                                                 <ScanEye size={18} />
                                             </button>
                                             <button
-                                                onClick={() => navigate(`/app/create?edit=${cartel.id}`)}
+                                                onClick={() => navigate(`/app/create?edit=${cartel.id}`, { state: { returnTo: `${location.pathname}${location.search}#${cartel.id}` } })}
                                                 title={t('drafts.edit')}
                                                 style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'blue' }}
                                             >

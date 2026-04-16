@@ -8,7 +8,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import { getYearForSort } from '../utils/helpers';
 import { Download, Trash2, CheckSquare, Square, Edit, LayoutList, CalendarDays, Map as MapIcon, Search, GitGraph } from 'lucide-react';
 import { generateZip } from '../utils/zipGenerator';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import './Library.css';
 
@@ -45,11 +45,15 @@ const Library = ({ fixedCategory = null }) => {
     const [selectedCats, setSelectedCats]   = useState([]);
     const [generatingZip, setGeneratingZip] = useState(false);
     const [progress, setProgress]           = useState({ current: 0, total: 0 });
-    const [targetCartelId, setTargetCartelId] = useState(null);
-    const [confirmState, setConfirmState]   = useState(null);
-
+    
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
+
+    const [targetCartelId, setTargetCartelId] = useState(() => {
+        return location.hash ? location.hash.replace('#', '') : null;
+    });
+    const [confirmState, setConfirmState]   = useState(null);
 
     // Pré-filtrer par catégorie si ?category= est dans l'URL (seulement sans fixedCategory)
     const urlCategoryFilter = !fixedCategory ? searchParams.get('category') : null;
@@ -332,7 +336,7 @@ const Library = ({ fixedCategory = null }) => {
                             </div>
                             {isAdmin && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
-                                    <button onClick={() => navigate(`/app/create?edit=${cartel.id}`)} title="Éditer" style={{ padding: '6px', border: 'none', background: 'none', cursor: 'pointer' }}>
+                                    <button onClick={() => navigate(`/app/create?edit=${cartel.id}`, { state: { returnTo: `${location.pathname}${location.search}#${cartel.id}` } })} title="Éditer" style={{ padding: '6px', border: 'none', background: 'none', cursor: 'pointer' }}>
                                         <Edit size={18} />
                                     </button>
                                     <button

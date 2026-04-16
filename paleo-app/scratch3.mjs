@@ -1,0 +1,65 @@
+import { getYearForSort } from './src/utils/helpers.js';
+
+const annees = [
+    '900 av. J.-C.',
+    '1500 av. J.-C.',
+    '1300 BC',
+    '2000 BC',
+    '400 av. J.C.',
+    'XVIIIe siècle',
+    '2000 BC',
+    '508',
+    'VIIIe siècle',
+    '1206',
+    'XIIIe siècle',
+    'XVIIe siècle',
+    'XVIIe siècle',
+    'XVIIIe siècle',
+    'XVIIIe siècle',
+    'XVIIIe siècle',
+    '1780',
+    '1727',
+    '1780',
+    '1792',
+    '1792',
+    'XIXe siècle',
+    'XIXe siècle',
+    '1818',
+    '1818',
+    '1836',
+    '1845',
+    '1850',
+    '1852',
+    '1855',
+    '1856',
+    '1859',
+    '1860',
+    '1869',
+    '1869',
+    '1870',
+    '1874',
+    '1874',
+    '1880',
+    '1880',
+    '1881',
+    '1885',
+    '1886',
+    '1891',
+    '1898',
+    '1898',
+    '1900',
+    '1901',
+    '1901',
+    '1901',
+    '2013',
+    '2010',
+    '2025',
+    '2024'
+];
+
+const mapped = annees.map(a => ({ annee: a, val: getYearForSort({ annee: a }) }));
+mapped.sort((a,b) => a.val - b.val);
+
+for (const m of mapped) {
+    console.log(`${String(m.val).padEnd(10)} | ${m.annee}`);
+}
