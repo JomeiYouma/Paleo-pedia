@@ -1,8 +1,24 @@
 import mysql from 'mysql2/promise';
 import 'dotenv/config';
 
+// Supporte deux modes de config :
+//   1. DATABASE_URL="mysql://user:pass@host:port/db"  (variable unique)
+//   2. DB_HOST + DB_PORT + DB_NAME + DB_USER + DB_PASSWORD (variables séparées)
+//      → utile quand cPanel encode mal les caractères spéciaux dans l'URL
+const poolConfig = process.env.DATABASE_URL
+  ? {
+      uri: process.env.DATABASE_URL,
+    }
+  : {
+      host:     process.env.DB_HOST     || 'localhost',
+      port:     parseInt(process.env.DB_PORT || '3306', 10),
+      database: process.env.DB_NAME,
+      user:     process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+    };
+
 const pool = mysql.createPool({
-  uri: process.env.DATABASE_URL,
+  ...poolConfig,
   waitForConnections: true,
   connectionLimit: 10,
   charset: 'utf8mb4',
