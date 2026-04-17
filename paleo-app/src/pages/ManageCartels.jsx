@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import {
     Edit, Trash2, Check, X, Clock,
     Download, Square, CheckSquare, Search,
     ArrowUpDown, ArrowUp, ArrowDown,
     FileText, Inbox, Globe, Plus, ScanEye, MapPin, Image as ImageIcon,
     Languages, Upload, ChevronDown, Package, FileJson, ImageIcon as ImgIcon,
+    FolderPlus,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { generateZip, generatePdf, generateArchive } from '../utils/zipGenerator';
@@ -171,9 +172,10 @@ const ImportModal = ({ onClose, onDone, t }) => {
 
 // ── Composant principal ──────────────────────────────────────
 const ManageCartels = () => {
-    const { cartels, fetchData, deleteCartel, deleteCartels, updateCartel, isAdmin, categories } = useApp();
+    const { cartels, fetchData, deleteCartel, deleteCartels, updateCartel, isAdmin, categories, workshops, addWorkshop } = useApp();
     const navigate = useNavigate();
     const location = useLocation();
+    const { workshopId } = useParams();
     const { t, i18n } = useTranslation();
 
     const pathToTab = {
@@ -190,12 +192,14 @@ const ManageCartels = () => {
     const activeTab = pathToTab[location.pathname] || 'drafts';
     const setActiveTab = (key) => navigate(tabToPath[key] || '/app/manage/drafts');
     const goToCreate = (editId) => {
-        const target = editId ? `/app/create?edit=${editId}` : '/app/create';
+        const workshopQuery = filterWorkshop ? `?workshopId=${filterWorkshop}` : '';
+        const target = editId ? `/app/create?edit=${editId}` : `/app/create${workshopQuery}`;
         navigate(target, { state: { returnTo: location.pathname } });
     };
 
     const [search,         setSearch]         = useState('');
     const [filterCategory, setFilterCategory] = useState('');
+    const [filterWorkshop, setFilterWorkshop] = useState(workshopId || '');
     const [sortConfig,     setSortConfig]      = useState({ key: 'date', direction: 'desc' });
     const [selectedIds,    setSelectedIds]     = useState(new Set());
     const [processingId,   setProcessingId]    = useState(null);
@@ -205,8 +209,16 @@ const ManageCartels = () => {
     const [progress,       setProgress]        = useState({ current: 0, total: 0 });
     const [showImport,     setShowImport]      = useState(false);
     const [translating,    setTranslating]     = useState(new Set()); // ids en cours de traduction
+    const [showWorkshopModal, setShowWorkshopModal] = useState(false);
+    const [newWorkshopName, setNewWorkshopName] = useState('');
+    const [selectedWorkshopId, setSelectedWorkshopId] = useState('');
+
+    React.useEffect(() => {
+        setFilterWorkshop(workshopId || '');
+    }, [workshopId]);
 
     const currentTabDef = TABS.find(t => t.key === activeTab) || TABS[0];
+    const activeWorkshop = filterWorkshop ? workshops.find(w => String(w.id) === String(filterWorkshop)) : null;
 
     const counts = useMemo(() => {
         const obj = {};
@@ -216,6 +228,9 @@ const ManageCartels = () => {
 
     const filteredCartels = useMemo(() => {
         let data = cartels.filter(currentTabDef.filter);
+        if (filterWorkshop) {
+            data = data.filter(c => (c.workshopIds || []).map(String).includes(String(filterWorkshop)));
+        }
         if (search) {
             const q = search.toLowerCase();
             data = data.filter(c =>
@@ -241,7 +256,7 @@ const ManageCartels = () => {
             return 0;
         });
         return data;
-    }, [cartels, currentTabDef, search, filterCategory, sortConfig]);
+    }, [cartels, currentTabDef, search, filterCategory, filterWorkshop, sortConfig]);
 
     if (!isAdmin) {
         return <div style={{ textAlign:'center', padding:'80px 20px', color:'#aaa' }}><p>{t('manageCartels.adminOnly')}</p></div>;
@@ -290,6 +305,27 @@ const ManageCartels = () => {
             for (const id of selectedIds) await api.cartels.delete(id);
             await fetchData();
             setSelectedIds(new Set());
+        });
+    };
+
+    const handleBulkWorkshop = async () => {
+        if (!selectedIds.size) return;
+        if (!newWorkshopName.trim() && !selectedWorkshopId) {
+            alert('Choisissez un workshop existant ou saisissez un nouveau nom.');
+            return;
+        }
+
+        await withBusy('Association workshop…', async () => {
+            if (newWorkshopName.trim()) {
+                await addWorkshop(newWorkshopName.trim(), Array.from(selectedIds));
+            } else {
+                await api.workshops.addCartels(selectedWorkshopId, Array.from(selectedIds));
+                await fetchData();
+            }
+            setSelectedIds(new Set());
+            setShowWorkshopModal(false);
+            setNewWorkshopName('');
+            setSelectedWorkshopId('');
         });
     };
 
@@ -451,6 +487,18 @@ const ManageCartels = () => {
                     {categories.map(c => <option key={c.id || c} value={c.name || c}>{c.name || c}</option>)}
                 </select>
 
+                <select value={filterWorkshop} onChange={e => setFilterWorkshop(e.target.value)}
+                    style={{ padding:'8px 12px', borderRadius:'8px', border:'1px solid #ddd', fontSize:'0.88rem', background:'white' }}>
+                    <option value="">{t('manageCartels.allWorkshops')}</option>
+                    {workshops.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                </select>
+
+                {activeWorkshop && (
+                    <span style={{ background:'#e8f1ff', color:'#1f6feb', padding:'8px 12px', borderRadius:'999px', fontSize:'0.82rem', fontWeight:'700' }}>
+                        {t('manageCartels.workshopFilter', { name: activeWorkshop.name })}
+                    </span>
+                )}
+
                 {/* Tout sélectionner */}
                 <button onClick={selectAll} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'8px 12px', borderRadius:'8px', border:'1px solid #ddd', background:'white', cursor:'pointer', fontSize:'0.85rem', color:'#555', fontFamily:'inherit' }}>
                     {selectedIds.size > 0 && selectedIds.size === filteredCartels.length
@@ -479,6 +527,9 @@ const ManageCartels = () => {
                                 <DropItem icon={Package}   label={t('manageCartels.fullArchive')} onClick={() => handleExportArchive(close)} />
                             </>)}
                         </DropdownButton>
+                        <button onClick={() => { setNewWorkshopName(''); setSelectedWorkshopId(''); setShowWorkshopModal(true); }} disabled={selectedIds.size === 0} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'8px 12px', borderRadius:'8px', border:'none', background:selectedIds.size === 0 ? '#a7c2ff' : '#1f6feb', color:'white', cursor:selectedIds.size === 0 ? 'not-allowed' : 'pointer', fontSize:'0.85rem', fontWeight:'600', fontFamily:'inherit' }}>
+                            <FolderPlus size={14} /> {t('manageCartels.assignWorkshop')} ({selectedIds.size})
+                        </button>
                         <button onClick={handleBulkDelete} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'8px 12px', borderRadius:'8px', border:'none', background:'#d32f2f', color:'white', cursor:'pointer', fontSize:'0.85rem', fontWeight:'600', fontFamily:'inherit' }}>
                             <Trash2 size={14} /> {t('manageCartels.delete')}
                         </button>
@@ -510,6 +561,7 @@ const ManageCartels = () => {
                                 <th onClick={() => handleSort('date')}  style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none', whiteSpace:'nowrap' }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.year')} <SortIcon k="date" /></div></th>
                                 <th onClick={() => handleSort('titre')} style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none' }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.title')} <SortIcon k="titre" /></div></th>
                                 <th style={{ padding:'12px', textAlign:'left' }}>{t('manageCartels.categories')}</th>
+                                <th style={{ padding:'12px', textAlign:'left' }}>{t('manageCartels.workshops')}</th>
                                 <th onClick={() => handleSort('loc')}   style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none' }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.location')} <SortIcon k="loc" /></div></th>
                                 {activeTab === 'pending' && <th style={{ padding:'12px', textAlign:'left' }}>IP</th>}
                                 <th style={{ padding:'12px', textAlign:'center' }}>{t('manageCartels.status')}</th>
@@ -566,6 +618,17 @@ const ManageCartels = () => {
                                                     <span key={c} style={{ background:'#f0f0f0', padding:'2px 7px', borderRadius:'10px', fontSize:'0.75rem', color:'#555' }}>{c}</span>
                                                 ))}
                                                 {(cartel.categories || []).length > 3 && <span style={{ color:'#bbb', fontSize:'0.75rem' }}>+{cartel.categories.length - 3}</span>}
+                                            </div>
+                                        </td>
+
+                                        {/* Workshops */}
+                                        <td style={{ padding:'10px' }}>
+                                            <div style={{ display:'flex', flexWrap:'wrap', gap:'4px' }}>
+                                                {((cartel.workshopIds || []).map(id => workshops.find(w => String(w.id) === String(id))).filter(Boolean).slice(0, 2)).map(w => (
+                                                    <span key={w.id} style={{ background:'#e8f1ff', padding:'2px 7px', borderRadius:'10px', fontSize:'0.75rem', color:'#1f6feb' }}>{w.name}</span>
+                                                ))}
+                                                {((cartel.workshopIds || []).length > 2) && <span style={{ color:'#bbb', fontSize:'0.75rem' }}>+{cartel.workshopIds.length - 2}</span>}
+                                                {(cartel.workshopIds || []).length === 0 && <span style={{ color:'#bbb', fontSize:'0.8rem' }}>—</span>}
                                             </div>
                                         </td>
 
@@ -638,6 +701,33 @@ const ManageCartels = () => {
                                 <Languages size={15} /> {t('manageCartels.retranslate')}
                             </button>
                             <button onClick={() => setPreviewCartel(null)} style={{ padding:'10px 18px', borderRadius:'8px', border:'1px solid #ddd', cursor:'pointer', fontFamily:'inherit' }}>{t('manageCartels.importClose')}</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showWorkshopModal && (
+                <div onClick={() => setShowWorkshopModal(false)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:1200, display:'flex', alignItems:'center', justifyContent:'center', padding:'20px' }}>
+                    <div onClick={e => e.stopPropagation()} style={{ background:'white', borderRadius:'16px', padding:'24px', maxWidth:'520px', width:'100%', boxShadow:'0 20px 50px rgba(0,0,0,0.2)' }}>
+                        <h3 style={{ marginTop:0 }}>{t('manageCartels.assignWorkshop')}</h3>
+                        <p style={{ color:'#666', marginTop:'-4px' }}>{selectedIds.size} cartel(s) sélectionné(s).</p>
+
+                        <div style={{ marginBottom:'14px' }}>
+                            <label style={{ display:'block', fontWeight:'700', marginBottom:'6px' }}>{t('manageCartels.existingWorkshop')}</label>
+                            <select value={selectedWorkshopId} onChange={e => { setSelectedWorkshopId(e.target.value); setNewWorkshopName(''); }} style={{ width:'100%', padding:'10px 12px', borderRadius:'10px', border:'1px solid #ddd' }}>
+                                <option value="">{t('manageCartels.chooseWorkshop')}</option>
+                                {workshops.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                            </select>
+                        </div>
+
+                        <div style={{ marginBottom:'14px' }}>
+                            <label style={{ display:'block', fontWeight:'700', marginBottom:'6px' }}>{t('manageCartels.newWorkshop')}</label>
+                            <input value={newWorkshopName} onChange={e => { setNewWorkshopName(e.target.value); setSelectedWorkshopId(''); }} placeholder={t('manageCartels.newWorkshopPlaceholder')} style={{ width:'100%', padding:'10px 12px', borderRadius:'10px', border:'1px solid #ddd' }} />
+                        </div>
+
+                        <div style={{ display:'flex', justifyContent:'flex-end', gap:'10px' }}>
+                            <button onClick={() => setShowWorkshopModal(false)} style={{ padding:'10px 16px', borderRadius:'10px', border:'1px solid #ddd', background:'white', cursor:'pointer' }}>{t('common.back')}</button>
+                            <button onClick={handleBulkWorkshop} style={{ padding:'10px 16px', borderRadius:'10px', border:'none', background:'#1f6feb', color:'white', cursor:'pointer', fontWeight:'700' }}>{t('manageCartels.assign')}</button>
                         </div>
                     </div>
                 </div>

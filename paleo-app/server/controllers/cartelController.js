@@ -2,6 +2,14 @@ import { CartelModel } from '../models/Cartel.js';
 
 const VALID_STATUSES = ['draft', 'pending_review', 'published', 'archived'];
 
+function sanitizeWorkshopFields(body, canManageAdmin) {
+  if (canManageAdmin) return body;
+  const cleaned = { ...body };
+  delete cleaned.workshop_ids;
+  delete cleaned.workshopIds;
+  return cleaned;
+}
+
 export const CartelController = {
 
   async getAll(req, res) {
@@ -22,6 +30,7 @@ export const CartelController = {
         filters.status  = 'published';
       }
       // Admin → tout (drafts, pending_review, published, archived)
+      filters.includeWorkshops = !!isAdmin;
 
       const cartels = await CartelModel.findAll(filters);
       res.json(cartels);
@@ -32,7 +41,9 @@ export const CartelController = {
 
   async getOne(req, res) {
     try {
-      const cartel = await CartelModel.findById(req.params.id);
+      const cartel = await CartelModel.findById(req.params.id, {
+        includeWorkshops: !!req.user?.can_manage_admin,
+      });
       if (!cartel) return res.status(404).json({ error: 'Cartel introuvable' });
       res.json(cartel);
     } catch (err) {
@@ -43,7 +54,7 @@ export const CartelController = {
   async create(req, res) {
     try {
       const cartel = await CartelModel.create(
-        req.body,
+        sanitizeWorkshopFields(req.body, req.user?.can_manage_admin),
         req.user?.id ?? null,
         req.submitterIp ?? null
       );
@@ -63,7 +74,10 @@ export const CartelController = {
       const isEditor = req.user.can_publish_cartel || req.user.can_manage_admin;
       if (!isOwner && !isEditor) return res.status(403).json({ error: 'Non autorisé' });
 
-      const cartel = await CartelModel.update(req.params.id, req.body);
+      const cartel = await CartelModel.update(
+        req.params.id,
+        sanitizeWorkshopFields(req.body, req.user?.can_manage_admin)
+      );
       res.json(cartel);
     } catch (err) {
       res.status(500).json({ error: err.message });

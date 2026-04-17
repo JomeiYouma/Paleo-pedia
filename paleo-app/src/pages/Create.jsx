@@ -20,6 +20,7 @@ const Create = () => {
         addLocalCategory,
         isAdmin,
         currentWorkshop,
+        workshops = [],
     } = context;
 
     const [searchParams] = useSearchParams();
@@ -45,7 +46,8 @@ const Create = () => {
         location_en: '',
         lat: null,
         lng: null,
-        image_path: ''
+        image_path: '',
+        workshopIds: workshopIdParam ? [workshopIdParam] : [],
     });
 
     const [imageFile, setImageFile] = useState(null);
@@ -64,7 +66,8 @@ const Create = () => {
                     ...existing,
                     imageUrl: existing.image_path || '',
                     categories: existing.categories || [],
-                    categories_en: existing.categories_en || []
+                    categories_en: existing.categories_en || [],
+                    workshopIds: existing.workshopIds || [],
                 }));
                 if (existing.lat != null && existing.lng != null) setGeoStatus('success');
             }
@@ -115,6 +118,16 @@ const Create = () => {
             }
             setNewCategory('');
         }
+    };
+
+    const handleWorkshopToggle = (id) => {
+        setForm(prev => {
+            const current = new Set((prev.workshopIds || []).map(String));
+            const key = String(id);
+            if (current.has(key)) current.delete(key);
+            else current.add(key);
+            return { ...prev, workshopIds: Array.from(current) };
+        });
     };
 
     const handleImageChange = async (e) => {
@@ -173,6 +186,7 @@ const Create = () => {
         };
         delete entry.imageUrl;
         delete entry.coords;
+        entry.workshop_ids = Array.isArray(form.workshopIds) ? form.workshopIds : [];
 
         if (activeWorkshopCtx) {
             entry.origin = activeWorkshopCtx.name;
@@ -361,6 +375,38 @@ const Create = () => {
                         <button type="button" onClick={handleAddCategory}>{t('common.add')}</button>
                     </div>
                 </div>
+
+                {isAdmin && (
+                    <div>
+                        <label>Ateliers</label>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
+                            {workshops.length > 0 ? workshops.map(workshop => {
+                                const active = (form.workshopIds || []).map(String).includes(String(workshop.id));
+                                return (
+                                    <button
+                                        key={workshop.id}
+                                        type="button"
+                                        onClick={() => handleWorkshopToggle(workshop.id)}
+                                        style={{
+                                            backgroundColor: active ? '#1a1a1a' : 'transparent',
+                                            color: active ? 'white' : '#333',
+                                            border: '1px solid #ccc',
+                                            borderRadius: '15px',
+                                            fontSize: '0.8rem',
+                                            padding: '4px 10px',
+                                            cursor: 'pointer',
+                                        }}
+                                    >
+                                        {workshop.name}
+                                    </button>
+                                );
+                            }) : <small style={{ color: '#888' }}>Aucun workshop existant.</small>}
+                        </div>
+                        <small style={{ color: '#777' }}>
+                            Ces tags sont réservés à l’administration et ne s’affichent ni sur la frise ni dans l’impression.
+                        </small>
+                    </div>
+                )}
 
                 <div>
                     <label>{t('create.fieldUrlQR')}</label>

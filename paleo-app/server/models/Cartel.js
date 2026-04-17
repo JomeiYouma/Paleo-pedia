@@ -7,20 +7,25 @@ const TEXT_FIELDS = [
   'date', 'visible', 'lat', 'lng',
 ];
 
-/** Requête de sélection complète avec catégories (compatibilité xampp ancienne version) */
-const SELECT_FULL = `
+function buildSelectFull({ includeWorkshops = false } = {}) {
+  return `
   SELECT
-    c.*,
+    c.*, 
     u.email AS created_by_email,
     GROUP_CONCAT(
       DISTINCT CONCAT_WS('||', cat.id, cat.name, cat.name_en, cat.color, cat.icon)
       SEPARATOR ';;'
-    ) AS categories_raw
+    ) AS categories_raw${includeWorkshops ? `,
+    GROUP_CONCAT(
+      DISTINCT CONCAT_WS('||', w.id, w.name, w.is_immersive)
+      SEPARATOR ';;'
+    ) AS workshops_raw` : ''}
   FROM cartels c
   LEFT JOIN users u ON u.id = c.created_by
   LEFT JOIN cartel_categories cc ON cc.cartel_id = c.id
-  LEFT JOIN categories cat ON cat.id = cc.category_id
+  LEFT JOIN categories cat ON cat.id = cc.category_id${includeWorkshops ? '\n  LEFT JOIN workshop_cartels wc ON wc.cartel_id = c.id\n  LEFT JOIN workshops w ON w.id = wc.workshop_id' : ''}
 `;
+}
 
 /** Parse les catégories retournées (MySQL renvoie du JSON en string selon le driver) */
 function parseCartel(row) {
@@ -40,6 +45,20 @@ function parseCartel(row) {
     row.category_objects = [];
   }
   delete row.categories_raw;
+
+  if (row.workshops_raw) {
+    const workshops = row.workshops_raw.split(';;').map(workshopStr => {
+      const [id, name, isImmersive] = workshopStr.split('||');
+      return { id, name, is_immersive: isImmersive === '1' || isImmersive === 'true' };
+    }).filter(w => w.id);
+    row.workshopIds = workshops.map(w => w.id);
+    row.workshop_objects = workshops;
+  } else {
+    row.workshopIds = [];
+    row.workshop_objects = [];
+  }
+  delete row.workshops_raw;
+
   row.imageCredit = row.image_credit || '';
   delete row.image_credit;
   // Convertir TINYINT(1) en boolean
@@ -49,7 +68,7 @@ function parseCartel(row) {
 
 export const CartelModel = {
 
-  async findAll({ status, visible, category, search, limit = 50, offset = 0 } = {}) {
+  async findAll({ status, visible, category, search, limit = 50, offset = 0, includeWorkshops = false } = {}) {
     const conditions = [];
     const values = [];
 
@@ -66,7 +85,7 @@ export const CartelModel = {
 
     const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
     const { rows } = await query(
-      `${SELECT_FULL} ${where}
+      `${buildSelectFull({ includeWorkshops })} ${where}
        GROUP BY c.id
        ORDER BY c.created_at DESC
        LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}`,
@@ -75,9 +94,9 @@ export const CartelModel = {
     return rows.map(parseCartel);
   },
 
-  async findById(id) {
+  async findById(id, { includeWorkshops = false } = {}) {
     const { rows } = await query(
-      `${SELECT_FULL} WHERE c.id = ? GROUP BY c.id`,
+      `${buildSelectFull({ includeWorkshops })} WHERE c.id = ? GROUP BY c.id`,
       [id]
     );
     return parseCartel(rows[0]);
@@ -117,8 +136,11 @@ export const CartelModel = {
       );
 
       await CartelModel._syncCategories(client, id, data.category_ids ?? []);
+      if (data.workshop_ids !== undefined || data.workshopIds !== undefined) {
+        await CartelModel._syncWorkshops(client, id, data.workshop_ids ?? data.workshopIds ?? []);
+      }
       await client.query('COMMIT');
-      return this.findById(id);
+      return this.findById(id, { includeWorkshops: true });
     } catch (err) {
       await client.query('ROLLBACK');
       throw err;
@@ -155,9 +177,12 @@ export const CartelModel = {
       if (data.category_ids !== undefined) {
         await CartelModel._syncCategories(client, id, data.category_ids);
       }
+      if (data.workshop_ids !== undefined || data.workshopIds !== undefined) {
+        await CartelModel._syncWorkshops(client, id, data.workshop_ids ?? data.workshopIds ?? []);
+      }
 
       await client.query('COMMIT');
-      return this.findById(id);
+      return this.findById(id, { includeWorkshops: true });
     } catch (err) {
       await client.query('ROLLBACK');
       throw err;
@@ -186,6 +211,16 @@ export const CartelModel = {
       await client.query(
         'INSERT IGNORE INTO cartel_categories (cartel_id, category_id) VALUES (?, ?)',
         [cartelId, catId]
+      );
+    }
+  },
+
+  async _syncWorkshops(client, cartelId, workshopIds) {
+    await client.query('DELETE FROM workshop_cartels WHERE cartel_id = ?', [cartelId]);
+    for (const workshopId of workshopIds) {
+      await client.query(
+        'INSERT IGNORE INTO workshop_cartels (workshop_id, cartel_id) VALUES (?, ?)',
+        [workshopId, cartelId]
       );
     }
   },

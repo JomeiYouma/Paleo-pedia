@@ -109,4 +109,34 @@ CREATE TABLE IF NOT EXISTS `cartel_categories` (
     FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ============================================================
+-- WORKSHOPS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `workshops` (
+  `id`           CHAR(36)      NOT NULL DEFAULT (UUID()),
+  `name`         VARCHAR(255)  NOT NULL,
+  `is_immersive` TINYINT(1)    NOT NULL DEFAULT 0,
+  `created_by`   CHAR(36)      NULL DEFAULT NULL,
+  `created_at`   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_workshops_user`
+    FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)
+    ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- TABLE DE JOINTURE workshop <-> cartels (N-N)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `workshop_cartels` (
+  `workshop_id` CHAR(36) NOT NULL,
+  `cartel_id`   CHAR(36) NOT NULL,
+  `added_at`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`workshop_id`, `cartel_id`),
+  CONSTRAINT `fk_wc_workshop`
+    FOREIGN KEY (`workshop_id`) REFERENCES `workshops` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_wc_cartel`
+    FOREIGN KEY (`cartel_id`)   REFERENCES `cartels`   (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;

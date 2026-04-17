@@ -94,6 +94,15 @@ export const AppProvider = ({ children }) => {
         delete payload.imageUrl;       // champ éphémère React
         delete payload.category_objects; // objets complets non nécessaires
         delete payload.created_by_email;
+        delete payload.origin;
+        delete payload.workshopId;
+        delete payload.workshop_objects;
+        delete payload.workshops;
+
+        if (payload.workshopIds && !payload.workshop_ids) {
+            payload.workshop_ids = payload.workshopIds;
+        }
+        delete payload.workshopIds;
 
         // Construire category_ids depuis les noms si pas encore fait
         if (!payload.category_ids && payload.categories?.length) {
