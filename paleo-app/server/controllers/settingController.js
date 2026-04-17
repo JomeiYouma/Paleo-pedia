@@ -33,6 +33,8 @@ export const SettingController = {
         'max_submissions_per_ip_window',
         'submission_window_minutes',
         'openai_key',
+        'site_primary_partner_ids',
+        'site_partner_ids',
       ];
       const pairs = {};
       for (const key of allowed) {

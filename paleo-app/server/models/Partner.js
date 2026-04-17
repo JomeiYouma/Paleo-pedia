@@ -2,6 +2,7 @@
  * Partner.js — Modèle MySQL pour les partenaires
  */
 import pool from '../lib/db.js';
+import { SettingModel } from './Setting.js';
 
 export const PartnerModel = {
 
@@ -51,8 +52,40 @@ export const PartnerModel = {
       ORDER BY CASE WHEN sp.partner_tier = 'primary' THEN 0 ELSE 1 END, sp.sort_order ASC, p.name ASC
     `);
 
-    const primary_partners = rows.filter(r => r.partner_tier === 'primary');
-    const partners = rows.filter(r => r.partner_tier === 'regular');
+    if (rows.length) {
+      const primary_partners = rows.filter(r => r.partner_tier === 'primary');
+      const partners = rows.filter(r => r.partner_tier === 'regular');
+      return { primary_partners, partners };
+    }
+
+    const settings = await SettingModel.getAll().catch(() => ({}));
+    let primaryIds = [];
+    let regularIds = [];
+    try {
+      primaryIds = JSON.parse(settings.site_primary_partner_ids || '[]');
+      regularIds = JSON.parse(settings.site_partner_ids || '[]');
+    } catch {
+      primaryIds = [];
+      regularIds = [];
+    }
+
+    const primarySet = new Set((primaryIds || []).map(String));
+    const regularSet = new Set((regularIds || []).map(String));
+    const allIds = Array.from(new Set([...primarySet, ...regularSet]));
+
+    if (!allIds.length) {
+      return { primary_partners: [], partners: [] };
+    }
+
+    const placeholders = allIds.map(() => '?').join(',');
+    const [partnerRows] = await pool.query(
+      `SELECT * FROM partners WHERE id IN (${placeholders})`,
+      allIds
+    );
+
+    const byId = new Map(partnerRows.map(p => [String(p.id), p]));
+    const primary_partners = (primaryIds || []).map(id => byId.get(String(id))).filter(Boolean);
+    const partners = (regularIds || []).map(id => byId.get(String(id))).filter(Boolean);
     return { primary_partners, partners };
   },
 
@@ -79,6 +112,9 @@ export const PartnerModel = {
       }
 
       await client.commit();
+
+      await SettingModel.set('site_primary_partner_ids', JSON.stringify(primary));
+      await SettingModel.set('site_partner_ids', JSON.stringify(regular));
     } catch (e) {
       await client.rollback();
       throw e;

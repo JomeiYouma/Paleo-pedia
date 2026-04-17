@@ -153,6 +153,13 @@ const AdminSettings = () => {
                 setMaxTotal(parseInt(s.max_submissions_per_ip_total, 10) || 10);
                 setMaxWindow(parseInt(s.max_submissions_per_ip_window, 10) || 3);
                 setWindowMinutes(parseInt(s.submission_window_minutes, 10) || 60);
+                try {
+                    setSitePrimaryPartnerIds(JSON.parse(s.site_primary_partner_ids || '[]'));
+                    setSitePartnerIds(JSON.parse(s.site_partner_ids || '[]'));
+                } catch {
+                    setSitePrimaryPartnerIds([]);
+                    setSitePartnerIds([]);
+                }
 
                 // Clé OpenAI séparée (endpoint dédié)
                 try {
@@ -247,10 +254,20 @@ const AdminSettings = () => {
     const handleSaveMainSitePartners = async () => {
         setSavingPartners(true);
         try {
-            await api.partners.setSiteSelection({
-                primary_partner_ids: sitePrimaryPartnerIds,
-                partner_ids: sitePartnerIds,
-            });
+            const payload = {
+                site_primary_partner_ids: JSON.stringify(sitePrimaryPartnerIds),
+                site_partner_ids: JSON.stringify(sitePartnerIds),
+            };
+
+            try {
+                await api.settings.update(payload);
+            } catch (settingsError) {
+                await api.partners.setSiteSelection({
+                    primary_partner_ids: sitePrimaryPartnerIds,
+                    partner_ids: sitePartnerIds,
+                });
+            }
+
             showToast('success', 'Partenaires du site principal enregistrés.');
         } catch (e) {
             showToast('error', 'Erreur enregistrement partenaires : ' + e.message);
