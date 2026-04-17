@@ -83,6 +83,8 @@ router.delete('/subsites/:slug', authenticate, requireAdmin, SubsiteController.r
 
 // ── Partenaires (public GET, admin write) ────────────────────
 router.get   ('/partners',       PartnerController.getAll);
+router.get   ('/partners/site',  PartnerController.getSiteSelection);
+router.put   ('/partners/site',  authenticate, requireAdmin, PartnerController.setSiteSelection);
 router.post  ('/partners',       authenticate, requireAdmin, PartnerController.create);
 router.patch ('/partners/:id',   authenticate, requireAdmin, PartnerController.update);
 router.delete('/partners/:id',   authenticate, requireAdmin, PartnerController.remove);

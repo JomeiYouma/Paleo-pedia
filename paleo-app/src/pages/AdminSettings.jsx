@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import {
     Shield, Users, Key, Save, RefreshCw,
     ToggleLeft, ToggleRight, Clock, Hash, AlertCircle, CheckCircle2,
-    Globe, Plus, Trash2, Edit, ExternalLink
+    Globe, Plus, Trash2, Edit, ExternalLink, ChevronDown, ChevronUp, Upload
 } from 'lucide-react';
 import api from '../services/apiClient';
 import SubsiteEditor from '../components/SubsiteEditor';
@@ -114,8 +114,25 @@ const AdminSettings = () => {
     const [subsites,    setSubsites]    = useState([]);
     const [editSubsite, setEditSubsite] = useState(null); // null | 'new' | {subsite}
 
+    // Partenaires (bibliothèque globale + sélection site principal)
+    const [partners, setPartners] = useState([]);
+    const [sitePrimaryPartnerIds, setSitePrimaryPartnerIds] = useState([]);
+    const [sitePartnerIds, setSitePartnerIds] = useState([]);
+    const [partnersExpanded, setPartnersExpanded] = useState(false);
+    const [partnerName, setPartnerName] = useState('');
+    const [partnerUrl, setPartnerUrl] = useState('');
+    const [partnerLogoFile, setPartnerLogoFile] = useState(null);
+    const [savingPartners, setSavingPartners] = useState(false);
+
     const loadSubsites = () => api.subsites.getAll().then(d => setSubsites(Array.isArray(d) ? d : [])).catch(() => {});
     useEffect(() => { loadSubsites(); }, []);
+
+    const loadPartners = () => api.partners.getAll().then(d => setPartners(Array.isArray(d) ? d : [])).catch(() => {});
+    const loadMainSitePartners = () => api.partners.getSiteSelection().then(d => {
+        setSitePrimaryPartnerIds(Array.isArray(d?.primary_partners) ? d.primary_partners.map(p => p.id) : []);
+        setSitePartnerIds(Array.isArray(d?.partners) ? d.partners.map(p => p.id) : []);
+    }).catch(() => {});
+    useEffect(() => { if (isAdmin) { loadPartners(); loadMainSitePartners(); } }, [isAdmin]);
 
     // Champs du formulaire
     const [allowAnon,     setAllowAnon]     = useState(true);
@@ -174,6 +191,71 @@ const AdminSettings = () => {
             showToast('error', 'Erreur : ' + e.message);
         } finally {
             setSaving(false);
+        }
+    };
+
+    const toggleSitePrimaryPartner = (id) => {
+        setSitePrimaryPartnerIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+        setSitePartnerIds(prev => prev.filter(x => x !== id));
+    };
+
+    const toggleSitePartner = (id) => {
+        setSitePartnerIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+        setSitePrimaryPartnerIds(prev => prev.filter(x => x !== id));
+    };
+
+    const handleCreatePartner = async () => {
+        if (!partnerName.trim()) {
+            showToast('error', 'Le nom du partenaire est requis.');
+            return;
+        }
+        setSavingPartners(true);
+        try {
+            let logoPath = null;
+            if (partnerLogoFile) {
+                const uploadRes = await api.media.upload(partnerLogoFile);
+                logoPath = uploadRes?.url || null;
+            }
+            await api.partners.create({
+                name: partnerName.trim(),
+                url: partnerUrl.trim() || null,
+                logo_path: logoPath,
+            });
+            setPartnerName('');
+            setPartnerUrl('');
+            setPartnerLogoFile(null);
+            await loadPartners();
+            showToast('success', 'Partenaire importé.');
+        } catch (e) {
+            showToast('error', 'Erreur import partenaire : ' + e.message);
+        } finally {
+            setSavingPartners(false);
+        }
+    };
+
+    const handleDeletePartner = async (id, name) => {
+        if (!confirm(`Supprimer le partenaire "${name}" ?`)) return;
+        try {
+            await api.partners.delete(id);
+            await Promise.all([loadPartners(), loadMainSitePartners()]);
+            showToast('success', 'Partenaire supprimé.');
+        } catch (e) {
+            showToast('error', 'Erreur suppression partenaire : ' + e.message);
+        }
+    };
+
+    const handleSaveMainSitePartners = async () => {
+        setSavingPartners(true);
+        try {
+            await api.partners.setSiteSelection({
+                primary_partner_ids: sitePrimaryPartnerIds,
+                partner_ids: sitePartnerIds,
+            });
+            showToast('success', 'Partenaires du site principal enregistrés.');
+        } catch (e) {
+            showToast('error', 'Erreur enregistrement partenaires : ' + e.message);
+        } finally {
+            setSavingPartners(false);
         }
     };
 
@@ -417,6 +499,124 @@ const AdminSettings = () => {
                                 Cliquez sur « Enregistrer la clé » après collage pour confirmer la prise en compte.
                             </p>
                         </Field>
+                    </Section>
+
+                    {/* ── Section 3 : info système ─────────── */}
+                    <Section icon={Users} title="Partenaires" color="#00897b">
+                        <div style={{ border: '1px solid #e6f2ef', borderRadius: '12px', overflow: 'hidden' }}>
+                            <button
+                                type="button"
+                                onClick={() => setPartnersExpanded(v => !v)}
+                                style={{
+                                    width: '100%',
+                                    border: 'none',
+                                    background: '#f4fbf9',
+                                    padding: '14px 16px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    cursor: 'pointer',
+                                    fontWeight: '700',
+                                    color: '#16695f',
+                                    fontFamily: 'inherit',
+                                }}
+                            >
+                                <span>Gérer les partenaires du site et des sous-sites</span>
+                                {partnersExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            </button>
+
+                            {partnersExpanded && (
+                                <div style={{ padding: '16px', background: 'white' }}>
+                                    <Field
+                                        label="1) Importer un partenaire (logo + lien)"
+                                        hint="Chaque partenaire importé devient disponible dans tous les sous-sites et pour le site principal."
+                                    >
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                                            <input value={partnerName} onChange={e => setPartnerName(e.target.value)} placeholder="Nom du partenaire" style={{ padding: '9px 12px', borderRadius: '8px', border: '1px solid #ddd', fontFamily: 'inherit' }} />
+                                            <input value={partnerUrl} onChange={e => setPartnerUrl(e.target.value)} placeholder="Lien partenaire (https://...)" style={{ padding: '9px 12px', borderRadius: '8px', border: '1px solid #ddd', fontFamily: 'inherit' }} />
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
+                                            <input type="file" accept="image/*" onChange={e => setPartnerLogoFile(e.target.files?.[0] || null)} />
+                                            <button
+                                                type="button"
+                                                onClick={handleCreatePartner}
+                                                disabled={savingPartners || !partnerName.trim()}
+                                                style={{
+                                                    border: 'none', borderRadius: '8px', padding: '9px 14px',
+                                                    background: savingPartners ? '#9fb6b1' : '#00897b', color: 'white',
+                                                    fontWeight: '700', cursor: savingPartners ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+                                                }}
+                                            >
+                                                <Upload size={14} style={{ marginRight: '6px', verticalAlign: 'text-bottom' }} /> Importer
+                                            </button>
+                                        </div>
+
+                                        {partners.length > 0 && (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                {partners.map(p => (
+                                                    <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid #eee', borderRadius: '8px', padding: '8px 10px' }}>
+                                                        <div style={{ flex: 1, fontSize: '0.9rem' }}>{p.name}</div>
+                                                        <button type="button" onClick={() => handleDeletePartner(p.id, p.name)} style={{ border: '1px solid #f3b0b0', background: '#fff', color: '#b42318', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                                            Supprimer
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </Field>
+
+                                    <Field
+                                        label="2) Choisir les partenaires affichés sur le site principal"
+                                        hint="Un partenaire ne peut être que dans une seule liste : principal ou standard."
+                                    >
+                                        <div style={{ marginBottom: '12px' }}>
+                                            <div style={{ fontWeight: '700', fontSize: '0.82rem', color: '#666', marginBottom: '8px' }}>Partenaires principaux</div>
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                {partners.map(p => {
+                                                    const active = sitePrimaryPartnerIds.includes(p.id);
+                                                    return (
+                                                        <button key={`site-primary-${p.id}`} type="button" onClick={() => toggleSitePrimaryPartner(p.id)} style={{
+                                                            borderRadius: '20px', border: active ? '2px solid #00695c' : '2px solid #e8e8e8',
+                                                            background: active ? '#00897b' : '#f5f5f5', color: active ? 'white' : '#555',
+                                                            padding: '6px 12px', fontSize: '0.84rem', cursor: 'pointer', fontFamily: 'inherit', fontWeight: '600',
+                                                        }}>{p.name}</button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        <div style={{ marginBottom: '12px' }}>
+                                            <div style={{ fontWeight: '700', fontSize: '0.82rem', color: '#666', marginBottom: '8px' }}>Partenaires</div>
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                {partners.map(p => {
+                                                    const active = sitePartnerIds.includes(p.id);
+                                                    return (
+                                                        <button key={`site-regular-${p.id}`} type="button" onClick={() => toggleSitePartner(p.id)} style={{
+                                                            borderRadius: '20px', border: active ? '2px solid #607d8b' : '2px solid #e8e8e8',
+                                                            background: active ? '#78909c' : '#f5f5f5', color: active ? 'white' : '#555',
+                                                            padding: '6px 12px', fontSize: '0.84rem', cursor: 'pointer', fontFamily: 'inherit', fontWeight: '600',
+                                                        }}>{p.name}</button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={handleSaveMainSitePartners}
+                                            disabled={savingPartners}
+                                            style={{
+                                                border: 'none', borderRadius: '8px', padding: '10px 14px',
+                                                background: savingPartners ? '#9fb6b1' : '#00695c', color: 'white',
+                                                fontWeight: '700', cursor: savingPartners ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+                                            }}
+                                        >
+                                            Enregistrer l'affichage du site principal
+                                        </button>
+                                    </Field>
+                                </div>
+                            )}
+                        </div>
                     </Section>
 
                     {/* ── Section 3 : info système ─────────── */}

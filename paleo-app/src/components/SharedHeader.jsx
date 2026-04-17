@@ -17,6 +17,7 @@ const SITE_NAV = [
     { path: '/prestations',  labelKey: 'header.prestations' },
     { path: '/ouvrages',     labelKey: 'header.ouvrages' },
     { path: '/museum',       labelKey: 'header.museum' },
+    { path: '/partenaires',  labelKey: 'header.partners' },
     { path: '/contact',      labelKey: 'header.contact' },
     { path: '/app',          labelKey: 'header.timeline' },
 ];

@@ -11,6 +11,28 @@ export const PartnerController = {
     catch (e) { res.status(500).json({ error: e.message }); }
   },
 
+  async getSiteSelection(req, res) {
+    try {
+      res.json(await PartnerModel.getSiteSelection());
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  },
+
+  async setSiteSelection(req, res) {
+    try {
+      const primary_partner_ids = Array.isArray(req.body?.primary_partner_ids) ? req.body.primary_partner_ids : [];
+      const partner_ids = Array.isArray(req.body?.partner_ids) ? req.body.partner_ids : [];
+      const data = await PartnerModel.setSiteSelection({
+        primaryPartnerIds: primary_partner_ids,
+        partnerIds: partner_ids,
+      });
+      res.json(data);
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  },
+
   async create(req, res) {
     try {
       const { name, logo_path, url } = req.body;

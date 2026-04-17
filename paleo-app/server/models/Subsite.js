@@ -32,14 +32,22 @@ export const SubsiteModel = {
     if (!row) return null;
 
     const [partners] = await pool.query(`
-      SELECT p.*, sp.sort_order
+      SELECT p.*, sp.sort_order, sp.partner_tier
       FROM partners p
       JOIN subsite_partners sp ON sp.partner_id = p.id
       WHERE sp.subsite_id = ?
-      ORDER BY sp.sort_order ASC, p.name ASC
+      ORDER BY CASE WHEN sp.partner_tier = 'primary' THEN 0 ELSE 1 END, sp.sort_order ASC, p.name ASC
     `, [row.id]);
 
-    return { ...row, content_blocks: parseBlocks(row.content_blocks), partners };
+    const primary_partners = partners.filter(p => p.partner_tier === 'primary');
+    const regular_partners = partners.filter(p => p.partner_tier !== 'primary');
+
+    return {
+      ...row,
+      content_blocks: parseBlocks(row.content_blocks),
+      primary_partners,
+      partners: regular_partners,
+    };
   },
 
   /** Créer un sous-site */
@@ -71,12 +79,23 @@ export const SubsiteModel = {
   },
 
   /** Associer des partenaires à un sous-site (remplace tout) */
-  async setPartners(subsiteId, partnerIds = []) {
+  async setPartners(subsiteId, payload = []) {
+    const isArrayPayload = Array.isArray(payload);
+    const primaryPartnerIds = isArrayPayload ? [] : (payload.primaryPartnerIds || []);
+    const partnerIds = isArrayPayload ? payload : (payload.partnerIds || []);
+
+    const primary = Array.from(new Set(primaryPartnerIds.map(String)));
+    const regular = Array.from(new Set(partnerIds.map(String))).filter(id => !primary.includes(id));
+
     await pool.query('DELETE FROM subsite_partners WHERE subsite_id = ?', [subsiteId]);
-    if (!partnerIds.length) return;
-    const rows = partnerIds.map((pid, i) => [subsiteId, pid, i]);
+    const rows = [
+      ...primary.map((pid, i) => [subsiteId, pid, 'primary', i]),
+      ...regular.map((pid, i) => [subsiteId, pid, 'regular', i]),
+    ];
+
+    if (!rows.length) return;
     await pool.query(
-      'INSERT INTO subsite_partners (subsite_id, partner_id, sort_order) VALUES ?',
+      'INSERT INTO subsite_partners (subsite_id, partner_id, partner_tier, sort_order) VALUES ?',
       [rows]
     );
   },

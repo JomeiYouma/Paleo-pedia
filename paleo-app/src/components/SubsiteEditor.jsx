@@ -29,7 +29,8 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved }) => {
     const [categoryId,    setCategoryId]    = useState(subsite?.category_id   ?? '');
     const [primaryColor,  setPrimaryColor]  = useState(subsite?.primary_color ?? '#4A90D9');
     const [blocks,        setBlocks]        = useState(subsite?.content_blocks ?? []);
-    const [partnerIds,    setPartnerIds]    = useState((subsite?.partners ?? []).map(p => p.id));
+    const [primaryPartnerIds, setPrimaryPartnerIds] = useState((subsite?.primary_partners ?? []).map(p => p.id));
+    const [partnerIds,        setPartnerIds]        = useState((subsite?.partners ?? []).map(p => p.id));
     const [categories,    setCategories]    = useState([]);
     const [allPartners,   setAllPartners]   = useState([]);
     const [saving,        setSaving]        = useState(false);
@@ -58,15 +59,30 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved }) => {
     };
 
     // ── Partenaires ────────────────────────────────────────────
-    const togglePartner = (id) =>
+    const togglePrimaryPartner = (id) => {
+        setPrimaryPartnerIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+        setPartnerIds(prev => prev.filter(x => x !== id));
+    };
+
+    const togglePartner = (id) => {
         setPartnerIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+        setPrimaryPartnerIds(prev => prev.filter(x => x !== id));
+    };
 
     // ── Save ───────────────────────────────────────────────────
     const handleSave = async () => {
         if (!name || !slug || !categoryId) { setError('Nom, slug et catégorie sont requis.'); return; }
         setSaving(true); setError('');
         try {
-            const payload = { name, slug, category_id: categoryId, primary_color: primaryColor, content_blocks: blocks, partner_ids: partnerIds };
+            const payload = {
+                name,
+                slug,
+                category_id: categoryId,
+                primary_color: primaryColor,
+                content_blocks: blocks,
+                primary_partner_ids: primaryPartnerIds,
+                partner_ids: partnerIds,
+            };
             if (isEdit) {
                 await api.subsites.update(subsite.slug, payload);
             } else {
@@ -181,8 +197,33 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved }) => {
                     {/* Partenaires */}
                     {allPartners.length > 0 && (
                         <section>
-                            <h3 style={{ margin: '0 0 14px', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', color: '#aaa', letterSpacing: '0.5px' }}>Partenaires associés</h3>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            <h3 style={{ margin: '0 0 14px', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', color: '#aaa', letterSpacing: '0.5px' }}>Partenaires du sous-site</h3>
+                            <p style={{ margin: '0 0 10px', color: '#888', fontSize: '0.82rem' }}>
+                                Sélectionnez les partenaires mis en avant (principaux) et les partenaires standards.
+                            </p>
+
+                            <div style={{ marginBottom: '14px' }}>
+                                <div style={{ fontWeight: '700', fontSize: '0.82rem', color: '#666', marginBottom: '8px' }}>Partenaires principaux</div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                    {allPartners.map(p => {
+                                        const selected = primaryPartnerIds.includes(p.id);
+                                        return (
+                                            <button key={`primary-${p.id}`} onClick={() => togglePrimaryPartner(p.id)} style={{
+                                                padding: '6px 14px', borderRadius: '20px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', fontFamily: 'inherit', transition: 'all 0.12s',
+                                                background: selected ? color : '#f7f7f7',
+                                                color: selected ? 'white' : '#555',
+                                                border: selected ? `2px solid ${color}` : '2px solid #e8e8e8',
+                                            }}>
+                                                {p.name}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div>
+                                <div style={{ fontWeight: '700', fontSize: '0.82rem', color: '#666', marginBottom: '8px' }}>Partenaires</div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                 {allPartners.map(p => {
                                     const selected = partnerIds.includes(p.id);
                                     return (
@@ -196,6 +237,7 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved }) => {
                                         </button>
                                     );
                                 })}
+                            </div>
                             </div>
                         </section>
                     )}

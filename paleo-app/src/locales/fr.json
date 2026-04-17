@@ -114,6 +114,7 @@
         "prestations": "Prestations",
         "ouvrages": "Ouvrages",
         "museum": "Museum",
+        "partners": "Partenaires",
         "contact": "Contact",
         "themes": "Thématiques",
         "timeline": "Frise Chronologique",
@@ -211,6 +212,13 @@
             "subject": "Sujet",
             "message": "Message",
             "send": "Envoyer"
+        },
+        "partners": {
+            "title": "Partenaires",
+            "subtitle": "Les organisations qui soutiennent et accompagnent le projet.",
+            "primaryTitle": "Partenaires principaux",
+            "secondaryTitle": "Partenaires",
+            "empty": "Aucun partenaire affiché pour le moment."
         }
     },
     "admin": {

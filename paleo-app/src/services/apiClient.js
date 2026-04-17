@@ -116,6 +116,8 @@ export const subsites = {
 // ── Partenaires ───────────────────────────────────────────────
 export const partners = {
   getAll:  ()           => get('/partners'),
+  getSiteSelection: ()  => get('/partners/site'),
+  setSiteSelection: (data) => request('PUT', '/partners/site', data),
   create:  (data)       => post('/partners', data),
   update:  (id, data)   => patch(`/partners/${id}`, data),
   delete:  (id)         => del(`/partners/${id}`),

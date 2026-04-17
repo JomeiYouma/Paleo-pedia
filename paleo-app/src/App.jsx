@@ -11,6 +11,7 @@ import Prestations from './pages/Prestations';
 import Ouvrages from './pages/Ouvrages';
 import Museum from './pages/Museum';
 import Contact from './pages/Contact';
+import Partners from './pages/Partners';
 import LandingPage from './pages/LandingPage';
 import SiteLayout from './components/SiteLayout';
 import SubsiteLayout from './layouts/SubsiteLayout';
@@ -30,6 +31,7 @@ function App() {
             <Route path="prestations"  element={<Prestations />} />
             <Route path="ouvrages"     element={<Ouvrages />} />
             <Route path="museum"       element={<Museum />} />
+            <Route path="partenaires"  element={<Partners />} />
             <Route path="contact"      element={<Contact />} />
           </Route>
 
