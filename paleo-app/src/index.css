@@ -104,8 +104,8 @@ button {
   }
 }
 
-/* Heuristic Mode Override */
-.heuristic-label {
+/* Arborescence Mode Override */
+.arborescence-label {
   fill: #000000 !important;
   text-shadow: none !important;
   font-family: var(--font-heading) !important;

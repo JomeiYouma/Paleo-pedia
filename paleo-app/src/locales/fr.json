@@ -13,6 +13,7 @@
         "title": "Filtres & Actions",
         "viewTimeline": "Vue Chronologique",
         "viewMap": "Vue Carte",
+        "viewArborescence": "Arborescence",
         "viewExport": "Mode Exportation",
         "searchPlaceholder": "Rechercher...",
         "selectAll": "Tout Sélectionner",

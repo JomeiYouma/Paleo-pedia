@@ -13,6 +13,7 @@
         "title": "Filters & Actions",
         "viewTimeline": "Timeline View",
         "viewMap": "Map View",
+        "viewArborescence": "Tree View",
         "viewExport": "Export Mode",
         "searchPlaceholder": "Search...",
         "selectAll": "Select All",
