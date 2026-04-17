@@ -6,6 +6,7 @@ import Library from './pages/Library';
 import Create from './pages/Create';
 import ManageCartels from './pages/ManageCartels';
 import AdminSettings from './pages/AdminSettings';
+import AdminPartners from './pages/AdminPartners';
 import Presentation from './pages/Presentation';
 import Prestations from './pages/Prestations';
 import Ouvrages from './pages/Ouvrages';
@@ -55,6 +56,7 @@ function App() {
             <Route path="manage/published"  element={<ManageCartels />} />
             <Route path="manage/submissions" element={<ManageCartels />} />
             <Route path="admin"             element={<AdminSettings />} />
+            <Route path="admin/partners"    element={<AdminPartners />} />
             <Route path="admin/workshop/:workshopId" element={<ManageCartels />} />
             <Route path="drafts" element={<Navigate to="/app/manage/pending" replace />} />
           </Route>
