@@ -213,6 +213,45 @@ export const CartelModel = {
     return this.findById(id);
   },
 
+  /** Marque un cartel de sous-site comme soumis pour validation sur le site principal */
+  async markSubmittedToMain(id) {
+    await query(
+      'UPDATE cartels SET submitted_to_main_at = NOW(), visible_on_main = 0 WHERE id = ?',
+      [id]
+    );
+    return this.findById(id);
+  },
+
+  /** Retire une soumission (owner side) ou la rejette (superadmin side) */
+  async clearSubmissionToMain(id) {
+    await query(
+      'UPDATE cartels SET submitted_to_main_at = NULL, visible_on_main = 0 WHERE id = ?',
+      [id]
+    );
+    return this.findById(id);
+  },
+
+  /** Superadmin : approuve un cartel soumis pour affichage sur le site principal */
+  async approveForMain(id) {
+    await query('UPDATE cartels SET visible_on_main = 1 WHERE id = ?', [id]);
+    return this.findById(id);
+  },
+
+  /** Liste des cartels de sous-sites soumis et en attente de décision */
+  async findPendingSubmissions({ limit = 50, offset = 0 } = {}) {
+    const { rows } = await query(
+      `${buildSelectFull()}
+       WHERE c.submitted_to_main_at IS NOT NULL
+         AND c.visible_on_main = 0
+         AND c.subsite_id IS NOT NULL
+       GROUP BY c.id
+       ORDER BY c.submitted_to_main_at ASC
+       LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}`,
+      []
+    );
+    return rows.map(parseCartel);
+  },
+
   async delete(id) {
     await query('DELETE FROM cartels WHERE id = ?', [id]);
   },

@@ -169,4 +169,109 @@ export const CartelController = {
       res.status(500).json({ error: err.message });
     }
   },
+
+  // ── Workflow soumission au site principal ──────────────────
+
+  /** Owner d'un sous-site soumet un cartel publié pour affichage sur le site principal */
+  async submitToMain(req, res) {
+    try {
+      const existing = await CartelModel.findById(req.params.id);
+      if (!existing) return res.status(404).json({ error: 'Cartel introuvable' });
+
+      const filter = resolveSubsiteFilter(req, { anonymousIsMainFeed: false });
+      if (!cartelInScope(existing, filter)) {
+        return res.status(404).json({ error: 'Cartel introuvable' });
+      }
+
+      // Un cartel de sous-site uniquement, publié localement
+      if (existing.subsite_id === null) {
+        return res.status(400).json({ error: 'Seul un cartel de sous-site peut être soumis au site principal' });
+      }
+      if (existing.status !== 'published') {
+        return res.status(400).json({ error: 'Seul un cartel publié peut être soumis' });
+      }
+
+      const isOwnerOfTenant = !!req.user?.can_manage_team && req.user.home_subsite_id === existing.subsite_id;
+      const isSuperadmin = !!req.user?.can_manage_admin;
+      if (!isOwnerOfTenant && !isSuperadmin) {
+        return res.status(403).json({ error: 'Permission can_manage_team requise' });
+      }
+
+      const cartel = await CartelModel.markSubmittedToMain(req.params.id);
+      res.json(cartel);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  /** Owner retire une soumission (annule la demande ou retire un cartel déjà approuvé) */
+  async withdrawFromMain(req, res) {
+    try {
+      const existing = await CartelModel.findById(req.params.id);
+      if (!existing) return res.status(404).json({ error: 'Cartel introuvable' });
+
+      const filter = resolveSubsiteFilter(req, { anonymousIsMainFeed: false });
+      if (!cartelInScope(existing, filter)) {
+        return res.status(404).json({ error: 'Cartel introuvable' });
+      }
+      if (existing.subsite_id === null) {
+        return res.status(400).json({ error: 'Non applicable aux cartels du site principal' });
+      }
+
+      const isOwnerOfTenant = !!req.user?.can_manage_team && req.user.home_subsite_id === existing.subsite_id;
+      const isSuperadmin = !!req.user?.can_manage_admin;
+      if (!isOwnerOfTenant && !isSuperadmin) {
+        return res.status(403).json({ error: 'Permission can_manage_team requise' });
+      }
+
+      const cartel = await CartelModel.clearSubmissionToMain(req.params.id);
+      res.json(cartel);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  /** Superadmin : liste les cartels soumis en attente de décision */
+  async listSubmissions(req, res) {
+    try {
+      const { limit, offset } = req.query;
+      const cartels = await CartelModel.findPendingSubmissions({
+        limit:  limit  ? parseInt(limit)  : 50,
+        offset: offset ? parseInt(offset) : 0,
+      });
+      res.json(cartels);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  /** Superadmin : approuve un cartel soumis → visible_on_main = 1 */
+  async approveSubmission(req, res) {
+    try {
+      const existing = await CartelModel.findById(req.params.id);
+      if (!existing) return res.status(404).json({ error: 'Cartel introuvable' });
+      if (!existing.submitted_to_main_at || existing.subsite_id === null) {
+        return res.status(400).json({ error: 'Ce cartel n\'est pas en attente de validation' });
+      }
+      const cartel = await CartelModel.approveForMain(req.params.id);
+      res.json(cartel);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  /** Superadmin : rejette une soumission → retire de la file d'attente */
+  async rejectSubmission(req, res) {
+    try {
+      const existing = await CartelModel.findById(req.params.id);
+      if (!existing) return res.status(404).json({ error: 'Cartel introuvable' });
+      if (!existing.submitted_to_main_at || existing.subsite_id === null) {
+        return res.status(400).json({ error: 'Ce cartel n\'est pas en attente de validation' });
+      }
+      const cartel = await CartelModel.clearSubmissionToMain(req.params.id);
+      res.json(cartel);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
 };

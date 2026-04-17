@@ -92,6 +92,15 @@ router.patch ('/s/:slug/cartels/:id',          authenticate, resolveTenant, requ
 router.patch ('/s/:slug/cartels/:id/status',   authenticate, resolveTenant, requireTenantAccess, CartelController.setStatus);
 router.delete('/s/:slug/cartels/:id',          authenticate, resolveTenant, requireTenantAccess, CartelController.delete);
 
+// Workflow de soumission au site principal (owner du sous-site)
+router.post  ('/s/:slug/cartels/:id/submit-to-main',  authenticate, resolveTenant, requireTenantAccess, CartelController.submitToMain);
+router.post  ('/s/:slug/cartels/:id/withdraw-from-main', authenticate, resolveTenant, requireTenantAccess, CartelController.withdrawFromMain);
+
+// File d'attente de validation (superadmin)
+router.get   ('/submissions',            authenticate, requireAdmin, CartelController.listSubmissions);
+router.post  ('/submissions/:id/approve', authenticate, requireAdmin, CartelController.approveSubmission);
+router.post  ('/submissions/:id/reject',  authenticate, requireAdmin, CartelController.rejectSubmission);
+
 // ── Partenaires (public GET, admin write) ────────────────────
 // optionalAuth sur GET pour que le filtre par scope (pool public vs pool+exclusifs
 // d'un tenant admin) soit calculé depuis req.user.
