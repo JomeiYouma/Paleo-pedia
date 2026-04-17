@@ -11,7 +11,9 @@ import { randomUUID } from 'crypto';
 import fs from 'fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export const UPLOADS_DIR = path.join(__dirname, '..', '..', 'public', 'images');
+// En production, pointer vers un dossier hors du code (ex: ~/paleo-uploads) via UPLOADS_DIR dans .env
+export const UPLOADS_DIR = process.env.UPLOADS_DIR
+  || path.join(__dirname, '..', '..', 'public', 'images');
 export const LEGACY_UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
 
 // Créer le dossier d'images s'il n'existe pas

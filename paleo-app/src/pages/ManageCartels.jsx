@@ -14,6 +14,7 @@ import { generateZip, generatePdf, generateArchive } from '../utils/zipGenerator
 import CartelPreview from '../components/CartelPreview';
 import { getYearForSort } from '../utils/helpers';
 import api from '../services/apiClient';
+import ConfirmModal from '../components/ConfirmModal';
 
 const HEX_COLORS = {
     neutral: '#4b5563',
@@ -65,7 +66,7 @@ const ProgressOverlay = ({ label, current, total }) => (
 );
 
 // ── Dropdown bouton ───────────────────────────────────────────
-const DropdownButton = ({ label, icon: Icon, color = '#555', children }) => {
+const DropdownButton = ({ label, icon: Icon, color = '#555', variant = 'solid', children }) => {
     const [open, setOpen] = useState(false);
     const ref = useRef(null);
 
@@ -77,7 +78,7 @@ const DropdownButton = ({ label, icon: Icon, color = '#555', children }) => {
 
     return (
         <div ref={ref} style={{ position:'relative' }}>
-            <button onClick={() => setOpen(o => !o)} style={{ display:'flex', alignItems:'center', gap:'6px', padding:'8px 12px', borderRadius:'8px', border:'none', background:color, color:'white', cursor:'pointer', fontSize:'0.85rem', fontWeight:'600', fontFamily:'inherit' }}>
+            <button onClick={() => setOpen(o => !o)} style={{ display:'flex', alignItems:'center', gap:'6px', padding:'7px 11px', borderRadius:'8px', border: variant === 'outline' ? `1px solid ${color}` : 'none', background: variant === 'outline' ? 'white' : color, color: variant === 'outline' ? color : 'white', cursor:'pointer', fontSize:'0.84rem', fontWeight:'600', fontFamily:'inherit' }}>
                 {Icon && <Icon size={14} />} {label} <ChevronDown size={13} style={{ opacity:0.7 }} />
             </button>
             {open && (
@@ -209,6 +210,7 @@ const ManageCartels = () => {
     const [progress,       setProgress]        = useState({ current: 0, total: 0 });
     const [showImport,     setShowImport]      = useState(false);
     const [translating,    setTranslating]     = useState(new Set()); // ids en cours de traduction
+    const [confirmState,      setConfirmState]      = useState(null);
     const [showWorkshopModal, setShowWorkshopModal] = useState(false);
     const [newWorkshopName, setNewWorkshopName] = useState('');
     const [selectedWorkshopId, setSelectedWorkshopId] = useState('');
@@ -263,6 +265,9 @@ const ManageCartels = () => {
     }
 
     // ── Actions unitaires ─────────────────────────────────────
+    const askConfirm = (message, onConfirm, opts = {}) =>
+        setConfirmState({ message, onConfirm, ...opts });
+
     const act = async (id, fn) => {
         setProcessingId(id);
         try { await fn(); await fetchData(); }
@@ -270,27 +275,45 @@ const ManageCartels = () => {
         finally { setProcessingId(null); }
     };
 
-    const handlePublish   = (c) => { if (!confirm(`Publier "${c.titre}" ?`)) return; act(c.id, () => api.cartels.publish(c.id)); };
-    const handleToDraft   = (c) => { if (!confirm(`Repasser "${c.titre}" en brouillon ?`)) return; act(c.id, () => api.cartels.setStatus(c.id, 'draft')); };
-    const handleArchive   = (c) => { if (!confirm(`Archiver "${c.titre}" ?`)) return; act(c.id, () => api.cartels.archive(c.id)); };
-    const handleDelete    = (id) => { if (!confirm(t('messages.confirmDelete', 'Supprimer ?'))) return; act(id, () => api.cartels.delete(id)); };
+    const handlePublish = (c) => askConfirm(
+        `Publier "${c.titre}" ?`,
+        () => act(c.id, () => api.cartels.publish(c.id)),
+        { danger: false, confirmLabel: 'Publier' }
+    );
+    const handleToDraft = (c) => askConfirm(
+        `Repasser "${c.titre}" en brouillon ?`,
+        () => act(c.id, () => api.cartels.setStatus(c.id, 'draft')),
+        { danger: false, confirmLabel: 'Brouillon' }
+    );
+    const handleArchive = (c) => askConfirm(
+        `Archiver "${c.titre}" ?`,
+        () => act(c.id, () => api.cartels.archive(c.id)),
+        { danger: false, confirmLabel: 'Archiver' }
+    );
+    const handleDelete = (id) => askConfirm(
+        t('messages.confirmDelete', 'Supprimer ce cartel ?'),
+        () => act(id, () => api.cartels.delete(id))
+    );
 
     // ── Traduction unitaire ───────────────────────────────────
-    const handleTranslate = async (cartel) => {
-        if (!confirm(`Retraduire "${cartel.titre}" en anglais via IA ? Les champs anglais existants seront écrasés.`)) return;
-        setTranslating(prev => new Set([...prev, cartel.id]));
-        try {
-            const translated = await api.translate.cartel({
-                titre: cartel.titre, description: cartel.description, location: cartel.location,
-            });
-            await api.cartels.update(cartel.id, translated);
-            await fetchData();
-        } catch (e) {
-            alert('Erreur traduction : ' + e.message);
-        } finally {
-            setTranslating(prev => { const s = new Set(prev); s.delete(cartel.id); return s; });
-        }
-    };
+    const handleTranslate = (cartel) => askConfirm(
+        `Retraduire "${cartel.titre}" en anglais via IA ? Les champs anglais existants seront écrasés.`,
+        async () => {
+            setTranslating(prev => new Set([...prev, cartel.id]));
+            try {
+                const translated = await api.translate.cartel({
+                    titre: cartel.titre, description: cartel.description, location: cartel.location,
+                });
+                await api.cartels.update(cartel.id, translated);
+                await fetchData();
+            } catch (e) {
+                alert('Erreur traduction : ' + e.message);
+            } finally {
+                setTranslating(prev => { const s = new Set(prev); s.delete(cartel.id); return s; });
+            }
+        },
+        { danger: false, confirmLabel: 'Retraduire' }
+    );
 
     // ── Actions batch ─────────────────────────────────────────
     const withBusy = async (label, fn) => {
@@ -299,13 +322,16 @@ const ManageCartels = () => {
         finally { setBusy(false); }
     };
 
-    const handleBulkDelete = async () => {
-        if (!selectedIds.size || !confirm(`Supprimer ces ${selectedIds.size} cartels ?`)) return;
-        await withBusy('Suppression…', async () => {
-            for (const id of selectedIds) await api.cartels.delete(id);
-            await fetchData();
-            setSelectedIds(new Set());
-        });
+    const handleBulkDelete = () => {
+        if (!selectedIds.size) return;
+        askConfirm(
+            `Supprimer ces ${selectedIds.size} cartel${selectedIds.size > 1 ? 's' : ''} ?`,
+            () => withBusy('Suppression…', async () => {
+                for (const id of selectedIds) await api.cartels.delete(id);
+                await fetchData();
+                setSelectedIds(new Set());
+            })
+        );
     };
 
     const handleBulkWorkshop = async () => {
@@ -341,27 +367,31 @@ const ManageCartels = () => {
         });
     };
 
-    const handleBulkTranslate = async () => {
-        if (!selectedIds.size || !confirm(`Retraduire ${selectedIds.size} cartel(s) via IA ?`)) return;
-        await withBusy('Traduction IA…', async () => {
-            let count = 0;
-            for (const id of selectedIds) {
-                count++;
-                setProgress({ current: count, total: selectedIds.size });
-                const cartel = cartels.find(c => c.id === id);
-                if (!cartel) continue;
-                try {
-                    const translated = await api.translate.cartel({
-                        titre: cartel.titre, description: cartel.description, location: cartel.location,
-                    });
-                    await api.cartels.update(id, translated);
-                } catch (e) {
-                    console.error(`Traduction ${id} échouée`, e);
+    const handleBulkTranslate = () => {
+        if (!selectedIds.size) return;
+        askConfirm(
+            `Retraduire ${selectedIds.size} cartel${selectedIds.size > 1 ? 's' : ''} via IA ?`,
+            () => withBusy('Traduction IA…', async () => {
+                let count = 0;
+                for (const id of selectedIds) {
+                    count++;
+                    setProgress({ current: count, total: selectedIds.size });
+                    const cartel = cartels.find(c => c.id === id);
+                    if (!cartel) continue;
+                    try {
+                        const translated = await api.translate.cartel({
+                            titre: cartel.titre, description: cartel.description, location: cartel.location,
+                        });
+                        await api.cartels.update(id, translated);
+                    } catch (e) {
+                        console.error(`Traduction ${id} échouée`, e);
+                    }
                 }
-            }
-            await fetchData();
-            setSelectedIds(new Set());
-        });
+                await fetchData();
+                setSelectedIds(new Set());
+            }),
+            { danger: false, confirmLabel: 'Retraduire' }
+        );
     };
 
     const handleExportImages = async (close) => {
@@ -411,6 +441,17 @@ const ManageCartels = () => {
 
             {/* Overlay */}
             {busy && <ProgressOverlay label={busyLabel} current={progress.current} total={progress.total} />}
+
+            {/* Confirmation */}
+            {confirmState && (
+                <ConfirmModal
+                    message={confirmState.message}
+                    confirmLabel={confirmState.confirmLabel}
+                    danger={confirmState.danger !== false}
+                    onConfirm={() => { confirmState.onConfirm(); setConfirmState(null); }}
+                    onCancel={() => setConfirmState(null)}
+                />
+            )}
 
             {/* Modal import */}
             {showImport && (
@@ -509,28 +550,26 @@ const ManageCartels = () => {
 
                 {/* Actions batch */}
                 {selectedIds.size > 0 && (
-                    <div style={{ display:'flex', gap:'6px', flexWrap:'wrap' }}>
+                    <div style={{ display:'flex', gap:'6px', flexWrap:'wrap', alignItems:'center' }}>
                         {activeTab !== 'published' && (
-                            <button onClick={handleBulkPublish} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'8px 12px', borderRadius:'8px', border:'none', background:'#2e7d32', color:'white', cursor:'pointer', fontSize:'0.85rem', fontWeight:'600', fontFamily:'inherit' }}>
+                            <button onClick={handleBulkPublish} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'7px 11px', borderRadius:'8px', border:'none', background:'var(--color-success, #2e7d32)', color:'white', cursor:'pointer', fontSize:'0.84rem', fontWeight:'600', fontFamily:'inherit' }}>
                                 <Check size={14} /> {t('manageCartels.publish')} ({selectedIds.size})
                             </button>
                         )}
-                        {/* Retraduire batch */}
-                        <button onClick={handleBulkTranslate} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'8px 12px', borderRadius:'8px', border:'none', background:'#6741d9', color:'white', cursor:'pointer', fontSize:'0.85rem', fontWeight:'600', fontFamily:'inherit' }}>
+                        <button onClick={handleBulkTranslate} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'7px 11px', borderRadius:'8px', border:'1px solid #6741d9', background:'white', color:'#6741d9', cursor:'pointer', fontSize:'0.84rem', fontWeight:'600', fontFamily:'inherit' }}>
                             <Languages size={14} /> {t('manageCartels.retranslate')} ({selectedIds.size})
                         </button>
-                        {/* Export dropdown */}
-                        <DropdownButton label={t('manageCartels.export')} icon={Download} color="#444">
+                        <DropdownButton label={t('manageCartels.export')} icon={Download} color="#555" variant="outline">
                             {close => (<>
                                 <DropItem icon={ImgIcon}   label={t('manageCartels.imagesZip')} onClick={() => handleExportImages(close)} />
                                 <DropItem icon={FileText}  label={t('manageCartels.pdfPrint')} onClick={() => handleExportPdf(close)} />
                                 <DropItem icon={Package}   label={t('manageCartels.fullArchive')} onClick={() => handleExportArchive(close)} />
                             </>)}
                         </DropdownButton>
-                        <button onClick={() => { setNewWorkshopName(''); setSelectedWorkshopId(''); setShowWorkshopModal(true); }} disabled={selectedIds.size === 0} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'8px 12px', borderRadius:'8px', border:'none', background:selectedIds.size === 0 ? '#a7c2ff' : '#1f6feb', color:'white', cursor:selectedIds.size === 0 ? 'not-allowed' : 'pointer', fontSize:'0.85rem', fontWeight:'600', fontFamily:'inherit' }}>
+                        <button onClick={() => { setNewWorkshopName(''); setSelectedWorkshopId(''); setShowWorkshopModal(true); }} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'7px 11px', borderRadius:'8px', border:'1px solid #1f6feb', background:'white', color:'#1f6feb', cursor:'pointer', fontSize:'0.84rem', fontWeight:'600', fontFamily:'inherit' }}>
                             <FolderPlus size={14} /> {t('manageCartels.assignWorkshop')} ({selectedIds.size})
                         </button>
-                        <button onClick={handleBulkDelete} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'8px 12px', borderRadius:'8px', border:'none', background:'#d32f2f', color:'white', cursor:'pointer', fontSize:'0.85rem', fontWeight:'600', fontFamily:'inherit' }}>
+                        <button onClick={handleBulkDelete} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'7px 11px', borderRadius:'8px', border:'none', background:'var(--color-error, #d32f2f)', color:'white', cursor:'pointer', fontSize:'0.84rem', fontWeight:'600', fontFamily:'inherit' }}>
                             <Trash2 size={14} /> {t('manageCartels.delete')}
                         </button>
                     </div>
@@ -538,7 +577,7 @@ const ManageCartels = () => {
 
                 {/* Export sans sélection → tout exporter */}
                 {selectedIds.size === 0 && (
-                    <DropdownButton label={t('manageCartels.exportAll')} icon={Download} color="#666">
+                    <DropdownButton label={t('manageCartels.exportAll')} icon={Download} color="#555" variant="outline">
                         {close => (<>
                             <DropItem icon={Package}  label={t('manageCartels.fullArchive')} onClick={() => { close(); withBusy(t('manageCartels.preparingArchive'), () => api.io.exportArchive([])); }} />
                         </>)}
