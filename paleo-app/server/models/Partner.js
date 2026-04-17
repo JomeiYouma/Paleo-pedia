@@ -6,9 +6,31 @@ import { SettingModel } from './Setting.js';
 
 export const PartnerModel = {
 
-  async findAll() {
+  /**
+   * Récupère les partenaires selon un filtre :
+   *   - 'all'            → tous (superadmin uniquement)
+   *   - { id: X }        → pool public + exclusifs du sous-site X
+   *   - 'public_pool'    → uniquement pool public (owner_subsite_id IS NULL)
+   * Par défaut 'all' — les contrôleurs doivent restreindre explicitement.
+   */
+  async findAll({ subsiteFilter = 'all' } = {}) {
+    let sql = 'SELECT * FROM partners';
+    const values = [];
+    if (subsiteFilter === 'public_pool') {
+      sql += ' WHERE owner_subsite_id IS NULL';
+    } else if (subsiteFilter && typeof subsiteFilter === 'object' && subsiteFilter.id) {
+      sql += ' WHERE owner_subsite_id IS NULL OR owner_subsite_id = ?';
+      values.push(subsiteFilter.id);
+    }
+    sql += ' ORDER BY name ASC';
+    const [rows] = await pool.query(sql, values);
+    return rows;
+  },
+
+  /** Partenaires marqués comme obligatoires (affichés sur tous les sous-sites) */
+  async findMandatory() {
     const [rows] = await pool.query(
-      'SELECT * FROM partners ORDER BY name ASC'
+      'SELECT * FROM partners WHERE is_mandatory = 1 ORDER BY name ASC'
     );
     return rows;
   },
@@ -18,21 +40,24 @@ export const PartnerModel = {
     return row ?? null;
   },
 
-  async create({ name, logo_path = null, url = null }) {
+  async create({ name, logo_path = null, url = null, is_mandatory = false, owner_subsite_id = null }) {
     const id = crypto.randomUUID();
     await pool.query(
-      'INSERT INTO partners (id, name, logo_path, url) VALUES (?, ?, ?, ?)',
-      [id, name, logo_path, url]
+      'INSERT INTO partners (id, name, logo_path, url, is_mandatory, owner_subsite_id) VALUES (?, ?, ?, ?, ?, ?)',
+      [id, name, logo_path, url, is_mandatory ? 1 : 0, owner_subsite_id]
     );
     return this.findById(id);
   },
 
   async update(id, data) {
-    const allowed = ['name', 'logo_path', 'url'];
+    const allowed = ['name', 'logo_path', 'url', 'is_mandatory', 'owner_subsite_id'];
     const sets = [];
     const vals = [];
     for (const k of allowed) {
-      if (k in data) { sets.push(`\`${k}\` = ?`); vals.push(data[k]); }
+      if (k in data) {
+        sets.push(`\`${k}\` = ?`);
+        vals.push(k === 'is_mandatory' ? (data[k] ? 1 : 0) : data[k]);
+      }
     }
     if (!sets.length) return this.findById(id);
     vals.push(id);

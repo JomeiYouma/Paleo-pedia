@@ -93,11 +93,16 @@ router.patch ('/s/:slug/cartels/:id/status',   authenticate, resolveTenant, requ
 router.delete('/s/:slug/cartels/:id',          authenticate, resolveTenant, requireTenantAccess, CartelController.delete);
 
 // ── Partenaires (public GET, admin write) ────────────────────
-router.get   ('/partners',       PartnerController.getAll);
+// optionalAuth sur GET pour que le filtre par scope (pool public vs pool+exclusifs
+// d'un tenant admin) soit calculé depuis req.user.
+router.get   ('/partners',       optionalAuth, PartnerController.getAll);
 router.get   ('/partners/site',  PartnerController.getSiteSelection);
 router.put   ('/partners/site',  authenticate, requireAdmin, PartnerController.setSiteSelection);
-router.post  ('/partners',       authenticate, requireAdmin, PartnerController.create);
-router.patch ('/partners/:id',   authenticate, requireAdmin, PartnerController.update);
-router.delete('/partners/:id',   authenticate, requireAdmin, PartnerController.remove);
+// CREATE / UPDATE / DELETE : le superadmin passe par requireAdmin, les tenant
+// admins doivent avoir can_manage_team (contrôlé dans le contrôleur via canModifyPartner).
+// On ouvre donc aux utilisateurs authentifiés et on délègue l'authz au contrôleur.
+router.post  ('/partners',       authenticate, PartnerController.create);
+router.patch ('/partners/:id',   authenticate, PartnerController.update);
+router.delete('/partners/:id',   authenticate, PartnerController.remove);
 
 export default router;

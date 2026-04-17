@@ -21,7 +21,7 @@ export const SubsiteModel = {
     return rows.map(r => ({ ...r, content_blocks: parseBlocks(r.content_blocks) }));
   },
 
-  /** Un sous-site par slug, avec ses partenaires */
+  /** Un sous-site par slug, avec ses partenaires (picks + obligatoires + exclusifs) */
   async findBySlug(slug) {
     const [[row]] = await pool.query(`
       SELECT s.*, c.name AS category_name, c.color AS category_color
@@ -31,7 +31,8 @@ export const SubsiteModel = {
     `, [slug]);
     if (!row) return null;
 
-    const [partners] = await pool.query(`
+    // Picks explicites (via subsite_partners)
+    const [picked] = await pool.query(`
       SELECT p.*, sp.sort_order, sp.partner_tier
       FROM partners p
       JOIN subsite_partners sp ON sp.partner_id = p.id
@@ -39,8 +40,19 @@ export const SubsiteModel = {
       ORDER BY CASE WHEN sp.partner_tier = 'primary' THEN 0 ELSE 1 END, sp.sort_order ASC, p.name ASC
     `, [row.id]);
 
-    const primary_partners = partners.filter(p => p.partner_tier === 'primary');
-    const regular_partners = partners.filter(p => p.partner_tier !== 'primary');
+    // Obligatoires (affichés en regular sur tous les sous-sites, sauf si déjà picked)
+    const [mandatory] = await pool.query(`
+      SELECT * FROM partners WHERE is_mandatory = 1 ORDER BY name ASC
+    `);
+
+    const pickedIds = new Set(picked.map(p => p.id));
+    const extraMandatory = mandatory
+      .filter(p => !pickedIds.has(p.id))
+      .map(p => ({ ...p, partner_tier: 'regular', sort_order: 9999 }));
+
+    const all = [...picked, ...extraMandatory];
+    const primary_partners = all.filter(p => p.partner_tier === 'primary');
+    const regular_partners = all.filter(p => p.partner_tier !== 'primary');
 
     return {
       ...row,
