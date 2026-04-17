@@ -50,8 +50,35 @@ CREATE TABLE IF NOT EXISTS `workshop_cartels` (
 -- ============================================================
 -- INDICE(S) SUPPLÉMENTAIRE(S) POUR PERFORMANCE
 -- ============================================================
-CREATE INDEX IF NOT EXISTS `idx_workshops_created_by` ON `workshops` (`created_by`);
-CREATE INDEX IF NOT EXISTS `idx_workshop_cartels_workshop` ON `workshop_cartels` (`workshop_id`);
+SET @idx_exists := (
+  SELECT COUNT(1)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'workshops'
+    AND index_name = 'idx_workshops_created_by'
+);
+SET @sql := IF(@idx_exists = 0,
+  'CREATE INDEX `idx_workshops_created_by` ON `workshops` (`created_by`)',
+  'SELECT 1'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @idx_exists := (
+  SELECT COUNT(1)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'workshop_cartels'
+    AND index_name = 'idx_workshop_cartels_workshop'
+);
+SET @sql := IF(@idx_exists = 0,
+  'CREATE INDEX `idx_workshop_cartels_workshop` ON `workshop_cartels` (`workshop_id`)',
+  'SELECT 1'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 SET FOREIGN_KEY_CHECKS = 1;
 

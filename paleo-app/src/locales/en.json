@@ -37,6 +37,10 @@
         "fieldUrlQR": "QR Code Link (Optional)",
         "fieldExhume": "Exhumed by",
         "fieldCategories": "Categories",
+        "fieldWorkshops": "Workshops",
+        "newWorkshopPlaceholder": "New workshop",
+        "noWorkshops": "No existing workshop.",
+        "workshopHelp": "These tags are reserved for administration and do not appear in the timeline or print view.",
         "btnSave": "Save Cartel",
         "translating": "Auto-translating...",
         "processing": "Processing...",
@@ -210,7 +214,7 @@
         "propose": "Send proposal",
         "create": "Create",
         "workshop": "Workshop",
-        "createWorkshop": "Create Workshop",
+        "createWorkshop": "Create workshop",
         "noCartels": "No cartels in the library."
     },
     "subsiteEditor": {

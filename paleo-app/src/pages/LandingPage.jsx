@@ -8,21 +8,35 @@ const PINK = 'var(--color-pink-darker, #C2185B)';
 const LandingPage = () => {
     const navigate = useNavigate();
     const [showCategoryModal, setShowCategoryModal] = useState(false);
-    const [cats,         setCats]         = useState([]);
-    const [subsiteMap,   setSubsiteMap]   = useState({}); // category_id -> subsite
-    const [loadingCats,  setLoadingCats]  = useState(false);
+    const [cats, setCats] = useState([]);
+    const [subsites, setSubsites] = useState([]);
+    const [explorerMode, setExplorerMode] = useState(null); // 'subsites' | 'categories' | null
+    const [loadingCats, setLoadingCats] = useState(false);
+
+    const closeCategoryModal = () => {
+        setShowCategoryModal(false);
+        setExplorerMode(null);
+    };
 
     // Charger les catégories + sous-sites à la demande
     const openCategoryModal = async () => {
         setShowCategoryModal(true);
-        if (cats.length > 0) return;
+        if (explorerMode) return;
         setLoadingCats(true);
         try {
-            const [data, subs] = await Promise.all([categoriesApi.getAll(), subsitesApi.getAll()]);
+            const subs = await subsitesApi.getAll();
+            const subsiteList = Array.isArray(subs) ? subs : [];
+            setSubsites(subsiteList);
+
+            if (subsiteList.length > 0) {
+                setCats([]);
+                setExplorerMode('subsites');
+                return;
+            }
+
+            const data = await categoriesApi.getAll();
             setCats(Array.isArray(data) ? data : []);
-            const map = {};
-            (Array.isArray(subs) ? subs : []).forEach(s => { map[s.category_id] = s; });
-            setSubsiteMap(map);
+            setExplorerMode('categories');
         } catch (e) {
             console.error('Impossible de charger les catégories', e);
         } finally {
@@ -30,19 +44,18 @@ const LandingPage = () => {
         }
     };
 
-    const handleCategoryClick = (cat) => {
+    const handleThemeClick = (item) => {
         setShowCategoryModal(false);
-        // Si un sous-site est associé à cette catégorie, y aller directement
-        if (subsiteMap[cat.id]) {
-            navigate(`/site/${subsiteMap[cat.id].slug}`);
+        if (explorerMode === 'subsites') {
+            navigate(`/site/${item.slug}`);
         } else {
-            navigate(`/app?category=${encodeURIComponent(cat.name)}`);
+            navigate(`/app?category=${encodeURIComponent(item.name)}`);
         }
     };
 
     // Fermer le modal sur Escape
     useEffect(() => {
-        const onKey = (e) => { if (e.key === 'Escape') setShowCategoryModal(false); };
+        const onKey = (e) => { if (e.key === 'Escape') closeCategoryModal(); };
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
     }, []);
@@ -174,7 +187,7 @@ const LandingPage = () => {
             {showCategoryModal && (
                 <div
                     id="modal-thematiques"
-                    onClick={(e) => { if (e.target === e.currentTarget) setShowCategoryModal(false); }}
+                    onClick={(e) => { if (e.target === e.currentTarget) closeCategoryModal(); }}
                     style={{
                         position: 'fixed', inset: 0,
                         background: 'rgba(0,0,0,0.5)',
@@ -200,7 +213,7 @@ const LandingPage = () => {
                     }}>
                         {/* Close */}
                         <button
-                            onClick={() => setShowCategoryModal(false)}
+                            onClick={closeCategoryModal}
                             style={{
                                 position: 'absolute', top: '16px', right: '16px',
                                 background: '#f5f5f5', border: 'none', borderRadius: '50%',
@@ -215,33 +228,39 @@ const LandingPage = () => {
 
                         <h2 style={{ margin: '0 0 8px 0', fontSize: '1.8rem', color: '#1a1a1a' }}>Explorer une thématique</h2>
                         <p style={{ margin: '0 0 28px 0', color: '#777', fontSize: '0.95rem' }}>
-                            Choisissez une catégorie pour voir uniquement les cartels associés.
+                            {explorerMode === 'subsites'
+                                ? 'Choisissez un sous-site pour accéder à son espace dédié.'
+                                : 'Choisissez une catégorie pour voir uniquement les cartels associés.'}
                         </p>
 
                         {loadingCats && (
                             <div style={{ textAlign: 'center', padding: '40px 0', color: '#aaa' }}>Chargement…</div>
                         )}
 
-                        {!loadingCats && cats.length === 0 && (
+                        {!loadingCats && explorerMode === 'categories' && cats.length === 0 && (
                             <div style={{ textAlign: 'center', padding: '40px 0', color: '#aaa' }}>Aucune thématique disponible pour le moment.</div>
                         )}
 
+                        {!loadingCats && explorerMode === 'subsites' && subsites.length === 0 && (
+                            <div style={{ textAlign: 'center', padding: '40px 0', color: '#aaa' }}>Aucun sous-site disponible pour le moment.</div>
+                        )}
+
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            {cats.map(cat => {
-                                const sub = subsiteMap[cat.id];
+                            {(explorerMode === 'subsites' ? subsites : cats).map(item => {
+                                const isSubsite = explorerMode === 'subsites';
                                 return (
                                 <button
-                                    key={cat.id}
-                                    id={`cat-btn-${cat.id}`}
-                                    onClick={() => handleCategoryClick(cat)}
+                                    key={item.id || item.slug}
+                                    id={`theme-btn-${item.id || item.slug}`}
+                                    onClick={() => handleThemeClick(item)}
                                     style={{
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'space-between',
                                         padding: '16px 20px',
                                         borderRadius: '12px',
-                                        border: sub ? `2px solid ${sub.primary_color}40` : '2px solid #f0f0f0',
-                                        background: sub ? `${sub.primary_color}08` : 'white',
+                                        border: isSubsite ? '2px solid #f0f0f0' : '2px solid #f0f0f0',
+                                        background: 'white',
                                         cursor: 'pointer',
                                         textAlign: 'left',
                                         transition: 'all 0.2s',
@@ -250,24 +269,19 @@ const LandingPage = () => {
                                         color: '#1a1a1a',
                                     }}
                                     onMouseEnter={e => {
-                                        e.currentTarget.style.borderColor = sub ? sub.primary_color : (cat.color || PINK);
+                                        e.currentTarget.style.borderColor = isSubsite ? '#aaa' : (item.color || PINK);
                                         e.currentTarget.style.background = '#fafafa';
                                         e.currentTarget.style.transform = 'translateX(4px)';
                                     }}
                                     onMouseLeave={e => {
-                                        e.currentTarget.style.borderColor = sub ? `${sub.primary_color}40` : '#f0f0f0';
-                                        e.currentTarget.style.background = sub ? `${sub.primary_color}08` : 'white';
+                                        e.currentTarget.style.borderColor = '#f0f0f0';
+                                        e.currentTarget.style.background = 'white';
                                         e.currentTarget.style.transform = 'translateX(0)';
                                     }}
                                 >
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                                        <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: cat.color || PINK, flexShrink: 0 }} />
-                                        <span>{cat.name}</span>
-                                        {sub && (
-                                            <span style={{ fontSize:'0.72rem', fontWeight:'700', padding:'2px 7px', borderRadius:'10px', background: sub.primary_color, color:'white' }}>
-                                                {sub.name} →
-                                            </span>
-                                        )}
+                                        <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: isSubsite ? (item.primary_color || PINK) : (item.color || PINK), flexShrink: 0 }} />
+                                        <span>{item.name}</span>
                                     </div>
                                     <ChevronRight size={18} color="#ccc" />
                                 </button>
@@ -279,7 +293,7 @@ const LandingPage = () => {
                         <div style={{ marginTop: '24px', textAlign: 'center' }}>
                             <Link
                                 to="/app"
-                                onClick={() => setShowCategoryModal(false)}
+                                onClick={closeCategoryModal}
                                 style={{ color: '#999', fontSize: '0.9rem', textDecoration: 'underline' }}
                             >
                                 Voir tous les cartels sans filtre →

@@ -18,6 +18,7 @@ const Create = () => {
         uploadImage,
         categories: globalCats = [],
         addLocalCategory,
+        addWorkshop,
         isAdmin,
         currentWorkshop,
         workshops = [],
@@ -52,6 +53,7 @@ const Create = () => {
 
     const [imageFile, setImageFile] = useState(null);
     const [newCategory, setNewCategory] = useState('');
+    const [newWorkshop, setNewWorkshop] = useState('');
     const [geoStatus, setGeoStatus] = useState('idle');
     const [isSaving, setIsSaving] = useState(false);
     const [statusMsg, setStatusMsg] = useState('');
@@ -117,6 +119,21 @@ const Create = () => {
                 setForm(prev => ({ ...prev, categories: [...prev.categories, newCategory] }));
             }
             setNewCategory('');
+        }
+    };
+
+    const handleAddWorkshop = async () => {
+        const name = newWorkshop.trim();
+        if (!name || !isAdmin || !addWorkshop) return;
+
+        const createdWorkshopId = await addWorkshop(name);
+        if (createdWorkshopId) {
+            setForm(prev => {
+                const current = new Set((prev.workshopIds || []).map(String));
+                current.add(String(createdWorkshopId));
+                return { ...prev, workshopIds: Array.from(current) };
+            });
+            setNewWorkshop('');
         }
     };
 
@@ -378,7 +395,7 @@ const Create = () => {
 
                 {isAdmin && (
                     <div>
-                        <label>Ateliers</label>
+                        <label>{t('create.fieldWorkshops')}</label>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
                             {workshops.length > 0 ? workshops.map(workshop => {
                                 const active = (form.workshopIds || []).map(String).includes(String(workshop.id));
@@ -400,11 +417,18 @@ const Create = () => {
                                         {workshop.name}
                                     </button>
                                 );
-                            }) : <small style={{ color: '#888' }}>Aucun workshop existant.</small>}
+                            }) : <small style={{ color: '#888' }}>{t('create.noWorkshops')}</small>}
                         </div>
-                        <small style={{ color: '#777' }}>
-                            Ces tags sont réservés à l’administration et ne s’affichent ni sur la frise ni dans l’impression.
-                        </small>
+                        <div style={{ display: 'flex', gap: '5px', marginBottom: '10px' }}>
+                            <input
+                                placeholder={t('create.newWorkshopPlaceholder')}
+                                value={newWorkshop}
+                                onChange={e => setNewWorkshop(e.target.value)}
+                                style={{ flex: 1, padding: '4px' }}
+                            />
+                            <button type="button" onClick={handleAddWorkshop} disabled={!newWorkshop.trim()}>{t('common.add')}</button>
+                        </div>
+                        <small style={{ color: '#777' }}>{t('create.workshopHelp')}</small>
                     </div>
                 )}
 

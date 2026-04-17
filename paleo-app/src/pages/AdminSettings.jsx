@@ -358,7 +358,7 @@ const AdminSettings = () => {
                             label="Clé OpenAI ou DeepL"
                             hint="Utilisée pour la traduction automatique des cartels. Commence par sk-… (OpenAI) ou se termine par :fx (DeepL Free)."
                         >
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                                 <input
                                     type={showKey ? 'text' : 'password'}
                                     value={aiKey}
@@ -366,6 +366,7 @@ const AdminSettings = () => {
                                     placeholder="sk-… ou votre clé DeepL"
                                     style={{
                                         flex: 1,
+                                        minWidth: '260px',
                                         padding: '10px 14px',
                                         borderRadius: '8px',
                                         border: '1px solid #ddd',
@@ -388,12 +389,33 @@ const AdminSettings = () => {
                                 >
                                     {showKey ? 'Masquer' : 'Afficher'}
                                 </button>
+                                <button
+                                    type="button"
+                                    onClick={handleSave}
+                                    disabled={saving || loading}
+                                    style={{
+                                        padding: '10px 14px',
+                                        borderRadius: '8px',
+                                        border: 'none',
+                                        background: saving ? '#999' : '#e67e00',
+                                        color: 'white',
+                                        cursor: saving || loading ? 'not-allowed' : 'pointer',
+                                        fontSize: '0.82rem',
+                                        fontWeight: '700',
+                                        fontFamily: 'inherit',
+                                    }}
+                                >
+                                    {saving ? 'Envoi…' : 'Enregistrer la clé'}
+                                </button>
                             </div>
                             {aiKey && (
                                 <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: '#aaa' }}>
                                     {aiKey.startsWith('sk-') ? 'Format OpenAI détecté' : aiKey.endsWith(':fx') ? 'Format DeepL Free détecté' : 'Format non reconnu'}
                                 </p>
                             )}
+                            <p style={{ margin: '8px 0 0', fontSize: '0.8rem', color: '#888' }}>
+                                Cliquez sur « Enregistrer la clé » après collage pour confirmer la prise en compte.
+                            </p>
                         </Field>
                     </Section>
 
