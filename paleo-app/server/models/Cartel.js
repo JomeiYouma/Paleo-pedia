@@ -68,9 +68,21 @@ function parseCartel(row) {
 
 export const CartelModel = {
 
-  async findAll({ status, visible, category, search, limit = 50, offset = 0, includeWorkshops = false } = {}) {
+  async findAll({ status, visible, category, search, limit = 50, offset = 0, includeWorkshops = false, subsiteFilter } = {}) {
     const conditions = [];
     const values = [];
+
+    // Isolation par sous-site — toujours appliquée, même valeur 'none' = pas de filtre
+    // (superadmin uniquement ; les contrôleurs sont responsables de ne jamais envoyer 'none' pour un non-superadmin)
+    if (subsiteFilter === 'main') {
+      conditions.push('c.subsite_id IS NULL');
+    } else if (subsiteFilter === 'main_feed') {
+      conditions.push('(c.subsite_id IS NULL OR c.visible_on_main = 1)');
+    } else if (subsiteFilter && typeof subsiteFilter === 'object' && subsiteFilter.id) {
+      conditions.push('c.subsite_id = ?');
+      values.push(subsiteFilter.id);
+    }
+    // subsiteFilter === 'none' ou undefined → aucun filtre (superadmin global)
 
     if (status)              { conditions.push('c.status = ?');   values.push(status); }
     if (visible !== undefined) { conditions.push('c.visible = ?'); values.push(visible ? 1 : 0); }
@@ -102,7 +114,7 @@ export const CartelModel = {
     return parseCartel(rows[0]);
   },
 
-  async create(data, userId, submitterIp = null) {
+  async create(data, userId, submitterIp = null, subsiteId = null) {
     const client = await getClient();
     try {
       await client.query('START TRANSACTION');
@@ -110,12 +122,12 @@ export const CartelModel = {
 
       await client.query(
         `INSERT INTO cartels (
-           id, created_by, titre, titre_en, annee, description, description_en,
+           id, created_by, subsite_id, titre, titre_en, annee, description, description_en,
            exhume_par, location, location_en, lat, lng,
            image_path, image_credit, url_qr, date, status, visible, submitter_ip
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          id, userId ?? null,
+          id, userId ?? null, subsiteId,
           data.titre,            data.titre_en      ?? '',
           data.annee             ?? '',
           data.description       ?? '',

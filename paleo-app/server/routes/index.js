@@ -11,6 +11,7 @@ import { ImportController }    from '../controllers/importController.js';
 import { ExportController }    from '../controllers/exportController.js';
 import { authenticate, requireAdmin, optionalAuth } from '../middleware/auth.js';
 import { submissionGuard } from '../middleware/submissionGuard.js';
+import { resolveTenant, requireTenantAccess } from '../middleware/tenant.js';
 import { SubsiteController }  from '../controllers/subsiteController.js';
 import { PartnerController }  from '../controllers/partnerController.js';
 
@@ -80,6 +81,16 @@ router.get   ('/subsites/:slug', SubsiteController.getOne);
 router.post  ('/subsites',       authenticate, requireAdmin, SubsiteController.create);
 router.patch ('/subsites/:slug', authenticate, requireAdmin, SubsiteController.update);
 router.delete('/subsites/:slug', authenticate, requireAdmin, SubsiteController.remove);
+
+// ── Routes scopées par sous-site (/s/:slug/*) ────────────────
+// Lecture publique et soumission anonyme d'un sous-site donné.
+// Les admins d'un tenant peuvent aussi y éditer (protégé par requireTenantAccess).
+router.get   ('/s/:slug/cartels',              optionalAuth, resolveTenant, CartelController.getAll);
+router.get   ('/s/:slug/cartels/:id',          optionalAuth, resolveTenant, CartelController.getOne);
+router.post  ('/s/:slug/cartels',              optionalAuth, resolveTenant, submissionGuard, CartelController.create);
+router.patch ('/s/:slug/cartels/:id',          authenticate, resolveTenant, requireTenantAccess, CartelController.update);
+router.patch ('/s/:slug/cartels/:id/status',   authenticate, resolveTenant, requireTenantAccess, CartelController.setStatus);
+router.delete('/s/:slug/cartels/:id',          authenticate, resolveTenant, requireTenantAccess, CartelController.delete);
 
 // ── Partenaires (public GET, admin write) ────────────────────
 router.get   ('/partners',       PartnerController.getAll);
