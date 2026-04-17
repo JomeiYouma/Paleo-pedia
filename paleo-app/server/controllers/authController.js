@@ -24,6 +24,8 @@ function buildToken(user) {
     can_publish_cartel: !!user.can_publish_cartel,
     can_manage_admin:   !!user.can_manage_admin,
     can_create_subsite: !!user.can_create_subsite,
+    can_manage_team:    !!user.can_manage_team,
+    home_subsite_id:    user.home_subsite_id ?? null,
   });
 }
 
