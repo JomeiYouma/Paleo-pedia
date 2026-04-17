@@ -52,6 +52,7 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
     const location = useLocation();
 
     const [isMenuOpen,     setIsMenuOpen]     = useState(false);
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [showLogin,      setShowLogin]       = useState(false);
     const [loginEmail,     setLoginEmail]      = useState('');
     const [loginPassword,  setLoginPassword]   = useState('');
@@ -373,9 +374,9 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
 
                         {!currentWorkshop && (
                             user ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div style={{ position: 'relative' }}>
                                     <button
-                                        onClick={() => navigate(isAdmin ? '/app/admin' : '/app')}
+                                        onClick={() => setIsUserMenuOpen(v => !v)}
                                         style={{
                                             background: '#f8f8f8',
                                             border: '1px solid #e8e8e8',
@@ -384,7 +385,7 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                             cursor: 'pointer',
                                             fontSize: '0.8rem',
                                             color: '#444',
-                                            maxWidth: '160px',
+                                            maxWidth: '200px',
                                             overflow: 'hidden',
                                             textOverflow: 'ellipsis',
                                             whiteSpace: 'nowrap',
@@ -394,22 +395,80 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                         {isAdmin && <span style={{ color: '#C2185B', marginRight: '4px' }}>●</span>}
                                         {user.email}
                                     </button>
-                                    <button
-                                        onClick={() => { logout(); navigate('/'); }}
-                                        title={t('header.logout')}
-                                        style={{
-                                            background: 'none',
-                                            border: '1px solid #e0e0e0',
-                                            borderRadius: '8px',
-                                            padding: '6px 10px',
-                                            cursor: 'pointer',
-                                            color: '#888',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                        }}
-                                    >
-                                        <LogOut size={14} />
-                                    </button>
+
+                                    {isUserMenuOpen && (
+                                        <>
+                                            <div
+                                                onClick={() => setIsUserMenuOpen(false)}
+                                                style={{ position: 'fixed', inset: 0, zIndex: 1500 }}
+                                            />
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: 'calc(100% + 8px)',
+                                                right: 0,
+                                                zIndex: 2000,
+                                                background: 'white',
+                                                border: '1px solid #eee',
+                                                borderRadius: '12px',
+                                                boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                                                minWidth: '200px',
+                                                padding: '6px',
+                                            }}>
+                                                {isAdmin && (
+                                                    <button
+                                                        onClick={() => { setIsUserMenuOpen(false); navigate('/app/admin'); }}
+                                                        style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '8px',
+                                                            width: '100%',
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            borderRadius: '8px',
+                                                            padding: '8px 12px',
+                                                            cursor: 'pointer',
+                                                            fontSize: '0.85rem',
+                                                            color: '#333',
+                                                            textAlign: 'left',
+                                                            fontFamily: 'inherit',
+                                                        }}
+                                                        onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                                                        onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                                                    >
+                                                        <Settings2 size={14} />
+                                                        {t('nav.admin')}
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => {
+                                                        setIsUserMenuOpen(false);
+                                                        logout();
+                                                        navigate('/app');
+                                                    }}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '8px',
+                                                        width: '100%',
+                                                        background: 'none',
+                                                        border: 'none',
+                                                        borderRadius: '8px',
+                                                        padding: '8px 12px',
+                                                        cursor: 'pointer',
+                                                        fontSize: '0.85rem',
+                                                        color: '#888',
+                                                        textAlign: 'left',
+                                                        fontFamily: 'inherit',
+                                                    }}
+                                                    onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                                                    onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                                                >
+                                                    <LogOut size={14} />
+                                                    {t('header.logout')}
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             ) : (
                                 <button
