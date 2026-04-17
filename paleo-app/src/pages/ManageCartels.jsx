@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import {
     Edit, Trash2, Check, X, Clock,
     Download, Square, CheckSquare, Search,
@@ -177,6 +177,7 @@ const ManageCartels = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { workshopId } = useParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const { t, i18n } = useTranslation();
 
     const pathToTab = {
@@ -195,11 +196,11 @@ const ManageCartels = () => {
     const goToCreate = (editId) => {
         const workshopQuery = filterWorkshop ? `?workshopId=${filterWorkshop}` : '';
         const target = editId ? `/app/create?edit=${editId}` : `/app/create${workshopQuery}`;
-        navigate(target, { state: { returnTo: location.pathname } });
+        navigate(target, { state: { returnTo: location.pathname + location.search } });
     };
 
     const [search,         setSearch]         = useState('');
-    const [filterCategory, setFilterCategory] = useState('');
+    const [filterCategory, setFilterCategory] = useState(() => searchParams.get('cat') || '');
     const [filterWorkshop, setFilterWorkshop] = useState(workshopId || '');
     const [sortConfig,     setSortConfig]      = useState({ key: 'date', direction: 'desc' });
     const [selectedIds,    setSelectedIds]     = useState(new Set());
@@ -218,6 +219,19 @@ const ManageCartels = () => {
     React.useEffect(() => {
         setFilterWorkshop(workshopId || '');
     }, [workshopId]);
+
+    // Sync filterCategory avec l'URL (?cat=…) pour survivre aux navigations
+    const handleSetFilterCategory = (cat) => {
+        setFilterCategory(cat);
+        const next = new URLSearchParams(searchParams);
+        if (cat) next.set('cat', cat);
+        else next.delete('cat');
+        setSearchParams(next, { replace: true });
+    };
+
+    React.useEffect(() => {
+        setFilterCategory(searchParams.get('cat') || '');
+    }, [location.search]);
 
     const currentTabDef = TABS.find(t => t.key === activeTab) || TABS[0];
     const activeWorkshop = filterWorkshop ? workshops.find(w => String(w.id) === String(filterWorkshop)) : null;
@@ -522,7 +536,7 @@ const ManageCartels = () => {
                 </div>
 
                 {/* Filtre catégorie */}
-                <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)}
+                <select value={filterCategory} onChange={e => handleSetFilterCategory(e.target.value)}
                     style={{ padding:'8px 12px', borderRadius:'8px', border:'1px solid #ddd', fontSize:'0.88rem', background:'white' }}>
                     <option value="">{t('manageCartels.allCategories')}</option>
                     {categories.map(c => <option key={c.id || c} value={c.name || c}>{c.name || c}</option>)}
@@ -626,7 +640,7 @@ const ManageCartels = () => {
                                         {/* Image */}
                                         <td style={{ padding:'10px' }}>
                                             {(cartel.image_path || cartel.imageUrl) ? (
-                                                <img src={cartel.image_path || cartel.imageUrl} alt="" style={{ width:'40px', height:'40px', objectFit:'cover', borderRadius:'6px' }} />
+                                                <img src={cartel.image_path || cartel.imageUrl} alt="" loading="lazy" style={{ width:'40px', height:'40px', objectFit:'cover', borderRadius:'6px' }} />
                                             ) : (
                                                 <div style={{ width:'40px', height:'40px', background:'#f0f0f0', borderRadius:'6px', display:'flex', alignItems:'center', justifyContent:'center' }}>
                                                     <ImageIcon size={16} color="#ccc" />

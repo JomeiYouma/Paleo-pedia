@@ -50,6 +50,7 @@ const Library = ({ fixedCategory = null }) => {
 
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
+    const prevSelectedCatsKey = React.useRef('');
 
     // Pré-filtrer par catégorie si ?category= est dans l'URL (seulement sans fixedCategory)
     const urlCategoryFilter = !fixedCategory ? searchParams.get('category') : null;
@@ -144,6 +145,16 @@ const Library = ({ fixedCategory = null }) => {
 
         return data.sort((a, b) => getYearForSort(a) - getYearForSort(b));
     }, [baseCartels, selectedCats, searchQuery, i18n.language]);
+
+    // Quand les filtres catégories changent en mode frise, scroller vers le premier cartel visible
+    useEffect(() => {
+        const key = selectedCats.join(',');
+        if (key === prevSelectedCatsKey.current) return;
+        prevSelectedCatsKey.current = key;
+        if (viewMode === 'timeline' && filteredCartels.length > 0) {
+            setTargetCartelId(filteredCartels[0].id);
+        }
+    }, [selectedCats, filteredCartels, viewMode]);
 
     // Sélection
     const toggleSelection = (id) => {

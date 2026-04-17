@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { geocodingService } from '../services/geocoding';
-import { Save, ArrowLeft, MapPin, Check, X } from 'lucide-react';
+import { Save, ArrowLeft, MapPin, Check, X, Bold, Italic } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { compressImage } from '../utils/imageProcessor';
 import api from '../services/apiClient';
@@ -57,6 +57,22 @@ const Create = () => {
     const [geoStatus, setGeoStatus] = useState('idle');
     const [isSaving, setIsSaving] = useState(false);
     const [statusMsg, setStatusMsg] = useState('');
+    const descRef = useRef(null);
+
+    const insertMarkdown = (marker) => {
+        const el = descRef.current;
+        if (!el) return;
+        const start = el.selectionStart;
+        const end = el.selectionEnd;
+        const value = el.value;
+        const selected = value.slice(start, end);
+        const newValue = value.slice(0, start) + marker + selected + marker + value.slice(end);
+        handleInputChange({ target: { name: 'desc_input', value: newValue } });
+        requestAnimationFrame(() => {
+            el.focus();
+            el.setSelectionRange(start + marker.length, end + marker.length);
+        });
+    };
 
     // Load existing data
     useEffect(() => {
@@ -331,7 +347,26 @@ const Create = () => {
                 {/* Description */}
                 <div>
                     <label>{t('create.fieldDesc')}</label>
+                    <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
+                        <button
+                            type="button"
+                            onClick={() => insertMarkdown('**')}
+                            title="Gras (** … **)"
+                            style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', border: '1px solid #ccc', borderRadius: '4px', background: '#f8f8f8', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700', fontFamily: 'inherit' }}
+                        >
+                            <Bold size={13} /> Gras
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => insertMarkdown('*')}
+                            title="Italique (* … *)"
+                            style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', border: '1px solid #ccc', borderRadius: '4px', background: '#f8f8f8', cursor: 'pointer', fontSize: '0.8rem', fontStyle: 'italic', fontFamily: 'inherit' }}
+                        >
+                            <Italic size={13} /> Italique
+                        </button>
+                    </div>
                     <textarea
+                        ref={descRef}
                         name="desc_input"
                         value={isEn ? form.description_en : form.description}
                         onChange={handleInputChange}

@@ -37,7 +37,7 @@ const loadAndEncodeImage = (src) =>
         canvas.width  = img.naturalWidth;
         canvas.height = img.naturalHeight;
         canvas.getContext('2d').drawImage(img, 0, 0);
-        resolve({ img, width: img.naturalWidth, height: img.naturalHeight, dataUrl: canvas.toDataURL('image/png') });
+        resolve({ img, width: img.naturalWidth, height: img.naturalHeight, dataUrl: canvas.toDataURL('image/jpeg', 0.92) });
       } catch {
         resolve({ img, width: img.naturalWidth, height: img.naturalHeight, dataUrl: src });
       }
@@ -82,7 +82,11 @@ const renderCartelToCanvas = async (cartel, container, lang) => {
   const creditText  = isEn ? 'Image source' : 'Source image';
   const unknownText = isEn ? 'Unknown'     : 'Inconnu';
 
-  const descHtml = desc.split('\n').map(l => `<p style="margin:0">${l}</p>`).join('<br/>');
+  const parseMd = (t) => t
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>');
+  const descHtml = desc.split('\n').map(l => `<p style="margin:0">${parseMd(l)}</p>`).join('<br/>');
 
   // Layout
   const mid_x         = Math.round(A4_WIDTH_PX / 2);

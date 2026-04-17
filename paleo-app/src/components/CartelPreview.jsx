@@ -6,6 +6,21 @@ import { formatYear } from '../utils/helpers';
 import { generateImage, generatePdf } from '../utils/zipGenerator';
 import { Download, Image as ImageIcon, FileText } from 'lucide-react';
 
+/** Transforme **gras** et *italique* en éléments React. */
+const parseMdLine = (text, key) => {
+    const parts = [];
+    const re = /\*\*(.+?)\*\*|\*(.+?)\*/g;
+    let last = 0, m;
+    while ((m = re.exec(text)) !== null) {
+        if (m.index > last) parts.push(text.slice(last, m.index));
+        if (m[1] !== undefined) parts.push(<strong key={m.index}>{m[1]}</strong>);
+        else                    parts.push(<em      key={m.index}>{m[2]}</em>);
+        last = m.index + m[0].length;
+    }
+    if (last < text.length) parts.push(text.slice(last));
+    return <React.Fragment key={key}>{parts}</React.Fragment>;
+};
+
 const CartelPreview = ({ data, isDraft = false }) => {
     const { t, i18n } = useTranslation();
     const [exporting, setExporting] = useState(false);
@@ -62,7 +77,8 @@ const CartelPreview = ({ data, isDraft = false }) => {
                             src={imgSrc}
                             alt={title}
                             className="cartel-img"
-                            onError={(e) => {
+                            loading="lazy"
+                            onError={() => {
                                 console.error("Image load failed:", imgSrc);
                                 setImgError(true);
                             }}
@@ -140,7 +156,7 @@ const CartelPreview = ({ data, isDraft = false }) => {
                     <div className="cartel-description">
                         {description && description.split('\n').map((line, i) => (
                             <React.Fragment key={i}>
-                                {line}
+                                {parseMdLine(line, i)}
                                 <br />
                             </React.Fragment>
                         ))}
