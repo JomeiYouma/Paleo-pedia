@@ -9,8 +9,12 @@ export const AppProvider = ({ children }) => {
     const [loading, setLoading] = useState(false);
     const [categories, setCategories] = useState([]);
     const [workshops, setWorkshops] = useState([]);
-    const [user, setUser] = useState(null); // { id, email, role, can_manage_admin, ... }
-    const isAdmin = !!user?.can_manage_admin;
+    const [user, setUser] = useState(null); // { id, email, role, can_manage_admin, can_manage_team, home_subsite_id, ... }
+    const isSuperadmin = !!user?.can_manage_admin;
+    const isOwner      = !!user?.can_manage_team;
+    const homeSubsiteId = user?.home_subsite_id ?? null;
+    // isAdmin = accès à l'UI d'administration (superadmin OU owner d'un sous-site)
+    const isAdmin = isSuperadmin || isOwner;
 
     const [currentWorkshopId, setCurrentWorkshopId] = useState(null);
     const currentWorkshop = (currentWorkshopId && Array.isArray(workshops))
@@ -254,7 +258,7 @@ export const AppProvider = ({ children }) => {
             // Data
             cartels, loading, categories, workshops, user,
             // Computed
-            isAdmin,
+            isAdmin, isSuperadmin, isOwner, homeSubsiteId,
             currentWorkshopId, currentWorkshop, setWorkshopContext,
             // Auth
             login, logout,

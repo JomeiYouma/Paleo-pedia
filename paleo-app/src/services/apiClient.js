@@ -62,6 +62,28 @@ export const cartels = {
   publish:         (id) => cartels.setStatus(id, 'published'),
   archive:         (id) => cartels.setStatus(id, 'archived'),
   submitForReview: (id) => cartels.setStatus(id, 'pending_review'),
+
+  // Routes scopées d'un sous-site (owner / admin tenant)
+  listForSubsite:   (slug, filters = {}) => {
+    const params = new URLSearchParams(
+      Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== undefined))
+    );
+    const qs = params.toString();
+    return get(`/s/${slug}/cartels${qs ? '?' + qs : ''}`);
+  },
+  createForSubsite: (slug, data)     => post(`/s/${slug}/cartels`, data),
+  updateInSubsite:  (slug, id, data) => patch(`/s/${slug}/cartels/${id}`, data),
+  setStatusInSubsite: (slug, id, s)  => patch(`/s/${slug}/cartels/${id}/status`, { status: s }),
+  deleteInSubsite:  (slug, id)       => del(`/s/${slug}/cartels/${id}`),
+  submitToMain:     (slug, id)       => post(`/s/${slug}/cartels/${id}/submit-to-main`),
+  withdrawFromMain: (slug, id)       => post(`/s/${slug}/cartels/${id}/withdraw-from-main`),
+};
+
+// ── File de validation (superadmin) ───────────────────────────
+export const submissions = {
+  list:    ()    => get('/submissions'),
+  approve: (id)  => post(`/submissions/${id}/approve`),
+  reject:  (id)  => post(`/submissions/${id}/reject`),
 };
 
 // ── Categories ────────────────────────────────────────────────
@@ -194,5 +216,5 @@ export const io = {
   },
 };
 
-const api = { auth, cartels, categories, workshops, settings, users, media, translate, io, subsites, partners };
+const api = { auth, cartels, submissions, categories, workshops, settings, users, media, translate, io, subsites, partners };
 export default api;
