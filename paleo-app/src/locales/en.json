@@ -5,6 +5,7 @@
         "drafts": "Ideas & Drafts",
         "published": "Published",
         "pending": "Pending",
+        "submissions": "Submissions",
         "admin": "Management",
         "management": "Management",
         "deleteAll": "Delete All"
@@ -130,6 +131,10 @@
         "draftsDescription": "Cartels in progress",
         "pendingDescription": "Visitor submissions to review",
         "publishedDescription": "Published cartels",
+        "submissionsDescription": "Subsite cartels submitted for main-site validation",
+        "approve": "Approve",
+        "reject": "Reject",
+        "subsite": "Subsite",
         "adminOnly": "Admin access only.",
         "totalCount": "{{count}} cartels total",
         "importHelp1": "The archive must contain a",

@@ -39,6 +39,7 @@ const TABS = [
     { key: 'drafts',    labelKey: 'nav.drafts',    icon: FileText, color: '#3b5bdb', bg: '#f0f4ff', descriptionKey: 'manageCartels.draftsDescription',      filter: c => c.status === 'draft' },
     { key: 'pending',   labelKey: 'nav.pending',   icon: Inbox,    color: '#e67e00', bg: '#fff4e0', descriptionKey: 'manageCartels.pendingDescription',     filter: c => c.status === 'pending_review' },
     { key: 'published', labelKey: 'nav.published', icon: Globe,    color: '#2e7d32', bg: '#e8f5e9', descriptionKey: 'manageCartels.publishedDescription',   filter: c => c.status === 'published' || c.status === 'archived' },
+    { key: 'submissions', labelKey: 'nav.submissions', icon: Inbox, color: '#C2185B', bg: '#fce4ec', descriptionKey: 'manageCartels.submissionsDescription', filter: c => !!c.submitted_to_main_at && !c.visible_on_main && !!c.subsite_id, superadminOnly: true },
 ];
 
 const STATUS_BADGE = {
@@ -173,7 +174,7 @@ const ImportModal = ({ onClose, onDone, t }) => {
 
 // ── Composant principal ──────────────────────────────────────
 const ManageCartels = () => {
-    const { cartels, fetchData, deleteCartel, deleteCartels, updateCartel, isAdmin, categories, workshops, addWorkshop } = useApp();
+    const { cartels, fetchData, deleteCartel, deleteCartels, updateCartel, isAdmin, isSuperadmin, categories, workshops, addWorkshop } = useApp();
     const navigate = useNavigate();
     const location = useLocation();
     const { workshopId } = useParams();
@@ -184,12 +185,16 @@ const ManageCartels = () => {
         '/app/manage/drafts': 'drafts',
         '/app/manage/pending': 'pending',
         '/app/manage/published': 'published',
+        '/app/manage/submissions': 'submissions',
     };
     const tabToPath = {
         drafts: '/app/manage/drafts',
         pending: '/app/manage/pending',
         published: '/app/manage/published',
+        submissions: '/app/manage/submissions',
     };
+
+    const visibleTabs = TABS.filter(tab => !tab.superadminOnly || isSuperadmin);
 
     const activeTab = pathToTab[location.pathname] || 'drafts';
     const setActiveTab = (key) => navigate(tabToPath[key] || '/app/manage/drafts');
@@ -307,6 +312,17 @@ const ManageCartels = () => {
     const handleDelete = (id) => askConfirm(
         t('messages.confirmDelete', 'Supprimer ce cartel ?'),
         () => act(id, () => api.cartels.delete(id))
+    );
+
+    const handleApproveSubmission = (c) => askConfirm(
+        `Approuver "${c.titre}" pour le site principal ?`,
+        () => act(c.id, () => api.submissions.approve(c.id)),
+        { danger: false, confirmLabel: t('manageCartels.approve') }
+    );
+    const handleRejectSubmission = (c) => askConfirm(
+        `Rejeter la soumission "${c.titre}" ? Le cartel restera visible sur son sous-site.`,
+        () => act(c.id, () => api.submissions.reject(c.id)),
+        { danger: true, confirmLabel: t('manageCartels.reject') }
     );
 
     // ── Traduction unitaire ───────────────────────────────────
@@ -500,7 +516,7 @@ const ManageCartels = () => {
 
             {/* ── Onglets ────────────────────────────────────── */}
             <div style={{ display:'flex', gap:'4px', background:'#f5f5f5', borderRadius:'14px', padding:'4px', marginBottom:'24px' }}>
-                {TABS.map(tab => {
+                {visibleTabs.map(tab => {
                     const Icon   = tab.icon;
                     const active = tab.key === activeTab;
                     return (
@@ -617,6 +633,7 @@ const ManageCartels = () => {
                                 <th style={{ padding:'12px', textAlign:'left' }}>{t('manageCartels.workshops')}</th>
                                 <th onClick={() => handleSort('loc')}   style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none' }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.location')} <SortIcon k="loc" /></div></th>
                                 {activeTab === 'pending' && <th style={{ padding:'12px', textAlign:'left' }}>IP</th>}
+                                {activeTab === 'submissions' && <th style={{ padding:'12px', textAlign:'left' }}>{t('manageCartels.subsite')}</th>}
                                 <th style={{ padding:'12px', textAlign:'center' }}>{t('manageCartels.status')}</th>
                                 <th style={{ padding:'12px', textAlign:'center' }}>{t('manageCartels.actions')}</th>
                             </tr>
@@ -697,6 +714,21 @@ const ManageCartels = () => {
                                             </td>
                                         )}
 
+                                        {/* Sous-site d'origine */}
+                                        {activeTab === 'submissions' && (
+                                            <td style={{ padding:'10px' }}>
+                                                {cartel.subsite_name ? (
+                                                    <span style={{ background:'#fce4ec', color:'#C2185B', borderRadius:'10px', padding:'2px 8px', fontSize:'0.78rem', fontWeight:'600' }}>{cartel.subsite_name}</span>
+                                                ) : <span style={{ color:'#bbb' }}>—</span>}
+                                                {cartel.submitted_to_main_at && (
+                                                    <div style={{ color:'#aaa', fontSize:'0.75rem', marginTop:'3px' }}>
+                                                        <Clock size={10} style={{ verticalAlign:'middle', marginRight:'2px' }} />
+                                                        {new Date(cartel.submitted_to_main_at).toLocaleString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}
+                                                    </div>
+                                                )}
+                                            </td>
+                                        )}
+
                                         {/* Statut */}
                                         <td style={{ padding:'10px', textAlign:'center' }}>
                                             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px' }}>
@@ -715,16 +747,25 @@ const ManageCartels = () => {
                                                     {isTrans ? <Clock size={15} /> : <Languages size={15} />}
                                                 </ActionBtn>
 
-                                                {(cartel.status === 'draft' || cartel.status === 'pending_review') && (
+                                                {activeTab === 'submissions' && (
+                                                    <>
+                                                        <ActionBtn onClick={() => handleApproveSubmission(cartel)} title={t('manageCartels.approve')} color="#2e7d32" disabled={isProc}><Check size={15} /></ActionBtn>
+                                                        <ActionBtn onClick={() => handleRejectSubmission(cartel)} title={t('manageCartels.reject')} color="#d32f2f" disabled={isProc}><X size={15} /></ActionBtn>
+                                                    </>
+                                                )}
+
+                                                {activeTab !== 'submissions' && (cartel.status === 'draft' || cartel.status === 'pending_review') && (
                                                     <ActionBtn onClick={() => handlePublish(cartel)} title={t('manageCartels.publish')} color="#2e7d32" disabled={isProc}><Check size={15} /></ActionBtn>
                                                 )}
-                                                {(cartel.status === 'pending_review' || cartel.status === 'published') && (
+                                                {activeTab !== 'submissions' && (cartel.status === 'pending_review' || cartel.status === 'published') && (
                                                     <ActionBtn onClick={() => handleToDraft(cartel)} title={t('status.draft')} color="#e67e00" disabled={isProc}><FileText size={15} /></ActionBtn>
                                                 )}
-                                                {cartel.status === 'published' && (
+                                                {activeTab !== 'submissions' && cartel.status === 'published' && (
                                                     <ActionBtn onClick={() => handleArchive(cartel)} title={t('manageCartels.archive')} color="#6b7280" disabled={isProc}><X size={15} /></ActionBtn>
                                                 )}
-                                                <ActionBtn onClick={() => handleDelete(cartel.id)} title={t('manageCartels.delete')} color="#d32f2f" disabled={isProc}><Trash2 size={15} /></ActionBtn>
+                                                {activeTab !== 'submissions' && (
+                                                    <ActionBtn onClick={() => handleDelete(cartel.id)} title={t('manageCartels.delete')} color="#d32f2f" disabled={isProc}><Trash2 size={15} /></ActionBtn>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

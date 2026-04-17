@@ -53,6 +53,7 @@ function App() {
             <Route path="manage/drafts"     element={<ManageCartels />} />
             <Route path="manage/pending"    element={<ManageCartels />} />
             <Route path="manage/published"  element={<ManageCartels />} />
+            <Route path="manage/submissions" element={<ManageCartels />} />
             <Route path="admin"             element={<AdminSettings />} />
             <Route path="admin/workshop/:workshopId" element={<ManageCartels />} />
             <Route path="drafts" element={<Navigate to="/app/manage/pending" replace />} />

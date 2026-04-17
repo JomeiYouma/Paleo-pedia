@@ -5,6 +5,7 @@
         "drafts": "Idées & Brouillons",
         "published": "Publiés",
         "pending": "En attente",
+        "submissions": "Soumissions",
         "admin": "Gestion",
         "management": "Gestion",
         "deleteAll": "Tout supprimer"
@@ -130,6 +131,10 @@
         "draftsDescription": "Cartels en cours de rédaction",
         "pendingDescription": "Soumissions de visiteurs à modérer",
         "publishedDescription": "Cartels publiés",
+        "submissionsDescription": "Cartels de sous-sites soumis à validation pour le site principal",
+        "approve": "Approuver",
+        "reject": "Rejeter",
+        "subsite": "Sous-site",
         "adminOnly": "Accès réservé à l'administration.",
         "totalCount": "{{count}} cartels au total",
         "importHelp1": "L'archive doit contenir un fichier",

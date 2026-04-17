@@ -10,8 +10,10 @@ const TEXT_FIELDS = [
 function buildSelectFull({ includeWorkshops = false } = {}) {
   return `
   SELECT
-    c.*, 
+    c.*,
     u.email AS created_by_email,
+    s.slug  AS subsite_slug,
+    s.name  AS subsite_name,
     GROUP_CONCAT(
       DISTINCT CONCAT_WS('||', cat.id, cat.name, cat.name_en, cat.color, cat.icon)
       SEPARATOR ';;'
@@ -22,6 +24,7 @@ function buildSelectFull({ includeWorkshops = false } = {}) {
     ) AS workshops_raw` : ''}
   FROM cartels c
   LEFT JOIN users u ON u.id = c.created_by
+  LEFT JOIN subsites s ON s.id = c.subsite_id
   LEFT JOIN cartel_categories cc ON cc.cartel_id = c.id
   LEFT JOIN categories cat ON cat.id = cc.category_id${includeWorkshops ? '\n  LEFT JOIN workshop_cartels wc ON wc.cartel_id = c.id\n  LEFT JOIN workshops w ON w.id = wc.workshop_id' : ''}
 `;
