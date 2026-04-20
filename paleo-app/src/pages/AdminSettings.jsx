@@ -549,7 +549,7 @@ const AdminSettings = () => {
                                     {/* ── Bloc B : Sélection site principal ── */}
                                     <div style={{ padding: '20px' }}>
                                         <p style={{ margin: '0 0 4px', fontWeight: '800', fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#00897b' }}>
-                                            B — Affichage sur le site principal
+                                            Affichage sur le site principal
                                         </p>
                                         <p style={{ margin: '0 0 16px', fontSize: '0.82rem', color: '#888' }}>
                                             Un partenaire ne peut être que dans une seule liste. Cliquez pour cocher/décocher.
