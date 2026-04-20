@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { geocodingService } from '../services/geocoding';
-import { Save, ArrowLeft, MapPin, Check, X, Bold, Italic, AlertTriangle } from 'lucide-react';
+import { Save, ArrowLeft, MapPin, Check, X, Bold, Italic, AlertTriangle, Info } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { compressImage } from '../utils/imageProcessor';
 import { detectWrongLanguage } from '../utils/detectLang';
@@ -22,6 +22,8 @@ const Create = () => {
         addLocalCategory,
         addWorkshop,
         isAdmin,
+        isSuperadmin,
+        homeSubsiteId,
         currentWorkshop,
         workshops = [],
     } = context;
@@ -62,6 +64,17 @@ const Create = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [statusMsg, setStatusMsg] = useState('');
     const descRef = useRef(null);
+
+    // Résolution paresseuse du nom du sous-site natif (pour le bandeau d'info
+    // quand un utilisateur de sous-site crée un cartel depuis /app/create)
+    const [homeSubsite, setHomeSubsite] = useState(null);
+    useEffect(() => {
+        // Pas besoin de fetcher si : route sous-site, superadmin, ou pas rattaché
+        if (subsiteSlug || isSuperadmin || !homeSubsiteId) return;
+        api.subsites.getAll()
+            .then(list => setHomeSubsite((Array.isArray(list) ? list : []).find(s => s.id === homeSubsiteId) || null))
+            .catch(() => {});
+    }, [subsiteSlug, isSuperadmin, homeSubsiteId]);
 
     // Détection de langue mal saisie (heuristique)
     const [langMismatch, setLangMismatch] = useState(null); // { field, detectedLang, content } | null
@@ -362,6 +375,29 @@ const Create = () => {
             </div>
 
             <h2>{editId ? t('messages.editCartel', 'Modifier le cartel') : t('create.pageTitle', 'Nouveau cartel')}</h2>
+
+            {/* Info discret : l'utilisateur est rattaché à un sous-site et ne le sait peut-être pas */}
+            {!subsiteSlug && !editId && homeSubsite && (
+                <div style={{
+                    display: 'flex', alignItems: 'flex-start', gap: '10px',
+                    background: '#fce4ec', border: '1px solid #f8bbd0',
+                    borderRadius: '10px', padding: '10px 14px', marginBottom: '12px',
+                    color: '#1a1a1a', fontSize: '0.85rem', lineHeight: '1.5',
+                }}>
+                    <Info size={16} color="#c2185b" style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <div style={{ flex: 1 }}>
+                        Votre cartel sera publié sur le sous-site <strong>{homeSubsite.name}</strong>, pas sur le site principal.
+                        {' '}
+                        <button
+                            type="button"
+                            onClick={() => navigate(`/site/${homeSubsite.slug}/create`)}
+                            style={{ background: 'none', border: 'none', color: '#c2185b', textDecoration: 'underline', cursor: 'pointer', padding: 0, fontFamily: 'inherit', fontSize: '0.85rem', fontWeight: '600' }}
+                        >
+                            Passer en vue sous-site →
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <form onSubmit={handleSubmit} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
 

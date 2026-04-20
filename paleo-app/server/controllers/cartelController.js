@@ -43,6 +43,22 @@ function resolveTargetSubsiteId(req) {
   return null;
 }
 
+/**
+ * Auto-submission au site principal : ne déclenche que si le cartel est sur
+ * un sous-site ET publié localement ET pas encore visible sur le principal.
+ *   - Brouillons / pending_review : pas de soumission (l'owner modère d'abord)
+ *   - Déjà approuvé (visible_on_main=1) : on ne re-queue pas, l'owner peut
+ *     retirer+soumettre manuellement s'il veut une re-validation
+ */
+async function maybeAutoSubmitToMain(cartel) {
+  if (!cartel) return cartel;
+  if (!cartel.subsite_id) return cartel;
+  if (cartel.status !== 'published') return cartel;
+  if (cartel.visible_on_main) return cartel;
+  if (cartel.submitted_to_main_at) return cartel; // déjà en file, idempotent
+  return await CartelModel.markSubmittedToMain(cartel.id);
+}
+
 export const CartelController = {
 
   async getAll(req, res) {
@@ -94,11 +110,7 @@ export const CartelController = {
         req.submitterIp ?? null,
         targetSubsiteId,
       );
-      // Auto-submit : tout cartel créé dans un sous-site est automatiquement
-      // poussé dans la file de validation du site principal (visible_on_main = 0).
-      if (targetSubsiteId) {
-        cartel = await CartelModel.markSubmittedToMain(cartel.id);
-      }
+      cartel = await maybeAutoSubmitToMain(cartel);
       res.status(201).json(cartel);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -130,12 +142,7 @@ export const CartelController = {
         req.params.id,
         sanitizeWorkshopFields(req.body, req.user?.can_manage_admin)
       );
-      // Auto-submit : toute modification d'un cartel scopé sous-site re-envoie
-      // le cartel en file de validation du site principal (les superadmins
-      // peuvent re-valider la nouvelle version).
-      if (existing.subsite_id) {
-        cartel = await CartelModel.markSubmittedToMain(req.params.id);
-      }
+      cartel = await maybeAutoSubmitToMain(cartel);
       res.json(cartel);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -161,7 +168,9 @@ export const CartelController = {
         return res.status(403).json({ error: 'Permission can_publish_cartel requise' });
       }
 
-      const cartel = await CartelModel.setStatus(req.params.id, status);
+      let cartel = await CartelModel.setStatus(req.params.id, status);
+      // Publier un cartel de sous-site → l'envoyer en file de validation principale
+      cartel = await maybeAutoSubmitToMain(cartel);
       res.json(cartel);
     } catch (err) {
       res.status(500).json({ error: err.message });
