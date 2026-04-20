@@ -87,12 +87,18 @@ export const CartelController = {
 
   async create(req, res) {
     try {
-      const cartel = await CartelModel.create(
+      const targetSubsiteId = resolveTargetSubsiteId(req);
+      let cartel = await CartelModel.create(
         sanitizeWorkshopFields(req.body, req.user?.can_manage_admin),
         req.user?.id ?? null,
         req.submitterIp ?? null,
-        resolveTargetSubsiteId(req),
+        targetSubsiteId,
       );
+      // Auto-submit : tout cartel créé dans un sous-site est automatiquement
+      // poussé dans la file de validation du site principal (visible_on_main = 0).
+      if (targetSubsiteId) {
+        cartel = await CartelModel.markSubmittedToMain(cartel.id);
+      }
       res.status(201).json(cartel);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -113,10 +119,16 @@ export const CartelController = {
       const isEditor = req.user.can_publish_cartel || req.user.can_manage_admin;
       if (!isOwner && !isEditor) return res.status(403).json({ error: 'Non autorisé' });
 
-      const cartel = await CartelModel.update(
+      let cartel = await CartelModel.update(
         req.params.id,
         sanitizeWorkshopFields(req.body, req.user?.can_manage_admin)
       );
+      // Auto-submit : toute modification d'un cartel scopé sous-site re-envoie
+      // le cartel en file de validation du site principal (les superadmins
+      // peuvent re-valider la nouvelle version).
+      if (existing.subsite_id) {
+        cartel = await CartelModel.markSubmittedToMain(req.params.id);
+      }
       res.json(cartel);
     } catch (err) {
       res.status(500).json({ error: err.message });

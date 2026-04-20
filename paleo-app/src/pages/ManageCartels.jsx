@@ -174,7 +174,7 @@ const ImportModal = ({ onClose, onDone, t }) => {
 };
 
 // ── Composant principal ──────────────────────────────────────
-const ManageCartels = ({ lockedSubsiteSlug = null } = {}) => {
+const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null } = {}) => {
     const { cartels, fetchData, deleteCartel, deleteCartels, updateCartel, isAdmin, isSuperadmin, isOwner, homeSubsiteId, categories, workshops, addWorkshop } = useApp();
     const navigate = useNavigate();
     const location = useLocation();
@@ -254,11 +254,25 @@ const ManageCartels = ({ lockedSubsiteSlug = null } = {}) => {
     const currentTabDef = TABS.find(t => t.key === activeTab) || TABS[0];
     const activeWorkshop = filterWorkshop ? workshops.find(w => String(w.id) === String(filterWorkshop)) : null;
 
-    // Pool de référence : cartels scopés au sous-site si verrouillé, sinon tout
-    const scopedCartels = useMemo(
-        () => filterSubsiteSlug ? cartels.filter(c => c.subsite_slug === filterSubsiteSlug) : cartels,
-        [cartels, filterSubsiteSlug]
-    );
+    // Pool de référence :
+    //   - Hors verrouillage : tous les cartels (ou scopés à un ?subsite=).
+    //   - Verrouillage sous-site : cartels scopés au sous-site + cartels du site
+    //     principal (subsite_id NULL) qui s'affichent sur la frise via la catégorie
+    //     du sous-site (consultation en lecture seule).
+    const scopedCartels = useMemo(() => {
+        if (!filterSubsiteSlug) return cartels;
+        return cartels.filter(c => {
+            if (c.subsite_slug === filterSubsiteSlug) return true;
+            if (lockedSubsiteCategory && c.subsite_id === null) {
+                const cat = lockedSubsiteCategory.toLowerCase();
+                return (c.categories || []).some(x => (x || '').toLowerCase() === cat);
+            }
+            return false;
+        });
+    }, [cartels, filterSubsiteSlug, lockedSubsiteCategory]);
+
+    // Détecte si un cartel est "du site principal" (affiché en consultation seulement)
+    const isReadOnlyMainCartel = (c) => !!lockedSubsiteSlug && c.subsite_id === null;
 
     const counts = useMemo(() => {
         const obj = {};
@@ -267,10 +281,8 @@ const ManageCartels = ({ lockedSubsiteSlug = null } = {}) => {
     }, [scopedCartels]);
 
     const filteredCartels = useMemo(() => {
-        let data = cartels.filter(currentTabDef.filter);
-        if (filterSubsiteSlug) {
-            data = data.filter(c => c.subsite_slug === filterSubsiteSlug);
-        }
+        // Partir du pool scopé (sous-site + legacy s'il y a lieu) puis appliquer le filtre d'onglet
+        let data = scopedCartels.filter(currentTabDef.filter);
         if (filterWorkshop) {
             data = data.filter(c => (c.workshopIds || []).map(String).includes(String(filterWorkshop)));
         }
@@ -554,11 +566,10 @@ const ManageCartels = ({ lockedSubsiteSlug = null } = {}) => {
                         border="#f8bbd0"
                         title={`Vous gérez le sous-site ${subsiteScopedName || lockedSubsiteSlug}`}
                     >
-                        Les actions ici ne touchent <strong>que votre sous-site</strong> :
                         <ul style={{ margin: '8px 0 0', paddingLeft: '18px', lineHeight: '1.7' }}>
-                            <li>Seuls les cartels <strong>créés pour votre sous-site</strong> apparaissent ci-dessous (via <em>Proposer un cartel</em> ou <em>+ Nouveau cartel</em>). Les cartels du site principal qui s'affichent sur votre frise par correspondance de catégorie ne sont <strong>pas</strong> listés ici — ils restent gérés par le site principal.</li>
-                            <li>Modifier ou supprimer un cartel ici n'affecte <strong>que le sous-site</strong>, jamais le site principal.</li>
-                            <li>Pour qu'un cartel de votre sous-site apparaisse aussi sur le site principal, cliquez sur <em>Soumettre au principal</em> depuis sa ligne : un superadmin validera avant publication.</li>
+                            <li>Les cartels <strong>de votre sous-site</strong> (créés via <em>Proposer un cartel</em> ou <em>+ Nouveau cartel</em>) sont modifiables ici. Chaque création ou modification est <strong>automatiquement envoyée en soumission</strong> au site principal pour validation — un superadmin décide si elle apparaît aussi sur le site principal.</li>
+                            <li>Les cartels du <strong>site principal</strong> qui s'affichent sur votre frise par correspondance de catégorie sont listés en <strong>consultation</strong> (étiquette bleue <em>Site principal · consultation</em>). Ils ne peuvent pas être modifiés depuis ce gestionnaire — ils restent gérés par le site principal.</li>
+                            <li>Supprimer un cartel ici n'affecte <strong>que votre sous-site</strong>, jamais le site principal.</li>
                         </ul>
                     </ExplainerBox>
                 </div>
@@ -759,6 +770,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null } = {}) => {
                                 const badge   = STATUS_BADGE[cartel.status] || {};
                                 const isProc  = processingId === cartel.id;
                                 const isTrans = translating.has(cartel.id);
+                                const readOnly = isReadOnlyMainCartel(cartel);
 
                                 return (
                                     <tr key={cartel.id} style={{ borderBottom:'1px solid #f0f0f0', background: isProc ? '#fffbf0' : 'white', opacity: isProc ? 0.7 : 1 }}>
@@ -793,6 +805,12 @@ const ManageCartels = ({ lockedSubsiteSlug = null } = {}) => {
                                             {activeTab !== 'submissions' && cartel.subsite_name && (
                                                 <span style={{ display:'inline-block', marginTop:'4px', background:'#fce4ec', color:'#c2185b', borderRadius:'10px', padding:'1px 7px', fontSize:'0.72rem', fontWeight:'700' }}>
                                                     {cartel.subsite_name}
+                                                </span>
+                                            )}
+                                            {/* Badge "Site principal" pour les cartels en consultation seule */}
+                                            {isReadOnlyMainCartel(cartel) && (
+                                                <span style={{ display:'inline-block', marginTop:'4px', background:'#e8f0fe', color:'#1a56db', borderRadius:'10px', padding:'1px 7px', fontSize:'0.72rem', fontWeight:'700' }}>
+                                                    Site principal · consultation
                                                 </span>
                                             )}
                                             {activeTab === 'pending' && cartel.created_at && (
@@ -862,16 +880,19 @@ const ManageCartels = ({ lockedSubsiteSlug = null } = {}) => {
                                         <td style={{ padding:'10px' }}>
                                             <div style={{ display:'flex', gap:'4px', justifyContent:'center', flexWrap:'wrap' }}>
                                                 <ActionBtn onClick={() => setPreviewCartel(cartel)} title={t('manageCartels.preview')} color={HEX_COLORS.neutral}><ScanEye size={15} /></ActionBtn>
-                                                <ActionBtn onClick={() => goToCreate(cartel.id)} title={t('manageCartels.edit')} color="#3b5bdb"><Edit size={15} /></ActionBtn>
+                                                {!readOnly && <ActionBtn onClick={() => goToCreate(cartel.id)} title={t('manageCartels.edit')} color="#3b5bdb"><Edit size={15} /></ActionBtn>}
 
-                                                {/* Retraduire vers EN */}
-                                                <ActionBtn onClick={() => handleRetranslate(cartel, 'en')} title={t('manageCartels.retranslateEn', 'Retraduire en anglais')} color="#6741d9" disabled={isTrans}>
-                                                    {isTrans ? <Clock size={15} /> : <Languages size={15} />}
-                                                </ActionBtn>
-                                                {/* Retraduire vers FR */}
-                                                <ActionBtn onClick={() => handleRetranslate(cartel, 'fr')} title={t('manageCartels.retranslateFr', 'Retraduire en français')} color="#3b82c4" disabled={isTrans}>
-                                                    {isTrans ? <Clock size={15} /> : <Languages size={15} />}
-                                                </ActionBtn>
+                                                {/* Retraduire (désactivé en lecture seule) */}
+                                                {!readOnly && (
+                                                    <>
+                                                        <ActionBtn onClick={() => handleRetranslate(cartel, 'en')} title={t('manageCartels.retranslateEn', 'Retraduire en anglais')} color="#6741d9" disabled={isTrans}>
+                                                            {isTrans ? <Clock size={15} /> : <Languages size={15} />}
+                                                        </ActionBtn>
+                                                        <ActionBtn onClick={() => handleRetranslate(cartel, 'fr')} title={t('manageCartels.retranslateFr', 'Retraduire en français')} color="#3b82c4" disabled={isTrans}>
+                                                            {isTrans ? <Clock size={15} /> : <Languages size={15} />}
+                                                        </ActionBtn>
+                                                    </>
+                                                )}
 
                                                 {activeTab === 'submissions' && (
                                                     <>
@@ -880,18 +901,18 @@ const ManageCartels = ({ lockedSubsiteSlug = null } = {}) => {
                                                     </>
                                                 )}
 
-                                                {activeTab !== 'submissions' && (cartel.status === 'draft' || cartel.status === 'pending_review') && (
+                                                {!readOnly && activeTab !== 'submissions' && (cartel.status === 'draft' || cartel.status === 'pending_review') && (
                                                     <ActionBtn onClick={() => handlePublish(cartel)} title={t('manageCartels.publish')} color="#2e7d32" disabled={isProc}><Check size={15} /></ActionBtn>
                                                 )}
-                                                {activeTab !== 'submissions' && (cartel.status === 'pending_review' || cartel.status === 'published') && (
+                                                {!readOnly && activeTab !== 'submissions' && (cartel.status === 'pending_review' || cartel.status === 'published') && (
                                                     <ActionBtn onClick={() => handleToDraft(cartel)} title={t('status.draft')} color="#e67e00" disabled={isProc}><FileText size={15} /></ActionBtn>
                                                 )}
-                                                {activeTab !== 'submissions' && cartel.status === 'published' && (
+                                                {!readOnly && activeTab !== 'submissions' && cartel.status === 'published' && (
                                                     <ActionBtn onClick={() => handleArchive(cartel)} title={t('manageCartels.archive')} color="#6b7280" disabled={isProc}><X size={15} /></ActionBtn>
                                                 )}
 
                                                 {/* Workflow site principal (owner/superadmin sur cartels de sous-site) */}
-                                                {activeTab !== 'submissions' && canSubmitThisCartel(cartel) && (
+                                                {!readOnly && activeTab !== 'submissions' && canSubmitThisCartel(cartel) && (
                                                     <>
                                                         {cartel.visible_on_main ? (
                                                             <ActionBtn onClick={() => handleWithdrawFromMain(cartel)} title="Visible sur le site principal — retirer" color="#2e7d32" disabled={isProc}><Globe size={15} /></ActionBtn>
@@ -903,7 +924,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null } = {}) => {
                                                     </>
                                                 )}
 
-                                                {activeTab !== 'submissions' && (
+                                                {!readOnly && activeTab !== 'submissions' && (
                                                     <ActionBtn onClick={() => handleDelete(cartel.id)} title={t('manageCartels.delete')} color="#d32f2f" disabled={isProc}><Trash2 size={15} /></ActionBtn>
                                                 )}
                                             </div>
