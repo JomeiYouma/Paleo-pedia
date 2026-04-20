@@ -60,6 +60,7 @@ router.patch ('/settings',            authenticate, requireAdmin, SettingControl
 
 // ── Users (admin) ────────────────────────────────────────────
 router.get   ('/users',              authenticate, requireAdmin, UserController.getAll);
+router.post  ('/users',              authenticate, requireAdmin, UserController.create);
 router.get   ('/users/:id',          authenticate, requireAdmin, UserController.getOne);
 router.patch ('/users/:id',          authenticate, requireAdmin, UserController.update);
 router.delete('/users/:id',          authenticate, requireAdmin, UserController.delete);

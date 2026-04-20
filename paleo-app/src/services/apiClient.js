@@ -130,6 +130,7 @@ export const users = {
     return get(`/users?${p}`);
   },
   getOne:  (id)       => get(`/users/${id}`),
+  create:  (data)     => post('/users', data),
   update:  (id, data) => patch(`/users/${id}`, data),
   delete:  (id)       => del(`/users/${id}`),
 };

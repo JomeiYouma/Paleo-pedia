@@ -1,6 +1,36 @@
 import { UserModel } from '../models/User.js';
+import { z } from 'zod';
+
+const CreateSchema = z.object({
+  email:               z.string().email('Email invalide'),
+  password:            z.string().min(8, 'Mot de passe : 8 caractères minimum'),
+  role:                z.enum(['contributor', 'editor', 'admin', 'superadmin']).optional(),
+  can_create_cartel:   z.boolean().optional(),
+  can_publish_cartel:  z.boolean().optional(),
+  can_manage_admin:    z.boolean().optional(),
+  can_create_subsite:  z.boolean().optional(),
+  can_manage_team:     z.boolean().optional(),
+  home_subsite_id:     z.string().nullable().optional(),
+}).strict();
 
 export const UserController = {
+
+  async create(req, res) {
+    try {
+      const parsed = CreateSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors[0].message });
+      }
+      const existing = await UserModel.findByEmail(parsed.data.email);
+      if (existing) return res.status(409).json({ error: 'Email déjà utilisé' });
+
+      const user = await UserModel.create(parsed.data);
+      const { password_hash, ...safe } = user;
+      res.status(201).json(safe);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
 
   async getAll(req, res) {
     try {
