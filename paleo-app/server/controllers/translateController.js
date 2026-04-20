@@ -9,11 +9,15 @@ import { translateCartel } from '../services/translationService.js';
 export const TranslateController = {
   async translate(req, res) {
     try {
-      const { titre, description, location } = req.body;
+      const { titre, description, location, target } = req.body;
       if (!titre && !description) {
         return res.status(400).json({ error: 'Champs titre ou description requis.' });
       }
-      const translations = await translateCartel({ titre, description, location });
+      const normalizedTarget = target === 'fr' ? 'fr' : 'en';
+      const translations = await translateCartel(
+        { titre, description, location },
+        { target: normalizedTarget }
+      );
       res.json(translations);
     } catch (err) {
       // Ne pas planter l'app si la clé est manquante : retourner un 503 clair
