@@ -202,8 +202,9 @@ const ManageCartels = ({ lockedSubsiteSlug = null } = {}) => {
     const activeTab = pathToTab[location.pathname] || 'drafts';
     const setActiveTab = (key) => navigate(tabToPath[key] || tabToPath.drafts);
     const goToCreate = (editId) => {
+        const basePath = lockedSubsiteSlug ? `/site/${lockedSubsiteSlug}/create` : '/app/create';
         const workshopQuery = filterWorkshop ? `?workshopId=${filterWorkshop}` : '';
-        const target = editId ? `/app/create?edit=${editId}` : `/app/create${workshopQuery}`;
+        const target = editId ? `${basePath}?edit=${editId}` : `${basePath}${workshopQuery}`;
         navigate(target, { state: { returnTo: location.pathname + location.search } });
     };
 
@@ -247,11 +248,17 @@ const ManageCartels = ({ lockedSubsiteSlug = null } = {}) => {
     const currentTabDef = TABS.find(t => t.key === activeTab) || TABS[0];
     const activeWorkshop = filterWorkshop ? workshops.find(w => String(w.id) === String(filterWorkshop)) : null;
 
+    // Pool de référence : cartels scopés au sous-site si verrouillé, sinon tout
+    const scopedCartels = useMemo(
+        () => filterSubsiteSlug ? cartels.filter(c => c.subsite_slug === filterSubsiteSlug) : cartels,
+        [cartels, filterSubsiteSlug]
+    );
+
     const counts = useMemo(() => {
         const obj = {};
-        TABS.forEach(tab => { obj[tab.key] = cartels.filter(tab.filter).length; });
+        TABS.forEach(tab => { obj[tab.key] = scopedCartels.filter(tab.filter).length; });
         return obj;
-    }, [cartels]);
+    }, [scopedCartels]);
 
     const filteredCartels = useMemo(() => {
         let data = cartels.filter(currentTabDef.filter);
@@ -532,11 +539,30 @@ const ManageCartels = ({ lockedSubsiteSlug = null } = {}) => {
                 />
             )}
 
+            {/* ── Info contextuelle (sous-site) ──────────────── */}
+            {lockedSubsiteSlug && (
+                <div style={{ padding: '20px 0 0' }}>
+                    <ExplainerBox
+                        color="#c2185b"
+                        background="#fce4ec"
+                        border="#f8bbd0"
+                        title={`Vous gérez le sous-site ${subsiteScopedName || lockedSubsiteSlug}`}
+                    >
+                        Les actions ici ne touchent <strong>que votre sous-site</strong> :
+                        <ul style={{ margin: '8px 0 0', paddingLeft: '18px', lineHeight: '1.7' }}>
+                            <li>Les cartels listés sont ceux de votre sous-site (créés par vous ou par des visiteurs via <em>Proposer un cartel</em>).</li>
+                            <li>Modifier ou supprimer un cartel ici n'affecte <strong>que le sous-site</strong>, jamais le site principal.</li>
+                            <li>Pour qu'un cartel apparaisse aussi sur le site principal, cliquez sur <em>Soumettre au principal</em> depuis sa ligne : un superadmin validera avant publication.</li>
+                        </ul>
+                    </ExplainerBox>
+                </div>
+            )}
+
             {/* ── En-tête ────────────────────────────────────── */}
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'28px 0 20px', flexWrap:'wrap', gap:'12px' }}>
                 <div>
                     <h1 style={{ margin:0, fontSize:'1.6rem', fontWeight:'800', color:'#1a1a1a' }}>{t('admin.title')}</h1>
-                    <p style={{ margin:'4px 0 0', color:'#999', fontSize:'0.88rem' }}>{t('manageCartels.totalCount', { count: cartels.length })}</p>
+                    <p style={{ margin:'4px 0 0', color:'#999', fontSize:'0.88rem' }}>{t('manageCartels.totalCount', { count: scopedCartels.length })}</p>
                 </div>
                 <div style={{ display:'flex', gap:'8px', flexWrap:'wrap' }}>
                     <button
@@ -571,29 +597,25 @@ const ManageCartels = ({ lockedSubsiteSlug = null } = {}) => {
                 })}
             </div>
 
-            {/* Bandeau scope sous-site (vient de /site/:slug via le bouton Gérer, ou
-                intégré dans /site/:slug/admin si lockedSubsiteSlug est fourni). */}
-            {filterSubsiteSlug && (
+            {/* Bandeau scope sous-site — uniquement hors /site/:slug/admin
+                (dans la page admin principale, on garde le bandeau compact avec
+                 le bouton pour retirer le filtre). En mode lockedSubsiteSlug,
+                 l'info box contextuelle au-dessus du titre couvre déjà ce rôle. */}
+            {filterSubsiteSlug && !lockedSubsiteSlug && (
                 <div style={{
                     display:'flex', alignItems:'center', gap:'10px',
                     background:'#fce4ec', border:'1px solid #f8bbd0',
                     borderRadius:'10px', padding:'10px 14px', marginBottom:'16px',
                     color:'#c2185b', fontSize:'0.88rem', fontWeight:'600',
                 }}>
-                    <span>
-                        {lockedSubsiteSlug
-                            ? <>Gestion du sous-site <strong>{subsiteScopedName}</strong></>
-                            : <>Vue filtrée sur le sous-site <strong>{subsiteScopedName}</strong></>}
-                    </span>
+                    <span>Vue filtrée sur le sous-site <strong>{subsiteScopedName}</strong></span>
                     <span style={{ flex: 1 }} />
-                    {!lockedSubsiteSlug && (
-                        <button
-                            onClick={() => { const next = new URLSearchParams(searchParams); next.delete('subsite'); setSearchParams(next, { replace: true }); }}
-                            style={{ background:'white', border:'1px solid #f8bbd0', color:'#c2185b', borderRadius:'6px', padding:'4px 10px', fontSize:'0.78rem', fontWeight:'700', cursor:'pointer', fontFamily:'inherit' }}
-                        >
-                            Retirer le filtre
-                        </button>
-                    )}
+                    <button
+                        onClick={() => { const next = new URLSearchParams(searchParams); next.delete('subsite'); setSearchParams(next, { replace: true }); }}
+                        style={{ background:'white', border:'1px solid #f8bbd0', color:'#c2185b', borderRadius:'6px', padding:'4px 10px', fontSize:'0.78rem', fontWeight:'700', cursor:'pointer', fontFamily:'inherit' }}
+                    >
+                        Retirer le filtre
+                    </button>
                     <button
                         onClick={() => navigate(`/site/${filterSubsiteSlug}`)}
                         style={{ background:'#c2185b', border:'none', color:'white', borderRadius:'6px', padding:'4px 10px', fontSize:'0.78rem', fontWeight:'700', cursor:'pointer', fontFamily:'inherit' }}

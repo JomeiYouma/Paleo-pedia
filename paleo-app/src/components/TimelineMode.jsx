@@ -4,7 +4,7 @@ import CartelPreview from './CartelPreview';
 import ConfirmModal from './ConfirmModal';
 import { getYearForSort } from '../utils/helpers';
 import { ChevronLeft, ChevronRight, Edit, Trash2 } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getLocalizedContent } from '../utils/i18nHelpers';
 
@@ -12,6 +12,9 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
+    // `slug` défini uniquement quand la timeline est rendue dans /site/:slug/*
+    const { slug: subsiteSlug } = useParams();
+    const createBasePath = subsiteSlug ? `/site/${subsiteSlug}/create` : '/app/create';
     const svgRef = useRef(null);
     const containerRef = useRef(null);
     // Store zoom transform to persist across re-renders
@@ -359,7 +362,7 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                             {isAdmin && (
                                 <>
                                     <button
-                                        onClick={() => navigate(`/app/create?edit=${currentCartel.id}`, { state: { returnTo: `${location.pathname}${location.search}#${currentCartel.id}` } })}
+                                        onClick={() => navigate(`${createBasePath}?edit=${currentCartel.id}`, { state: { returnTo: `${location.pathname}${location.search}#${currentCartel.id}` } })}
                                         title={t('cartel.edit')}
                                         style={{ border: 'none', background: 'white', cursor: 'pointer', padding: '12px', borderRadius: '50%', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}
                                     >
