@@ -226,24 +226,45 @@ const Create = () => {
             entry.workshopId = activeWorkshopCtx.id;
         }
 
-        // Sur création initiale d'un cartel admin en FR, auto-traduire vers EN si champs EN manquants.
+        // Sur création initiale d'un cartel admin, auto-traduire le côté manquant.
+        // Détection automatique de la direction : si FR rempli et EN vide → FR→EN ;
+        // si EN rempli et FR vide → EN→FR.
         if (!editId && isAdmin) {
             const hasFrContent = [entry.titre, entry.description, entry.location].some(v => (v || '').trim() !== '');
+            const hasEnContent = [entry.titre_en, entry.description_en, entry.location_en].some(v => (v || '').trim() !== '');
             const needsEn = [entry.titre_en, entry.description_en, entry.location_en].some(v => (v || '').trim() === '');
-            if (hasFrContent && needsEn) {
+            const needsFr = [entry.titre, entry.description, entry.location].some(v => (v || '').trim() === '');
+
+            if (hasFrContent && !hasEnContent && needsEn) {
+                // FR → EN (comportement historique)
                 setStatusMsg(t('create.translating'));
                 try {
                     const translated = await api.translate.cartel({
                         titre: entry.titre || '',
                         description: entry.description || '',
                         location: entry.location || '',
-                    });
-                    entry.titre_en = translated.titre_en || entry.titre_en || '';
+                    }, { target: 'en' });
+                    entry.titre_en       = translated.titre_en       || entry.titre_en       || '';
                     entry.description_en = translated.description_en || entry.description_en || '';
-                    entry.location_en = translated.location_en || entry.location_en || '';
+                    entry.location_en    = translated.location_en    || entry.location_en    || '';
                 } catch (err) {
-                    // On n'interrompt pas la sauvegarde, mais on informe l'admin.
-                    console.error('Auto translation failed', err);
+                    console.error('Auto translation FR→EN failed', err);
+                    alert(t('messages.autoTranslateWarning') + err.message);
+                }
+            } else if (hasEnContent && !hasFrContent && needsFr) {
+                // EN → FR
+                setStatusMsg(t('create.translating'));
+                try {
+                    const translated = await api.translate.cartel({
+                        titre: entry.titre_en || '',
+                        description: entry.description_en || '',
+                        location: entry.location_en || '',
+                    }, { target: 'fr' });
+                    entry.titre       = translated.titre       || entry.titre       || '';
+                    entry.description = translated.description || entry.description || '';
+                    entry.location    = translated.location    || entry.location    || '';
+                } catch (err) {
+                    console.error('Auto translation EN→FR failed', err);
                     alert(t('messages.autoTranslateWarning') + err.message);
                 }
             }

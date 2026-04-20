@@ -345,24 +345,30 @@ const ManageCartels = () => {
     );
 
     // ── Traduction unitaire ───────────────────────────────────
-    const handleTranslate = (cartel) => askConfirm(
-        `Retraduire "${cartel.titre}" en anglais via IA ? Les champs anglais existants seront écrasés.`,
-        async () => {
-            setTranslating(prev => new Set([...prev, cartel.id]));
-            try {
-                const translated = await api.translate.cartel({
-                    titre: cartel.titre, description: cartel.description, location: cartel.location,
-                });
-                await api.cartels.update(cartel.id, translated);
-                await fetchData();
-            } catch (e) {
-                alert('Erreur traduction : ' + e.message);
-            } finally {
-                setTranslating(prev => { const s = new Set(prev); s.delete(cartel.id); return s; });
-            }
-        },
-        { danger: false, confirmLabel: 'Retraduire' }
-    );
+    const handleRetranslate = (cartel, target) => {
+        const targetLabel   = target === 'fr' ? 'français' : 'anglais';
+        const overwriteSide = target === 'fr' ? 'français' : 'anglais';
+        const sourceFields  = target === 'fr'
+            ? { titre: cartel.titre_en || '', description: cartel.description_en || '', location: cartel.location_en || '' }
+            : { titre: cartel.titre    || '', description: cartel.description    || '', location: cartel.location    || '' };
+
+        askConfirm(
+            `Retraduire "${cartel.titre || cartel.titre_en || ''}" en ${targetLabel} via IA ? Les champs ${overwriteSide} existants seront écrasés.`,
+            async () => {
+                setTranslating(prev => new Set([...prev, cartel.id]));
+                try {
+                    const translated = await api.translate.cartel(sourceFields, { target });
+                    await api.cartels.update(cartel.id, translated);
+                    await fetchData();
+                } catch (e) {
+                    alert('Erreur traduction : ' + e.message);
+                } finally {
+                    setTranslating(prev => { const s = new Set(prev); s.delete(cartel.id); return s; });
+                }
+            },
+            { danger: false, confirmLabel: 'Retraduire' }
+        );
+    };
 
     // ── Actions batch ─────────────────────────────────────────
     const withBusy = async (label, fn) => {
@@ -767,8 +773,12 @@ const ManageCartels = () => {
                                                 <ActionBtn onClick={() => setPreviewCartel(cartel)} title={t('manageCartels.preview')} color={HEX_COLORS.neutral}><ScanEye size={15} /></ActionBtn>
                                                 <ActionBtn onClick={() => goToCreate(cartel.id)} title={t('manageCartels.edit')} color="#3b5bdb"><Edit size={15} /></ActionBtn>
 
-                                                {/* Retraduire */}
-                                                <ActionBtn onClick={() => handleTranslate(cartel)} title={t('manageCartels.retranslate')} color="#6741d9" disabled={isTrans}>
+                                                {/* Retraduire vers EN */}
+                                                <ActionBtn onClick={() => handleRetranslate(cartel, 'en')} title={t('manageCartels.retranslateEn', 'Retraduire en anglais')} color="#6741d9" disabled={isTrans}>
+                                                    {isTrans ? <Clock size={15} /> : <Languages size={15} />}
+                                                </ActionBtn>
+                                                {/* Retraduire vers FR */}
+                                                <ActionBtn onClick={() => handleRetranslate(cartel, 'fr')} title={t('manageCartels.retranslateFr', 'Retraduire en français')} color="#3b82c4" disabled={isTrans}>
                                                     {isTrans ? <Clock size={15} /> : <Languages size={15} />}
                                                 </ActionBtn>
 
@@ -829,9 +839,13 @@ const ManageCartels = () => {
                                 style={{ display:'flex', alignItems:'center', gap:'6px', background:'#3b5bdb', color:'white', border:'none', padding:'10px 18px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', fontFamily:'inherit' }}>
                                 <Edit size={15} /> {t('manageCartels.edit')}
                             </button>
-                            <button onClick={() => handleTranslate(previewCartel)}
+                            <button onClick={() => handleRetranslate(previewCartel, 'en')}
                                 style={{ display:'flex', alignItems:'center', gap:'6px', background:'#6741d9', color:'white', border:'none', padding:'10px 18px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', fontFamily:'inherit' }}>
-                                <Languages size={15} /> {t('manageCartels.retranslate')}
+                                <Languages size={15} /> {t('manageCartels.retranslateEn', 'Retraduire en anglais')}
+                            </button>
+                            <button onClick={() => handleRetranslate(previewCartel, 'fr')}
+                                style={{ display:'flex', alignItems:'center', gap:'6px', background:'#3b82c4', color:'white', border:'none', padding:'10px 18px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', fontFamily:'inherit' }}>
+                                <Languages size={15} /> {t('manageCartels.retranslateFr', 'Retraduire en français')}
                             </button>
                             <button onClick={() => setPreviewCartel(null)} style={{ padding:'10px 18px', borderRadius:'8px', border:'1px solid #ddd', cursor:'pointer', fontFamily:'inherit' }}>{t('manageCartels.importClose')}</button>
                         </div>

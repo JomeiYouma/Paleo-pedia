@@ -174,8 +174,15 @@ export const media = {
 
 // ── Traduction ────────────────────────────────────────────────
 export const translate = {
-  /** Traduit les champs d'un cartel (titre, description, location) via OpenAI serveur */
-  cartel: (fields) => post('/translate', fields),
+  /**
+   * Traduit les champs d'un cartel.
+   * @param {object} fields - { titre, description, location } dans la langue SOURCE.
+   * @param {object} [opts]
+   * @param {'en'|'fr'} [opts.target='en'] - Langue cible.
+   *   target='en' → réponse { titre_en, description_en, location_en }
+   *   target='fr' → réponse { titre, description, location }
+   */
+  cartel: (fields, { target = 'en' } = {}) => post('/translate', { ...fields, target }),
 };
 
 // ── Import / Export ───────────────────────────────────────────

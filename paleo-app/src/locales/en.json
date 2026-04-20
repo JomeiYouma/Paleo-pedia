@@ -173,6 +173,8 @@
         "actions": "Actions",
         "publish": "Publish",
         "retranslate": "Retranslate",
+        "retranslateEn": "Retranslate to English",
+        "retranslateFr": "Retranslate to French",
         "edit": "Edit",
         "preview": "Preview",
         "archive": "Archive",
