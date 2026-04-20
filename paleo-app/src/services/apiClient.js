@@ -86,6 +86,14 @@ export const submissions = {
   reject:  (id)  => post(`/submissions/${id}/reject`),
 };
 
+// ── Gestion d'équipe scopée (owner / superadmin) ──────────────
+export const team = {
+  list:    (slug)           => get(`/s/${slug}/users`),
+  create:  (slug, data)     => post(`/s/${slug}/users`, data),
+  update:  (slug, id, data) => patch(`/s/${slug}/users/${id}`, data),
+  delete:  (slug, id)       => del(`/s/${slug}/users/${id}`),
+};
+
 // ── Categories ────────────────────────────────────────────────
 export const categories = {
   getAll:  ()         => get('/categories'),
@@ -216,5 +224,5 @@ export const io = {
   },
 };
 
-const api = { auth, cartels, submissions, categories, workshops, settings, users, media, translate, io, subsites, partners };
+const api = { auth, cartels, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners };
 export default api;

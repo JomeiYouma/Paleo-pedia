@@ -477,6 +477,30 @@ const AdminSettings = () => {
                         </Field>
                     </Section>
 
+                    {/* ── Section 3a : Gestion d'équipe (lien) ──────────── */}
+                    <Section icon={Users} title="Gestion d'équipe" color="#6741d9">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/app/admin/team')}
+                            style={{
+                                width: '100%',
+                                display: 'flex', alignItems: 'center', gap: '12px',
+                                padding: '14px 18px',
+                                background: '#f3efff', border: '1px solid #d9ccff',
+                                borderRadius: '10px', cursor: 'pointer',
+                                fontFamily: 'inherit', color: '#5327b5',
+                                fontSize: '0.9rem', fontWeight: '700',
+                            }}
+                        >
+                            <ExternalLink size={16} />
+                            <span style={{ flex: 1, textAlign: 'left' }}>Inviter ou gérer les membres d'un sous-site</span>
+                            <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
+                        </button>
+                        <p style={{ margin: '10px 0 0', fontSize: '0.8rem', color: '#888' }}>
+                            Owners : gérez votre propre équipe. Superadmins : vous pouvez aussi utiliser la page globale des utilisateurs.
+                        </p>
+                    </Section>
+
                     {/* ── Section 3 : Partenaires ──────────── */}
                     <Section icon={Users} title="Partenaires" color="#00897b">
                         {/* Toggler */}
