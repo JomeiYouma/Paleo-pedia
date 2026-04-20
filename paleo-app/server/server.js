@@ -12,6 +12,13 @@ const isProd = process.env.NODE_ENV === 'production';
 const app  = express();
 const PORT = process.env.PORT || 3001;
 
+// ── Trust proxy ──────────────────────────────────────────────
+// o2switch (et la plupart des hébergeurs) fait passer les requêtes via
+// Apache/Passenger. Sans ce réglage, req.ip vaut l'IP de la loopback et
+// X-Forwarded-For peut être forgé. Le nombre de hops est configurable via
+// TRUST_PROXY (défaut "1" = un seul proxy connu devant Node).
+app.set('trust proxy', process.env.TRUST_PROXY ?? 1);
+
 // ── Middleware ───────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
 app.use((req, res, next) => {

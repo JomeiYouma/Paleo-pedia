@@ -11,6 +11,7 @@ import { ImportController }    from '../controllers/importController.js';
 import { ExportController }    from '../controllers/exportController.js';
 import { authenticate, requireAdmin, optionalAuth } from '../middleware/auth.js';
 import { submissionGuard } from '../middleware/submissionGuard.js';
+import { uploadGuard } from '../middleware/uploadGuard.js';
 import { resolveTenant, requireTenantAccess } from '../middleware/tenant.js';
 import { SubsiteController }  from '../controllers/subsiteController.js';
 import { PartnerController }  from '../controllers/partnerController.js';
@@ -67,9 +68,10 @@ router.delete('/users/:id',          authenticate, requireAdmin, UserController.
 
 // ── Upload image ─────────────────────────────────────────────
 // optionalAuth : autorise les visiteurs anonymes (pour la soumission publique
-// de cartels avec image, côté site principal et côté /site/:slug). La taille
-// et le type de fichier sont déjà bornés par multer (20 Mo, images uniquement).
-router.post('/upload', optionalAuth, upload.single('image'), UploadController.uploadImage);
+// de cartels avec image, côté site principal et côté /site/:slug). Multer
+// borne déjà la taille et le type (20 Mo, images uniquement), uploadGuard
+// ajoute un rate-limit par IP pour les visiteurs anonymes.
+router.post('/upload', optionalAuth, uploadGuard, upload.single('image'), UploadController.uploadImage);
 
 // ── Traduction (admin) ───────────────────────────────────────
 router.post('/translate', authenticate, requireAdmin, TranslateController.translate);

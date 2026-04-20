@@ -117,7 +117,14 @@ export const CartelController = {
 
       const isOwner = existing.created_by === req.user.id;
       const isEditor = req.user.can_publish_cartel || req.user.can_manage_admin;
-      if (!isOwner && !isEditor) return res.status(403).json({ error: 'Non autorisé' });
+      // Owner d'un sous-site : peut modérer tout cartel de son sous-site
+      const isTenantOwnerOfThisCartel =
+        !!req.user.can_manage_team &&
+        !!existing.subsite_id &&
+        existing.subsite_id === req.user.home_subsite_id;
+      if (!isOwner && !isEditor && !isTenantOwnerOfThisCartel) {
+        return res.status(403).json({ error: 'Non autorisé' });
+      }
 
       let cartel = await CartelModel.update(
         req.params.id,
@@ -173,7 +180,14 @@ export const CartelController = {
 
       const isOwner = existing.created_by === req.user.id;
       const isAdmin = req.user.can_manage_admin;
-      if (!isOwner && !isAdmin) return res.status(403).json({ error: 'Non autorisé' });
+      // Owner d'un sous-site : peut supprimer tout cartel de son sous-site
+      const isTenantOwnerOfThisCartel =
+        !!req.user.can_manage_team &&
+        !!existing.subsite_id &&
+        existing.subsite_id === req.user.home_subsite_id;
+      if (!isOwner && !isAdmin && !isTenantOwnerOfThisCartel) {
+        return res.status(403).json({ error: 'Non autorisé' });
+      }
 
       await CartelModel.delete(req.params.id);
       res.status(204).send();
