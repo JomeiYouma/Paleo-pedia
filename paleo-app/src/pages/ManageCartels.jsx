@@ -174,7 +174,7 @@ const ImportModal = ({ onClose, onDone, t }) => {
 
 // ── Composant principal ──────────────────────────────────────
 const ManageCartels = () => {
-    const { cartels, fetchData, deleteCartel, deleteCartels, updateCartel, isAdmin, isSuperadmin, categories, workshops, addWorkshop } = useApp();
+    const { cartels, fetchData, deleteCartel, deleteCartels, updateCartel, isAdmin, isSuperadmin, isOwner, homeSubsiteId, categories, workshops, addWorkshop } = useApp();
     const navigate = useNavigate();
     const location = useLocation();
     const { workshopId } = useParams();
@@ -323,6 +323,25 @@ const ManageCartels = () => {
         `Rejeter la soumission "${c.titre}" ? Le cartel restera visible sur son sous-site.`,
         () => act(c.id, () => api.submissions.reject(c.id)),
         { danger: true, confirmLabel: t('manageCartels.reject') }
+    );
+
+    // ── Workflow owner → submit/withdraw au site principal ────
+    const canSubmitThisCartel = (c) => {
+        if (!c.subsite_id || !c.subsite_slug) return false;
+        if (c.status !== 'published') return false;
+        if (isSuperadmin) return true;
+        return isOwner && c.subsite_id === homeSubsiteId;
+    };
+
+    const handleSubmitToMain = (c) => askConfirm(
+        `Soumettre "${c.titre}" à la validation du site principal ?`,
+        () => act(c.id, () => api.cartels.submitToMain(c.subsite_slug, c.id)),
+        { danger: false, confirmLabel: 'Soumettre' }
+    );
+    const handleWithdrawFromMain = (c) => askConfirm(
+        `Retirer "${c.titre}" du site principal (ou annuler la soumission) ?`,
+        () => act(c.id, () => api.cartels.withdrawFromMain(c.subsite_slug, c.id)),
+        { danger: true, confirmLabel: 'Retirer' }
     );
 
     // ── Traduction unitaire ───────────────────────────────────
@@ -673,6 +692,12 @@ const ManageCartels = () => {
                                             <div style={{ fontWeight:'700', color:'#1a1a1a', lineHeight:'1.3' }}>{cartel.titre || '(sans titre)'}</div>
                                             {cartel.titre_en && <div style={{ color:'#999', fontSize:'0.82rem', marginTop:'2px' }}>{cartel.titre_en}</div>}
                                             {!cartel.titre_en && <div style={{ color:'#f5a623', fontSize:'0.78rem', marginTop:'2px' }}>⚠ Pas de traduction EN</div>}
+                                            {/* Badge sous-site d'origine (affiché sur les onglets hors submissions) */}
+                                            {activeTab !== 'submissions' && cartel.subsite_name && (
+                                                <span style={{ display:'inline-block', marginTop:'4px', background:'#fce4ec', color:'#c2185b', borderRadius:'10px', padding:'1px 7px', fontSize:'0.72rem', fontWeight:'700' }}>
+                                                    {cartel.subsite_name}
+                                                </span>
+                                            )}
                                             {activeTab === 'pending' && cartel.created_at && (
                                                 <div style={{ color:'#bbb', fontSize:'0.78rem', marginTop:'3px', display:'flex', alignItems:'center', gap:'4px' }}>
                                                     <Clock size={11} />
@@ -763,6 +788,20 @@ const ManageCartels = () => {
                                                 {activeTab !== 'submissions' && cartel.status === 'published' && (
                                                     <ActionBtn onClick={() => handleArchive(cartel)} title={t('manageCartels.archive')} color="#6b7280" disabled={isProc}><X size={15} /></ActionBtn>
                                                 )}
+
+                                                {/* Workflow site principal (owner/superadmin sur cartels de sous-site) */}
+                                                {activeTab !== 'submissions' && canSubmitThisCartel(cartel) && (
+                                                    <>
+                                                        {cartel.visible_on_main ? (
+                                                            <ActionBtn onClick={() => handleWithdrawFromMain(cartel)} title="Visible sur le site principal — retirer" color="#2e7d32" disabled={isProc}><Globe size={15} /></ActionBtn>
+                                                        ) : cartel.submitted_to_main_at ? (
+                                                            <ActionBtn onClick={() => handleWithdrawFromMain(cartel)} title="En attente de validation — retirer" color="#C2185B" disabled={isProc}><Clock size={15} /></ActionBtn>
+                                                        ) : (
+                                                            <ActionBtn onClick={() => handleSubmitToMain(cartel)} title="Soumettre au site principal" color="#6741d9" disabled={isProc}><Upload size={15} /></ActionBtn>
+                                                        )}
+                                                    </>
+                                                )}
+
                                                 {activeTab !== 'submissions' && (
                                                     <ActionBtn onClick={() => handleDelete(cartel.id)} title={t('manageCartels.delete')} color="#d32f2f" disabled={isProc}><Trash2 size={15} /></ActionBtn>
                                                 )}

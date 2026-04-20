@@ -46,7 +46,7 @@ const APP_NAV_ADMIN = [
  *   currentWorkshop, quitWorkshop
  */
 const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
-    const { user, isAdmin, login, logout } = useApp();
+    const { user, isAdmin, homeSubsiteId, login, logout } = useApp();
     const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
@@ -70,6 +70,15 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
             subsitesApi.getAll().then(d => setSubsites(Array.isArray(d) ? d : [])).catch(() => {});
         }
     };
+
+    // Précharger les sous-sites pour afficher le badge tenant si l'utilisateur en a un
+    useEffect(() => {
+        if (homeSubsiteId && subsites.length === 0) {
+            subsitesApi.getAll().then(d => setSubsites(Array.isArray(d) ? d : [])).catch(() => {});
+        }
+    }, [homeSubsiteId]);
+
+    const homeSubsite = homeSubsiteId ? subsites.find(s => s.id === homeSubsiteId) : null;
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -374,7 +383,27 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
 
                         {!currentWorkshop && (
                             user ? (
-                                <div style={{ position: 'relative' }}>
+                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {homeSubsite && (
+                                        <span
+                                            title={`Sous-site géré : ${homeSubsite.name}`}
+                                            style={{
+                                                background: '#f3e5f5',
+                                                color: '#6741d9',
+                                                border: '1px solid #d9ccff',
+                                                borderRadius: '14px',
+                                                padding: '3px 10px',
+                                                fontSize: '0.74rem',
+                                                fontWeight: '700',
+                                                whiteSpace: 'nowrap',
+                                                maxWidth: '140px',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                            }}
+                                        >
+                                            {homeSubsite.name}
+                                        </span>
+                                    )}
                                     <button
                                         onClick={() => setIsUserMenuOpen(v => !v)}
                                         style={{
