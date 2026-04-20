@@ -66,7 +66,10 @@ router.patch ('/users/:id',          authenticate, requireAdmin, UserController.
 router.delete('/users/:id',          authenticate, requireAdmin, UserController.delete);
 
 // ── Upload image ─────────────────────────────────────────────
-router.post('/upload', authenticate, upload.single('image'), UploadController.uploadImage);
+// optionalAuth : autorise les visiteurs anonymes (pour la soumission publique
+// de cartels avec image, côté site principal et côté /site/:slug). La taille
+// et le type de fichier sont déjà bornés par multer (20 Mo, images uniquement).
+router.post('/upload', optionalAuth, upload.single('image'), UploadController.uploadImage);
 
 // ── Traduction (admin) ───────────────────────────────────────
 router.post('/translate', authenticate, requireAdmin, TranslateController.translate);

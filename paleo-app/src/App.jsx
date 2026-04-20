@@ -20,6 +20,7 @@ import SubsiteLayout from './layouts/SubsiteLayout';
 import SubsiteHome from './pages/SubsiteHome';
 import SubsiteFrise from './pages/SubsiteFrise';
 import SubsitePartners from './pages/SubsitePartners';
+import SubsiteAdmin from './pages/SubsiteAdmin';
 
 function App() {
   return (
@@ -44,6 +45,11 @@ function App() {
             <Route path="presentation"     element={<Presentation />} />
             <Route path="partenaires"      element={<SubsitePartners />} />
             <Route path="mentions"         element={<Presentation />} />
+            <Route path="admin"            element={<SubsiteAdmin />} />
+            <Route path="admin/drafts"     element={<SubsiteAdmin />} />
+            <Route path="admin/pending"    element={<SubsiteAdmin />} />
+            <Route path="admin/published"  element={<SubsiteAdmin />} />
+            <Route path="admin/submissions" element={<SubsiteAdmin />} />
           </Route>
 
           {/* ── Application (frise + gestion) ────────────── */}

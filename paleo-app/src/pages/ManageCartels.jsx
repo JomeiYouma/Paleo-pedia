@@ -174,7 +174,7 @@ const ImportModal = ({ onClose, onDone, t }) => {
 };
 
 // ── Composant principal ──────────────────────────────────────
-const ManageCartels = () => {
+const ManageCartels = ({ lockedSubsiteSlug = null } = {}) => {
     const { cartels, fetchData, deleteCartel, deleteCartels, updateCartel, isAdmin, isSuperadmin, isOwner, homeSubsiteId, categories, workshops, addWorkshop } = useApp();
     const navigate = useNavigate();
     const location = useLocation();
@@ -182,23 +182,25 @@ const ManageCartels = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const { t, i18n } = useTranslation();
 
+    // Base path dépend du contexte : intégré dans un sous-site ou page admin globale
+    const managePrefix = lockedSubsiteSlug ? `/site/${lockedSubsiteSlug}/admin` : '/app/manage';
     const pathToTab = {
-        '/app/manage/drafts': 'drafts',
-        '/app/manage/pending': 'pending',
-        '/app/manage/published': 'published',
-        '/app/manage/submissions': 'submissions',
+        [`${managePrefix}/drafts`]: 'drafts',
+        [`${managePrefix}/pending`]: 'pending',
+        [`${managePrefix}/published`]: 'published',
+        [`${managePrefix}/submissions`]: 'submissions',
     };
     const tabToPath = {
-        drafts: '/app/manage/drafts',
-        pending: '/app/manage/pending',
-        published: '/app/manage/published',
-        submissions: '/app/manage/submissions',
+        drafts: `${managePrefix}/drafts`,
+        pending: `${managePrefix}/pending`,
+        published: `${managePrefix}/published`,
+        submissions: `${managePrefix}/submissions`,
     };
 
     const visibleTabs = TABS.filter(tab => !tab.superadminOnly || isSuperadmin);
 
     const activeTab = pathToTab[location.pathname] || 'drafts';
-    const setActiveTab = (key) => navigate(tabToPath[key] || '/app/manage/drafts');
+    const setActiveTab = (key) => navigate(tabToPath[key] || tabToPath.drafts);
     const goToCreate = (editId) => {
         const workshopQuery = filterWorkshop ? `?workshopId=${filterWorkshop}` : '';
         const target = editId ? `/app/create?edit=${editId}` : `/app/create${workshopQuery}`;
@@ -208,7 +210,9 @@ const ManageCartels = () => {
     const [search,         setSearch]         = useState('');
     const [filterCategory, setFilterCategory] = useState(() => searchParams.get('cat') || '');
     const [filterWorkshop, setFilterWorkshop] = useState(workshopId || '');
-    const filterSubsiteSlug = searchParams.get('subsite') || '';
+    // Si intégré dans un sous-site, le filtre est verrouillé sur ce sous-site et
+    // ignore le query param. Sinon on lit ?subsite= depuis l'URL.
+    const filterSubsiteSlug = lockedSubsiteSlug || searchParams.get('subsite') || '';
     const [sortConfig,     setSortConfig]      = useState({ key: 'date', direction: 'desc' });
     const [selectedIds,    setSelectedIds]     = useState(new Set());
     const [processingId,   setProcessingId]    = useState(null);
@@ -567,7 +571,8 @@ const ManageCartels = () => {
                 })}
             </div>
 
-            {/* Bandeau scope sous-site (vient de /site/:slug via le bouton Gérer) */}
+            {/* Bandeau scope sous-site (vient de /site/:slug via le bouton Gérer, ou
+                intégré dans /site/:slug/admin si lockedSubsiteSlug est fourni). */}
             {filterSubsiteSlug && (
                 <div style={{
                     display:'flex', alignItems:'center', gap:'10px',
@@ -575,14 +580,20 @@ const ManageCartels = () => {
                     borderRadius:'10px', padding:'10px 14px', marginBottom:'16px',
                     color:'#c2185b', fontSize:'0.88rem', fontWeight:'600',
                 }}>
-                    <span>Vue filtrée sur le sous-site <strong>{subsiteScopedName}</strong></span>
+                    <span>
+                        {lockedSubsiteSlug
+                            ? <>Gestion du sous-site <strong>{subsiteScopedName}</strong></>
+                            : <>Vue filtrée sur le sous-site <strong>{subsiteScopedName}</strong></>}
+                    </span>
                     <span style={{ flex: 1 }} />
-                    <button
-                        onClick={() => { const next = new URLSearchParams(searchParams); next.delete('subsite'); setSearchParams(next, { replace: true }); }}
-                        style={{ background:'white', border:'1px solid #f8bbd0', color:'#c2185b', borderRadius:'6px', padding:'4px 10px', fontSize:'0.78rem', fontWeight:'700', cursor:'pointer', fontFamily:'inherit' }}
-                    >
-                        Retirer le filtre
-                    </button>
+                    {!lockedSubsiteSlug && (
+                        <button
+                            onClick={() => { const next = new URLSearchParams(searchParams); next.delete('subsite'); setSearchParams(next, { replace: true }); }}
+                            style={{ background:'white', border:'1px solid #f8bbd0', color:'#c2185b', borderRadius:'6px', padding:'4px 10px', fontSize:'0.78rem', fontWeight:'700', cursor:'pointer', fontFamily:'inherit' }}
+                        >
+                            Retirer le filtre
+                        </button>
+                    )}
                     <button
                         onClick={() => navigate(`/site/${filterSubsiteSlug}`)}
                         style={{ background:'#c2185b', border:'none', color:'white', borderRadius:'6px', padding:'4px 10px', fontSize:'0.78rem', fontWeight:'700', cursor:'pointer', fontFamily:'inherit' }}
