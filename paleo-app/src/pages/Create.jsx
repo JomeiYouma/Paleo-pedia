@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
+import { useSearchParams, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { geocodingService } from '../services/geocoding';
 import { Save, ArrowLeft, MapPin, Check, X, Bold, Italic, AlertTriangle } from 'lucide-react';
@@ -14,6 +14,7 @@ const Create = () => {
     const {
         cartels = [],
         addCartel,
+        addCartelToSubsite,
         updateCartel,
         deleteCartel,
         uploadImage,
@@ -28,9 +29,11 @@ const Create = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const location = useLocation();
+    const routeParams = useParams();
+    const subsiteSlug = routeParams.slug || null; // défini uniquement sur /site/:slug/create
     const editId = searchParams.get('edit');
     const workshopIdParam = searchParams.get('workshopId');
-    const returnTo = location.state?.returnTo || '/app';
+    const returnTo = location.state?.returnTo || (subsiteSlug ? `/site/${subsiteSlug}` : '/app');
 
     const isEn = i18n.language === 'en';
 
@@ -332,7 +335,11 @@ const Create = () => {
                     setStatusMsg(t('messages.proposalSaved', "Proposition envoyée !"));
                 }
             }
-            await addCartel(entry);
+            if (subsiteSlug) {
+                await addCartelToSubsite(subsiteSlug, entry);
+            } else {
+                await addCartel(entry);
+            }
         }
 
         setIsSaving(false);

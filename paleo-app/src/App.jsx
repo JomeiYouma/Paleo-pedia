@@ -63,6 +63,9 @@ function App() {
             <Route path="drafts" element={<Navigate to="/app/manage/pending" replace />} />
           </Route>
 
+          {/* Route de proposition de cartel sur un sous-site (visiteurs) */}
+          <Route path="/site/:slug/create" element={<Create />} />
+
           {/* Redirect workshops (anciens liens partagés) */}
           <Route path="/workshop/:workshopId" element={<WorkshopRedirect />} />
         </Routes>

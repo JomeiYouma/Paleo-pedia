@@ -208,6 +208,7 @@ const ManageCartels = () => {
     const [search,         setSearch]         = useState('');
     const [filterCategory, setFilterCategory] = useState(() => searchParams.get('cat') || '');
     const [filterWorkshop, setFilterWorkshop] = useState(workshopId || '');
+    const filterSubsiteSlug = searchParams.get('subsite') || '';
     const [sortConfig,     setSortConfig]      = useState({ key: 'date', direction: 'desc' });
     const [selectedIds,    setSelectedIds]     = useState(new Set());
     const [processingId,   setProcessingId]    = useState(null);
@@ -250,6 +251,9 @@ const ManageCartels = () => {
 
     const filteredCartels = useMemo(() => {
         let data = cartels.filter(currentTabDef.filter);
+        if (filterSubsiteSlug) {
+            data = data.filter(c => c.subsite_slug === filterSubsiteSlug);
+        }
         if (filterWorkshop) {
             data = data.filter(c => (c.workshopIds || []).map(String).includes(String(filterWorkshop)));
         }
@@ -278,7 +282,13 @@ const ManageCartels = () => {
             return 0;
         });
         return data;
-    }, [cartels, currentTabDef, search, filterCategory, filterWorkshop, sortConfig]);
+    }, [cartels, currentTabDef, search, filterCategory, filterWorkshop, filterSubsiteSlug, sortConfig]);
+
+    const subsiteScopedName = useMemo(() => {
+        if (!filterSubsiteSlug) return null;
+        const sample = cartels.find(c => c.subsite_slug === filterSubsiteSlug);
+        return sample?.subsite_name || filterSubsiteSlug;
+    }, [filterSubsiteSlug, cartels]);
 
     if (!isAdmin) {
         return <div style={{ textAlign:'center', padding:'80px 20px', color:'#aaa' }}><p>{t('manageCartels.adminOnly')}</p></div>;
@@ -556,6 +566,31 @@ const ManageCartels = () => {
                     );
                 })}
             </div>
+
+            {/* Bandeau scope sous-site (vient de /site/:slug via le bouton Gérer) */}
+            {filterSubsiteSlug && (
+                <div style={{
+                    display:'flex', alignItems:'center', gap:'10px',
+                    background:'#fce4ec', border:'1px solid #f8bbd0',
+                    borderRadius:'10px', padding:'10px 14px', marginBottom:'16px',
+                    color:'#c2185b', fontSize:'0.88rem', fontWeight:'600',
+                }}>
+                    <span>Vue filtrée sur le sous-site <strong>{subsiteScopedName}</strong></span>
+                    <span style={{ flex: 1 }} />
+                    <button
+                        onClick={() => { const next = new URLSearchParams(searchParams); next.delete('subsite'); setSearchParams(next, { replace: true }); }}
+                        style={{ background:'white', border:'1px solid #f8bbd0', color:'#c2185b', borderRadius:'6px', padding:'4px 10px', fontSize:'0.78rem', fontWeight:'700', cursor:'pointer', fontFamily:'inherit' }}
+                    >
+                        Retirer le filtre
+                    </button>
+                    <button
+                        onClick={() => navigate(`/site/${filterSubsiteSlug}`)}
+                        style={{ background:'#c2185b', border:'none', color:'white', borderRadius:'6px', padding:'4px 10px', fontSize:'0.78rem', fontWeight:'700', cursor:'pointer', fontFamily:'inherit' }}
+                    >
+                        Retour au sous-site
+                    </button>
+                </div>
+            )}
 
             {/* Description onglet */}
             {activeTab === 'submissions' ? (

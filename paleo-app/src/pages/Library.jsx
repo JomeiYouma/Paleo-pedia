@@ -34,7 +34,7 @@ const StatusBadge = ({ status, t }) => {
     );
 };
 
-const Library = ({ fixedCategory = null }) => {
+const Library = ({ fixedCategory = null, fixedSubsiteId = null }) => {
     const { t, i18n } = useTranslation();
     // Source unique : tous les cartels depuis l'API (l'API filtre selon le rôle)
     const { cartels, loading, deleteCartel, deleteCartels, isAdmin, currentWorkshop } = useApp();
@@ -74,17 +74,23 @@ const Library = ({ fixedCategory = null }) => {
             data = data.filter(c => c.status === 'published' && c.visible);
         }
 
-        // Si un sous-site impose une catégorie : on filtre en dur ici
-        // fixedCategory est toujours le nom FR (category_name du JOIN SQL)
-        // → on compare TOUJOURS contre c.categories (FR), quelle que soit la langue d'affichage
-        if (fixedCategory) {
-            data = data.filter(c =>
-                (c.categories || []).some(cat => cat.toLowerCase() === fixedCategory.toLowerCase())
-            );
+        // Si un sous-site impose une catégorie ou son subsite_id : on filtre en dur ici.
+        // Règle : sur un sous-site on montre ses cartels scopés (subsite_id) ET les cartels
+        // legacy du site principal (subsite_id NULL) partageant la catégorie.
+        if (fixedSubsiteId || fixedCategory) {
+            data = data.filter(c => {
+                const matchesSubsite = fixedSubsiteId && c.subsite_id === fixedSubsiteId;
+                const matchesCategory = fixedCategory && (c.categories || []).some(
+                    cat => cat.toLowerCase() === fixedCategory.toLowerCase()
+                );
+                if (fixedSubsiteId && matchesSubsite) return true;
+                if (fixedCategory && matchesCategory && (!c.subsite_id || c.subsite_id === fixedSubsiteId)) return true;
+                return false;
+            });
         }
 
         return data;
-    }, [cartels, currentWorkshop, isAdmin, fixedCategory]);
+    }, [cartels, currentWorkshop, isAdmin, fixedCategory, fixedSubsiteId]);
 
     // Catégories disponibles dans le dataset de base (sous-ensemble cohérent)
     const allCategories = useMemo(() => {

@@ -132,6 +132,22 @@ export const AppProvider = ({ children }) => {
         }
     };
 
+    /** Soumettre un cartel à un sous-site précis via la route scopée /s/:slug/cartels */
+    const addCartelToSubsite = async (slug, entry) => {
+        setLoading(true);
+        try {
+            const created = await api.cartels.createForSubsite(slug, buildApiPayload(entry));
+            await fetchData();
+            return created;
+        } catch (e) {
+            console.error(e);
+            alert('Erreur sauvegarde : ' + e.message);
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const updateCartel = async (entry) => {
         setLoading(true);
         try {
@@ -263,7 +279,7 @@ export const AppProvider = ({ children }) => {
             // Auth
             login, logout,
             // Cartels CRUD
-            fetchData, addCartel, updateCartel, deleteCartel, deleteCartels, uploadImage, translateCartel,
+            fetchData, addCartel, addCartelToSubsite, updateCartel, deleteCartel, deleteCartels, uploadImage, translateCartel,
             // Categories
             addLocalCategory,
             // Workshops

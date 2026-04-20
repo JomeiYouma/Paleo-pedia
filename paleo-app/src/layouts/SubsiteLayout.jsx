@@ -7,7 +7,7 @@
  */
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Outlet, Link, NavLink, useParams, useNavigate } from 'react-router-dom';
-import { Menu, X, Lock, LogOut, Languages } from 'lucide-react';
+import { Menu, X, Lock, LogOut, Languages, PlusCircle, Settings2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import api from '../services/apiClient';
@@ -119,13 +119,23 @@ const SubsiteLayout = () => {
                         {/* Actions droite */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
                             <LanguageSwitcher />
+
+                            {/* Proposer un cartel (visiteurs + admins) */}
+                            <button
+                                onClick={() => navigate(`/site/${slug}/create`)}
+                                title="Proposer un cartel pour ce sous-site"
+                                style={{ background: color, border: 'none', borderRadius: '8px', padding: '6px 12px', color: 'white', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}
+                            >
+                                <PlusCircle size={14} /> Proposer un cartel
+                            </button>
+
                             {isAdmin && (
                                 <button
-                                    onClick={() => navigate('/app/admin')}
-                                    title="Administration"
-                                    style={{ background: `${color}18`, border: `1px solid ${color}40`, borderRadius: '8px', padding: '6px 12px', color, cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700', fontFamily: 'inherit' }}
+                                    onClick={() => navigate(`/app/manage/drafts?subsite=${slug}`)}
+                                    title="Gérer les cartels de ce sous-site"
+                                    style={{ background: `${color}18`, border: `1px solid ${color}40`, borderRadius: '8px', padding: '6px 12px', color, cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}
                                 >
-                                    Admin ↗
+                                    <Settings2 size={14} /> Gérer ↗
                                 </button>
                             )}
                             {user && (
