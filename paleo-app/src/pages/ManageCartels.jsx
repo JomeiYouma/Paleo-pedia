@@ -197,7 +197,13 @@ const ManageCartels = ({ lockedSubsiteSlug = null } = {}) => {
         submissions: `${managePrefix}/submissions`,
     };
 
-    const visibleTabs = TABS.filter(tab => !tab.superadminOnly || isSuperadmin);
+    // L'onglet submissions est réservé à la page admin principale (file de validation
+    // globale du superadmin). Il n'a aucun sens dans un contexte sous-site verrouillé.
+    const visibleTabs = TABS.filter(tab => {
+        if (tab.key === 'submissions') return isSuperadmin && !lockedSubsiteSlug;
+        if (tab.superadminOnly) return isSuperadmin;
+        return true;
+    });
 
     const activeTab = pathToTab[location.pathname] || 'drafts';
     const setActiveTab = (key) => navigate(tabToPath[key] || tabToPath.drafts);
@@ -550,9 +556,9 @@ const ManageCartels = ({ lockedSubsiteSlug = null } = {}) => {
                     >
                         Les actions ici ne touchent <strong>que votre sous-site</strong> :
                         <ul style={{ margin: '8px 0 0', paddingLeft: '18px', lineHeight: '1.7' }}>
-                            <li>Les cartels listés sont ceux de votre sous-site (créés par vous ou par des visiteurs via <em>Proposer un cartel</em>).</li>
+                            <li>Seuls les cartels <strong>créés pour votre sous-site</strong> apparaissent ci-dessous (via <em>Proposer un cartel</em> ou <em>+ Nouveau cartel</em>). Les cartels du site principal qui s'affichent sur votre frise par correspondance de catégorie ne sont <strong>pas</strong> listés ici — ils restent gérés par le site principal.</li>
                             <li>Modifier ou supprimer un cartel ici n'affecte <strong>que le sous-site</strong>, jamais le site principal.</li>
-                            <li>Pour qu'un cartel apparaisse aussi sur le site principal, cliquez sur <em>Soumettre au principal</em> depuis sa ligne : un superadmin validera avant publication.</li>
+                            <li>Pour qu'un cartel de votre sous-site apparaisse aussi sur le site principal, cliquez sur <em>Soumettre au principal</em> depuis sa ligne : un superadmin validera avant publication.</li>
                         </ul>
                     </ExplainerBox>
                 </div>
