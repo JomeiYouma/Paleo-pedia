@@ -27,6 +27,12 @@
     },
     "create": {
         "pageTitle": "Create / Edit Cartel",
+        "langMismatchTitle": "Different language detected",
+        "langMismatchEnOnFr": "You appear to be writing in English on the French page. Switch to the English page to fill the English fields — your text will be moved.",
+        "langMismatchFrOnEn": "You appear to be writing in French on the English page. Switch to the French page to fill the French fields — your text will be moved.",
+        "langMismatchHint": "Tip: use the language switcher in the top-right to toggle manually at any time.",
+        "langMismatchConfirm": "Yes, switch",
+        "langMismatchDismiss": "No, keep writing",
         "fieldTitle": "Title",
         "fieldTitleEn": "Title (English)",
         "fieldYear": "Year (e.g. 2024, 2024-01-15...)",

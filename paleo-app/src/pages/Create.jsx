@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { geocodingService } from '../services/geocoding';
-import { Save, ArrowLeft, MapPin, Check, X, Bold, Italic } from 'lucide-react';
+import { Save, ArrowLeft, MapPin, Check, X, Bold, Italic, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { compressImage } from '../utils/imageProcessor';
+import { detectWrongLanguage } from '../utils/detectLang';
 import api from '../services/apiClient';
 
 const Create = () => {
@@ -58,6 +59,45 @@ const Create = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [statusMsg, setStatusMsg] = useState('');
     const descRef = useRef(null);
+
+    // Détection de langue mal saisie (heuristique)
+    const [langMismatch, setLangMismatch] = useState(null); // { field, detectedLang, content } | null
+    const dismissedRef = useRef({ title: '', desc: '' });   // dernier texte écarté par l'utilisateur par champ
+
+    const checkLangMismatch = (field, text) => {
+        if (!text || dismissedRef.current[field] === text) return;
+        const detected = detectWrongLanguage(text, i18n.language);
+        if (detected) setLangMismatch({ field, detectedLang: detected, content: text });
+    };
+
+    const acceptLangSwitch = () => {
+        if (!langMismatch) return;
+        const target = langMismatch.detectedLang; // 'fr' ou 'en'
+        // Déplace tous les champs actuellement remplis du côté courant vers le côté cible
+        setForm(prev => {
+            const next = { ...prev };
+            if (target === 'en') {
+                // Page FR → EN : déplace titre/description/location vers *_en
+                if (prev.titre       && !prev.titre_en)       { next.titre_en       = prev.titre;       next.titre = ''; }
+                if (prev.description && !prev.description_en) { next.description_en = prev.description; next.description = ''; }
+                if (prev.location    && !prev.location_en)    { next.location_en    = prev.location;    next.location = ''; }
+            } else {
+                // Page EN → FR : déplace *_en vers titre/description/location
+                if (prev.titre_en       && !prev.titre)       { next.titre       = prev.titre_en;       next.titre_en = ''; }
+                if (prev.description_en && !prev.description) { next.description = prev.description_en; next.description_en = ''; }
+                if (prev.location_en    && !prev.location)    { next.location    = prev.location_en;    next.location_en = ''; }
+            }
+            return next;
+        });
+        i18n.changeLanguage(target);
+        setLangMismatch(null);
+    };
+
+    const dismissLangSwitch = () => {
+        if (!langMismatch) return;
+        dismissedRef.current[langMismatch.field] = langMismatch.content;
+        setLangMismatch(null);
+    };
 
     const insertMarkdown = (marker) => {
         const el = descRef.current;
@@ -325,6 +365,7 @@ const Create = () => {
                         name="title_input"
                         value={isEn ? form.titre_en : form.titre}
                         onChange={handleInputChange}
+                        onBlur={e => checkLangMismatch('title', e.target.value)}
                         required
                         style={{ width: '100%', padding: '8px' }}
                     />
@@ -391,6 +432,7 @@ const Create = () => {
                         name="desc_input"
                         value={isEn ? form.description_en : form.description}
                         onChange={handleInputChange}
+                        onBlur={e => checkLangMismatch('desc', e.target.value)}
                         maxLength={1500}
                         rows={10}
                         style={{ width: '100%', padding: '8px' }}
@@ -517,6 +559,66 @@ const Create = () => {
                     )}
                 </div>
             </form>
+
+            {/* Modal : langue mal saisie */}
+            {langMismatch && (
+                <div
+                    onClick={dismissLangSwitch}
+                    style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+                >
+                    <div
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            background: 'white', borderRadius: '14px', padding: '28px',
+                            maxWidth: '460px', width: '100%',
+                            boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#fff4e0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <AlertTriangle size={20} color="#e67e00" />
+                            </div>
+                            <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800' }}>
+                                {t('create.langMismatchTitle', 'Langue différente détectée')}
+                            </h3>
+                        </div>
+                        <p style={{ margin: '0 0 10px', fontSize: '0.92rem', color: '#333', lineHeight: '1.5' }}>
+                            {langMismatch.detectedLang === 'en'
+                                ? t('create.langMismatchEnOnFr', 'Il semble que vous écrivez en anglais sur la page française. Basculez vers la page anglaise pour saisir les champs anglais, votre texte sera déplacé.')
+                                : t('create.langMismatchFrOnEn', 'Il semble que vous écrivez en français sur la page anglaise. Basculez vers la page française pour saisir les champs français, votre texte sera déplacé.')}
+                        </p>
+                        <p style={{ margin: '0 0 18px', fontSize: '0.8rem', color: '#888' }}>
+                            {t('create.langMismatchHint', 'Astuce : utilisez le sélecteur de langue en haut à droite pour basculer manuellement à tout moment.')}
+                        </p>
+                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                            <button
+                                type="button"
+                                onClick={dismissLangSwitch}
+                                style={{
+                                    padding: '9px 16px', borderRadius: '8px',
+                                    border: '1px solid #ddd', background: 'white',
+                                    color: '#555', cursor: 'pointer',
+                                    fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: '600',
+                                }}
+                            >
+                                {t('create.langMismatchDismiss', 'Non, continuer')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={acceptLangSwitch}
+                                style={{
+                                    padding: '9px 16px', borderRadius: '8px',
+                                    border: 'none', background: '#e67e00', color: 'white',
+                                    cursor: 'pointer',
+                                    fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: '700',
+                                }}
+                            >
+                                {t('create.langMismatchConfirm', 'Oui, basculer')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
