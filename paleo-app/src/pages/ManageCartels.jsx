@@ -15,6 +15,7 @@ import CartelPreview from '../components/CartelPreview';
 import { getYearForSort } from '../utils/helpers';
 import api from '../services/apiClient';
 import ConfirmModal from '../components/ConfirmModal';
+import ExplainerBox from '../components/ExplainerBox';
 
 const HEX_COLORS = {
     neutral: '#4b5563',
@@ -557,9 +558,25 @@ const ManageCartels = () => {
             </div>
 
             {/* Description onglet */}
-            <p style={{ background:currentTabDef.bg, color:currentTabDef.color, borderRadius:'8px', padding:'10px 16px', fontSize:'0.85rem', fontWeight:'600', margin:'0 0 20px' }}>
-                {t(currentTabDef.descriptionKey)}
-            </p>
+            {activeTab === 'submissions' ? (
+                <ExplainerBox
+                    color="#C2185B"
+                    background="#fce4ec"
+                    border="#f8bbd0"
+                    title="File de validation des sous-sites"
+                >
+                    Quand un owner de sous-site soumet un cartel publié au site principal, il apparaît ici
+                    en attente de votre décision.<br />
+                    <ul style={{ margin: '8px 0 0', paddingLeft: '18px', lineHeight: '1.7' }}>
+                        <li><strong>Approuver</strong> — le cartel devient visible sur le flux du site principal. Il reste aussi visible sur son sous-site d'origine.</li>
+                        <li><strong>Rejeter</strong> — la soumission est retirée de la file. Le cartel n'est pas supprimé et reste publié sur son sous-site.</li>
+                    </ul>
+                </ExplainerBox>
+            ) : (
+                <p style={{ background:currentTabDef.bg, color:currentTabDef.color, borderRadius:'8px', padding:'10px 16px', fontSize:'0.85rem', fontWeight:'600', margin:'0 0 20px' }}>
+                    {t(currentTabDef.descriptionKey)}
+                </p>
+            )}
 
             {/* ── Barre filtres + actions ───────────────────── */}
             <div style={{ display:'flex', gap:'10px', flexWrap:'wrap', alignItems:'center', background:'#fafafa', border:'1px solid #eee', borderRadius:'12px', padding:'12px 16px', marginBottom:'16px' }}>

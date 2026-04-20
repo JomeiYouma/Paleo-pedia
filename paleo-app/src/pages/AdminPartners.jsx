@@ -6,6 +6,7 @@ import {
     CheckCircle2, AlertCircle,
 } from 'lucide-react';
 import api from '../services/apiClient';
+import ExplainerBox from '../components/ExplainerBox';
 
 // ── Onglets ──────────────────────────────────────────────────
 const TABS = [
@@ -221,6 +222,22 @@ const AdminPartners = () => {
                     Gestion des partenaires
                 </h1>
             </div>
+
+            {/* Paragraphe explicatif */}
+            <ExplainerBox
+                color="#00897b"
+                background="#e0f2f1"
+                border="#b2dfdb"
+                title="À quoi sert cette page ?"
+            >
+                Centraliser la bibliothèque de partenaires et décider où chacun s'affiche.
+                Trois catégories, mutuellement exclusives :<br />
+                <ul style={{ margin: '8px 0 0', paddingLeft: '18px', lineHeight: '1.7' }}>
+                    <li><strong>Obligatoires</strong> — apparaissent automatiquement sur tous les sous-sites, sans action de leur part. Superadmin uniquement.</li>
+                    <li><strong>Pool public</strong> — réservoir partagé : chaque sous-site peut piocher dedans depuis sa propre configuration.</li>
+                    <li><strong>Exclusifs</strong> — rattachés à un sous-site unique. Invisibles pour les autres. Un <em>owner</em> peut gérer les exclusifs de son propre sous-site.</li>
+                </ul>
+            </ExplainerBox>
 
             {/* Onglets */}
             <div style={{ display: 'flex', gap: '4px', background: '#f5f5f5', borderRadius: '14px', padding: '4px', marginBottom: '24px' }}>

@@ -3,9 +3,10 @@ import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import {
     UserPlus, Trash2, ArrowLeft, Mail, Crown, Users as UsersIcon,
-    CheckCircle2, AlertCircle, Shield, Info, Home,
+    CheckCircle2, AlertCircle, Shield, Home, HelpCircle,
 } from 'lucide-react';
 import api from '../services/apiClient';
+import ExplainerBox from '../components/ExplainerBox';
 
 const ACCENT = '#6741d9';       // violet cohérent avec le lien d'AdminSettings
 const ACCENT_BG = '#f3efff';
@@ -217,24 +218,20 @@ const AdminTeam = () => {
             </div>
 
             {/* Paragraphe explicatif */}
-            <div style={{
-                background: ACCENT_BG, border: `1px solid ${ACCENT_BORDER}`,
-                borderRadius: '12px', padding: '16px 18px', marginBottom: '20px',
-                color: '#3e2b72', fontSize: '0.88rem', lineHeight: '1.55',
-                display: 'flex', gap: '12px', alignItems: 'flex-start',
-            }}>
-                <Info size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
-                <div>
-                    <strong>À quoi sert cette page ?</strong><br />
-                    Gérer les comptes utilisateurs <strong>d'un sous-site précis</strong> (ou du site principal si
-                    vous êtes superadmin). Chaque compte créé ici est automatiquement rattaché au contexte choisi
-                    dans le sélecteur ci-dessous.<br />
-                    Les <em>owners</em> de sous-site peuvent inviter et gérer les membres de leur propre équipe.
-                    Les <em>superadmins</em> peuvent en plus basculer entre le site principal et n'importe quel
-                    sous-site, et déléguer la permission <strong>Owner</strong> (qui permet à son tour de gérer l'équipe du
-                    sous-site).
-                </div>
-            </div>
+            <ExplainerBox
+                color={ACCENT}
+                background={ACCENT_BG}
+                border={ACCENT_BORDER}
+                title="À quoi sert cette page ?"
+            >
+                Gérer les comptes utilisateurs <strong>d'un sous-site précis</strong> (ou du site principal si
+                vous êtes superadmin). Chaque compte créé ici est automatiquement rattaché au contexte choisi
+                dans le sélecteur ci-dessous.<br />
+                Les <em>owners</em> de sous-site peuvent inviter et gérer les membres de leur propre équipe.
+                Les <em>superadmins</em> peuvent en plus basculer entre le site principal et n'importe quel
+                sous-site, et déléguer la permission <strong>Gérer équipe</strong> (qui permet à son tour de gérer
+                l'équipe du sous-site).
+            </ExplainerBox>
 
             {/* Sélecteur (superadmin ou owner avec plusieurs options) */}
             {pickerOptions.length > 1 && (
@@ -325,6 +322,26 @@ const AdminTeam = () => {
                         Par défaut, il peut seulement <strong>créer des cartels</strong>. Ajoutez d'autres permissions ci-dessous.
                     </p>
                 </div>
+            )}
+
+            {/* Légende des permissions */}
+            {canManageCurrent && (
+                <ExplainerBox
+                    color="#0288d1"
+                    background="#e6f4fa"
+                    border="#b3e0f2"
+                    icon={HelpCircle}
+                    title="Permissions disponibles"
+                >
+                    <ul style={{ margin: '8px 0 0', paddingLeft: '18px', lineHeight: '1.7' }}>
+                        <li><strong>Créer cartels</strong> — le membre peut créer de nouveaux cartels (en brouillon par défaut).</li>
+                        <li><strong>Publier</strong> — le membre peut faire passer un cartel en statut <em>publié</em> (sinon ils restent en brouillon ou en attente).</li>
+                        <li><strong>Gérer équipe</strong> — <em>owner</em> : le membre peut inviter, modifier et supprimer d'autres comptes dans le contexte courant (ce sous-site ou le site principal).</li>
+                        {isSuperadmin && (
+                            <li><strong>Créer sous-sites</strong> — superadmin uniquement : le membre peut créer de nouveaux sous-sites depuis les réglages.</li>
+                        )}
+                    </ul>
+                </ExplainerBox>
             )}
 
             {/* Liste des membres */}
