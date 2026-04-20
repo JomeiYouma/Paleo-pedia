@@ -217,9 +217,18 @@ export const CartelModel = {
   },
 
   /** Marque un cartel de sous-site comme soumis pour validation sur le site principal */
+  /**
+   * Marque un cartel comme soumis pour validation sur le site principal.
+   * Idempotent : si submitted_to_main_at est déjà renseigné, on conserve
+   * l'horodatage de la première soumission (évite de perdre l'historique
+   * quand le contrôleur appelle cette méthode sur chaque update).
+   */
   async markSubmittedToMain(id) {
     await query(
-      'UPDATE cartels SET submitted_to_main_at = NOW(), visible_on_main = 0 WHERE id = ?',
+      `UPDATE cartels
+         SET submitted_to_main_at = IFNULL(submitted_to_main_at, NOW()),
+             visible_on_main = 0
+       WHERE id = ?`,
       [id]
     );
     return this.findById(id);

@@ -163,6 +163,22 @@ export const AppProvider = ({ children }) => {
         }
     };
 
+    /** Variante pour éditer un cartel dans le contexte d'un sous-site (/s/:slug/cartels/:id) */
+    const updateCartelInSubsite = async (slug, entry) => {
+        setLoading(true);
+        try {
+            const updated = await api.cartels.updateInSubsite(slug, entry.id, buildApiPayload(entry));
+            await fetchData();
+            return updated;
+        } catch (e) {
+            console.error(e);
+            alert('Erreur mise à jour : ' + e.message);
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const deleteCartel = async (id) => {
         setLoading(true);
         try {
@@ -279,7 +295,7 @@ export const AppProvider = ({ children }) => {
             // Auth
             login, logout,
             // Cartels CRUD
-            fetchData, addCartel, addCartelToSubsite, updateCartel, deleteCartel, deleteCartels, uploadImage, translateCartel,
+            fetchData, addCartel, addCartelToSubsite, updateCartel, updateCartelInSubsite, deleteCartel, deleteCartels, uploadImage, translateCartel,
             // Categories
             addLocalCategory,
             // Workshops

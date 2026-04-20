@@ -16,6 +16,7 @@ const Create = () => {
         addCartel,
         addCartelToSubsite,
         updateCartel,
+        updateCartelInSubsite,
         deleteCartel,
         uploadImage,
         categories: globalCats = [],
@@ -337,7 +338,11 @@ const Create = () => {
                 // Visiteur : propose ou sauvegarde
                 entry.status = action === 'save_draft' ? 'draft' : 'pending_review';
             }
-            await updateCartel(entry);
+            if (subsiteSlug) {
+                await updateCartelInSubsite(subsiteSlug, entry);
+            } else {
+                await updateCartel(entry);
+            }
         } else {
             // Nouveau cartel
             if (isAdmin) {
