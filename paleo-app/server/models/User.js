@@ -36,6 +36,14 @@ export const UserModel = {
     return rows;
   },
 
+  async findBySubsite(subsiteId, { limit = 100, offset = 0 } = {}) {
+    const { rows } = await query(
+      'SELECT id, email, role, can_create_cartel, can_publish_cartel, can_manage_admin, can_create_subsite, can_manage_team, home_subsite_id, created_at, updated_at FROM users WHERE home_subsite_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?',
+      [subsiteId, limit, offset]
+    );
+    return rows;
+  },
+
   async update(id, fields) {
     const allowed = ['role', 'can_create_cartel', 'can_publish_cartel', 'can_manage_admin', 'can_create_subsite', 'can_manage_team', 'home_subsite_id'];
     const sets = [];

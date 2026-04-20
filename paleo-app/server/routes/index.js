@@ -14,6 +14,7 @@ import { submissionGuard } from '../middleware/submissionGuard.js';
 import { resolveTenant, requireTenantAccess } from '../middleware/tenant.js';
 import { SubsiteController }  from '../controllers/subsiteController.js';
 import { PartnerController }  from '../controllers/partnerController.js';
+import { TeamController }     from '../controllers/teamController.js';
 
 const router = Router();
 
@@ -100,6 +101,12 @@ router.post  ('/s/:slug/cartels/:id/withdraw-from-main', authenticate, resolveTe
 router.get   ('/submissions',            authenticate, requireAdmin, CartelController.listSubmissions);
 router.post  ('/submissions/:id/approve', authenticate, requireAdmin, CartelController.approveSubmission);
 router.post  ('/submissions/:id/reject',  authenticate, requireAdmin, CartelController.rejectSubmission);
+
+// Gestion d'équipe scopée (owner du sous-site OU superadmin)
+router.get   ('/s/:slug/users',     authenticate, resolveTenant, requireTenantAccess, TeamController.list);
+router.post  ('/s/:slug/users',     authenticate, resolveTenant, requireTenantAccess, TeamController.create);
+router.patch ('/s/:slug/users/:id', authenticate, resolveTenant, requireTenantAccess, TeamController.update);
+router.delete('/s/:slug/users/:id', authenticate, resolveTenant, requireTenantAccess, TeamController.remove);
 
 // ── Partenaires (public GET, admin write) ────────────────────
 // optionalAuth sur GET pour que le filtre par scope (pool public vs pool+exclusifs
