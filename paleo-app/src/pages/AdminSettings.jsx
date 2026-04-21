@@ -7,6 +7,7 @@ import {
     Globe, Plus, Trash2, Edit, ExternalLink, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import api from '../services/apiClient';
+import i18n from '../i18n';
 import SubsiteEditor from '../components/SubsiteEditor';
 
 // ── Composants de formulaire ─────────────────────────────────
@@ -166,7 +167,7 @@ const AdminSettings = () => {
                     setAiKey(k.openai_key || '');
                 } catch { /* pas critique */ }
             } catch (e) {
-                showToast('error', 'Erreur de chargement : ' + e.message);
+                showToast('error', i18n.t('errors.loadingPrefix', { msg: e.message }));
             } finally {
                 setLoading(false);
             }
@@ -192,9 +193,9 @@ const AdminSettings = () => {
             if (aiKey !== undefined) payload.openai_key = aiKey;
 
             await api.settings.update(payload);
-            showToast('success', 'Paramètres sauvegardés !');
+            showToast('success', i18n.t('toasts.settingsSaved'));
         } catch (e) {
-            showToast('error', 'Erreur : ' + e.message);
+            showToast('error', i18n.t('common.error', { msg: e.message }));
         } finally {
             setSaving(false);
         }
@@ -227,9 +228,9 @@ const AdminSettings = () => {
                 });
             }
 
-            showToast('success', 'Partenaires du site principal enregistrés.');
+            showToast('success', i18n.t('toasts.mainSitePartnersSaved'));
         } catch (e) {
-            showToast('error', 'Erreur enregistrement partenaires : ' + e.message);
+            showToast('error', i18n.t('errors.savingPartnersPrefix', { msg: e.message }));
         } finally {
             setSavingPartners(false);
         }
@@ -251,7 +252,7 @@ const AdminSettings = () => {
                 <SubsiteEditor
                     subsite={editSubsite === 'new' ? null : editSubsite}
                     onClose={() => setEditSubsite(null)}
-                    onSaved={() => { loadSubsites(); showToast('success', 'Sous-site sauvegardé !'); }}
+                    onSaved={() => { loadSubsites(); showToast('success', i18n.t('toasts.subsiteSaved')); }}
                 />
             )}
 

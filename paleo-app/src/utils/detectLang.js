@@ -49,7 +49,9 @@ export function detectWrongLanguage(text, expectedLang) {
     if (FR_INDICATORS.has(w)) frHits++;
   }
 
-  if (expectedLang === 'fr' && enHits >= MIN_HITS && enHits > frHits) return 'en';
-  if (expectedLang === 'en' && frHits >= MIN_HITS && frHits > enHits) return 'fr';
+  // Normaliser : i18n peut renvoyer 'fr-FR', 'en-GB', ou l'ancienne valeur 'gb'.
+  const exp = (expectedLang === 'gb' ? 'en' : (expectedLang || '')).slice(0, 2).toLowerCase();
+  if (exp === 'fr' && enHits >= MIN_HITS && enHits > frHits) return 'en';
+  if (exp === 'en' && frHits >= MIN_HITS && frHits > enHits) return 'fr';
   return null;
 }

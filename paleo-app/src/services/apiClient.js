@@ -188,6 +188,19 @@ export const translate = {
 
 // ── Import / Export ───────────────────────────────────────────
 export const io = {
+  /**
+   * Audit image_path — retourne { total, issues: [{ id, titre, type, ... }] }.
+   * Par défaut n'audite que les cartels publiés (ce qui sera effectivement
+   * exporté). Passer { ids: [...] } pour scoper à une sélection, ou
+   * { status: 'all' } pour tout auditer (brouillons inclus).
+   */
+  imageCheck: ({ ids, status } = {}) => {
+    const qs = [];
+    if (Array.isArray(ids) && ids.length) qs.push(`ids=${ids.join(',')}`);
+    if (status) qs.push(`status=${status}`);
+    return get(`/export/image-check${qs.length ? '?' + qs.join('&') : ''}`);
+  },
+
   /** Importe un ZIP contenant cartels.json + images — retourne { created, errors } */
   importZip: async (zipFile) => {
     const formData = new FormData();

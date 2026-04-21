@@ -80,7 +80,8 @@ router.post('/translate', authenticate, requireAdmin, TranslateController.transl
 router.post('/import', authenticate, requireAdmin, ImportController.middleware, ImportController.importZip);
 
 // ── Export archive (admin) ───────────────────────────────────
-router.get('/export', authenticate, requireAdmin, ExportController.exportArchive);
+router.get('/export/image-check', authenticate, requireAdmin, ExportController.imageCheck);
+router.get('/export',             authenticate, requireAdmin, ExportController.exportArchive);
 
 // ── Sous-sites (public GET, admin write) ─────────────────────
 router.get   ('/subsites',       SubsiteController.getAll);

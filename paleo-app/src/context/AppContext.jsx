@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useLocation, matchPath, useNavigate } from 'react-router-dom';
 import api from '../services/apiClient';
+import i18n from '../i18n';
 
 const AppContext = createContext();
 
@@ -125,7 +126,7 @@ export const AppProvider = ({ children }) => {
             return created;
         } catch (e) {
             console.error(e);
-            alert('Erreur sauvegarde : ' + e.message);
+            alert(i18n.t('errors.savingPrefix', { msg: e.message }));
             return null;
         } finally {
             setLoading(false);
@@ -141,7 +142,7 @@ export const AppProvider = ({ children }) => {
             return created;
         } catch (e) {
             console.error(e);
-            alert('Erreur sauvegarde : ' + e.message);
+            alert(i18n.t('errors.savingPrefix', { msg: e.message }));
             return null;
         } finally {
             setLoading(false);
@@ -156,7 +157,7 @@ export const AppProvider = ({ children }) => {
             return updated;
         } catch (e) {
             console.error(e);
-            alert('Erreur mise à jour : ' + e.message);
+            alert(i18n.t('errors.updatingPrefix', { msg: e.message }));
             return null;
         } finally {
             setLoading(false);
@@ -172,7 +173,7 @@ export const AppProvider = ({ children }) => {
             return updated;
         } catch (e) {
             console.error(e);
-            alert('Erreur mise à jour : ' + e.message);
+            alert(i18n.t('errors.updatingPrefix', { msg: e.message }));
             return null;
         } finally {
             setLoading(false);
@@ -262,7 +263,7 @@ export const AppProvider = ({ children }) => {
             return ws.id;
         } catch (e) {
             console.error(e);
-            alert('Erreur création atelier : ' + e.message);
+            alert(i18n.t('errors.workshopCreatePrefix', { msg: e.message }));
             return null;
         }
     };

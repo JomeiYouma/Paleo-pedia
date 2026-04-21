@@ -36,7 +36,12 @@ const Create = () => {
     const subsiteSlug = routeParams.slug || null; // défini uniquement sur /site/:slug/create
     const editId = searchParams.get('edit');
     const workshopIdParam = searchParams.get('workshopId');
-    const returnTo = location.state?.returnTo || (subsiteSlug ? `/site/${subsiteSlug}` : '/app');
+    // location.state peut disparaître (reload, entrée via lien direct sans state,
+    // certaines navigations hash). sessionStorage sert de filet pour préserver
+    // les filtres du gestionnaire (ex. ?cat=énergie) au retour.
+    const returnTo = location.state?.returnTo
+        || sessionStorage.getItem('paleo:returnTo')
+        || (subsiteSlug ? `/site/${subsiteSlug}` : '/app');
 
     const isEn = i18n.language === 'en';
 
@@ -238,11 +243,30 @@ const Create = () => {
     };
 
     const handleBack = () => {
+        sessionStorage.removeItem('paleo:returnTo');
         navigate(returnTo);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Filet de sécurité : si l'utilisateur clique Publier sans sortir du champ,
+        // onBlur ne déclenche pas à temps (le formulaire navigue avant que le modal
+        // soit visible). On vérifie donc titre + description au submit et on bloque
+        // jusqu'à la décision (bascule de langue ou "continuer").
+        const pairs = [
+            ['title', isEn ? form.titre_en : form.titre],
+            ['desc',  isEn ? form.description_en : form.description],
+        ];
+        for (const [field, text] of pairs) {
+            if (!text || dismissedRef.current[field] === text) continue;
+            const detected = detectWrongLanguage(text, i18n.language);
+            if (detected) {
+                setLangMismatch({ field, detectedLang: detected, content: text });
+                return;
+            }
+        }
+
         setIsSaving(true);
         setStatusMsg(t('create.processing'));
         await new Promise(r => setTimeout(r, 100));
@@ -361,6 +385,7 @@ const Create = () => {
         }
 
         setIsSaving(false);
+        sessionStorage.removeItem('paleo:returnTo');
         navigate(returnTo);
     };
 

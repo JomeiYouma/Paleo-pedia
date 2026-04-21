@@ -7,14 +7,15 @@ import {
     ArrowUpDown, ArrowUp, ArrowDown,
     FileText, Inbox, Globe, Plus, ScanEye, MapPin, Image as ImageIcon,
     Languages, Upload, ChevronDown, Package, FileJson, ImageIcon as ImgIcon,
-    FolderPlus,
+    FolderPlus, AlertTriangle,
 } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { generateZip, generatePdf, generateArchive } from '../utils/zipGenerator';
 import CartelPreview from '../components/CartelPreview';
 import { getYearForSort } from '../utils/helpers';
 import api from '../services/apiClient';
 import ConfirmModal from '../components/ConfirmModal';
+import ImageHealthModal from '../components/ImageHealthModal';
 import ExplainerBox from '../components/ExplainerBox';
 
 const HEX_COLORS = {
@@ -211,7 +212,10 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
         const basePath = lockedSubsiteSlug ? `/site/${lockedSubsiteSlug}/create` : '/app/create';
         const workshopQuery = filterWorkshop ? `?workshopId=${filterWorkshop}` : '';
         const target = editId ? `${basePath}?edit=${editId}` : `${basePath}${workshopQuery}`;
-        navigate(target, { state: { returnTo: location.pathname + location.search } });
+        const returnTo = location.pathname + location.search;
+        // sessionStorage = filet quand location.state est perdu (reload, etc.).
+        sessionStorage.setItem('paleo:returnTo', returnTo);
+        navigate(target, { state: { returnTo } });
     };
 
     const [search,         setSearch]         = useState('');
@@ -233,6 +237,24 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     const [showWorkshopModal, setShowWorkshopModal] = useState(false);
     const [newWorkshopName, setNewWorkshopName] = useState('');
     const [selectedWorkshopId, setSelectedWorkshopId] = useState('');
+    // ── Audit images (au chargement) ─────────────────────────
+    const [imageIssues,         setImageIssues]         = useState([]);
+    const [showImageHealthModal, setShowImageHealthModal] = useState(false);
+    const [issueIdsFilter,      setIssueIdsFilter]      = useState(null); // Set<id> ou null
+
+    React.useEffect(() => {
+        let cancelled = false;
+        api.io.imageCheck()
+            .then(({ issues }) => {
+                if (cancelled) return;
+                if (issues && issues.length > 0) {
+                    setImageIssues(issues);
+                    setShowImageHealthModal(true);
+                }
+            })
+            .catch(() => { /* silencieux : ne bloque pas la page */ });
+        return () => { cancelled = true; };
+    }, []);
 
     React.useEffect(() => {
         setFilterWorkshop(workshopId || '');
@@ -281,8 +303,11 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     }, [scopedCartels]);
 
     const filteredCartels = useMemo(() => {
-        // Partir du pool scopé (sous-site + legacy s'il y a lieu) puis appliquer le filtre d'onglet
-        let data = scopedCartels.filter(currentTabDef.filter);
+        // Mode "Voir les cartels problématiques" : on ignore le filtre d'onglet
+        // pour rassembler tous les cartels cassés, quel que soit leur statut.
+        let data = issueIdsFilter
+            ? scopedCartels.filter(c => issueIdsFilter.has(c.id))
+            : scopedCartels.filter(currentTabDef.filter);
         if (filterWorkshop) {
             data = data.filter(c => (c.workshopIds || []).map(String).includes(String(filterWorkshop)));
         }
@@ -311,7 +336,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
             return 0;
         });
         return data;
-    }, [cartels, currentTabDef, search, filterCategory, filterWorkshop, filterSubsiteSlug, sortConfig]);
+    }, [cartels, currentTabDef, search, filterCategory, filterWorkshop, filterSubsiteSlug, sortConfig, issueIdsFilter, scopedCartels]);
 
     const subsiteScopedName = useMemo(() => {
         if (!filterSubsiteSlug) return null;
@@ -330,37 +355,37 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     const act = async (id, fn) => {
         setProcessingId(id);
         try { await fn(); await fetchData(); }
-        catch (e) { alert('Erreur : ' + e.message); }
+        catch (e) { alert(t('common.error', { msg: e.message })); }
         finally { setProcessingId(null); }
     };
 
     const handlePublish = (c) => askConfirm(
-        `Publier "${c.titre}" ?`,
+        t('manageCartels.confirmPublish', { title: c.titre }),
         () => act(c.id, () => api.cartels.publish(c.id)),
-        { danger: false, confirmLabel: 'Publier' }
+        { danger: false, confirmLabel: t('manageCartels.publish') }
     );
     const handleToDraft = (c) => askConfirm(
-        `Repasser "${c.titre}" en brouillon ?`,
+        t('manageCartels.confirmDraft', { title: c.titre }),
         () => act(c.id, () => api.cartels.setStatus(c.id, 'draft')),
-        { danger: false, confirmLabel: 'Brouillon' }
+        { danger: false, confirmLabel: t('manageCartels.draft') }
     );
     const handleArchive = (c) => askConfirm(
-        `Archiver "${c.titre}" ?`,
+        t('manageCartels.confirmArchive', { title: c.titre }),
         () => act(c.id, () => api.cartels.archive(c.id)),
-        { danger: false, confirmLabel: 'Archiver' }
+        { danger: false, confirmLabel: t('manageCartels.archive') }
     );
     const handleDelete = (id) => askConfirm(
-        t('messages.confirmDelete', 'Supprimer ce cartel ?'),
+        t('messages.confirmDelete'),
         () => act(id, () => api.cartels.delete(id))
     );
 
     const handleApproveSubmission = (c) => askConfirm(
-        `Approuver "${c.titre}" pour le site principal ?`,
+        t('manageCartels.confirmApproveSubmission', { title: c.titre }),
         () => act(c.id, () => api.submissions.approve(c.id)),
         { danger: false, confirmLabel: t('manageCartels.approve') }
     );
     const handleRejectSubmission = (c) => askConfirm(
-        `Rejeter la soumission "${c.titre}" ? Le cartel restera visible sur son sous-site.`,
+        t('manageCartels.confirmRejectSubmission', { title: c.titre }),
         () => act(c.id, () => api.submissions.reject(c.id)),
         { danger: true, confirmLabel: t('manageCartels.reject') }
     );
@@ -374,14 +399,14 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     };
 
     const handleSubmitToMain = (c) => askConfirm(
-        `Soumettre "${c.titre}" à la validation du site principal ?`,
+        t('manageCartels.confirmSubmitMain', { title: c.titre }),
         () => act(c.id, () => api.cartels.submitToMain(c.subsite_slug, c.id)),
-        { danger: false, confirmLabel: 'Soumettre' }
+        { danger: false, confirmLabel: t('manageCartels.submit') }
     );
     const handleWithdrawFromMain = (c) => askConfirm(
-        `Retirer "${c.titre}" du site principal (ou annuler la soumission) ?`,
+        t('manageCartels.confirmWithdrawMain', { title: c.titre }),
         () => act(c.id, () => api.cartels.withdrawFromMain(c.subsite_slug, c.id)),
-        { danger: true, confirmLabel: 'Retirer' }
+        { danger: true, confirmLabel: t('manageCartels.withdraw') }
     );
 
     // ── Traduction unitaire ───────────────────────────────────
@@ -401,7 +426,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                     await api.cartels.update(cartel.id, translated);
                     await fetchData();
                 } catch (e) {
-                    alert('Erreur traduction : ' + e.message);
+                    alert(t('errors.translationPrefix', { msg: e.message }));
                 } finally {
                     setTranslating(prev => { const s = new Set(prev); s.delete(cartel.id); return s; });
                 }
@@ -420,8 +445,8 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     const handleBulkDelete = () => {
         if (!selectedIds.size) return;
         askConfirm(
-            `Supprimer ces ${selectedIds.size} cartel${selectedIds.size > 1 ? 's' : ''} ?`,
-            () => withBusy('Suppression…', async () => {
+            t('manageCartels.confirmBulkDelete', { count: selectedIds.size }),
+            () => withBusy(t('manageCartels.busyDeleting'), async () => {
                 for (const id of selectedIds) await api.cartels.delete(id);
                 await fetchData();
                 setSelectedIds(new Set());
@@ -432,11 +457,11 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     const handleBulkWorkshop = async () => {
         if (!selectedIds.size) return;
         if (!newWorkshopName.trim() && !selectedWorkshopId) {
-            alert('Choisissez un workshop existant ou saisissez un nouveau nom.');
+            alert(t('manageCartels.chooseWorkshopWarning'));
             return;
         }
 
-        await withBusy('Association workshop…', async () => {
+        await withBusy(t('manageCartels.busyAssigningWorkshop'), async () => {
             if (newWorkshopName.trim()) {
                 await addWorkshop(newWorkshopName.trim(), Array.from(selectedIds));
             } else {
@@ -452,7 +477,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
 
     const handleBulkPublish = async () => {
         if (!selectedIds.size) return;
-        await withBusy('Publication…', async () => {
+        await withBusy(t('manageCartels.busyPublishing'), async () => {
             for (const id of selectedIds) {
                 const c = cartels.find(x => x.id === id);
                 if (c && c.status !== 'published') await api.cartels.publish(id);
@@ -465,8 +490,8 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     const handleBulkTranslate = () => {
         if (!selectedIds.size) return;
         askConfirm(
-            `Retraduire ${selectedIds.size} cartel${selectedIds.size > 1 ? 's' : ''} via IA ?`,
-            () => withBusy('Traduction IA…', async () => {
+            t('manageCartels.confirmBulkTranslate', { count: selectedIds.size }),
+            () => withBusy(t('manageCartels.busyTranslating'), async () => {
                 let count = 0;
                 for (const id of selectedIds) {
                     count++;
@@ -557,6 +582,32 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                 />
             )}
 
+            {/* Modal audit images (au chargement) */}
+            {showImageHealthModal && (
+                <ImageHealthModal
+                    issues={imageIssues}
+                    onContinue={() => setShowImageHealthModal(false)}
+                    onShowIssues={() => {
+                        setIssueIdsFilter(new Set(imageIssues.map(i => i.id)));
+                        setShowImageHealthModal(false);
+                    }}
+                />
+            )}
+
+            {/* Bannière filtre "cartels problématiques" actif */}
+            {issueIdsFilter && (
+                <div style={{ margin: '16px 0 0', padding: '10px 14px', background: '#fff5f5', border: '1px solid #fecaca', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.88rem', color: '#7a2222' }}>
+                    <AlertTriangle size={16} color="#e53e3e" />
+                    <span>{t('manageCartels.issueFilterBanner', { count: filteredCartels.length })}</span>
+                    <button
+                        onClick={() => setIssueIdsFilter(null)}
+                        style={{ marginLeft: 'auto', padding: '5px 12px', borderRadius: '6px', border: '1px solid #fecaca', background: 'white', cursor: 'pointer', fontSize: '0.82rem', color: '#7a2222' }}
+                    >
+                        {t('manageCartels.clearFilter')}
+                    </button>
+                </div>
+            )}
+
             {/* ── Info contextuelle (sous-site) ──────────────── */}
             {lockedSubsiteSlug && (
                 <div style={{ padding: '20px 0 0' }}>
@@ -564,12 +615,12 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                         color="#c2185b"
                         background="#fce4ec"
                         border="#f8bbd0"
-                        title={`Vous gérez le sous-site ${subsiteScopedName || lockedSubsiteSlug}`}
+                        title={t('manageCartels.lockedIntroTitle', { name: subsiteScopedName || lockedSubsiteSlug })}
                     >
                         <ul style={{ margin: '8px 0 0', paddingLeft: '18px', lineHeight: '1.7' }}>
-                            <li>Les cartels <strong>de votre sous-site</strong> (créés via <em>Proposer un cartel</em> ou <em>+ Nouveau cartel</em>) sont modifiables ici. Chaque création ou modification est <strong>automatiquement envoyée en soumission</strong> au site principal pour validation — un superadmin décide si elle apparaît aussi sur le site principal.</li>
-                            <li>Les cartels du <strong>site principal</strong> qui s'affichent sur votre frise par correspondance de catégorie sont listés en <strong>consultation</strong> (étiquette bleue <em>Site principal · consultation</em>). Ils ne peuvent pas être modifiés depuis ce gestionnaire — ils restent gérés par le site principal.</li>
-                            <li>Supprimer un cartel ici n'affecte <strong>que votre sous-site</strong>, jamais le site principal.</li>
+                            <li><Trans i18nKey="manageCartels.lockedIntroPoint1" components={{ strong: <strong />, em: <em /> }} /></li>
+                            <li><Trans i18nKey="manageCartels.lockedIntroPoint2" components={{ strong: <strong />, em: <em /> }} /></li>
+                            <li><Trans i18nKey="manageCartels.lockedIntroPoint3" components={{ strong: <strong />, em: <em /> }} /></li>
                         </ul>
                     </ExplainerBox>
                 </div>
@@ -625,19 +676,19 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                     borderRadius:'10px', padding:'10px 14px', marginBottom:'16px',
                     color:'#c2185b', fontSize:'0.88rem', fontWeight:'600',
                 }}>
-                    <span>Vue filtrée sur le sous-site <strong>{subsiteScopedName}</strong></span>
+                    <span><Trans i18nKey="manageCartels.subsiteFilterBanner" values={{ name: subsiteScopedName }} components={[<strong key="s" />]} /></span>
                     <span style={{ flex: 1 }} />
                     <button
                         onClick={() => { const next = new URLSearchParams(searchParams); next.delete('subsite'); setSearchParams(next, { replace: true }); }}
                         style={{ background:'white', border:'1px solid #f8bbd0', color:'#c2185b', borderRadius:'6px', padding:'4px 10px', fontSize:'0.78rem', fontWeight:'700', cursor:'pointer', fontFamily:'inherit' }}
                     >
-                        Retirer le filtre
+                        {t('manageCartels.removeSubsiteFilter')}
                     </button>
                     <button
                         onClick={() => navigate(`/site/${filterSubsiteSlug}`)}
                         style={{ background:'#c2185b', border:'none', color:'white', borderRadius:'6px', padding:'4px 10px', fontSize:'0.78rem', fontWeight:'700', cursor:'pointer', fontFamily:'inherit' }}
                     >
-                        Retour au sous-site
+                        {t('manageCartels.backToSubsite')}
                     </button>
                 </div>
             )}
@@ -648,13 +699,12 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                     color="#C2185B"
                     background="#fce4ec"
                     border="#f8bbd0"
-                    title="File de validation des sous-sites"
+                    title={t('manageCartels.submissionsExplainerTitle')}
                 >
-                    Quand un owner de sous-site soumet un cartel publié au site principal, il apparaît ici
-                    en attente de votre décision.<br />
+                    {t('manageCartels.submissionsExplainerIntro')}<br />
                     <ul style={{ margin: '8px 0 0', paddingLeft: '18px', lineHeight: '1.7' }}>
-                        <li><strong>Approuver</strong> — le cartel devient visible sur le flux du site principal. Il reste aussi visible sur son sous-site d'origine.</li>
-                        <li><strong>Rejeter</strong> — la soumission est retirée de la file. Le cartel n'est pas supprimé et reste publié sur son sous-site.</li>
+                        <li><Trans i18nKey="manageCartels.submissionsExplainerApprove" components={{ strong: <strong /> }} /></li>
+                        <li><Trans i18nKey="manageCartels.submissionsExplainerReject" components={{ strong: <strong /> }} /></li>
                     </ul>
                 </ExplainerBox>
             ) : (
@@ -915,11 +965,11 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                                 {!readOnly && activeTab !== 'submissions' && canSubmitThisCartel(cartel) && (
                                                     <>
                                                         {cartel.visible_on_main ? (
-                                                            <ActionBtn onClick={() => handleWithdrawFromMain(cartel)} title="Visible sur le site principal — retirer" color="#2e7d32" disabled={isProc}><Globe size={15} /></ActionBtn>
+                                                            <ActionBtn onClick={() => handleWithdrawFromMain(cartel)} title={t('manageCartels.tipVisibleOnMain')} color="#2e7d32" disabled={isProc}><Globe size={15} /></ActionBtn>
                                                         ) : cartel.submitted_to_main_at ? (
-                                                            <ActionBtn onClick={() => handleWithdrawFromMain(cartel)} title="En attente de validation — retirer" color="#C2185B" disabled={isProc}><Clock size={15} /></ActionBtn>
+                                                            <ActionBtn onClick={() => handleWithdrawFromMain(cartel)} title={t('manageCartels.tipPendingMain')} color="#C2185B" disabled={isProc}><Clock size={15} /></ActionBtn>
                                                         ) : (
-                                                            <ActionBtn onClick={() => handleSubmitToMain(cartel)} title="Soumettre au site principal" color="#6741d9" disabled={isProc}><Upload size={15} /></ActionBtn>
+                                                            <ActionBtn onClick={() => handleSubmitToMain(cartel)} title={t('manageCartels.tipSubmitToMain')} color="#6741d9" disabled={isProc}><Upload size={15} /></ActionBtn>
                                                         )}
                                                     </>
                                                 )}

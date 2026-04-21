@@ -6,6 +6,7 @@ import {
     CheckCircle2, AlertCircle,
 } from 'lucide-react';
 import api from '../services/apiClient';
+import i18n from '../i18n';
 import ExplainerBox from '../components/ExplainerBox';
 
 // ── Onglets ──────────────────────────────────────────────────
@@ -71,7 +72,7 @@ const AdminPartners = () => {
             setPartners(Array.isArray(ps) ? ps : []);
             setSubsites(Array.isArray(ss) ? ss : []);
         } catch (e) {
-            showToast('error', e.message || 'Erreur chargement');
+            showToast('error', e.message || i18n.t('errors.loading'));
         } finally {
             setLoading(false);
         }
@@ -143,7 +144,7 @@ const AdminPartners = () => {
             await load();
             showToast('success', `"${name}" ajouté`);
         } catch (e) {
-            showToast('error', e.message || 'Erreur création');
+            showToast('error', e.message || i18n.t('errors.creating'));
         } finally {
             setCreating(false);
         }
@@ -156,7 +157,7 @@ const AdminPartners = () => {
             await load();
             showToast('success', `"${p.name}" supprimé`);
         } catch (e) {
-            showToast('error', e.message || 'Erreur suppression');
+            showToast('error', e.message || i18n.t('errors.deleting'));
         }
     };
 
@@ -167,7 +168,7 @@ const AdminPartners = () => {
             await load();
             showToast('success', p.is_mandatory ? 'Retiré des obligatoires' : 'Ajouté aux obligatoires');
         } catch (e) {
-            showToast('error', e.message || 'Erreur');
+            showToast('error', e.message || i18n.t('errors.generic'));
         }
     };
 

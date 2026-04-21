@@ -6,6 +6,7 @@ import {
     CheckCircle2, AlertCircle, Shield, Home, HelpCircle,
 } from 'lucide-react';
 import api from '../services/apiClient';
+import i18n from '../i18n';
 import ExplainerBox from '../components/ExplainerBox';
 
 const ACCENT = '#6741d9';       // violet cohérent avec le lien d'AdminSettings
@@ -73,7 +74,7 @@ const AdminTeam = () => {
                 // Superadmin sans sous-site d'attache : on pointe sur le site principal par défaut
                 else if (isSuperadmin) setSelected(MAIN_SITE);
             } catch (e) {
-                showToast('error', e.message || 'Erreur chargement');
+                showToast('error', e.message || i18n.t('errors.loading'));
             } finally {
                 setLoading(false);
             }
@@ -103,7 +104,7 @@ const AdminTeam = () => {
     const handleCreate = async (e) => {
         e.preventDefault();
         if (!newEmail.trim() || !newPassword || newPassword.length < 8) {
-            showToast('error', 'Email et mot de passe (8 caractères min.) requis');
+            showToast('error', i18n.t('toasts.emailPasswordRequired'));
             return;
         }
         setCreating(true);
@@ -129,7 +130,7 @@ const AdminTeam = () => {
             setNewPassword('');
             showToast('success', `Compte "${created.email}" créé`);
         } catch (err) {
-            showToast('error', err.message || 'Erreur création');
+            showToast('error', err.message || i18n.t('errors.creating'));
         } finally {
             setCreating(false);
         }
@@ -143,7 +144,7 @@ const AdminTeam = () => {
                 : await api.team.update(selected.slug, m.id, payload);
             setMembers(prev => prev.map(x => x.id === m.id ? updated : x));
         } catch (err) {
-            showToast('error', err.message || 'Erreur modification');
+            showToast('error', err.message || i18n.t('errors.updating'));
         }
     };
 
@@ -153,9 +154,9 @@ const AdminTeam = () => {
             if (isMain) await api.users.delete(m.id);
             else        await api.team.delete(selected.slug, m.id);
             setMembers(prev => prev.filter(x => x.id !== m.id));
-            showToast('success', 'Compte supprimé');
+            showToast('success', i18n.t('toasts.accountDeleted'));
         } catch (err) {
-            showToast('error', err.message || 'Erreur suppression');
+            showToast('error', err.message || i18n.t('errors.deleting'));
         }
     };
 
