@@ -7,7 +7,7 @@
     "dev:frontend": "vite",
     "dev:backend": "node --watch server/server.js",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "build": "vite build",
+    "build": "vite build && node -e \"require('fs').rmSync('dist/images',{recursive:true,force:true})\"",
     "start": "NODE_ENV=production node server/server.js",
     "start:prod": "NODE_ENV=production node server/server.js",
     "lint": "eslint .",

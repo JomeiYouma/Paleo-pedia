@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Images uploadées : vivent dans paleo-uploads en prod (hors du code).
+# Ne pas committer ni builder les images locales.
+public/images/
+
 # Secrets — ne JAMAIS committer le .env réel
 .env
 .env.local
