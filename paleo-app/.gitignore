@@ -16,6 +16,9 @@ dist-ssr
 # Ne pas committer ni builder les images locales.
 public/images/
 
+# Artefacts de déploiement (ZIPs SFTP)
+*.zip
+
 # Secrets — ne JAMAIS committer le .env réel
 .env
 .env.local
