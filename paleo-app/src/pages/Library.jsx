@@ -164,6 +164,23 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null }) => {
         }
     }, [selectedCats, filteredCartels, viewMode]);
 
+    // Retour d'édition : location.hash = '#cartel-<id>' (posé par rememberReturn).
+    // On restaure la sélection du Frise/TimelineMode dès que filteredCartels
+    // contient la cible. La ref empêche que les changements de filtres
+    // ultérieurs ne re-déclenchent le scroll sur un hash obsolète.
+    const hashRestoredRef = React.useRef(null);
+    useEffect(() => {
+        const h = location.hash || '';
+        if (!h.startsWith('#cartel-')) return;
+        if (hashRestoredRef.current === h) return;
+        const id = h.slice('#cartel-'.length);
+        const found = filteredCartels.find(c => String(c.id) === String(id));
+        if (!found) return;
+        setTargetCartelId(found.id);
+        if (viewMode !== 'timeline' && viewMode !== 'map') setViewMode('timeline');
+        hashRestoredRef.current = h;
+    }, [location.hash, filteredCartels, viewMode]);
+
     // Sélection
     const toggleSelection = (id) => {
         const newSet = new Set(selectedIds);
