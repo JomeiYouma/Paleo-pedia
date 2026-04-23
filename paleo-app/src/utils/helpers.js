@@ -165,7 +165,10 @@ export const formatYear = (yearStr, lang) => {
         val = val.replace(/\bA\.?D\.?\b/gi, 'ap. J.-C.');
 
         // ── Qualificatifs temporels EN → FR ──────────────────────────
-        val = val.replace(/\bc\./gi, 'vers');
+        // Pas de flag `i` : sans ça, le "C." dans "av. J.-C." (produit juste
+        // au-dessus par le remplacement BC→av. J.-C.) serait réécrit en
+        // "av. J.-vers". On ne cible donc que le "c." minuscule (circa).
+        val = val.replace(/\bc\./g, 'vers');
         val = val.replace(/\bearly\b/gi, 'Début');
         val = val.replace(/\blate\b/gi, 'Fin');
         val = val.replace(/\bmid-?\b/gi, 'Milieu');
