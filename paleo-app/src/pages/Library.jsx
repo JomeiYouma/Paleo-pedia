@@ -8,8 +8,9 @@ import ConfirmModal from '../components/ConfirmModal';
 import { getYearForSort } from '../utils/helpers';
 import { Download, Trash2, CheckSquare, Square, Edit, LayoutList, CalendarDays, Map as MapIcon, Search, GitGraph } from 'lucide-react';
 import { generateZip } from '../utils/zipGenerator';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { rememberReturn } from '../utils/navigation';
 import './Library.css';
 
 /** Badge de statut pour les cartels hors "published" (visible admin only) */
@@ -49,6 +50,7 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null }) => {
     const [confirmState, setConfirmState]   = useState(null);
 
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
     const prevSelectedCatsKey = React.useRef('');
 
@@ -349,7 +351,10 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null }) => {
                             </div>
                             {isAdmin && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
-                                    <button onClick={() => navigate(`/app/create?edit=${cartel.id}`)} title="Éditer" style={{ padding: '6px', border: 'none', background: 'none', cursor: 'pointer' }}>
+                                    <button onClick={() => {
+                                            const returnTo = rememberReturn(location, { scrollId: cartel.id });
+                                            navigate(`/app/create?edit=${cartel.id}`, { state: { returnTo } });
+                                        }} title="Éditer" style={{ padding: '6px', border: 'none', background: 'none', cursor: 'pointer' }}>
                                         <Edit size={18} />
                                     </button>
                                     <button

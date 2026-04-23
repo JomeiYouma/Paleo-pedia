@@ -1,10 +1,11 @@
 import React from 'react';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip } from 'react-leaflet';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Edit, MapPin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { getLocalizedContent } from '../utils/i18nHelpers';
+import { rememberReturn } from '../utils/navigation';
 import 'leaflet/dist/leaflet.css';
 
 // Dynamic Marker Style
@@ -152,6 +153,7 @@ const ClusterPopup = ({ items, onNavigate, onTimeline }) => {
 const MapMode = ({ cartels, onGoToTimeline, isAdmin }) => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
+    const location = useLocation();
 
     // Group cartels by coordinates
     const clusters = React.useMemo(() => {
@@ -239,7 +241,10 @@ const MapMode = ({ cartels, onGoToTimeline, isAdmin }) => {
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginTop: '5px' }}>
                                     {isAdmin && (
                                         <button
-                                            onClick={() => navigate(`/create?edit=${c.id}`)}
+                                            onClick={() => {
+                                                const returnTo = rememberReturn(location, { scrollId: c.id });
+                                                navigate(`/app/create?edit=${c.id}`, { state: { returnTo } });
+                                            }}
                                             title={t('cartel.addLocation')}
                                             style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'blue', display: 'flex', alignItems: 'center', gap: '4px', padding: 0, fontSize: '0.85rem' }}
                                         >

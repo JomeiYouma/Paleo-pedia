@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Edit, Trash2 } from 'lucide-react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getLocalizedContent } from '../utils/i18nHelpers';
+import { rememberReturn } from '../utils/navigation';
 
 const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
     const { t, i18n } = useTranslation();
@@ -362,7 +363,10 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                             {isAdmin && (
                                 <>
                                     <button
-                                        onClick={() => navigate(`${createBasePath}?edit=${currentCartel.id}`, { state: { returnTo: `${location.pathname}${location.search}#${currentCartel.id}` } })}
+                                        onClick={() => {
+                                            const returnTo = rememberReturn(location, { scrollId: currentCartel.id });
+                                            navigate(`${createBasePath}?edit=${currentCartel.id}`, { state: { returnTo } });
+                                        }}
                                         title={t('cartel.edit')}
                                         style={{ border: 'none', background: 'white', cursor: 'pointer', padding: '12px', borderRadius: '50%', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}
                                     >

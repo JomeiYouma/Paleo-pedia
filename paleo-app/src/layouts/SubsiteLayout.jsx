@@ -6,11 +6,12 @@
  * - Header propre + footer discret avec retour au site principal
  */
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Outlet, Link, NavLink, useParams, useNavigate } from 'react-router-dom';
+import { Outlet, Link, NavLink, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, Lock, LogOut, Languages, PlusCircle, Settings2, LogIn } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import api from '../services/apiClient';
+import { rememberReturn } from '../utils/navigation';
 
 // ── Contexte interne sous-site ────────────────────────────────
 export const SubsiteContext = createContext(null);
@@ -27,6 +28,7 @@ const NAV = (slug) => [
 
 const SubsiteLayout = () => {
     const { slug } = useParams();
+    const location = useLocation();
     const { user, isAdmin, login, logout } = useApp();
     const navigate = useNavigate();
 
@@ -144,7 +146,10 @@ const SubsiteLayout = () => {
 
                             {/* Proposer un cartel (visiteurs + admins) */}
                             <button
-                                onClick={() => navigate(`/site/${slug}/create`)}
+                                onClick={() => {
+                                    const returnTo = rememberReturn(location);
+                                    navigate(`/site/${slug}/create`, { state: { returnTo } });
+                                }}
                                 title="Proposer un cartel pour ce sous-site"
                                 style={{ background: color, border: 'none', borderRadius: '8px', padding: '6px 12px', color: 'white', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}
                             >

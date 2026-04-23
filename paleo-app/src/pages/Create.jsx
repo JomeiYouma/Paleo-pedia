@@ -6,6 +6,7 @@ import { Save, ArrowLeft, MapPin, Check, X, Bold, Italic, AlertTriangle, Info } 
 import { useTranslation } from 'react-i18next';
 import { compressImage } from '../utils/imageProcessor';
 import { detectWrongLanguage } from '../utils/detectLang';
+import { readStoredReturnTo, clearReturnTo } from '../utils/navigation';
 import api from '../services/apiClient';
 
 const Create = () => {
@@ -40,7 +41,7 @@ const Create = () => {
     // certaines navigations hash). sessionStorage sert de filet pour préserver
     // les filtres du gestionnaire (ex. ?cat=énergie) au retour.
     const returnTo = location.state?.returnTo
-        || sessionStorage.getItem('paleo:returnTo')
+        || readStoredReturnTo()
         || (subsiteSlug ? `/site/${subsiteSlug}` : '/app');
 
     const isEn = i18n.language === 'en';
@@ -243,7 +244,7 @@ const Create = () => {
     };
 
     const handleBack = () => {
-        sessionStorage.removeItem('paleo:returnTo');
+        clearReturnTo();
         navigate(returnTo);
     };
 
@@ -385,7 +386,7 @@ const Create = () => {
         }
 
         setIsSaving(false);
-        sessionStorage.removeItem('paleo:returnTo');
+        clearReturnTo();
         navigate(returnTo);
     };
 

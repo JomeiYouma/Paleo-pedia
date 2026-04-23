@@ -17,6 +17,7 @@ import api from '../services/apiClient';
 import ConfirmModal from '../components/ConfirmModal';
 import ImageHealthModal from '../components/ImageHealthModal';
 import ExplainerBox from '../components/ExplainerBox';
+import { rememberReturn } from '../utils/navigation';
 
 const HEX_COLORS = {
     neutral: '#4b5563',
@@ -212,9 +213,8 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
         const basePath = lockedSubsiteSlug ? `/site/${lockedSubsiteSlug}/create` : '/app/create';
         const workshopQuery = filterWorkshop ? `?workshopId=${filterWorkshop}` : '';
         const target = editId ? `${basePath}?edit=${editId}` : `${basePath}${workshopQuery}`;
-        const returnTo = location.pathname + location.search;
-        // sessionStorage = filet quand location.state est perdu (reload, etc.).
-        sessionStorage.setItem('paleo:returnTo', returnTo);
+        // scrollId = editId permet de re-scroller la liste jusqu'à la ligne éditée au retour.
+        const returnTo = rememberReturn(location, { scrollId: editId || null });
         navigate(target, { state: { returnTo } });
     };
 
@@ -224,8 +224,23 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     // Si intégré dans un sous-site, le filtre est verrouillé sur ce sous-site et
     // ignore le query param. Sinon on lit ?subsite= depuis l'URL.
     const filterSubsiteSlug = lockedSubsiteSlug || searchParams.get('subsite') || '';
-    const [sortConfig,     setSortConfig]      = useState({ key: 'date', direction: 'desc' });
-    const [selectedIds,    setSelectedIds]     = useState(new Set());
+    // Tri persisté dans l'URL (?sort=…&dir=…) pour survivre à un aller-retour vers Create.
+    const [sortConfig, setSortConfig] = useState(() => ({
+        key: searchParams.get('sort') || 'date',
+        direction: searchParams.get('dir') === 'asc' ? 'asc' : 'desc',
+    }));
+    // Sélection persistée en sessionStorage, restaurée au mount.
+    const selectionStorageKey = `paleo:manage:selection:${lockedSubsiteSlug || 'main'}`;
+    const [selectedIds, setSelectedIds] = useState(() => {
+        try {
+            const raw = sessionStorage.getItem(selectionStorageKey);
+            return raw ? new Set(JSON.parse(raw)) : new Set();
+        } catch { return new Set(); }
+    });
+    // Persistance continue : chaque changement est reflété dans sessionStorage.
+    React.useEffect(() => {
+        try { sessionStorage.setItem(selectionStorageKey, JSON.stringify(Array.from(selectedIds))); } catch { /* noop */ }
+    }, [selectedIds, selectionStorageKey]);
     const [processingId,   setProcessingId]    = useState(null);
     const [previewCartel,  setPreviewCartel]   = useState(null);
     const [busy,           setBusy]            = useState(false);
@@ -272,6 +287,27 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     React.useEffect(() => {
         setFilterCategory(searchParams.get('cat') || '');
     }, [location.search]);
+
+    // ── Scroll vers la ligne éditée au retour : location.hash = '#cartel-<id>'
+    // (posé par rememberReturn(location, { scrollId })). On déclenche quand
+    // filteredCartels est prêt pour que la ligne existe dans le DOM.
+    const hashScrolledRef = useRef(null);
+    React.useEffect(() => {
+        const h = location.hash || '';
+        if (!h.startsWith('#cartel-')) return;
+        if (hashScrolledRef.current === h) return;
+        const id = h.slice('#cartel-'.length);
+        const el = document.getElementById(`cartel-${id}`);
+        if (el) {
+            el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            // Petit flash pour repérer visuellement la ligne.
+            const prevBg = el.style.background;
+            el.style.transition = 'background 0.6s ease';
+            el.style.background = '#fff8d6';
+            setTimeout(() => { el.style.background = prevBg; }, 1400);
+            hashScrolledRef.current = h;
+        }
+    }, [location.hash, filteredCartels]);
 
     const currentTabDef = TABS.find(t => t.key === activeTab) || TABS[0];
     const activeWorkshop = filterWorkshop ? workshops.find(w => String(w.id) === String(filterWorkshop)) : null;
@@ -550,7 +586,15 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     const selectAll    = () => setSelectedIds(selectedIds.size === filteredCartels.length ? new Set() : new Set(filteredCartels.map(c => c.id)));
 
     // ── Tri ───────────────────────────────────────────────────
-    const handleSort = (key) => setSortConfig(prev => ({ key, direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc' }));
+    const handleSort = (key) => setSortConfig(prev => {
+        const next = { key, direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc' };
+        // Écrire dans l'URL pour que le tri survive à un aller-retour vers Create.
+        const qp = new URLSearchParams(searchParams);
+        qp.set('sort', next.key);
+        qp.set('dir', next.direction);
+        setSearchParams(qp, { replace: true });
+        return next;
+    });
     const SortIcon = ({ k }) => {
         if (sortConfig.key !== k) return <ArrowUpDown size={13} color="#ccc" />;
         return sortConfig.direction === 'asc' ? <ArrowUp size={13} color="#333" /> : <ArrowDown size={13} color="#333" />;
@@ -793,26 +837,35 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
             </div>
 
             {/* ── Tableau ────────────────────────────────────── */}
-            <div style={{ background:'white', borderRadius:'12px', border:'1px solid #eee', overflow:'hidden', boxShadow:'0 2px 8px rgba(0,0,0,0.04)' }}>
+            {/* Scroll interne : seules les lignes défilent, filtres/onglets/entête
+                de page restent visibles. thead reste collé en haut grâce au sticky. */}
+            <div style={{ background:'white', borderRadius:'12px', border:'1px solid #eee', overflow:'hidden', boxShadow:'0 2px 8px rgba(0,0,0,0.04)', maxHeight:'calc(100vh - 340px)', overflowY:'auto' }}>
                 {filteredCartels.length === 0 ? (
                     <div style={{ textAlign:'center', padding:'60px 20px', color:'#bbb' }}>
                         <p style={{ fontSize:'1.1rem' }}>{t('manageCartels.noCartelsTab')}</p>
                     </div>
                 ) : (
                     <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'0.88rem' }}>
+                        {/* Sticky sur chaque <th> (plus fiable cross-browser que sur <thead>).
+                            top:0 relatif au conteneur de scroll au-dessus. */}
                         <thead style={{ background:'#f8f8f8', borderBottom:'2px solid #eee' }}>
                             <tr>
-                                <th style={{ padding:'12px', width:'36px' }} />
-                                <th style={{ padding:'12px', width:'50px', textAlign:'left' }}>Img</th>
-                                <th onClick={() => handleSort('date')}  style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none', whiteSpace:'nowrap' }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.year')} <SortIcon k="date" /></div></th>
-                                <th onClick={() => handleSort('titre')} style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none' }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.title')} <SortIcon k="titre" /></div></th>
-                                <th style={{ padding:'12px', textAlign:'left' }}>{t('manageCartels.categories')}</th>
-                                <th style={{ padding:'12px', textAlign:'left' }}>{t('manageCartels.workshops')}</th>
-                                <th onClick={() => handleSort('loc')}   style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none' }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.location')} <SortIcon k="loc" /></div></th>
-                                {activeTab === 'pending' && <th style={{ padding:'12px', textAlign:'left' }}>IP</th>}
-                                {activeTab === 'submissions' && <th style={{ padding:'12px', textAlign:'left' }}>{t('manageCartels.subsite')}</th>}
-                                <th style={{ padding:'12px', textAlign:'center' }}>{t('manageCartels.status')}</th>
-                                <th style={{ padding:'12px', textAlign:'center' }}>{t('manageCartels.actions')}</th>
+                                {(() => {
+                                    const thSticky = { position:'sticky', top:0, background:'#f8f8f8', zIndex:2, boxShadow:'inset 0 -2px 0 #eee' };
+                                    return <>
+                                        <th style={{ padding:'12px', width:'36px', ...thSticky }} />
+                                        <th style={{ padding:'12px', width:'50px', textAlign:'left', ...thSticky }}>Img</th>
+                                        <th onClick={() => handleSort('date')}  style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none', whiteSpace:'nowrap', ...thSticky }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.year')} <SortIcon k="date" /></div></th>
+                                        <th onClick={() => handleSort('titre')} style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none', ...thSticky }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.title')} <SortIcon k="titre" /></div></th>
+                                        <th style={{ padding:'12px', textAlign:'left', ...thSticky }}>{t('manageCartels.categories')}</th>
+                                        <th style={{ padding:'12px', textAlign:'left', ...thSticky }}>{t('manageCartels.workshops')}</th>
+                                        <th onClick={() => handleSort('loc')}   style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none', ...thSticky }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.location')} <SortIcon k="loc" /></div></th>
+                                        {activeTab === 'pending' && <th style={{ padding:'12px', textAlign:'left', ...thSticky }}>IP</th>}
+                                        {activeTab === 'submissions' && <th style={{ padding:'12px', textAlign:'left', ...thSticky }}>{t('manageCartels.subsite')}</th>}
+                                        <th style={{ padding:'12px', textAlign:'center', ...thSticky }}>{t('manageCartels.status')}</th>
+                                        <th style={{ padding:'12px', textAlign:'center', ...thSticky }}>{t('manageCartels.actions')}</th>
+                                    </>;
+                                })()}
                             </tr>
                         </thead>
                         <tbody>
@@ -823,7 +876,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                 const readOnly = isReadOnlyMainCartel(cartel);
 
                                 return (
-                                    <tr key={cartel.id} style={{ borderBottom:'1px solid #f0f0f0', background: isProc ? '#fffbf0' : 'white', opacity: isProc ? 0.7 : 1 }}>
+                                    <tr key={cartel.id} id={`cartel-${cartel.id}`} style={{ borderBottom:'1px solid #f0f0f0', background: isProc ? '#fffbf0' : 'white', opacity: isProc ? 0.7 : 1 }}>
 
                                         {/* Checkbox */}
                                         <td style={{ padding:'10px', textAlign:'center' }}>
