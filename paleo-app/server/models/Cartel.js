@@ -123,6 +123,13 @@ export const CartelModel = {
       await client.query('START TRANSACTION');
       const id = randomUUID();
 
+      // `visible` suit `status='published'` : la colonne est vestigiale mais
+      // encore lue côté frontend pour masquer les cartels non publiés. On la
+      // synchronise ici pour qu'un cartel créé directement en 'published'
+      // apparaisse aux visiteurs anonymes.
+      const cartelStatus = data.status ?? 'draft';
+      const visible = cartelStatus === 'published' ? 1 : (data.visible ? 1 : 0);
+
       await client.query(
         `INSERT INTO cartels (
            id, created_by, subsite_id, titre, titre_en, annee, description, description_en,
@@ -144,8 +151,8 @@ export const CartelModel = {
           data.imageCredit       ?? data.image_credit ?? '',
           data.url_qr            ?? '',
           data.date              ?? null,
-          data.status            ?? 'draft',
-          data.visible           ? 1 : 0,
+          cartelStatus,
+          visible,
           submitterIp,
         ]
       );
@@ -207,11 +214,20 @@ export const CartelModel = {
   },
 
   async setStatus(id, status) {
-    const values = [status, id];
+    // `visible` est une colonne vestigiale encore lue par le frontend
+    // (Library.jsx filtre les visiteurs anonymes sur c.visible). On la
+    // synchronise avec le statut : visible=1 uniquement quand publié.
+    const visible = status === 'published' ? 1 : 0;
     if (status === 'published') {
-      await query('UPDATE cartels SET status = ?, published_at = NOW() WHERE id = ?', values);
+      await query(
+        'UPDATE cartels SET status = ?, visible = ?, published_at = NOW() WHERE id = ?',
+        [status, visible, id]
+      );
     } else {
-      await query('UPDATE cartels SET status = ? WHERE id = ?', values);
+      await query(
+        'UPDATE cartels SET status = ?, visible = ? WHERE id = ?',
+        [status, visible, id]
+      );
     }
     return this.findById(id);
   },
