@@ -288,26 +288,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
         setFilterCategory(searchParams.get('cat') || '');
     }, [location.search]);
 
-    // ── Scroll vers la ligne éditée au retour : location.hash = '#cartel-<id>'
-    // (posé par rememberReturn(location, { scrollId })). On déclenche quand
-    // filteredCartels est prêt pour que la ligne existe dans le DOM.
     const hashScrolledRef = useRef(null);
-    React.useEffect(() => {
-        const h = location.hash || '';
-        if (!h.startsWith('#cartel-')) return;
-        if (hashScrolledRef.current === h) return;
-        const id = h.slice('#cartel-'.length);
-        const el = document.getElementById(`cartel-${id}`);
-        if (el) {
-            el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-            // Petit flash pour repérer visuellement la ligne.
-            const prevBg = el.style.background;
-            el.style.transition = 'background 0.6s ease';
-            el.style.background = '#fff8d6';
-            setTimeout(() => { el.style.background = prevBg; }, 1400);
-            hashScrolledRef.current = h;
-        }
-    }, [location.hash, filteredCartels]);
 
     const currentTabDef = TABS.find(t => t.key === activeTab) || TABS[0];
     const activeWorkshop = filterWorkshop ? workshops.find(w => String(w.id) === String(filterWorkshop)) : null;
@@ -373,6 +354,25 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
         });
         return data;
     }, [cartels, currentTabDef, search, filterCategory, filterWorkshop, filterSubsiteSlug, sortConfig, issueIdsFilter, scopedCartels]);
+
+    // ── Scroll vers la ligne éditée au retour : location.hash = '#cartel-<id>'
+    // (posé par rememberReturn(location, { scrollId })). On déclenche quand
+    // filteredCartels est prêt pour que la ligne existe dans le DOM.
+    React.useEffect(() => {
+        const h = location.hash || '';
+        if (!h.startsWith('#cartel-')) return;
+        if (hashScrolledRef.current === h) return;
+        const id = h.slice('#cartel-'.length);
+        const el = document.getElementById(`cartel-${id}`);
+        if (el) {
+            el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            const prevBg = el.style.background;
+            el.style.transition = 'background 0.6s ease';
+            el.style.background = '#fff8d6';
+            setTimeout(() => { el.style.background = prevBg; }, 1400);
+            hashScrolledRef.current = h;
+        }
+    }, [location.hash, filteredCartels]);
 
     const subsiteScopedName = useMemo(() => {
         if (!filterSubsiteSlug) return null;
