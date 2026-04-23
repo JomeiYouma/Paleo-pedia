@@ -8,6 +8,7 @@ import ManageCartels from './pages/ManageCartels';
 import AdminSettings from './pages/AdminSettings';
 import AdminPartners from './pages/AdminPartners';
 import AdminTeam from './pages/AdminTeam';
+import AdminCategoriesWorkshops from './pages/AdminCategoriesWorkshops';
 import Presentation from './pages/Presentation';
 import Prestations from './pages/Prestations';
 import Ouvrages from './pages/Ouvrages';
@@ -65,6 +66,7 @@ function App() {
             <Route path="admin"             element={<AdminSettings />} />
             <Route path="admin/partners"    element={<AdminPartners />} />
             <Route path="admin/team"        element={<AdminTeam />} />
+            <Route path="admin/taxonomies"  element={<AdminCategoriesWorkshops />} />
             <Route path="admin/workshop/:workshopId" element={<ManageCartels />} />
             <Route path="drafts" element={<Navigate to="/app/manage/pending" replace />} />
           </Route>

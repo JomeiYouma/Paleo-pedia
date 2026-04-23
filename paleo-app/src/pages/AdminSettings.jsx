@@ -5,6 +5,7 @@ import {
     Shield, Users, Key, Save, RefreshCw,
     ToggleLeft, ToggleRight, AlertCircle, CheckCircle2, Check,
     Globe, Plus, Trash2, Edit, ExternalLink, ChevronDown, ChevronUp,
+    FolderOpen,
 } from 'lucide-react';
 import api from '../services/apiClient';
 import i18n from '../i18n';
@@ -499,6 +500,30 @@ const AdminSettings = () => {
                         </button>
                         <p style={{ margin: '10px 0 0', fontSize: '0.8rem', color: '#888' }}>
                             Owners : gérez votre propre équipe. Superadmins : vous pouvez aussi utiliser la page globale des utilisateurs.
+                        </p>
+                    </Section>
+
+                    {/* ── Section 3b : Catégories & ateliers ──────────── */}
+                    <Section icon={FolderOpen} title="Catégories & ateliers" color="#0d9488">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/app/admin/taxonomies')}
+                            style={{
+                                width: '100%',
+                                display: 'flex', alignItems: 'center', gap: '12px',
+                                padding: '14px 18px',
+                                background: '#ecfdf5', border: '1px solid #b7e4d8',
+                                borderRadius: '10px', cursor: 'pointer',
+                                fontFamily: 'inherit', color: '#0d6b60',
+                                fontSize: '0.9rem', fontWeight: '700',
+                            }}
+                        >
+                            <ExternalLink size={16} />
+                            <span style={{ flex: 1, textAlign: 'left' }}>Modifier ou supprimer les catégories et ateliers</span>
+                            <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
+                        </button>
+                        <p style={{ margin: '10px 0 0', fontSize: '0.8rem', color: '#888' }}>
+                            Gérez la taxonomie des cartels (couleurs, traductions) et le cycle de vie des ateliers.
                         </p>
                     </Section>
 
