@@ -2,6 +2,42 @@ import { CartelModel } from '../models/Cartel.js';
 
 const VALID_STATUSES = ['draft', 'pending_review', 'published', 'archived'];
 
+/**
+ * Longueurs maximales par champ (en caractères). Bornes raisonnables pour
+ * éviter qu'un client envoie 10 Mo de texte dans description et sature la BDD.
+ * Un visiteur légitime ne dépassera jamais ces limites ; un bot/attaque oui.
+ */
+const MAX_LENGTHS = {
+  titre:          200,
+  titre_en:       200,
+  annee:          50,
+  description:    10000,
+  description_en: 10000,
+  exhume_par:     200,
+  location:       300,
+  location_en:    300,
+  image_credit:   300,
+  imageCredit:    300,
+  image_path:     500,
+  url_qr:         500,
+};
+
+/**
+ * Valide la taille des champs texte présents dans `data`. Retourne un message
+ * d'erreur lisible si un champ dépasse la limite, `null` sinon. On ignore les
+ * champs absents pour rester compatible avec les updates partiels.
+ */
+function validateFieldLengths(data) {
+  if (!data || typeof data !== 'object') return 'Payload invalide';
+  for (const [field, max] of Object.entries(MAX_LENGTHS)) {
+    const v = data[field];
+    if (typeof v === 'string' && v.length > max) {
+      return `Le champ "${field}" dépasse la longueur maximale (${max} caractères).`;
+    }
+  }
+  return null;
+}
+
 function sanitizeWorkshopFields(body, canManageAdmin) {
   if (canManageAdmin) return body;
   const cleaned = { ...body };
@@ -41,6 +77,32 @@ function resolveTargetSubsiteId(req) {
   // Un superadmin non rattaché crée sur le site principal (subsite_id = NULL).
   if (req.user?.home_subsite_id && !req.user?.can_manage_admin) return req.user.home_subsite_id;
   return null;
+}
+
+/**
+ * Détermine le statut autorisé à la création selon l'identité de l'émetteur.
+ *
+ * Un visiteur anonyme ne peut JAMAIS publier directement : son cartel part
+ * toujours en `pending_review`, quel que soit le `status` envoyé dans le body.
+ * Sans cette garde, un attaquant peut POST avec `{status: 'published'}` et
+ * contourner la modération (le modèle respectait `data.status ?? 'draft'`).
+ */
+function resolveCreateStatus(req, requestedStatus) {
+  // Anonyme : on force pending_review, point final.
+  if (!req.user) return 'pending_review';
+
+  // Authentifié mais sans permission de publier : il peut au mieux soumettre
+  // en pending_review ; on refuse 'published' et 'archived' silencieusement
+  // en les ramenant à un brouillon.
+  if (!req.user.can_publish_cartel && !req.user.can_manage_admin) {
+    if (requestedStatus === 'published' || requestedStatus === 'archived') {
+      return 'pending_review';
+    }
+    return VALID_STATUSES.includes(requestedStatus) ? requestedStatus : 'draft';
+  }
+
+  // Permissions suffisantes : on respecte le choix du client s'il est valide.
+  return VALID_STATUSES.includes(requestedStatus) ? requestedStatus : 'draft';
 }
 
 /**
@@ -103,9 +165,16 @@ export const CartelController = {
 
   async create(req, res) {
     try {
+      const lengthError = validateFieldLengths(req.body);
+      if (lengthError) return res.status(400).json({ error: lengthError });
+
       const targetSubsiteId = resolveTargetSubsiteId(req);
+      const body = sanitizeWorkshopFields(req.body, req.user?.can_manage_admin);
+      // Le statut du client est ignoré si l'utilisateur n'est pas autorisé à le choisir
+      // (cf. resolveCreateStatus). Évite qu'un visiteur anonyme poste {status:'published'}.
+      body.status = resolveCreateStatus(req, body.status);
       let cartel = await CartelModel.create(
-        sanitizeWorkshopFields(req.body, req.user?.can_manage_admin),
+        body,
         req.user?.id ?? null,
         req.submitterIp ?? null,
         targetSubsiteId,
@@ -119,6 +188,9 @@ export const CartelController = {
 
   async update(req, res) {
     try {
+      const lengthError = validateFieldLengths(req.body);
+      if (lengthError) return res.status(400).json({ error: lengthError });
+
       const existing = await CartelModel.findById(req.params.id);
       if (!existing) return res.status(404).json({ error: 'Cartel introuvable' });
 

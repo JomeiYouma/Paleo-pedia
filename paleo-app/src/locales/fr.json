@@ -116,7 +116,10 @@
         "loadingPrefix": "Erreur de chargement : {{msg}}",
         "savingPartnersPrefix": "Erreur enregistrement partenaires : {{msg}}",
         "translationPrefix": "Erreur traduction : {{msg}}",
-        "workshopCreatePrefix": "Erreur création atelier : {{msg}}"
+        "workshopCreatePrefix": "Erreur création atelier : {{msg}}",
+        "submitFailedTitle": "Votre cartel n'a pas été enregistré.",
+        "submitFailedRetry": "L'envoi a échoué : {{msg}}. Vérifiez votre connexion et réessayez.",
+        "updateFailedRetry": "La mise à jour a échoué. Vos modifications n'ont pas été enregistrées."
     },
     "messages": {
         "editDraft": "Modifier le Brouillon",

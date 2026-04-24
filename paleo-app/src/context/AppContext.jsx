@@ -118,16 +118,15 @@ export const AppProvider = ({ children }) => {
         return payload;
     };
 
+    // addCartel / addCartelToSubsite propagent les erreurs (throw) : le caller
+    // doit les capter pour afficher un feedback ET s'abstenir de naviguer en
+    // cas d'échec. Renvoyer null avec un alert() avalait l'échec côté UX.
     const addCartel = async (entry) => {
         setLoading(true);
         try {
             const created = await api.cartels.create(buildApiPayload(entry));
             await fetchData();
             return created;
-        } catch (e) {
-            console.error(e);
-            alert(i18n.t('errors.savingPrefix', { msg: e.message }));
-            return null;
         } finally {
             setLoading(false);
         }
@@ -140,10 +139,6 @@ export const AppProvider = ({ children }) => {
             const created = await api.cartels.createForSubsite(slug, buildApiPayload(entry));
             await fetchData();
             return created;
-        } catch (e) {
-            console.error(e);
-            alert(i18n.t('errors.savingPrefix', { msg: e.message }));
-            return null;
         } finally {
             setLoading(false);
         }

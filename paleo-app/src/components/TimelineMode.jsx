@@ -61,14 +61,29 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
         return stacked;
     }, [cartels]);
 
-    // Sync targetId to selection
+    // Mémorise l'id du cartel courant pour pouvoir le restaurer après un
+    // changement du jeu de cartels (toggle d'un filtre catégorie, refresh...).
+    const lastSelectedIdRef = useRef(null);
     useEffect(() => {
-        if (targetId && validCartels.length > 0) {
-            const foundIndex = validCartels.findIndex(c => c.id === targetId);
-            if (foundIndex !== -1) {
-                setSelectedIndex(foundIndex);
-            }
+        const c = validCartels[selectedIndex];
+        if (c) lastSelectedIdRef.current = c.id;
+    }, [selectedIndex, validCartels]);
+
+    // Résout la sélection : targetId explicite > cartel précédent si toujours
+    // dans la liste > premier cartel. Sans ce fallback, selectedIndex peut
+    // devenir hors bornes après un filtre et plus aucun cartel ne s'affiche.
+    useEffect(() => {
+        if (!validCartels.length) return;
+        if (targetId) {
+            const idx = validCartels.findIndex(c => c.id === targetId);
+            if (idx !== -1) { setSelectedIndex(idx); return; }
         }
+        const prevId = lastSelectedIdRef.current;
+        if (prevId) {
+            const idx = validCartels.findIndex(c => c.id === prevId);
+            if (idx !== -1) { setSelectedIndex(idx); return; }
+        }
+        setSelectedIndex(0);
     }, [targetId, validCartels]);
 
     // Initialization Effect (Draws Axis, Zoom, Markers initially)

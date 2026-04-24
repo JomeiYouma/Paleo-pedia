@@ -9,6 +9,10 @@ import { detectWrongLanguage } from '../utils/detectLang';
 import { readStoredReturnTo, clearReturnTo } from '../utils/navigation';
 import api from '../services/apiClient';
 
+const RequiredMark = () => (
+    <span aria-hidden="true" style={{ color: '#d32f2f', marginLeft: '3px', fontWeight: 700 }}>*</span>
+);
+
 const Create = () => {
     const { t, i18n } = useTranslation();
     const context = useApp() || {};
@@ -62,6 +66,9 @@ const Create = () => {
         lng: null,
         image_path: '',
         workshopIds: workshopIdParam ? [workshopIdParam] : [],
+        // Honeypot : toujours '' pour un humain. Si rempli, le backend rejette
+        // la soumission (guard anti-bot côté submissionGuard).
+        website: '',
     });
 
     const [imageFile, setImageFile] = useState(null);
@@ -70,6 +77,7 @@ const Create = () => {
     const [geoStatus, setGeoStatus] = useState('idle');
     const [isSaving, setIsSaving] = useState(false);
     const [statusMsg, setStatusMsg] = useState('');
+    const [submitError, setSubmitError] = useState('');
     const descRef = useRef(null);
 
     // Résolution paresseuse du nom du sous-site natif (pour le bandeau d'info
@@ -250,6 +258,7 @@ const Create = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setSubmitError('');
 
         // Filet de sécurité : si l'utilisateur clique Publier sans sortir du champ,
         // onBlur ne déclenche pas à temps (le formulaire navigue avant que le modal
@@ -352,37 +361,48 @@ const Create = () => {
             }
         }
 
-        if (editId) {
-            // Mise à jour d'un cartel existant
-            if (isAdmin && action === 'publish') {
-                entry.status = 'published';
-            } else if (isAdmin) {
-                // Admin garde le statut actuel ou force draft
-                entry.status = entry.status || 'draft';
+        try {
+            if (editId) {
+                // Mise à jour d'un cartel existant
+                if (isAdmin && action === 'publish') {
+                    entry.status = 'published';
+                } else if (isAdmin) {
+                    // Admin garde le statut actuel ou force draft
+                    entry.status = entry.status || 'draft';
+                } else {
+                    // Visiteur : propose ou sauvegarde
+                    entry.status = action === 'save_draft' ? 'draft' : 'pending_review';
+                }
+                const updated = subsiteSlug
+                    ? await updateCartelInSubsite(subsiteSlug, entry)
+                    : await updateCartel(entry);
+                // updateCartel retourne null en cas d'échec (alert déjà affiché) :
+                // on reste sur la page pour que l'utilisateur voie le bandeau.
+                if (updated == null) {
+                    setSubmitError(t('errors.updateFailedRetry', "La mise à jour a échoué. Vos modifications n'ont pas été enregistrées."));
+                    setIsSaving(false);
+                    return;
+                }
             } else {
-                // Visiteur : propose ou sauvegarde
-                entry.status = action === 'save_draft' ? 'draft' : 'pending_review';
-            }
-            if (subsiteSlug) {
-                await updateCartelInSubsite(subsiteSlug, entry);
-            } else {
-                await updateCartel(entry);
-            }
-        } else {
-            // Nouveau cartel
-            if (isAdmin) {
-                entry.status = action === 'publish' ? 'published' : 'draft';
-            } else {
-                entry.status = action === 'save_draft' ? 'draft' : 'pending_review';
-                if (action !== 'save_draft') {
-                    setStatusMsg(t('messages.proposalSaved', "Proposition envoyée !"));
+                // Nouveau cartel
+                if (isAdmin) {
+                    entry.status = action === 'publish' ? 'published' : 'draft';
+                } else {
+                    entry.status = action === 'save_draft' ? 'draft' : 'pending_review';
+                }
+                if (subsiteSlug) {
+                    await addCartelToSubsite(subsiteSlug, entry);
+                } else {
+                    await addCartel(entry);
                 }
             }
-            if (subsiteSlug) {
-                await addCartelToSubsite(subsiteSlug, entry);
-            } else {
-                await addCartel(entry);
-            }
+        } catch (err) {
+            // Échec de création/soumission : on reste sur la page avec un bandeau
+            // explicite. Surtout ne PAS naviguer — sinon le visiteur croit que sa
+            // proposition est partie alors qu'elle a été rejetée (rate limit, etc.).
+            setSubmitError(t('errors.submitFailedRetry', { msg: err?.message || 'Erreur inconnue' }));
+            setIsSaving(false);
+            return;
         }
 
         setIsSaving(false);
@@ -406,6 +426,32 @@ const Create = () => {
             </div>
 
             <h2>{editId ? t('messages.editCartel', 'Modifier le cartel') : t('create.pageTitle', 'Nouveau cartel')}</h2>
+
+            {submitError && (
+                <div
+                    role="alert"
+                    style={{
+                        display: 'flex', alignItems: 'flex-start', gap: '10px',
+                        background: '#fff0f0', border: '1px solid #f5c2c7',
+                        borderRadius: '10px', padding: '12px 14px', marginBottom: '14px',
+                        color: '#842029', fontSize: '0.9rem', lineHeight: '1.5',
+                    }}
+                >
+                    <AlertTriangle size={18} color="#c0392b" style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <div style={{ flex: 1 }}>
+                        <strong>{t('errors.submitFailedTitle', "Votre cartel n'a pas été enregistré.")}</strong>
+                        <div style={{ marginTop: '4px' }}>{submitError}</div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setSubmitError('')}
+                        aria-label={t('common.close', 'Fermer')}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#842029', padding: 0 }}
+                    >
+                        <X size={16} />
+                    </button>
+                </div>
+            )}
 
             {/* Info discret : l'utilisateur est rattaché à un sous-site et ne le sait peut-être pas */}
             {!subsiteSlug && !editId && homeSubsite && (
@@ -432,9 +478,26 @@ const Create = () => {
 
             <form onSubmit={handleSubmit} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
 
+                {/* Honeypot anti-bot : champ invisible à l'œil nu et aux lecteurs d'écran,
+                    mais présent dans le DOM. Les scrapers le remplissent → le serveur
+                    rejette. Nom "website" choisi pour paraître légitime aux yeux d'un bot. */}
+                <div aria-hidden="true" style={{ position: 'absolute', left: '-10000px', top: 'auto', width: '1px', height: '1px', overflow: 'hidden' }}>
+                    <label>
+                        Website (leave empty)
+                        <input
+                            type="text"
+                            name="website"
+                            tabIndex={-1}
+                            autoComplete="off"
+                            value={form.website || ''}
+                            onChange={e => setForm(f => ({ ...f, website: e.target.value }))}
+                        />
+                    </label>
+                </div>
+
                 {/* Title */}
                 <div>
-                    <label>{t('create.fieldTitle')} *</label>
+                    <label>{t('create.fieldTitle')}<RequiredMark /></label>
                     <input
                         name="title_input"
                         value={isEn ? form.titre_en : form.titre}
@@ -501,19 +564,41 @@ const Create = () => {
                             <Italic size={13} /> Italique
                         </button>
                     </div>
-                    <textarea
-                        ref={descRef}
-                        name="desc_input"
-                        value={isEn ? form.description_en : form.description}
-                        onChange={handleInputChange}
-                        onBlur={e => checkLangMismatch('desc', e.target.value)}
-                        maxLength={1500}
-                        rows={10}
-                        style={{ width: '100%', padding: '8px' }}
-                    />
-                    <div style={{ textAlign: 'right', fontSize: '0.8em', color: '#666', marginTop: '4px' }}>
-                        {1500 - ((isEn ? form.description_en : form.description)?.length || 0)} / 1500
-                    </div>
+                    {(() => {
+                        const descText = (isEn ? form.description_en : form.description) || '';
+                        const descLen = descText.length;
+                        const descOver = descLen > 1500;
+                        return (
+                            <>
+                                <textarea
+                                    ref={descRef}
+                                    name="desc_input"
+                                    value={descText}
+                                    onChange={handleInputChange}
+                                    onBlur={e => checkLangMismatch('desc', e.target.value)}
+                                    rows={10}
+                                    style={{
+                                        width: '100%',
+                                        padding: '8px',
+                                        border: `1px solid ${descOver ? '#d32f2f' : '#ccc'}`,
+                                        outline: descOver ? '1px solid #d32f2f' : undefined,
+                                        borderRadius: '4px',
+                                    }}
+                                />
+                                <div style={{
+                                    textAlign: 'right',
+                                    fontSize: '0.8em',
+                                    color: descOver ? '#d32f2f' : '#666',
+                                    fontWeight: descOver ? 700 : 'normal',
+                                    marginTop: '4px',
+                                }}>
+                                    {descOver
+                                        ? t('create.descOverLimit', { count: descLen - 1500, total: descLen, defaultValue: `⚠︎ ${descLen - 1500} caractère(s) en trop — ${descLen} / 1500` })
+                                        : `${1500 - descLen} / 1500`}
+                                </div>
+                            </>
+                        );
+                    })()}
                 </div>
 
                 {/* Image */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useLocation, NavLink } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import {
@@ -28,13 +28,35 @@ const APP_NAV_VISITOR = [
     { path: '/app/create', labelKey: 'nav.create', icon: PlusCircle },
 ];
 
+// Les onglets admin peuvent exposer un compteur live (cartels en attente, brouillons, etc.).
+// `countKey` pointe sur la clé calculée dans adminNavCounts ci-dessous.
 const APP_NAV_ADMIN = [
     { path: '/app',              labelKey: 'nav.library',         icon: Library,         end: true },
-    { path: '/app/manage/drafts',   labelKey: 'nav.drafts',   icon: ClipboardList },
-    { path: '/app/manage/pending',  labelKey: 'nav.pending', icon: ClipboardList },
+    { path: '/app/manage/drafts',   labelKey: 'nav.drafts',   icon: ClipboardList, countKey: 'drafts' },
+    { path: '/app/manage/pending',  labelKey: 'nav.pending', icon: ClipboardList, countKey: 'pending' },
     { path: '/app/manage/published',labelKey: 'nav.published',      icon: LayoutDashboard },
     { path: '/app/admin',           labelKey: 'nav.admin',        icon: Settings2 },
 ];
+
+// Petit badge circulaire affiché à côté des libellés de nav admin.
+// Couleur neutre à 0, orange à partir de 1 (attire l'œil pour la modération).
+const NavBadge = ({ count, accent }) => {
+    if (!count) return null;
+    return (
+        <span
+            style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                minWidth: '18px', height: '18px', padding: '0 6px',
+                marginLeft: '6px', borderRadius: '9px',
+                background: accent ? '#e67e00' : '#ccc',
+                color: 'white', fontSize: '0.68rem', fontWeight: '800',
+                lineHeight: 1,
+            }}
+        >
+            {count > 99 ? '99+' : count}
+        </span>
+    );
+};
 
 /**
  * Header unifié — un seul header pour tout le site.
@@ -46,10 +68,24 @@ const APP_NAV_ADMIN = [
  *   currentWorkshop, quitWorkshop
  */
 const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
-    const { user, isAdmin, homeSubsiteId, login, logout } = useApp();
+    const { user, isAdmin, homeSubsiteId, login, logout, cartels = [] } = useApp();
     const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
+
+    // Compteurs visibles à côté des onglets admin : on veut attirer l'œil sur
+    // ce qui attend une action (cartels en attente de modération), sans faire
+    // clignoter le reste.
+    const adminNavCounts = useMemo(() => {
+        if (!isAdmin) return { drafts: 0, pending: 0 };
+        const scoped = homeSubsiteId
+            ? cartels.filter(c => c.subsite_id === homeSubsiteId)
+            : cartels;
+        return {
+            drafts:  scoped.filter(c => c.status === 'draft').length,
+            pending: scoped.filter(c => c.status === 'pending_review').length,
+        };
+    }, [cartels, isAdmin, homeSubsiteId]);
 
     const [isMenuOpen,     setIsMenuOpen]     = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -226,6 +262,12 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                                     >
                                                         <Icon size={15} />
                                                         {t(link.labelKey)}
+                                                        {link.countKey && (
+                                                            <NavBadge
+                                                                count={adminNavCounts[link.countKey]}
+                                                                accent={link.countKey === 'pending'}
+                                                            />
+                                                        )}
                                                     </Link>
                                                 );
                                             })}
@@ -585,6 +627,12 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                     >
                                         <Icon size={14} />
                                         {t(link.labelKey)}
+                                        {link.countKey && (
+                                            <NavBadge
+                                                count={adminNavCounts[link.countKey]}
+                                                accent={link.countKey === 'pending'}
+                                            />
+                                        )}
                                     </Link>
                                 );
                             })}

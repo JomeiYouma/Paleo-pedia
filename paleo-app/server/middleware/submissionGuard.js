@@ -16,6 +16,14 @@ export async function submissionGuard(req, res, next) {
     // Utilisateur connecté → toujours autorisé
     if (req.user) return next();
 
+    // Honeypot : champ piège invisible côté client. Rempli = bot quasi certain.
+    // Le formulaire pose un <input name="website"> caché en CSS ; un humain ne
+    // le voit pas, un scraper le remplit. On répond 400 générique pour ne pas
+    // lui donner d'indice sur la cause du rejet.
+    if (req.body && typeof req.body.website === 'string' && req.body.website.trim() !== '') {
+      return res.status(400).json({ error: 'Requête invalide.' });
+    }
+
     const settings = await SettingModel.getCached();
 
     // Soumissions anonymes désactivées ?
@@ -25,11 +33,10 @@ export async function submissionGuard(req, res, next) {
       });
     }
 
-    // Récupérer l'IP (compatible proxy)
-    const ip =
-      req.headers['x-forwarded-for']?.split(',')[0].trim() ||
-      req.socket?.remoteAddress ||
-      'unknown';
+    // `req.ip` résolu par Express via `trust proxy` (cf. server.js). Évite
+    // d'utiliser `x-forwarded-for` brut — un client peut poser sa propre en-tête
+    // et spoofer l'IP s'il prend la 1ʳᵉ valeur.
+    const ip = req.ip || 'unknown';
 
     const maxTotal  = parseInt(settings.max_submissions_per_ip_total,  10) || 10;
     const maxWindow = parseInt(settings.max_submissions_per_ip_window, 10) || 3;

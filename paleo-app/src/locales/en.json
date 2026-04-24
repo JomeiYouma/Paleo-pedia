@@ -116,7 +116,10 @@
         "loadingPrefix": "Load error: {{msg}}",
         "savingPartnersPrefix": "Partners save error: {{msg}}",
         "translationPrefix": "Translation error: {{msg}}",
-        "workshopCreatePrefix": "Workshop creation error: {{msg}}"
+        "workshopCreatePrefix": "Workshop creation error: {{msg}}",
+        "submitFailedTitle": "Your cartel was not saved.",
+        "submitFailedRetry": "Submission failed: {{msg}}. Please check your connection and try again.",
+        "updateFailedRetry": "Update failed. Your changes were not saved."
     },
     "messages": {
         "editDraft": "Edit Draft",
