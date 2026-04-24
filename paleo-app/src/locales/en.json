@@ -2,6 +2,7 @@
     "nav": {
         "library": "Library",
         "create": "Create",
+        "cartels": "Cartels",
         "drafts": "Ideas & Drafts",
         "published": "Published",
         "pending": "Pending",
