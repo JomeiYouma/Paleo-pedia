@@ -78,7 +78,24 @@ const Create = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [statusMsg, setStatusMsg] = useState('');
     const [submitError, setSubmitError] = useState('');
+    // Vrai dès que l'utilisateur a modifié le form. Sert au garde-fou anti-perte
+    // (handleBack + beforeunload). Reste false tant qu'on est sur le pré-remplissage
+    // initial en mode edit (cf. useEffect editId plus bas).
+    const [isDirty, setIsDirty] = useState(false);
     const descRef = useRef(null);
+
+    // beforeunload : bloque les refreshs / fermetures d'onglet si modifs en cours.
+    // Le message lui-même est imposé par le navigateur (on ne peut pas le customiser
+    // depuis ~2017), mais le simple fait de set returnValue déclenche la confirmation.
+    useEffect(() => {
+        if (!isDirty || isSaving) return;
+        const handler = (e) => {
+            e.preventDefault();
+            e.returnValue = '';
+        };
+        window.addEventListener('beforeunload', handler);
+        return () => window.removeEventListener('beforeunload', handler);
+    }, [isDirty, isSaving]);
 
     // Résolution paresseuse du nom du sous-site natif (pour le bandeau d'info
     // quand un utilisateur de sous-site crée un cartel depuis /app/create)
@@ -191,7 +208,10 @@ const Create = () => {
         }
     };
 
+    // Les toggles boutons ne déclenchent pas onChange du <form> : on doit
+    // marquer dirty manuellement pour que le garde-fou anti-perte fonctionne.
     const handleCategoryToggle = (cat) => {
+        setIsDirty(true);
         setForm(prev => {
             const cats = prev.categories || [];
             if (cats.includes(cat)) return { ...prev, categories: cats.filter(c => c !== cat) };
@@ -203,6 +223,7 @@ const Create = () => {
         if (newCategory) {
             addLocalCategory(newCategory);
             if (!form.categories.includes(newCategory)) {
+                setIsDirty(true);
                 setForm(prev => ({ ...prev, categories: [...prev.categories, newCategory] }));
             }
             setNewCategory('');
@@ -215,6 +236,7 @@ const Create = () => {
 
         const createdWorkshopId = await addWorkshop(name);
         if (createdWorkshopId) {
+            setIsDirty(true);
             setForm(prev => {
                 const current = new Set((prev.workshopIds || []).map(String));
                 current.add(String(createdWorkshopId));
@@ -225,6 +247,7 @@ const Create = () => {
     };
 
     const handleWorkshopToggle = (id) => {
+        setIsDirty(true);
         setForm(prev => {
             const current = new Set((prev.workshopIds || []).map(String));
             const key = String(id);
@@ -252,6 +275,9 @@ const Create = () => {
     };
 
     const handleBack = () => {
+        if (isDirty && !window.confirm(t('create.confirmLeave', "Vous avez des modifications non enregistrées. Quitter sans publier ?"))) {
+            return;
+        }
         clearReturnTo();
         navigate(returnTo);
     };
@@ -405,6 +431,7 @@ const Create = () => {
             return;
         }
 
+        setIsDirty(false);
         setIsSaving(false);
         clearReturnTo();
         navigate(returnTo);
@@ -476,7 +503,12 @@ const Create = () => {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <form
+                onSubmit={handleSubmit}
+                onChange={() => setIsDirty(true)}
+                className="card"
+                style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}
+            >
 
                 {/* Honeypot anti-bot : champ invisible à l'œil nu et aux lecteurs d'écran,
                     mais présent dans le DOM. Les scrapers le remplissent → le serveur

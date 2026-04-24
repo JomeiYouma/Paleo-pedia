@@ -27,6 +27,7 @@
     },
     "create": {
         "pageTitle": "Créer / Modifier un cartel",
+        "confirmLeave": "Vous avez des modifications non enregistrées. Quitter sans publier ?",
         "langMismatchTitle": "Langue différente détectée",
         "langMismatchEnOnFr": "Il semble que vous écrivez en anglais sur la page française. Basculez vers la page anglaise pour saisir les champs anglais, votre texte sera déplacé.",
         "langMismatchFrOnEn": "Il semble que vous écrivez en français sur la page anglaise. Basculez vers la page française pour saisir les champs français, votre texte sera déplacé.",
