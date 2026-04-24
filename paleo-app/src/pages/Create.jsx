@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams, useNavigate, useLocation, useParams } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams, useNavigate, useLocation, useParams, useBlocker } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { geocodingService } from '../services/geocoding';
 import { Save, ArrowLeft, MapPin, Check, X, Bold, Italic, AlertTriangle, Info } from 'lucide-react';
@@ -96,6 +96,26 @@ const Create = () => {
         window.addEventListener('beforeunload', handler);
         return () => window.removeEventListener('beforeunload', handler);
     }, [isDirty, isSaving]);
+
+    // useBlocker intercepte la navigation interne (Link, navigate(), back btn).
+    // Nécessite le data router (cf. App.jsx createHashRouter). On ne bloque que
+    // les changements de chemin réels — un navigate vers la même URL passe.
+    const blocker = useBlocker(
+        useCallback(
+            ({ currentLocation, nextLocation }) =>
+                isDirty && !isSaving && currentLocation.pathname !== nextLocation.pathname,
+            [isDirty, isSaving],
+        ),
+    );
+
+    useEffect(() => {
+        if (blocker.state !== 'blocked') return;
+        if (window.confirm(t('create.confirmLeave', "Vous avez des modifications non enregistrées. Quitter sans publier ?"))) {
+            blocker.proceed();
+        } else {
+            blocker.reset();
+        }
+    }, [blocker, t]);
 
     // Résolution paresseuse du nom du sous-site natif (pour le bandeau d'info
     // quand un utilisateur de sous-site crée un cartel depuis /app/create)
@@ -275,9 +295,8 @@ const Create = () => {
     };
 
     const handleBack = () => {
-        if (isDirty && !window.confirm(t('create.confirmLeave', "Vous avez des modifications non enregistrées. Quitter sans publier ?"))) {
-            return;
-        }
+        // Le garde-fou anti-perte est centralisé via useBlocker plus haut, qui
+        // intercepte ce navigate() au besoin. Pas de confirm ici, sinon double prompt.
         clearReturnTo();
         navigate(returnTo);
     };
