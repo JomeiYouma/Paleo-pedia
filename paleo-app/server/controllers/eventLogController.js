@@ -69,4 +69,23 @@ export const EventLogController = {
       res.status(500).json({ error: err.message });
     }
   },
+
+  /**
+   * PATCH /api/logs/email-config
+   * Body: { recipient: string }
+   * Met à jour le destinataire pour TOUS les types en un seul UPDATE.
+   * Les autres colonnes (enabled, mark_as_spam, subject_prefix) sont préservées.
+   */
+  async bulkUpdateRecipient(req, res) {
+    try {
+      const recipient = String(req.body?.recipient ?? '').trim();
+      // Pas de validation stricte d'email côté serveur : on autorise vide
+      // (= retirer le destinataire partout) et on laisse le mailer gérer.
+      const affected = await EventEmailConfigModel.bulkSetRecipient(recipient);
+      const items = await EventEmailConfigModel.getAll();
+      res.json({ affected, items });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
 };

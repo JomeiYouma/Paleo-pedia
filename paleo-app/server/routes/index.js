@@ -134,6 +134,7 @@ router.delete('/partners/:id',   authenticate, PartnerController.remove);
 router.get   ('/logs',                       authenticate, requireAdmin, EventLogController.list);
 router.get   ('/logs/types',                 authenticate, requireAdmin, EventLogController.distinctTypes);
 router.get   ('/logs/email-config',          authenticate, requireAdmin, EventLogController.listEmailConfig);
+router.patch ('/logs/email-config',           authenticate, requireAdmin, EventLogController.bulkUpdateRecipient);
 router.patch ('/logs/email-config/:type',    authenticate, requireAdmin, EventLogController.updateEmailConfig);
 
 export default router;

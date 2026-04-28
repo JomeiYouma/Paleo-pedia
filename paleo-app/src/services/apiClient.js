@@ -283,6 +283,8 @@ export const logs = {
   distinctTypes:    () => get('/logs/types'),
   getEmailConfig:   () => get('/logs/email-config'),
   updateEmailConfig: (type, body) => patch(`/logs/email-config/${encodeURIComponent(type)}`, body),
+  /** Met à jour le destinataire de tous les types en une seule fois. */
+  bulkSetRecipient: (recipient) => patch('/logs/email-config', { recipient }),
 };
 
 const api = { auth, cartels, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners, logs };

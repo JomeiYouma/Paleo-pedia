@@ -45,4 +45,22 @@ export const EventEmailConfigModel = {
     );
     return this.get(type);
   },
+
+  /**
+   * Met à jour le destinataire de TOUS les types en une seule requête.
+   * Ne touche pas aux autres colonnes (enabled, mark_as_spam, subject_prefix
+   * sont préservés). Utilisé par le formulaire "appliquer à tous".
+   * @param {string} recipient
+   * @returns {Promise<number>} nombre de lignes modifiées
+   */
+  async bulkSetRecipient(recipient) {
+    const value = String(recipient || '').slice(0, 255);
+    // query() retourne { rows: [okPacket] } pour un UPDATE
+    // (cf. lib/db.js qui wrappe le résultat non-tableau dans [resultat]).
+    const { rows } = await query(
+      'UPDATE event_email_config SET recipient = ?',
+      [value]
+    );
+    return rows[0]?.affectedRows ?? 0;
+  },
 };

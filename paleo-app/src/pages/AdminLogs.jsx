@@ -166,6 +166,10 @@ const EmailConfigTab = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    // Bulk update : changer le destinataire de tous les types d'un coup
+    const [bulkRecipient, setBulkRecipient] = useState('');
+    const [bulkSaving, setBulkSaving] = useState(false);
+
     const load = async () => {
         setLoading(true); setError('');
         try {
@@ -175,6 +179,21 @@ const EmailConfigTab = () => {
         finally { setLoading(false); }
     };
     useEffect(() => { load(); }, []);
+
+    const applyBulkRecipient = async () => {
+        const value = bulkRecipient.trim();
+        if (!value) return;
+        if (!window.confirm(`Remplacer le destinataire de TOUS les types par "${value}" ?\n\nLes autres réglages (activation, spam, préfixe) sont conservés.`)) return;
+        setBulkSaving(true); setError(''); setSuccess('');
+        try {
+            const { affected, items: fresh } = await api.logs.bulkSetRecipient(value);
+            setItems(fresh || []);
+            setSuccess(`Destinataire appliqué à ${affected} type(s).`);
+            setBulkRecipient('');
+            setTimeout(() => setSuccess(''), 3000);
+        } catch (e) { setError(e.message); }
+        finally { setBulkSaving(false); }
+    };
 
     const updateLocal = (type, patch) => {
         setItems(prev => prev.map(it => it.type === type ? { ...it, ...patch } : it));
@@ -217,6 +236,56 @@ const EmailConfigTab = () => {
                 avec quel préfixe de sujet, et si l'en-tête <code>X-Spam-Flag</code> doit être ajouté
                 (utile pour des règles de tri côté boîte de réception).
             </p>
+
+            {/* Bulk : changer le destinataire de tous les types */}
+            <div style={{
+                background: '#f5f3ff', border: '1px solid #d9ccff',
+                borderRadius: 10, padding: '14px 16px', marginBottom: 18,
+            }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#5327b5', marginBottom: 8 }}>
+                    Appliquer un destinataire à tous les types
+                </div>
+                <p style={{ margin: '0 0 10px', fontSize: '0.8rem', color: '#666' }}>
+                    Remplace le champ « Destinataire » de tous les types d'un seul coup.
+                    Les autres réglages (Email activé, Spam, Sujet préfixe) ne sont pas modifiés.
+                </p>
+                <form
+                    onSubmit={e => { e.preventDefault(); applyBulkRecipient(); }}
+                    style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}
+                >
+                    <input
+                        type="email"
+                        value={bulkRecipient}
+                        onChange={e => setBulkRecipient(e.target.value)}
+                        placeholder="hello@atelier21.org"
+                        disabled={bulkSaving}
+                        style={{
+                            flex: '1 1 280px',
+                            padding: '8px 10px',
+                            borderRadius: 6,
+                            border: '1px solid #d9ccff',
+                            fontSize: '0.9rem',
+                        }}
+                    />
+                    <button
+                        type="submit"
+                        disabled={bulkSaving || !bulkRecipient.trim()}
+                        style={{
+                            padding: '8px 16px',
+                            border: 'none',
+                            background: bulkSaving || !bulkRecipient.trim() ? '#bbb' : '#6741d9',
+                            color: 'white',
+                            borderRadius: 6,
+                            cursor: bulkSaving || !bulkRecipient.trim() ? 'not-allowed' : 'pointer',
+                            fontSize: '0.88rem',
+                            fontWeight: 600,
+                        }}
+                    >
+                        {bulkSaving ? 'Application…' : 'Appliquer à tous'}
+                    </button>
+                </form>
+            </div>
+
             {error && <div style={{ background: '#fee', color: '#a00', padding: 10, borderRadius: 6, marginBottom: 12, fontSize: '0.88rem' }}>{error}</div>}
             {success && <div style={{ background: '#e6f7ec', color: '#1f7a3f', padding: 10, borderRadius: 6, marginBottom: 12, fontSize: '0.88rem' }}>{success}</div>}
 
