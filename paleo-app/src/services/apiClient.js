@@ -184,6 +184,17 @@ export const translate = {
    *   target='fr' → réponse { titre, description, location }
    */
   cartel: (fields, { target = 'en' } = {}) => post('/translate', { ...fields, target }),
+
+  /**
+   * Traduit un lot de cartels vers une langue arbitraire (frise traduite).
+   * @param {object}   args
+   * @param {string[]} args.ids
+   * @param {'fr'|'en'} args.sourceLang
+   * @param {string}   args.targetLanguage  - Nom libre saisi par l'admin.
+   * Réponse : { translations: [{ id, titre, description, location }] }
+   */
+  bulk: ({ ids, sourceLang, targetLanguage }) =>
+    post('/translate/bulk', { ids, sourceLang, targetLanguage }),
 };
 
 // ── Import / Export ───────────────────────────────────────────

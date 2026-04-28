@@ -12,6 +12,8 @@ import {
 import { useTranslation, Trans } from 'react-i18next';
 import { generateZip, generatePdf, generateArchive } from '../utils/zipGenerator';
 import CartelPreview from '../components/CartelPreview';
+import LongOperationOverlay from '../components/LongOperationOverlay';
+import TranslateFriseModal from '../components/TranslateFriseModal';
 import { getYearForSort } from '../utils/helpers';
 import api from '../services/apiClient';
 import ConfirmModal from '../components/ConfirmModal';
@@ -51,23 +53,6 @@ const STATUS_BADGE = {
     published:      { labelKey: 'status.published',      bg: '#e8f5e9', color: '#2e7d32' },
     archived:       { labelKey: 'status.archived',       bg: '#f5f5f5', color: '#888'   },
 };
-
-// ── Overlay de progression ────────────────────────────────────
-const ProgressOverlay = ({ label, current, total }) => (
-    <div style={{ position:'fixed', inset:0, background:'rgba(255,255,255,0.92)', zIndex:9999, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
-        <div style={{ width:'50px', height:'50px', border:'5px solid #eee', borderTop:'5px solid #D65A5A', borderRadius:'50%', animation:'spin 1s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <h3 style={{ marginTop:'20px' }}>{label}</h3>
-        {total > 0 && (
-            <>
-                <div style={{ fontSize:'1.4rem', fontWeight:'700', margin:'8px 0' }}>{current}/{total}</div>
-                <div style={{ width:'280px', height:'8px', background:'#eee', borderRadius:'4px', overflow:'hidden' }}>
-                    <div style={{ width:`${(current/total)*100}%`, height:'100%', background:'#D65A5A', transition:'width 0.3s' }} />
-                </div>
-            </>
-        )}
-    </div>
-);
 
 // ── Dropdown bouton ───────────────────────────────────────────
 const DropdownButton = ({ label, icon: Icon, color = '#555', variant = 'solid', children }) => {
@@ -247,6 +232,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     const [busyLabel,      setBusyLabel]       = useState('Traitement…');
     const [progress,       setProgress]        = useState({ current: 0, total: 0 });
     const [showImport,     setShowImport]      = useState(false);
+    const [showTranslateFrise, setShowTranslateFrise] = useState(false);
     const [translating,    setTranslating]     = useState(new Set()); // ids en cours de traduction
     const [confirmState,      setConfirmState]      = useState(null);
     const [showWorkshopModal, setShowWorkshopModal] = useState(false);
@@ -568,6 +554,43 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
         });
     };
 
+    /**
+     * Frise traduite : on demande la langue cible via modal, on appelle l'API
+     * bulk pour récupérer les traductions, puis on génère le PDF avec des
+     * cartels-clones où les champs source sont remplacés par la traduction.
+     * La langue source est l'i18n active (FR ou EN) — le PDF est généré
+     * dans la même clé de langue, le contenu étant déjà traduit.
+     */
+    const handleTranslateFrise = async (targetLanguage) => {
+        setShowTranslateFrise(false);
+        if (!selectedIds.size) return;
+        const sourceLang = i18n.language === 'en' ? 'en' : 'fr';
+        const ids = Array.from(selectedIds);
+
+        await withBusy(t('translateFrise.busyTranslating', { defaultValue: `Traduction vers ${targetLanguage}…` }), async () => {
+            setProgress({ current: 0, total: ids.length });
+            const { translations } = await api.translate.bulk({ ids, sourceLang, targetLanguage });
+            setProgress({ current: ids.length, total: ids.length });
+
+            const byId = new Map(translations.map(tr => [String(tr.id), tr]));
+            const items = cartels
+                .filter(c => selectedIds.has(c.id))
+                .map(c => {
+                    const tr = byId.get(String(c.id));
+                    if (!tr) return c;
+                    // On remplace les champs de la langue source : generatePdf
+                    // affichera ces champs traduits puisqu'on garde la même langue.
+                    return sourceLang === 'en'
+                        ? { ...c, titre_en: tr.titre, description_en: tr.description, location_en: tr.location }
+                        : { ...c, titre: tr.titre, description: tr.description, location: tr.location };
+                });
+
+            setBusyLabel(t('translateFrise.busyGenerating', { defaultValue: 'Génération du PDF traduit…' }));
+            setProgress({ current: 0, total: items.length });
+            await generatePdf(items, sourceLang, (cur, tot) => setProgress({ current: cur, total: tot }));
+        });
+    };
+
     const handleExportArchive = async (close) => {
         close?.();
         if (!selectedIds.size) {
@@ -604,7 +627,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
         <div style={{ maxWidth:'1400px', margin:'0 auto', padding:'0 24px 80px' }}>
 
             {/* Overlay */}
-            {busy && <ProgressOverlay label={busyLabel} current={progress.current} total={progress.total} />}
+            <LongOperationOverlay visible={busy} label={busyLabel} current={progress.current} total={progress.total} />
 
             {/* Confirmation */}
             {confirmState && (
@@ -623,6 +646,16 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                     t={t}
                     onClose={() => setShowImport(false)}
                     onDone={() => { fetchData(); setShowImport(false); }}
+                />
+            )}
+
+            {/* Modal frise traduite */}
+            {showTranslateFrise && (
+                <TranslateFriseModal
+                    count={selectedIds.size}
+                    sourceLang={i18n.language === 'en' ? 'en' : 'fr'}
+                    onCancel={() => setShowTranslateFrise(false)}
+                    onSubmit={handleTranslateFrise}
                 />
             )}
 
@@ -814,6 +847,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                             {close => (<>
                                 <DropItem icon={ImgIcon}   label={t('manageCartels.imagesZip')} onClick={() => handleExportImages(close)} />
                                 <DropItem icon={FileText}  label={t('manageCartels.pdfPrint')} onClick={() => handleExportPdf(close)} />
+                                <DropItem icon={Languages} label={t('translateFrise.menuLabel', 'PDF traduit (autre langue)…')} onClick={() => { close(); setShowTranslateFrise(true); }} />
                                 <DropItem icon={Package}   label={t('manageCartels.fullArchive')} onClick={() => handleExportArchive(close)} />
                             </>)}
                         </DropdownButton>
@@ -1047,7 +1081,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                         <button onClick={() => setPreviewCartel(null)} style={{ position:'absolute', top:'16px', right:'16px', background:'#f5f5f5', border:'none', borderRadius:'50%', width:'32px', height:'32px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={16} /></button>
                         <h3 style={{ margin:'0 0 16px', fontSize:'1rem', fontWeight:'700' }}>{t('manageCartels.preview')}</h3>
                         <div style={{ border:'1px solid #eee', borderRadius:'10px', padding:'12px', height:'400px', overflow:'hidden' }}>
-                            <CartelPreview data={previewCartel} />
+                            <CartelPreview data={previewCartel} showExports />
                         </div>
                         <div style={{ display:'flex', gap:'10px', marginTop:'16px', justifyContent:'flex-end' }}>
                             <button onClick={() => { setPreviewCartel(null); goToCreate(previewCartel.id); }}

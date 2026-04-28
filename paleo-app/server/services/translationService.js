@@ -7,6 +7,8 @@
 import OpenAI from 'openai';
 import { SettingModel } from '../models/Setting.js';
 
+const SOURCE_LANG_NAMES = { fr: 'French', en: 'English' };
+
 /**
  * Traduit un cartel.
  * @param {object} cartelData - { titre, description, location } dans la langue SOURCE.
@@ -137,4 +139,72 @@ ${JSON.stringify(payload, null, 2)}`;
     });
     return result;
   }
+}
+
+/**
+ * Traduit un cartel vers une langue arbitraire (autre que FR/EN).
+ * Utilise OpenAI uniquement (DeepL n'est pas adapté à un nom de langue libre).
+ * Retourne { titre, description, location } dans la langue cible (clés non suffixées).
+ *
+ * @param {object} cartelData - { titre, description, location } dans la langue source
+ * @param {object} opts
+ * @param {'fr'|'en'} opts.sourceLang - Code de langue source (déterminé par l'UI)
+ * @param {string}    opts.targetLanguageName - Nom libre de la langue cible (ex: "Spanish", "Espagnol", "日本語")
+ */
+export async function translateCartelToLanguage(cartelData, { sourceLang = 'fr', targetLanguageName } = {}) {
+  if (!targetLanguageName || !String(targetLanguageName).trim()) {
+    throw new Error('Langue cible manquante.');
+  }
+  const apiKey = await SettingModel.get('openai_key');
+  if (!apiKey) throw new Error('Clé API non configurée dans les réglages.');
+
+  const isOpenAI = apiKey.startsWith('sk-') || apiKey.startsWith('proj-');
+  if (!isOpenAI) {
+    throw new Error('La traduction vers une langue arbitraire requiert une clé OpenAI (DeepL non supporté pour ce flux).');
+  }
+
+  const client = new OpenAI({ apiKey });
+  const sourceLangName = SOURCE_LANG_NAMES[sourceLang] || 'French';
+
+  const payload = {
+    titre:       cartelData.titre       || '',
+    description: cartelData.description || '',
+    location:    cartelData.location    || '',
+  };
+
+  const prompt = `You are a professional translator for a scientific exhibition about historical energy called "Paléo-Énergétique".
+Translate the following JSON fields from ${sourceLangName} to ${targetLanguageName}.
+If "${targetLanguageName}" is ambiguous or not a recognised language, infer the most likely language and translate accordingly.
+Return ONLY a valid JSON object with the same keys (titre, description, location).
+Keep empty strings empty. Do not add explanations or markdown fences.
+
+Input:
+${JSON.stringify(payload, null, 2)}`;
+
+  const chat = await client.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      { role: 'system', content: `You translate JSON from ${sourceLangName} to ${targetLanguageName}. Output only valid JSON.` },
+      { role: 'user',   content: prompt },
+    ],
+    temperature: 0.2,
+    max_tokens:  1200,
+  });
+
+  const raw = chat.choices[0]?.message?.content?.trim() ?? '';
+  const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const jsonStr = jsonMatch ? jsonMatch[1] : raw;
+
+  let parsed;
+  try {
+    parsed = JSON.parse(jsonStr);
+  } catch {
+    throw new Error(`Réponse OpenAI non-JSON : ${raw.slice(0, 200)}`);
+  }
+
+  return {
+    titre:       (parsed.titre       || '').trim(),
+    description: (parsed.description || '').trim(),
+    location:    (parsed.location    || '').trim(),
+  };
 }

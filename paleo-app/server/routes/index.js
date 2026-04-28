@@ -74,7 +74,8 @@ router.delete('/users/:id',          authenticate, requireAdmin, UserController.
 router.post('/upload', optionalAuth, uploadGuard, upload.single('image'), UploadController.uploadImage);
 
 // ── Traduction (admin) ───────────────────────────────────────
-router.post('/translate', authenticate, requireAdmin, TranslateController.translate);
+router.post('/translate',      authenticate, requireAdmin, TranslateController.translate);
+router.post('/translate/bulk', authenticate, requireAdmin, TranslateController.bulkTranslate);
 
 // ── Import ZIP (admin) ───────────────────────────────────────
 router.post('/import', authenticate, requireAdmin, ImportController.middleware, ImportController.importZip);
