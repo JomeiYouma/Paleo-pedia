@@ -16,6 +16,7 @@ import { resolveTenant, requireTenantAccess } from '../middleware/tenant.js';
 import { SubsiteController }  from '../controllers/subsiteController.js';
 import { PartnerController }  from '../controllers/partnerController.js';
 import { TeamController }     from '../controllers/teamController.js';
+import { EventLogController } from '../controllers/eventLogController.js';
 
 const router = Router();
 
@@ -128,5 +129,11 @@ router.put   ('/partners/site',  authenticate, requireAdmin, PartnerController.s
 router.post  ('/partners',       authenticate, PartnerController.create);
 router.patch ('/partners/:id',   authenticate, PartnerController.update);
 router.delete('/partners/:id',   authenticate, PartnerController.remove);
+
+// ── Event logs + config emails (superadmin only) ─────────────
+router.get   ('/logs',                       authenticate, requireAdmin, EventLogController.list);
+router.get   ('/logs/types',                 authenticate, requireAdmin, EventLogController.distinctTypes);
+router.get   ('/logs/email-config',          authenticate, requireAdmin, EventLogController.listEmailConfig);
+router.patch ('/logs/email-config/:type',    authenticate, requireAdmin, EventLogController.updateEmailConfig);
 
 export default router;

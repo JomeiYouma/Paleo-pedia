@@ -1,5 +1,7 @@
 import { UserModel } from '../models/User.js';
 import { z } from 'zod';
+import { dispatchEvent } from '../services/eventDispatcher.js';
+const dispatch = (args) => { dispatchEvent(args).catch(() => {}); };
 
 const CreateSchema = z.object({
   email:               z.string().email('Email invalide'),
@@ -26,6 +28,12 @@ export const UserController = {
 
       const user = await UserModel.create(parsed.data);
       const { password_hash, ...safe } = user;
+      dispatch({
+        type: 'user.created', req,
+        targetId: user.id,
+        summary: user.email,
+        payload: { role: user.role, home_subsite_id: user.home_subsite_id ?? null },
+      });
       res.status(201).json(safe);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -59,6 +67,17 @@ export const UserController = {
     try {
       const user = await UserModel.update(req.params.id, req.body);
       if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
+      // On capture les permissions modifiées pour faciliter l'audit
+      const trackedFields = ['role', 'can_create_cartel', 'can_publish_cartel', 'can_manage_admin', 'can_create_subsite', 'can_manage_team', 'home_subsite_id'];
+      const changed = Object.fromEntries(
+        Object.entries(req.body || {}).filter(([k]) => trackedFields.includes(k))
+      );
+      dispatch({
+        type: 'user.updated', req,
+        targetId: user.id,
+        summary: user.email,
+        payload: { changed },
+      });
       res.json(user);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -67,7 +86,13 @@ export const UserController = {
 
   async delete(req, res) {
     try {
+      const target = await UserModel.findById(req.params.id);
       await UserModel.delete(req.params.id);
+      dispatch({
+        type: 'user.deleted', req,
+        targetId: req.params.id,
+        summary: target?.email || req.params.id,
+      });
       res.status(204).send();
     } catch (err) {
       res.status(500).json({ error: err.message });

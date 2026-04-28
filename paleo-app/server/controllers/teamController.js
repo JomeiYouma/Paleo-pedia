@@ -12,6 +12,8 @@
  */
 import { z } from 'zod';
 import { UserModel } from '../models/User.js';
+import { dispatchEvent } from '../services/eventDispatcher.js';
+const dispatch = (args) => { dispatchEvent(args).catch(() => {}); };
 
 const CreateSchema = z.object({
   email:    z.string().email('Email invalide'),
@@ -72,6 +74,12 @@ export const TeamController = {
       });
 
       const { password_hash, ...safe } = user;
+      dispatch({
+        type: 'user.assigned_subsite', req,
+        targetId: user.id, subsiteId: req.tenant.id,
+        summary: user.email,
+        payload: { home_subsite_id: req.tenant.id, slug: req.tenant.slug },
+      });
       res.status(201).json(safe);
     } catch (e) {
       res.status(500).json({ error: e.message });
@@ -100,6 +108,12 @@ export const TeamController = {
 
       const updated = await UserModel.update(req.params.id, parsed.data);
       const { password_hash, ...safe } = updated;
+      dispatch({
+        type: 'user.updated', req,
+        targetId: updated.id, subsiteId: req.tenant.id,
+        summary: updated.email,
+        payload: { changed: parsed.data },
+      });
       res.json(safe);
     } catch (e) {
       res.status(500).json({ error: e.message });
@@ -123,6 +137,11 @@ export const TeamController = {
       }
 
       await UserModel.delete(req.params.id);
+      dispatch({
+        type: 'user.deleted', req,
+        targetId: target.id, subsiteId: req.tenant.id,
+        summary: target.email,
+      });
       res.sendStatus(204);
     } catch (e) {
       res.status(500).json({ error: e.message });

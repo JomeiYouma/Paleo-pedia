@@ -1,4 +1,8 @@
 import { CartelModel } from '../models/Cartel.js';
+import { dispatchEvent } from '../services/eventDispatcher.js';
+
+// Helper local : dispatch fire-and-forget (jamais bloquant)
+const dispatch = (args) => { dispatchEvent(args).catch(() => {}); };
 
 const VALID_STATUSES = ['draft', 'pending_review', 'published', 'archived'];
 
@@ -180,6 +184,19 @@ export const CartelController = {
         targetSubsiteId,
       );
       cartel = await maybeAutoSubmitToMain(cartel);
+
+      // Choix du type d'event : anonyme → submission_pending, sinon selon statut
+      let eventType;
+      if (!req.user) eventType = 'cartel.submission_pending';
+      else if (cartel.status === 'published') eventType = cartel.subsite_id ? 'cartel.subsite_published' : 'cartel.published';
+      else if (cartel.status === 'draft') eventType = 'cartel.draft_created';
+      else eventType = 'cartel.created';
+      dispatch({
+        type: eventType, req,
+        targetId: cartel.id, subsiteId: cartel.subsite_id ?? null,
+        summary: cartel.titre || '(sans titre)',
+        payload: { status: cartel.status, anonymous: !req.user },
+      });
       res.status(201).json(cartel);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -215,6 +232,18 @@ export const CartelController = {
         sanitizeWorkshopFields(req.body, req.user?.can_manage_admin)
       );
       cartel = await maybeAutoSubmitToMain(cartel);
+
+      // Si la modif passe le statut à "published", c'est sémantiquement une publication
+      const becamePublished = existing.status !== 'published' && cartel.status === 'published';
+      dispatch({
+        type: becamePublished
+          ? (cartel.subsite_id ? 'cartel.subsite_published' : 'cartel.published')
+          : 'cartel.updated',
+        req,
+        targetId: cartel.id, subsiteId: cartel.subsite_id ?? null,
+        summary: cartel.titre || '(sans titre)',
+        payload: { previousStatus: existing.status, status: cartel.status },
+      });
       res.json(cartel);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -243,6 +272,17 @@ export const CartelController = {
       let cartel = await CartelModel.setStatus(req.params.id, status);
       // Publier un cartel de sous-site → l'envoyer en file de validation principale
       cartel = await maybeAutoSubmitToMain(cartel);
+
+      const becamePublished = existing.status !== 'published' && cartel.status === 'published';
+      dispatch({
+        type: becamePublished
+          ? (cartel.subsite_id ? 'cartel.subsite_published' : 'cartel.published')
+          : 'cartel.updated',
+        req,
+        targetId: cartel.id, subsiteId: cartel.subsite_id ?? null,
+        summary: cartel.titre || '(sans titre)',
+        payload: { previousStatus: existing.status, status: cartel.status },
+      });
       res.json(cartel);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -271,6 +311,12 @@ export const CartelController = {
       }
 
       await CartelModel.delete(req.params.id);
+      dispatch({
+        type: 'cartel.deleted', req,
+        targetId: existing.id, subsiteId: existing.subsite_id ?? null,
+        summary: existing.titre || '(sans titre)',
+        payload: { status: existing.status },
+      });
       res.status(204).send();
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -305,6 +351,12 @@ export const CartelController = {
       }
 
       const cartel = await CartelModel.markSubmittedToMain(req.params.id);
+      dispatch({
+        type: 'cartel.subsite_submitted', req,
+        targetId: cartel.id, subsiteId: cartel.subsite_id ?? null,
+        summary: cartel.titre || '(sans titre)',
+        payload: { subsite_id: cartel.subsite_id },
+      });
       res.json(cartel);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -361,6 +413,11 @@ export const CartelController = {
         return res.status(400).json({ error: 'Ce cartel n\'est pas en attente de validation' });
       }
       const cartel = await CartelModel.approveForMain(req.params.id);
+      dispatch({
+        type: 'cartel.subsite_approved', req,
+        targetId: cartel.id, subsiteId: cartel.subsite_id ?? null,
+        summary: cartel.titre || '(sans titre)',
+      });
       res.json(cartel);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -376,6 +433,11 @@ export const CartelController = {
         return res.status(400).json({ error: 'Ce cartel n\'est pas en attente de validation' });
       }
       const cartel = await CartelModel.clearSubmissionToMain(req.params.id);
+      dispatch({
+        type: 'cartel.subsite_rejected', req,
+        targetId: cartel.id, subsiteId: cartel.subsite_id ?? null,
+        summary: cartel.titre || '(sans titre)',
+      });
       res.json(cartel);
     } catch (err) {
       res.status(500).json({ error: err.message });

@@ -19,6 +19,7 @@ const LoginSchema = z.object({
 function buildToken(user) {
   return signToken({
     id:                 user.id,
+    email:              user.email,
     role:               user.role,
     can_create_cartel:  !!user.can_create_cartel,
     can_publish_cartel: !!user.can_publish_cartel,

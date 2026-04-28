@@ -7,6 +7,8 @@
  *   - Anonyme     : voit uniquement le pool public
  */
 import { PartnerModel } from '../models/Partner.js';
+import { dispatchEvent } from '../services/eventDispatcher.js';
+const dispatch = (args) => { dispatchEvent(args).catch(() => {}); };
 
 function resolvePartnerScope(req) {
   if (req.user?.can_manage_admin) return 'all';
@@ -73,9 +75,15 @@ export const PartnerController = {
         ? (req.body.owner_subsite_id ?? null)
         : (req.user?.home_subsite_id ?? null);
 
-      res.status(201).json(await PartnerModel.create({
+      const created = await PartnerModel.create({
         name, logo_path, url, is_mandatory, owner_subsite_id,
-      }));
+      });
+      dispatch({
+        type: 'partner.created', req,
+        targetId: created.id, subsiteId: created.owner_subsite_id ?? null,
+        summary: created.name,
+      });
+      res.status(201).json(created);
     } catch (e) {
       res.status(500).json({ error: e.message });
     }
@@ -101,7 +109,13 @@ export const PartnerController = {
         delete data.owner_subsite_id;
       }
 
-      res.json(await PartnerModel.update(req.params.id, data));
+      const updated = await PartnerModel.update(req.params.id, data);
+      dispatch({
+        type: 'partner.updated', req,
+        targetId: updated.id, subsiteId: updated.owner_subsite_id ?? null,
+        summary: updated.name,
+      });
+      res.json(updated);
     } catch (e) {
       res.status(500).json({ error: e.message });
     }
@@ -120,6 +134,11 @@ export const PartnerController = {
       }
 
       await PartnerModel.delete(req.params.id);
+      dispatch({
+        type: 'partner.deleted', req,
+        targetId: p.id, subsiteId: p.owner_subsite_id ?? null,
+        summary: p.name,
+      });
       res.sendStatus(204);
     } catch (e) {
       res.status(500).json({ error: e.message });

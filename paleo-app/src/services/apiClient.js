@@ -256,5 +256,34 @@ export const io = {
   },
 };
 
-const api = { auth, cartels, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners };
+// ── Event logs (superadmin) ───────────────────────────────────
+export const logs = {
+  /**
+   * @param {object} params
+   * @param {string|string[]} [params.types]
+   * @param {string} [params.actorId]
+   * @param {string} [params.subsiteId]
+   * @param {string} [params.q]
+   * @param {string} [params.since]
+   * @param {number} [params.limit]
+   * @param {number} [params.offset]
+   */
+  list: (params = {}) => {
+    const qp = new URLSearchParams();
+    if (params.types) qp.set('types', Array.isArray(params.types) ? params.types.join(',') : params.types);
+    if (params.actorId) qp.set('actorId', params.actorId);
+    if (params.subsiteId) qp.set('subsiteId', params.subsiteId);
+    if (params.q) qp.set('q', params.q);
+    if (params.since) qp.set('since', params.since);
+    if (params.limit != null) qp.set('limit', String(params.limit));
+    if (params.offset != null) qp.set('offset', String(params.offset));
+    const qs = qp.toString();
+    return get(`/logs${qs ? '?' + qs : ''}`);
+  },
+  distinctTypes:    () => get('/logs/types'),
+  getEmailConfig:   () => get('/logs/email-config'),
+  updateEmailConfig: (type, body) => patch(`/logs/email-config/${encodeURIComponent(type)}`, body),
+};
+
+const api = { auth, cartels, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners, logs };
 export default api;

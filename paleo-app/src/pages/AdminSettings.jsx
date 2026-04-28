@@ -5,7 +5,7 @@ import {
     Shield, Users, Key, Save, RefreshCw,
     ToggleLeft, ToggleRight, AlertCircle, CheckCircle2, Check,
     Globe, Plus, Trash2, Edit, ExternalLink, ChevronDown, ChevronUp,
-    FolderOpen,
+    FolderOpen, Activity,
 } from 'lucide-react';
 import api from '../services/apiClient';
 import i18n from '../i18n';
@@ -524,6 +524,30 @@ const AdminSettings = () => {
                         </button>
                         <p style={{ margin: '10px 0 0', fontSize: '0.8rem', color: '#888' }}>
                             Gérez la taxonomie des cartels (couleurs, traductions) et le cycle de vie des ateliers.
+                        </p>
+                    </Section>
+
+                    {/* ── Section 3c : Journal d'événements ──────────── */}
+                    <Section icon={Activity} title="Journal d'événements" color="#6741d9">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/app/admin/logs')}
+                            style={{
+                                width: '100%',
+                                display: 'flex', alignItems: 'center', gap: '12px',
+                                padding: '14px 18px',
+                                background: '#f3efff', border: '1px solid #d9ccff',
+                                borderRadius: '10px', cursor: 'pointer',
+                                fontFamily: 'inherit', color: '#5327b5',
+                                fontSize: '0.9rem', fontWeight: '700',
+                            }}
+                        >
+                            <ExternalLink size={16} />
+                            <span style={{ flex: 1, textAlign: 'left' }}>Consulter le journal et configurer les notifications email</span>
+                            <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
+                        </button>
+                        <p style={{ margin: '10px 0 0', fontSize: '0.8rem', color: '#888' }}>
+                            Audit complet des actions (publications, modifications, créations de comptes…) et activation des notifications par email à l'équipe.
                         </p>
                     </Section>
 
