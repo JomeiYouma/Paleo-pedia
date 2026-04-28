@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   createHashRouter,
   createRoutesFromElements,
@@ -7,6 +7,7 @@ import {
   Route,
   Navigate,
   useParams,
+  useLocation,
 } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import Layout from './components/Layout';
@@ -31,11 +32,26 @@ import SubsiteFrise from './pages/SubsiteFrise';
 import SubsitePartners from './pages/SubsitePartners';
 import SubsiteAdmin from './pages/SubsiteAdmin';
 
+// Reset du scroll sur changement de route. React Router en SPA conserve la
+// position Y de la page précédente, ce qui faisait apparaître les pages
+// suivantes (Create, ManageCartels, etc.) déjà scrollées et avec leur header
+// coupé. On laisse passer les ancres `#cartel-<id>` posées par rememberReturn,
+// que ManageCartels/Admin/Library gèrent eux-mêmes via scrollIntoView.
+function ScrollToTopOnRouteChange() {
+  const location = useLocation();
+  useEffect(() => {
+    if ((location.hash || '').startsWith('#cartel-')) return;
+    window.scrollTo(0, 0);
+  }, [location.pathname, location.hash]);
+  return null;
+}
+
 // AppProvider doit être à l'intérieur du router (il utilise useLocation/useNavigate),
 // donc on l'expose via un layout racine dont chaque branche est enfant.
 function RootLayout() {
   return (
     <AppProvider>
+      <ScrollToTopOnRouteChange />
       <Outlet />
     </AppProvider>
   );
