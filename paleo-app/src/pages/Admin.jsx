@@ -5,6 +5,7 @@ import { Edit, Trash2, Globe, MapPin, Image as ImageIcon, Eye, EyeOff, Download,
 import { useTranslation } from 'react-i18next';
 import { generateZip } from '../utils/zipGenerator';
 import CartelPreview from '../components/CartelPreview';
+import LongOperationOverlay from '../components/LongOperationOverlay';
 import { getYearForSort } from '../utils/helpers'; // Import helper
 import { rememberReturn } from '../utils/navigation';
 import api from '../services/apiClient';
@@ -257,35 +258,12 @@ const Admin = () => {
         <div className="container" style={{ paddingBottom: '100px', maxWidth: '1400px' }}>
 
             {/* Loading / Export Overlay */}
-            {generatingZip && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(255,255,255,0.9)',
-                    zIndex: 9999,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--color-black)'
-                }}>
-                    <div className="spinner" style={{ width: '50px', height: '50px', border: '5px solid #eee', borderTop: '5px solid var(--color-pink-darker)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                    <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-
-                    <h3 style={{ marginTop: '20px' }}>Génération de l'export...</h3>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: '10px 0' }}>
-                        {progress.current} / {progress.total}
-                    </div>
-                    <div style={{ width: '300px', height: '10px', backgroundColor: '#eee', borderRadius: '5px', overflow: 'hidden' }}>
-                        <div style={{
-                            width: progress.total ? `${(progress.current / progress.total) * 100}%` : '0%',
-                            height: '100%',
-                            backgroundColor: 'var(--color-pink-darker)',
-                            transition: 'width 0.3s ease'
-                        }} />
-                    </div>
-                </div>
-            )}
+            <LongOperationOverlay
+                visible={generatingZip}
+                label={t('library.generating')}
+                current={progress.current}
+                total={progress.total}
+            />
 
             {/* Header / Nav */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
@@ -471,7 +449,7 @@ const Admin = () => {
                         </button>
                         <h3 style={{ marginTop: 0 }}>Aperçu</h3>
                         <div style={{ border: '1px solid #eee', padding: '10px', borderRadius: '8px' }}>
-                            <CartelPreview data={previewCartel} />
+                            <CartelPreview data={previewCartel} showExports />
                         </div>
                         <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                             <button onClick={() => {

@@ -193,7 +193,7 @@ const PendingCard = ({ cartel, isProcessing, onPublish, onReject, onEdit, onReve
                         </span>
                     )}
                 </div>
-                <CartelPreview data={cartel} isDraft />
+                <CartelPreview data={cartel} isDraft showExports />
             </div>
 
             {/* Actions */}

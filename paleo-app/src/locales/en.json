@@ -97,7 +97,8 @@
         "confirm": "Confirm",
         "warning": "Warning",
         "error": "Error: {{msg}}",
-        "loading": "Loading..."
+        "loading": "Loading...",
+        "dontCloseTab": "Please do not close this tab or leave the page until the operation is complete."
     },
     "toasts": {
         "settingsSaved": "Settings saved!",

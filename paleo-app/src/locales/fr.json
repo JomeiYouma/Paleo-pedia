@@ -97,7 +97,8 @@
         "confirm": "Confirmer",
         "warning": "Attention",
         "error": "Erreur : {{msg}}",
-        "loading": "Chargement..."
+        "loading": "Chargement...",
+        "dontCloseTab": "Ne fermez pas cet onglet et ne quittez pas la page tant que l'opération n'est pas terminée."
     },
     "toasts": {
         "settingsSaved": "Paramètres sauvegardés !",

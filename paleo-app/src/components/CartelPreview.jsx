@@ -5,6 +5,7 @@ import { getLocalizedContent } from '../utils/i18nHelpers';
 import { formatYear } from '../utils/helpers';
 import { generateImage, generatePdf } from '../utils/zipGenerator';
 import { Download, Image as ImageIcon, FileText } from 'lucide-react';
+import LongOperationOverlay from './LongOperationOverlay';
 
 /** Transforme **gras** et *italique* en éléments React. */
 const parseMdLine = (text, key) => {
@@ -21,9 +22,10 @@ const parseMdLine = (text, key) => {
     return <React.Fragment key={key}>{parts}</React.Fragment>;
 };
 
-const CartelPreview = ({ data, isDraft = false }) => {
+const CartelPreview = ({ data, isDraft = false, showExports = false }) => {
     const { t, i18n } = useTranslation();
     const [exporting, setExporting] = useState(false);
+    const [exportLabel, setExportLabel] = useState('');
 
     if (!data) return null; // Safety check
     const { title, description } = getLocalizedContent(data, i18n.language);
@@ -110,33 +112,38 @@ const CartelPreview = ({ data, isDraft = false }) => {
                 <div className="cartel-card">
                     {isDraft && <div className="draft-badge">⚠️ BROUILLON</div>}
 
-                    {/* Boutons d'export (en haut pour visibilité immédiate) */}
-                    <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                        <button 
-                            onClick={async () => {
-                                setExporting(true);
-                                await generateImage(data, i18n.language);
-                                setExporting(false);
-                            }} 
-                            disabled={exporting}
-                            className="btn-export"
-                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', background: '#f5f5f5', border: '1px solid #ddd', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
-                        >
-                            <ImageIcon size={14} /> PNG
-                        </button>
-                        <button 
-                            onClick={async () => {
-                                setExporting(true);
-                                await generatePdf([data], i18n.language);
-                                setExporting(false);
-                            }} 
-                            disabled={exporting}
-                            className="btn-export"
-                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', background: '#f5f5f5', border: '1px solid #ddd', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
-                        >
-                            <FileText size={14} /> PDF
-                        </button>
-                    </div>
+                    {/* Boutons d'export — réservés à la gestion (cachés en bibliothèque publique) */}
+                    {showExports && (
+                        <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                            <button
+                                onClick={async () => {
+                                    setExportLabel(t('library.generating'));
+                                    setExporting(true);
+                                    try { await generateImage(data, i18n.language); }
+                                    finally { setExporting(false); }
+                                }}
+                                disabled={exporting}
+                                className="btn-export"
+                                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', background: '#f5f5f5', border: '1px solid #ddd', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
+                            >
+                                <ImageIcon size={14} /> PNG
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    setExportLabel(t('library.generating'));
+                                    setExporting(true);
+                                    try { await generatePdf([data], i18n.language); }
+                                    finally { setExporting(false); }
+                                }}
+                                disabled={exporting}
+                                className="btn-export"
+                                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', background: '#f5f5f5', border: '1px solid #ddd', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
+                            >
+                                <FileText size={14} /> PDF
+                            </button>
+                        </div>
+                    )}
+                    <LongOperationOverlay visible={exporting} label={exportLabel} />
 
                     <div className="cartel-year">{formatYear(data.annee, i18n.language)}</div>
                     <div className="cartel-title">{title}</div>

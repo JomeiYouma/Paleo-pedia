@@ -5,6 +5,7 @@ import TimelineMode from '../components/TimelineMode';
 import MapMode from '../components/MapMode';
 import ArborescenceMode from '../components/ArborescenceMode';
 import ConfirmModal from '../components/ConfirmModal';
+import LongOperationOverlay from '../components/LongOperationOverlay';
 import { getYearForSort } from '../utils/helpers';
 import { Download, Trash2, CheckSquare, Square, Edit, LayoutList, CalendarDays, Map as MapIcon, Search, GitGraph } from 'lucide-react';
 import { generateZip } from '../utils/zipGenerator';
@@ -215,15 +216,12 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null }) => {
         <div style={{ padding: '0 20px' }}>
 
             {/* Progress overlay export ZIP */}
-            {generatingZip && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(255,255,255,0.92)', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <h3>{t('library.generating')}</h3>
-                    <div style={{ fontSize: '2rem', fontWeight: 'bold', margin: '20px 0' }}>{progress.current} / {progress.total}</div>
-                    <div style={{ width: '300px', height: '10px', background: '#eee', borderRadius: '5px', overflow: 'hidden' }}>
-                        <div style={{ width: `${(progress.current / progress.total) * 100}%`, height: '100%', background: 'var(--color-pink-darker)', transition: 'width 0.3s' }} />
-                    </div>
-                </div>
-            )}
+            <LongOperationOverlay
+                visible={generatingZip}
+                label={t('library.generating')}
+                current={progress.current}
+                total={progress.total}
+            />
 
             <div style={{ marginBottom: '20px' }}>
                 {/* Barre de contrôles */}
