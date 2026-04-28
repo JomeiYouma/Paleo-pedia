@@ -3,16 +3,24 @@ import * as d3 from 'd3';
 import { useApp } from '../context/AppContext';
 import { useTranslation } from 'react-i18next';
 import CartelPreview from './CartelPreview';
-import { X } from 'lucide-react';
+import { X, Settings } from 'lucide-react';
 
 const ArborescenceMode = ({ cartels = [] }) => {
-    const { isAdmin } = useApp();
+    const { isAdmin, categories = [] } = useApp();
     const svgRef = useRef(null);
     const { i18n } = useTranslation();
     const isEn = i18n.language === 'en';
 
     const [selectedNode, setSelectedNode] = useState(null);
     const [audioActive, setAudioActive] = useState(false);
+
+    // ── Paramètres d'affichage ───────────────────────────────
+    const [panelOpen,        setPanelOpen]        = useState(false);
+    const [sizeByCount,      setSizeByCount]      = useState(false);
+    const [sizeSpread,       setSizeSpread]       = useState(50);
+    const [linkDistance,     setLinkDistance]     = useState(100);
+    const [hideCartelLabels, setHideCartelLabels] = useState(false);
+    const [colorMode,        setColorMode]        = useState(0); // 0: off, 1: nodes, 2: nodes + links
 
     // ── Easter egg : audio réactif ────────────────────────────
     const nodeSelRef     = useRef(null); // sélection D3 des groupes nœuds
@@ -24,32 +32,50 @@ const ArborescenceMode = ({ cartels = [] }) => {
     const rafRef         = useRef(null);
     const audioActiveRef = useRef(false);
     const keysRef        = useRef({ alt: false, a: false });
+    const colorModeRef   = useRef(0); // lu depuis la boucle rAF audio
 
     // ── Données du graphe ─────────────────────────────────────
     const graphData = useMemo(() => {
         const activeCats = new Set();
         const cartelNodes = [];
         const links = [];
+        const cartelCountByCat = {};
 
         if (!Array.isArray(cartels)) return { nodes: [], links: [] };
+
+        // Map nom de catégorie (FR ou EN) → couleur définie en admin
+        const colorByCat = {};
+        (Array.isArray(categories) ? categories : []).forEach(c => {
+            if (c?.name    && c?.color) colorByCat[c.name]    = c.color;
+            if (c?.name_en && c?.color) colorByCat[c.name_en] = c.color;
+        });
 
         cartels.forEach(c => {
             if (!isAdmin && c.status !== 'published') return;
             const cats = isEn && c.categories_en ? c.categories_en : (c.categories || []);
-            const node = { id: `cartel-${c.id}`, type: 'cartel', data: c, radius: 8, color: '#F48FB1' };
+            const catColors = cats.map(cat => colorByCat[cat] || '#F48FB1');
+            const node = {
+                id: `cartel-${c.id}`, type: 'cartel', data: c,
+                radius: 8, color: '#F48FB1',
+                categoryColors: catColors,
+            };
             cartelNodes.push(node);
             cats.forEach(cat => {
                 activeCats.add(cat);
+                cartelCountByCat[cat] = (cartelCountByCat[cat] || 0) + 1;
                 links.push({ source: node.id, target: `cat-${cat}`, value: 1 });
             });
         });
 
         const categoryNodes = Array.from(activeCats).map(cat => ({
-            id: `cat-${cat}`, type: 'category', name: cat, radius: 20, color: '#C2185B',
+            id: `cat-${cat}`, type: 'category', name: cat,
+            radius: 20, color: '#C2185B',
+            cartelCount: cartelCountByCat[cat] || 0,
+            categoryColor: colorByCat[cat] || '#C2185B',
         }));
 
         return { nodes: [...categoryNodes, ...cartelNodes], links };
-    }, [cartels, isEn, isAdmin]);
+    }, [cartels, isEn, isAdmin, categories]);
 
     // ── Simulation D3 ─────────────────────────────────────────
     useEffect(() => {
@@ -83,6 +109,26 @@ const ArborescenceMode = ({ cartels = [] }) => {
         filter.append('feFlood').attr('flood-color', '#000').attr('flood-opacity', 0.2).attr('result', 'offsetColor');
         filter.append('feComposite').attr('in', 'offsetColor').attr('in2', 'offsetBlur').attr('operator', 'in').attr('result', 'offsetBlur');
         filter.append('feMerge').selectAll('feMergeNode').data(['offsetBlur', 'SourceGraphic']).enter().append('feMergeNode').attr('in', d => d);
+
+        // Gradients pour cartels multi-catégories (utilisés par le mode couleurs)
+        const cartelsMulti = graphData.nodes.filter(n => n.type === 'cartel' && (n.categoryColors?.length || 0) > 1);
+        defs.selectAll('linearGradient.cartel-gradient')
+            .data(cartelsMulti, d => d.id)
+            .enter()
+            .append('linearGradient')
+                .attr('class', 'cartel-gradient')
+                .attr('id', d => `grad-${d.id}`)
+                .attr('x1', '0%').attr('y1', '0%')
+                .attr('x2', '100%').attr('y2', '100%')
+                .each(function (d) {
+                    const sel = d3.select(this);
+                    const n = d.categoryColors.length;
+                    d.categoryColors.forEach((c, i) => {
+                        sel.append('stop')
+                            .attr('offset', `${Math.round((i / (n - 1)) * 100)}%`)
+                            .attr('stop-color', c);
+                    });
+                });
 
         const g    = svg.append('g');
         const zoom = d3.zoom().scaleExtent([0.1, 4]).on('zoom', ev => g.attr('transform', ev.transform));
@@ -154,6 +200,72 @@ const ArborescenceMode = ({ cartels = [] }) => {
         };
     }, [graphData]);
 
+    // ── Refs pour éviter de relancer la simulation au montage ─
+    const didMountSizeRef  = useRef(false);
+    const didMountDistRef  = useRef(false);
+
+    // ── Taille des catégories selon le nombre de cartels ─────
+    useEffect(() => {
+        if (!nodeSelRef.current || !simRef.current) return;
+        if (!didMountSizeRef.current) { didMountSizeRef.current = true; return; }
+        const cats = graphData.nodes.filter(n => n.type === 'category');
+        const maxCount = d3.max(cats, n => n.cartelCount || 0) || 1;
+        const rScale = d3.scaleSqrt().domain([1, Math.max(1, maxCount)]).range([14, sizeSpread]);
+        graphData.nodes.forEach(n => {
+            if (n.type === 'category') {
+                n.radius = sizeByCount ? rScale(Math.max(1, n.cartelCount || 0)) : 20;
+            }
+        });
+        nodeSelRef.current.select('circle').transition().duration(300).attr('r', d => d.radius);
+        nodeSelRef.current.select('text').attr('x', d => d.type === 'category' ? (d.radius + 5) : 12);
+        simRef.current.force('collide').radius(d => d.radius + 5);
+        simRef.current.alpha(0.3).restart();
+    }, [sizeByCount, sizeSpread, graphData]);
+
+    // ── Distance des liens ───────────────────────────────────
+    useEffect(() => {
+        if (!simRef.current) return;
+        if (!didMountDistRef.current) { didMountDistRef.current = true; return; }
+        const linkForce = simRef.current.force('link');
+        if (linkForce) linkForce.distance(linkDistance);
+        simRef.current.alpha(0.3).restart();
+    }, [linkDistance, graphData]);
+
+    // ── Masquage des titres de cartels ───────────────────────
+    useEffect(() => {
+        if (!nodeSelRef.current) return;
+        nodeSelRef.current.select('text')
+            .filter(d => d.type === 'cartel')
+            .style('display', hideCartelLabels ? 'none' : null);
+    }, [hideCartelLabels, graphData]);
+
+    // ── Mode couleurs (0: off, 1: nœuds, 2: nœuds + liens) ───
+    useEffect(() => { colorModeRef.current = colorMode; }, [colorMode]);
+
+    useEffect(() => {
+        if (!nodeSelRef.current || !linkSelRef.current) return;
+        if (audioActiveRef.current) return; // l'audio reprend la main
+        nodeSelRef.current.select('circle')
+            .transition().duration(400)
+            .attr('fill', d => {
+                if (colorMode === 0) return d.color;
+                if (d.type === 'category') return d.categoryColor || d.color;
+                const colors = d.categoryColors || [];
+                if (colors.length === 0) return d.color;
+                if (colors.length === 1) return colors[0];
+                return `url(#grad-${d.id})`;
+            });
+        linkSelRef.current
+            .transition().duration(400)
+            .attr('stroke', d => {
+                if (colorMode !== 2) return '#999';
+                const tn = d.target;
+                return (tn && typeof tn === 'object') ? (tn.categoryColor || '#999') : '#999';
+            })
+            .attr('stroke-opacity', colorMode === 2 ? 0.75 : 0.6)
+            .attr('stroke-width', colorMode === 2 ? 1.5 : 1);
+    }, [colorMode, graphData, audioActive]);
+
     // ── Drag helper ───────────────────────────────────────────
     const drag = (simulation) => {
         const started = (ev) => { if (!ev.active) simulation.alphaTarget(0.3).restart(); ev.subject.fx = ev.subject.x; ev.subject.fy = ev.subject.y; };
@@ -219,9 +331,19 @@ const ArborescenceMode = ({ cartels = [] }) => {
                     });
 
                     // Couleur : rotation de teinte + saturation/luminosité selon le volume
+                    const cm = colorModeRef.current;
                     nodeSelRef.current.select('circle')
                         .attr('fill', d => {
-                            const base   = d3.hsl(d.color);
+                            let baseCol = d.color;
+                            if (cm >= 1) {
+                                if (d.type === 'category') {
+                                    baseCol = d.categoryColor || d.color;
+                                } else {
+                                    const colors = d.categoryColors || [];
+                                    baseCol = colors[0] || d.color;
+                                }
+                            }
+                            const base   = d3.hsl(baseCol);
                             const hShift = vol * 210 + Math.sin(tt * 1.8 + (d.x ?? 0) * 0.01) * vol * 90;
                             return d3.hsl(
                                 (base.h + hShift) % 360,
@@ -234,9 +356,22 @@ const ArborescenceMode = ({ cartels = [] }) => {
                 }
 
                 if (linkSelRef.current) {
+                    const cm  = colorModeRef.current;
                     const hue = (tt * 55) % 360;
                     linkSelRef.current
-                        .attr('stroke', `hsl(${hue},${55 + vol * 45}%,${40 + vol * 30}%)`)
+                        .attr('stroke', d => {
+                            if (cm !== 2) {
+                                return `hsl(${hue},${55 + vol * 45}%,${40 + vol * 30}%)`;
+                            }
+                            const tn = d.target;
+                            const baseCol = (tn && typeof tn === 'object' && tn.categoryColor) || '#999';
+                            const base = d3.hsl(baseCol);
+                            return d3.hsl(
+                                (base.h + hue) % 360,
+                                Math.min(1, base.s + vol * 0.45),
+                                Math.min(0.75, base.l + vol * 0.2),
+                            ).toString();
+                        })
                         .attr('stroke-opacity', 0.25 + vol * 0.75)
                         .attr('stroke-width', 1 + vol * 4.5);
                 }
@@ -299,7 +434,7 @@ const ArborescenceMode = ({ cartels = [] }) => {
                 <div
                     title="Mode son actif — Alt + A + Vol↑ pour désactiver"
                     style={{
-                        position: 'absolute', top: 14, left: 14, zIndex: 30,
+                        position: 'absolute', top: 14, right: 14, zIndex: 30,
                         width: 10, height: 10, borderRadius: '50%',
                         background: '#ff4081',
                         boxShadow: '0 0 8px 3px rgba(255,64,129,0.55)',
@@ -307,6 +442,90 @@ const ArborescenceMode = ({ cartels = [] }) => {
                     }}
                 />
             )}
+
+            {/* Paramètres d'affichage */}
+            <div style={{ position: 'absolute', top: 14, left: 14, zIndex: 20 }}>
+                <button
+                    onClick={() => setPanelOpen(!panelOpen)}
+                    title={isEn ? 'Display settings' : 'Paramètres d\'affichage'}
+                    style={{
+                        background: 'white', border: 'none', borderRadius: 8,
+                        padding: '8px 12px', cursor: 'pointer',
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                        display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85em',
+                    }}
+                >
+                    <Settings size={14} /> {isEn ? 'Settings' : 'Paramètres'}
+                </button>
+                {panelOpen && (
+                    <div style={{
+                        marginTop: 8, background: 'white', padding: 12, borderRadius: 8,
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)', fontSize: '0.85em',
+                        minWidth: 240,
+                    }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, cursor: 'pointer' }}>
+                            <input
+                                type="checkbox"
+                                checked={sizeByCount}
+                                onChange={e => setSizeByCount(e.target.checked)}
+                            />
+                            {isEn ? 'Size by cartel count' : 'Taille selon le nombre de cartels'}
+                        </label>
+                        {sizeByCount && (
+                            <div style={{ marginBottom: 10, paddingLeft: 22 }}>
+                                <div style={{ marginBottom: 4 }}>
+                                    {isEn ? 'Size amplitude' : 'Amplitude des tailles'} : {sizeSpread}
+                                </div>
+                                <input
+                                    type="range" min={20} max={100} step={5}
+                                    value={sizeSpread}
+                                    onChange={e => setSizeSpread(Number(e.target.value))}
+                                    className="arb-slider"
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                        )}
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, cursor: 'pointer' }}>
+                            <input
+                                type="checkbox"
+                                checked={hideCartelLabels}
+                                onChange={e => setHideCartelLabels(e.target.checked)}
+                            />
+                            {isEn ? 'Hide cartel titles' : 'Masquer les titres des cartels'}
+                        </label>
+                        <div style={{ marginBottom: 10 }}>
+                            <div style={{ marginBottom: 4 }}>
+                                {isEn ? 'Color mode' : 'Mode couleurs'} : {
+                                    [
+                                        isEn ? 'Off' : 'Désactivé',
+                                        isEn ? 'Nodes' : 'Nœuds',
+                                        isEn ? 'Nodes + links' : 'Nœuds + liens',
+                                    ][colorMode]
+                                }
+                            </div>
+                            <input
+                                type="range" min={0} max={2} step={1}
+                                value={colorMode}
+                                onChange={e => setColorMode(Number(e.target.value))}
+                                className="arb-slider"
+                                style={{ width: '100%' }}
+                            />
+                        </div>
+                        <div style={{ marginBottom: 4 }}>
+                            <div style={{ marginBottom: 4 }}>
+                                {isEn ? 'Link distance' : 'Distance des liens'} : {linkDistance}
+                            </div>
+                            <input
+                                type="range" min={5} max={250} step={5}
+                                value={linkDistance}
+                                onChange={e => setLinkDistance(Number(e.target.value))}
+                                className="arb-slider"
+                                style={{ width: '100%' }}
+                            />
+                        </div>
+                    </div>
+                )}
+            </div>
 
             {/* Légende */}
             <div style={{ position: 'absolute', bottom: 20, right: 20, zIndex: 10 }}>
@@ -324,7 +543,7 @@ const ArborescenceMode = ({ cartels = [] }) => {
 
             {/* Modale prévisualisation */}
             {selectedNode && (
-                <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 400, background: 'white', boxShadow: '-2px 0 10px rgba(0,0,0,0.1)', zIndex: 20, overflowY: 'auto', padding: 20 }}>
+                <div className="arb-cartel-preview" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 400, background: 'white', boxShadow: '-2px 0 10px rgba(0,0,0,0.1)', zIndex: 20, overflowY: 'auto', padding: 20 }}>
                     <button onClick={() => setSelectedNode(null)} style={{ float: 'right', background: 'none', border: 'none', cursor: 'pointer' }}>
                         <X size={24} />
                     </button>
@@ -336,6 +555,84 @@ const ArborescenceMode = ({ cartels = [] }) => {
                 @keyframes audioPulse {
                     from { transform: scale(1);   opacity: 1;   }
                     to   { transform: scale(1.7); opacity: 0.4; }
+                }
+                .arb-slider {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    height: 4px;
+                    border-radius: 2px;
+                    background: #e5e5e5;
+                    outline: none;
+                    cursor: pointer;
+                    margin: 6px 0;
+                }
+                .arb-slider::-webkit-slider-runnable-track {
+                    height: 4px;
+                    border-radius: 2px;
+                    background: #e5e5e5;
+                }
+                .arb-slider::-moz-range-track {
+                    height: 4px;
+                    border-radius: 2px;
+                    background: #e5e5e5;
+                }
+                .arb-slider::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 14px;
+                    height: 14px;
+                    border-radius: 50%;
+                    background: #C2185B;
+                    border: 2px solid #fff;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+                    margin-top: -5px;
+                    transition: transform 0.1s, background 0.15s;
+                }
+                .arb-slider::-moz-range-thumb {
+                    width: 14px;
+                    height: 14px;
+                    border-radius: 50%;
+                    background: #C2185B;
+                    border: 2px solid #fff;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+                    transition: transform 0.1s, background 0.15s;
+                }
+                .arb-slider:hover::-webkit-slider-thumb { transform: scale(1.15); background: #AD1457; }
+                .arb-slider:hover::-moz-range-thumb     { transform: scale(1.15); background: #AD1457; }
+                .arb-slider:active::-webkit-slider-thumb { transform: scale(1.25); }
+                .arb-slider:active::-moz-range-thumb     { transform: scale(1.25); }
+
+                /* Image en bannière dans le panneau latéral de l'arborescence */
+                .arb-cartel-preview .cartel-container {
+                    flex-direction: column;
+                    height: auto;
+                    overflow: visible;
+                    gap: 10px;
+                }
+                .arb-cartel-preview .cartel-image-column {
+                    flex: 0 0 auto;
+                    height: auto;
+                }
+                .arb-cartel-preview .cartel-image-wrapper {
+                    width: 100%;
+                    height: 160px;
+                    flex: 0 0 auto;
+                }
+                .arb-cartel-preview .cartel-img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    object-position: center;
+                }
+                .arb-cartel-preview .cartel-no-image {
+                    height: 100px;
+                }
+                .arb-cartel-preview .cartel-content-column {
+                    flex: 1 1 auto;
+                    width: 100%;
+                }
+                .arb-cartel-preview .cartel-card {
+                    min-height: 0;
                 }
             `}</style>
         </div>
