@@ -162,9 +162,12 @@ const LogsTab = () => {
 const EmailConfigTab = () => {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [savingType, setSavingType] = useState('');
+    const [savingAll, setSavingAll] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+
+    // Track des lignes modifiées (set de types). Vide = rien à sauvegarder.
+    const [dirty, setDirty] = useState(() => new Set());
 
     // Bulk update : changer le destinataire de tous les types d'un coup
     const [bulkRecipient, setBulkRecipient] = useState('');
@@ -175,6 +178,7 @@ const EmailConfigTab = () => {
         try {
             const data = await api.logs.getEmailConfig();
             setItems(data.items || []);
+            setDirty(new Set());
         } catch (e) { setError(e.message); }
         finally { setLoading(false); }
     };
@@ -188,6 +192,7 @@ const EmailConfigTab = () => {
         try {
             const { affected, items: fresh } = await api.logs.bulkSetRecipient(value);
             setItems(fresh || []);
+            setDirty(new Set());  // le bulk a tout sauvegardé côté serveur
             setSuccess(`Destinataire appliqué à ${affected} type(s).`);
             setBulkRecipient('');
             setTimeout(() => setSuccess(''), 3000);
@@ -197,24 +202,60 @@ const EmailConfigTab = () => {
 
     const updateLocal = (type, patch) => {
         setItems(prev => prev.map(it => it.type === type ? { ...it, ...patch } : it));
+        setDirty(prev => {
+            const next = new Set(prev);
+            next.add(type);
+            return next;
+        });
     };
 
-    const save = async (type) => {
-        const it = items.find(x => x.type === type);
-        if (!it) return;
-        setSavingType(type); setError(''); setSuccess('');
+    /** Sauvegarde les lignes modifiées en parallèle (max 5 en simultané). */
+    const saveAll = async () => {
+        const toSave = Array.from(dirty)
+            .map(type => items.find(it => it.type === type))
+            .filter(Boolean);
+        if (!toSave.length) return;
+
+        setSavingAll(true); setError(''); setSuccess('');
+        const concurrency = 5;
+        const failed = [];
         try {
-            const updated = await api.logs.updateEmailConfig(type, {
-                enabled: !!it.enabled,
-                recipient: it.recipient || '',
-                mark_as_spam: !!it.mark_as_spam,
-                subject_prefix: it.subject_prefix || '[Paléo]',
-            });
-            updateLocal(type, updated);
-            setSuccess(`Sauvegardé : ${type}`);
-            setTimeout(() => setSuccess(''), 2000);
-        } catch (e) { setError(e.message); }
-        finally { setSavingType(''); }
+            for (let i = 0; i < toSave.length; i += concurrency) {
+                const slice = toSave.slice(i, i + concurrency);
+                await Promise.all(slice.map(async it => {
+                    try {
+                        const updated = await api.logs.updateEmailConfig(it.type, {
+                            enabled:        !!it.enabled,
+                            recipient:      it.recipient || '',
+                            mark_as_spam:   !!it.mark_as_spam,
+                            subject_prefix: it.subject_prefix || '[Paléo]',
+                        });
+                        // On met à jour items avec la version serveur (pas de re-render
+                        // de la position de la ligne car le type ne change pas)
+                        setItems(prev => prev.map(x => x.type === it.type ? updated : x));
+                    } catch (e) {
+                        failed.push({ type: it.type, message: e.message });
+                    }
+                }));
+            }
+            if (failed.length) {
+                setError(`${failed.length} échec(s) : ` + failed.map(f => f.type).join(', '));
+                // Garder dirty sur les types en échec uniquement
+                setDirty(new Set(failed.map(f => f.type)));
+            } else {
+                setSuccess(`${toSave.length} type(s) sauvegardé(s).`);
+                setDirty(new Set());
+                setTimeout(() => setSuccess(''), 2500);
+            }
+        } finally {
+            setSavingAll(false);
+        }
+    };
+
+    const discardChanges = async () => {
+        if (!dirty.size) return;
+        if (!window.confirm(`Annuler les ${dirty.size} modification(s) non sauvegardée(s) ?`)) return;
+        await load();
     };
 
     const grouped = useMemo(() => {
@@ -289,72 +330,116 @@ const EmailConfigTab = () => {
             {error && <div style={{ background: '#fee', color: '#a00', padding: 10, borderRadius: 6, marginBottom: 12, fontSize: '0.88rem' }}>{error}</div>}
             {success && <div style={{ background: '#e6f7ec', color: '#1f7a3f', padding: 10, borderRadius: 6, marginBottom: 12, fontSize: '0.88rem' }}>{success}</div>}
 
-            {grouped.map(([scope, group]) => (
-                <div key={scope} style={{ marginBottom: 24 }}>
-                    <h3 style={{ margin: '8px 0', textTransform: 'capitalize', color: '#444', fontSize: '1rem' }}>{scope}</h3>
-                    <div style={{ background: 'white', border: '1px solid #eee', borderRadius: 10, overflow: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                            <thead style={{ background: '#fafafa' }}>
-                                <tr>
-                                    <th style={{ padding: 10, textAlign: 'left' }}>Type</th>
-                                    <th style={{ padding: 10, textAlign: 'center', width: 90 }}>Email</th>
-                                    <th style={{ padding: 10, textAlign: 'left' }}>Destinataire</th>
-                                    <th style={{ padding: 10, textAlign: 'left', width: 140 }}>Sujet préfixe</th>
-                                    <th style={{ padding: 10, textAlign: 'center', width: 90 }}>Spam</th>
-                                    <th style={{ padding: 10, textAlign: 'right', width: 110 }}></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {group.map(it => (
-                                    <tr key={it.type} style={{ borderTop: '1px solid #f3f3f3' }}>
-                                        <td style={{ padding: 10 }}><code style={{ background: '#f5f3ff', color: '#6741d9', padding: '2px 6px', borderRadius: 4, fontSize: '0.78rem' }}>{it.type}</code></td>
-                                        <td style={{ padding: 10, textAlign: 'center' }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={!!it.enabled}
-                                                onChange={e => updateLocal(it.type, { enabled: e.target.checked })}
-                                            />
-                                        </td>
-                                        <td style={{ padding: 10 }}>
-                                            <input
-                                                type="email"
-                                                value={it.recipient || ''}
-                                                onChange={e => updateLocal(it.type, { recipient: e.target.value })}
-                                                placeholder="hello@atelier21.org"
-                                                style={{ width: '100%', padding: '6px 8px', borderRadius: 4, border: '1px solid #ddd', fontSize: '0.85rem', boxSizing: 'border-box' }}
-                                            />
-                                        </td>
-                                        <td style={{ padding: 10 }}>
-                                            <input
-                                                type="text"
-                                                value={it.subject_prefix || '[Paléo]'}
-                                                onChange={e => updateLocal(it.type, { subject_prefix: e.target.value })}
-                                                style={{ width: '100%', padding: '6px 8px', borderRadius: 4, border: '1px solid #ddd', fontSize: '0.85rem', boxSizing: 'border-box' }}
-                                            />
-                                        </td>
-                                        <td style={{ padding: 10, textAlign: 'center' }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={!!it.mark_as_spam}
-                                                onChange={e => updateLocal(it.type, { mark_as_spam: e.target.checked })}
-                                            />
-                                        </td>
-                                        <td style={{ padding: 10, textAlign: 'right' }}>
-                                            <button
-                                                onClick={() => save(it.type)}
-                                                disabled={savingType === it.type}
-                                                style={{ padding: '6px 10px', border: 'none', background: '#6741d9', color: 'white', borderRadius: 4, cursor: 'pointer', fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: 4, opacity: savingType === it.type ? 0.6 : 1 }}
-                                            >
-                                                <Save size={12} /> {savingType === it.type ? '…' : 'Enregistrer'}
-                                            </button>
-                                        </td>
+            {/* Padding bas pour ne pas que le sticky footer cache la dernière ligne */}
+            <div style={{ paddingBottom: dirty.size ? 80 : 0 }}>
+                {grouped.map(([scope, group]) => (
+                    <div key={scope} style={{ marginBottom: 24 }}>
+                        <h3 style={{ margin: '8px 0', textTransform: 'capitalize', color: '#444', fontSize: '1rem' }}>{scope}</h3>
+                        <div style={{ background: 'white', border: '1px solid #eee', borderRadius: 10, overflow: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                                <thead style={{ background: '#fafafa' }}>
+                                    <tr>
+                                        <th style={{ padding: 10, textAlign: 'left' }}>Type</th>
+                                        <th style={{ padding: 10, textAlign: 'center', width: 90 }}>Email</th>
+                                        <th style={{ padding: 10, textAlign: 'left' }}>Destinataire</th>
+                                        <th style={{ padding: 10, textAlign: 'left', width: 140 }}>Sujet préfixe</th>
+                                        <th style={{ padding: 10, textAlign: 'center', width: 90 }}>Spam</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {group.map(it => {
+                                        const isDirty = dirty.has(it.type);
+                                        return (
+                                            <tr key={it.type} style={{
+                                                borderTop: '1px solid #f3f3f3',
+                                                background: isDirty ? '#fff8e1' : 'transparent',
+                                                transition: 'background 0.15s',
+                                            }}>
+                                                <td style={{ padding: 10 }}>
+                                                    <code style={{ background: '#f5f3ff', color: '#6741d9', padding: '2px 6px', borderRadius: 4, fontSize: '0.78rem' }}>{it.type}</code>
+                                                    {isDirty && <span title="Modification non sauvegardée" style={{ marginLeft: 6, color: '#d97706', fontSize: '0.78rem' }}>●</span>}
+                                                </td>
+                                                <td style={{ padding: 10, textAlign: 'center' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={!!it.enabled}
+                                                        onChange={e => updateLocal(it.type, { enabled: e.target.checked })}
+                                                    />
+                                                </td>
+                                                <td style={{ padding: 10 }}>
+                                                    <input
+                                                        type="email"
+                                                        value={it.recipient || ''}
+                                                        onChange={e => updateLocal(it.type, { recipient: e.target.value })}
+                                                        placeholder="hello@atelier21.org"
+                                                        style={{ width: '100%', padding: '6px 8px', borderRadius: 4, border: '1px solid #ddd', fontSize: '0.85rem', boxSizing: 'border-box' }}
+                                                    />
+                                                </td>
+                                                <td style={{ padding: 10 }}>
+                                                    <input
+                                                        type="text"
+                                                        value={it.subject_prefix || '[Paléo]'}
+                                                        onChange={e => updateLocal(it.type, { subject_prefix: e.target.value })}
+                                                        style={{ width: '100%', padding: '6px 8px', borderRadius: 4, border: '1px solid #ddd', fontSize: '0.85rem', boxSizing: 'border-box' }}
+                                                    />
+                                                </td>
+                                                <td style={{ padding: 10, textAlign: 'center' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={!!it.mark_as_spam}
+                                                        onChange={e => updateLocal(it.type, { mark_as_spam: e.target.checked })}
+                                                    />
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Sticky footer : visible uniquement quand il y a des modifs en attente */}
+            {dirty.size > 0 && (
+                <div style={{
+                    position: 'sticky', bottom: 0, left: 0, right: 0,
+                    marginTop: 16,
+                    background: 'white',
+                    borderTop: '1px solid #e0e0e0',
+                    boxShadow: '0 -4px 16px rgba(0,0,0,0.08)',
+                    padding: '12px 16px',
+                    display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+                    zIndex: 10,
+                }}>
+                    <span style={{ fontSize: '0.9rem', color: '#444' }}>
+                        <strong style={{ color: '#d97706' }}>●</strong>{' '}
+                        {dirty.size} modification{dirty.size > 1 ? 's' : ''} non sauvegardée{dirty.size > 1 ? 's' : ''}
+                    </span>
+                    <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+                        <button
+                            onClick={discardChanges}
+                            disabled={savingAll}
+                            style={{ padding: '8px 14px', borderRadius: 6, border: '1px solid #ddd', background: 'white', cursor: savingAll ? 'not-allowed' : 'pointer', fontSize: '0.88rem' }}
+                        >
+                            Annuler
+                        </button>
+                        <button
+                            onClick={saveAll}
+                            disabled={savingAll}
+                            style={{
+                                padding: '8px 18px', borderRadius: 6, border: 'none',
+                                background: savingAll ? '#aaa' : '#6741d9', color: 'white',
+                                cursor: savingAll ? 'not-allowed' : 'pointer',
+                                fontSize: '0.9rem', fontWeight: 600,
+                                display: 'inline-flex', alignItems: 'center', gap: 6,
+                            }}
+                        >
+                            <Save size={14} /> {savingAll ? 'Enregistrement…' : `Enregistrer (${dirty.size})`}
+                        </button>
                     </div>
                 </div>
-            ))}
+            )}
         </div>
     );
 };
