@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { Activity, Mail, Save, RefreshCw, Search, Filter } from 'lucide-react';
 import api from '../services/apiClient';
+import Toast from '../components/Toast';
 
 const PAGE_SIZE = 100;
 
@@ -114,7 +115,7 @@ const LogsTab = () => {
                 </button>
             </div>
 
-            {error && <div style={{ background: '#fee', color: '#a00', padding: 10, borderRadius: 6, marginBottom: 12, fontSize: '0.88rem' }}>{error}</div>}
+            <Toast visible={!!error} type="error" message={error} onDismiss={() => setError('')} />
 
             {/* Tableau */}
             <div style={{ background: 'white', borderRadius: 10, border: '1px solid #eee', overflow: 'auto', maxHeight: 'calc(100vh - 320px)' }}>
@@ -195,7 +196,6 @@ const EmailConfigTab = () => {
             setDirty(new Set());  // le bulk a tout sauvegardé côté serveur
             setSuccess(`Destinataire appliqué à ${affected} type(s).`);
             setBulkRecipient('');
-            setTimeout(() => setSuccess(''), 3000);
         } catch (e) { setError(e.message); }
         finally { setBulkSaving(false); }
     };
@@ -245,7 +245,6 @@ const EmailConfigTab = () => {
             } else {
                 setSuccess(`${toSave.length} type(s) sauvegardé(s).`);
                 setDirty(new Set());
-                setTimeout(() => setSuccess(''), 2500);
             }
         } finally {
             setSavingAll(false);
@@ -327,8 +326,8 @@ const EmailConfigTab = () => {
                 </form>
             </div>
 
-            {error && <div style={{ background: '#fee', color: '#a00', padding: 10, borderRadius: 6, marginBottom: 12, fontSize: '0.88rem' }}>{error}</div>}
-            {success && <div style={{ background: '#e6f7ec', color: '#1f7a3f', padding: 10, borderRadius: 6, marginBottom: 12, fontSize: '0.88rem' }}>{success}</div>}
+            <Toast visible={!!error}   type="error"   message={error}   onDismiss={() => setError('')} />
+            <Toast visible={!!success} type="success" message={success} onDismiss={() => setSuccess('')} />
 
             {/* Padding bas pour ne pas que le sticky footer cache la dernière ligne */}
             <div style={{ paddingBottom: dirty.size ? 80 : 0 }}>

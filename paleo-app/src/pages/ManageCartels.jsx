@@ -14,6 +14,7 @@ import { generateZip, generatePdf, generateArchive } from '../utils/zipGenerator
 import CartelPreview from '../components/CartelPreview';
 import LongOperationOverlay from '../components/LongOperationOverlay';
 import TranslateFriseModal from '../components/TranslateFriseModal';
+import Toast from '../components/Toast';
 import { getYearForSort } from '../utils/helpers';
 import api from '../services/apiClient';
 import ConfirmModal from '../components/ConfirmModal';
@@ -233,6 +234,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     const [progress,       setProgress]        = useState({ current: 0, total: 0 });
     const [showImport,     setShowImport]      = useState(false);
     const [showTranslateFrise, setShowTranslateFrise] = useState(false);
+    const [toastError,     setToastError]      = useState('');
     const [translating,    setTranslating]     = useState(new Set()); // ids en cours de traduction
     const [confirmState,      setConfirmState]      = useState(null);
     const [showWorkshopModal, setShowWorkshopModal] = useState(false);
@@ -567,28 +569,41 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
         const sourceLang = i18n.language === 'en' ? 'en' : 'fr';
         const ids = Array.from(selectedIds);
 
-        await withBusy(t('translateFrise.busyTranslating', { defaultValue: `Traduction vers ${targetLanguage}…` }), async () => {
-            setProgress({ current: 0, total: ids.length });
-            const { translations } = await api.translate.bulk({ ids, sourceLang, targetLanguage });
-            setProgress({ current: ids.length, total: ids.length });
+        try {
+            await withBusy(t('translateFrise.busyTranslating', { defaultValue: `Traduction vers ${targetLanguage}…` }), async () => {
+                setProgress({ current: 0, total: ids.length });
+                const { translations } = await api.translate.bulk({ ids, sourceLang, targetLanguage });
+                setProgress({ current: ids.length, total: ids.length });
 
-            const byId = new Map(translations.map(tr => [String(tr.id), tr]));
-            const items = cartels
-                .filter(c => selectedIds.has(c.id))
-                .map(c => {
-                    const tr = byId.get(String(c.id));
-                    if (!tr) return c;
-                    // On remplace les champs de la langue source : generatePdf
-                    // affichera ces champs traduits puisqu'on garde la même langue.
-                    return sourceLang === 'en'
-                        ? { ...c, titre_en: tr.titre, description_en: tr.description, location_en: tr.location }
-                        : { ...c, titre: tr.titre, description: tr.description, location: tr.location };
-                });
+                const byId = new Map(translations.map(tr => [String(tr.id), tr]));
+                const items = cartels
+                    .filter(c => selectedIds.has(c.id))
+                    .map(c => {
+                        const tr = byId.get(String(c.id));
+                        if (!tr) return c;
+                        // On remplace les champs de la langue source : generatePdf
+                        // affichera ces champs traduits puisqu'on garde la même langue.
+                        return sourceLang === 'en'
+                            ? { ...c, titre_en: tr.titre, description_en: tr.description, location_en: tr.location }
+                            : { ...c, titre: tr.titre, description: tr.description, location: tr.location };
+                    });
 
-            setBusyLabel(t('translateFrise.busyGenerating', { defaultValue: 'Génération du PDF traduit…' }));
-            setProgress({ current: 0, total: items.length });
-            await generatePdf(items, sourceLang, (cur, tot) => setProgress({ current: cur, total: tot }));
-        });
+                setBusyLabel(t('translateFrise.busyGenerating', { defaultValue: 'Génération du PDF traduit…' }));
+                setProgress({ current: 0, total: items.length });
+                await generatePdf(items, sourceLang, (cur, tot) => setProgress({ current: cur, total: tot }));
+            });
+        } catch (err) {
+            // Le serveur renvoie un message technique quand DeepL est configuré.
+            // On le traduit en quelque chose de lisible pour l'utilisateur.
+            const msg = String(err?.message || '');
+            if (msg.includes('OpenAI')) {
+                setToastError('Clef DeepL pas assez puissante. Renseigne une clé OpenAI dans Admin → Réglages pour la frise traduite.');
+            } else if (msg.includes('Clé API non configurée')) {
+                setToastError('Aucune clé de traduction configurée. Renseigne une clé OpenAI dans Admin → Réglages.');
+            } else {
+                setToastError(`Échec de la traduction : ${msg || 'erreur inconnue'}`);
+            }
+        }
     };
 
     const handleExportArchive = async (close) => {
@@ -628,6 +643,8 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
 
             {/* Overlay */}
             <LongOperationOverlay visible={busy} label={busyLabel} current={progress.current} total={progress.total} />
+
+            <Toast visible={!!toastError} type="error" message={toastError} onDismiss={() => setToastError('')} autoDismiss={6000} />
 
             {/* Confirmation */}
             {confirmState && (
