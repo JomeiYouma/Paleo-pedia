@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useLocation, matchPath, useNavigate } from 'react-router-dom';
 import api from '../services/apiClient';
+import i18n from '../i18n';
 
 const AppContext = createContext();
 
@@ -9,8 +10,12 @@ export const AppProvider = ({ children }) => {
     const [loading, setLoading] = useState(false);
     const [categories, setCategories] = useState([]);
     const [workshops, setWorkshops] = useState([]);
-    const [user, setUser] = useState(null); // { id, email, role, can_manage_admin, ... }
-    const isAdmin = !!user?.can_manage_admin;
+    const [user, setUser] = useState(null); // { id, email, role, can_manage_admin, can_manage_team, home_subsite_id, ... }
+    const isSuperadmin = !!user?.can_manage_admin;
+    const isOwner      = !!user?.can_manage_team;
+    const homeSubsiteId = user?.home_subsite_id ?? null;
+    // isAdmin = accès à l'UI d'administration (superadmin OU owner d'un sous-site)
+    const isAdmin = isSuperadmin || isOwner;
 
     const [currentWorkshopId, setCurrentWorkshopId] = useState(null);
     const currentWorkshop = (currentWorkshopId && Array.isArray(workshops))
@@ -113,16 +118,27 @@ export const AppProvider = ({ children }) => {
         return payload;
     };
 
+    // addCartel / addCartelToSubsite propagent les erreurs (throw) : le caller
+    // doit les capter pour afficher un feedback ET s'abstenir de naviguer en
+    // cas d'échec. Renvoyer null avec un alert() avalait l'échec côté UX.
     const addCartel = async (entry) => {
         setLoading(true);
         try {
             const created = await api.cartels.create(buildApiPayload(entry));
             await fetchData();
             return created;
-        } catch (e) {
-            console.error(e);
-            alert('Erreur sauvegarde : ' + e.message);
-            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    /** Soumettre un cartel à un sous-site précis via la route scopée /s/:slug/cartels */
+    const addCartelToSubsite = async (slug, entry) => {
+        setLoading(true);
+        try {
+            const created = await api.cartels.createForSubsite(slug, buildApiPayload(entry));
+            await fetchData();
+            return created;
         } finally {
             setLoading(false);
         }
@@ -136,7 +152,23 @@ export const AppProvider = ({ children }) => {
             return updated;
         } catch (e) {
             console.error(e);
-            alert('Erreur mise à jour : ' + e.message);
+            alert(i18n.t('errors.updatingPrefix', { msg: e.message }));
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    /** Variante pour éditer un cartel dans le contexte d'un sous-site (/s/:slug/cartels/:id) */
+    const updateCartelInSubsite = async (slug, entry) => {
+        setLoading(true);
+        try {
+            const updated = await api.cartels.updateInSubsite(slug, entry.id, buildApiPayload(entry));
+            await fetchData();
+            return updated;
+        } catch (e) {
+            console.error(e);
+            alert(i18n.t('errors.updatingPrefix', { msg: e.message }));
             return null;
         } finally {
             setLoading(false);
@@ -226,7 +258,7 @@ export const AppProvider = ({ children }) => {
             return ws.id;
         } catch (e) {
             console.error(e);
-            alert('Erreur création atelier : ' + e.message);
+            alert(i18n.t('errors.workshopCreatePrefix', { msg: e.message }));
             return null;
         }
     };
@@ -254,12 +286,12 @@ export const AppProvider = ({ children }) => {
             // Data
             cartels, loading, categories, workshops, user,
             // Computed
-            isAdmin,
+            isAdmin, isSuperadmin, isOwner, homeSubsiteId,
             currentWorkshopId, currentWorkshop, setWorkshopContext,
             // Auth
             login, logout,
             // Cartels CRUD
-            fetchData, addCartel, updateCartel, deleteCartel, deleteCartels, uploadImage, translateCartel,
+            fetchData, addCartel, addCartelToSubsite, updateCartel, updateCartelInSubsite, deleteCartel, deleteCartels, uploadImage, translateCartel,
             // Categories
             addLocalCategory,
             // Workshops

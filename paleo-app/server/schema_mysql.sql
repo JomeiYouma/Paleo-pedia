@@ -139,4 +139,45 @@ CREATE TABLE IF NOT EXISTS `workshop_cartels` (
     FOREIGN KEY (`cartel_id`)   REFERENCES `cartels`   (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ============================================================
+-- EVENT_LOGS (v8) — journal d'audit + déclencheur d'emails
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `event_logs` (
+  `id`           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `type`         VARCHAR(64)     NOT NULL,
+  `actor_id`     CHAR(36)        NULL DEFAULT NULL,
+  `actor_email`  VARCHAR(255)    NULL DEFAULT NULL,
+  `subsite_id`   CHAR(36)        NULL DEFAULT NULL,
+  `target_id`    VARCHAR(64)     NULL DEFAULT NULL,
+  `summary`      VARCHAR(512)    NOT NULL DEFAULT '',
+  `payload`      JSON            NULL,
+  `created_at`   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_event_logs_type`       (`type`),
+  KEY `idx_event_logs_created_at` (`created_at`),
+  KEY `idx_event_logs_actor`      (`actor_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `event_email_config` (
+  `type`           VARCHAR(64)  NOT NULL,
+  `enabled`        TINYINT(1)   NOT NULL DEFAULT 0,
+  `recipient`      VARCHAR(255) NOT NULL DEFAULT '',
+  `mark_as_spam`   TINYINT(1)   NOT NULL DEFAULT 0,
+  `subject_prefix` VARCHAR(64)  NOT NULL DEFAULT '[Paléo]',
+  `updated_at`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO `event_email_config` (`type`) VALUES
+  ('cartel.created'), ('cartel.updated'), ('cartel.deleted'), ('cartel.published'),
+  ('cartel.draft_created'),
+  ('cartel.submission_pending'), ('cartel.submission_approved'), ('cartel.submission_rejected'),
+  ('cartel.subsite_submitted'), ('cartel.subsite_approved'), ('cartel.subsite_rejected'),
+  ('cartel.subsite_published'),
+  ('subsite.created'), ('subsite.updated'), ('subsite.deleted'),
+  ('user.created'),    ('user.updated'),   ('user.deleted'), ('user.assigned_subsite'),
+  ('partner.created'), ('partner.updated'),('partner.deleted'),
+  ('category.created'),('category.updated'),('category.deleted'),
+  ('workshop.created'),('workshop.updated'),('workshop.deleted');
+
 SET FOREIGN_KEY_CHECKS = 1;

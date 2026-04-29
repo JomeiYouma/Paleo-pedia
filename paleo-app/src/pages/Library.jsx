@@ -5,11 +5,13 @@ import TimelineMode from '../components/TimelineMode';
 import MapMode from '../components/MapMode';
 import ArborescenceMode from '../components/ArborescenceMode';
 import ConfirmModal from '../components/ConfirmModal';
+import LongOperationOverlay from '../components/LongOperationOverlay';
 import { getYearForSort } from '../utils/helpers';
 import { Download, Trash2, CheckSquare, Square, Edit, LayoutList, CalendarDays, Map as MapIcon, Search, GitGraph } from 'lucide-react';
 import { generateZip } from '../utils/zipGenerator';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { rememberReturn } from '../utils/navigation';
 import './Library.css';
 
 /** Badge de statut pour les cartels hors "published" (visible admin only) */
@@ -34,7 +36,7 @@ const StatusBadge = ({ status, t }) => {
     );
 };
 
-const Library = ({ fixedCategory = null }) => {
+const Library = ({ fixedCategory = null, fixedSubsiteId = null }) => {
     const { t, i18n } = useTranslation();
     // Source unique : tous les cartels depuis l'API (l'API filtre selon le rôle)
     const { cartels, loading, deleteCartel, deleteCartels, isAdmin, currentWorkshop } = useApp();
@@ -49,8 +51,8 @@ const Library = ({ fixedCategory = null }) => {
     const [confirmState, setConfirmState]   = useState(null);
 
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
-    const prevSelectedCatsKey = React.useRef('');
 
     // Pré-filtrer par catégorie si ?category= est dans l'URL (seulement sans fixedCategory)
     const urlCategoryFilter = !fixedCategory ? searchParams.get('category') : null;
@@ -74,17 +76,23 @@ const Library = ({ fixedCategory = null }) => {
             data = data.filter(c => c.status === 'published' && c.visible);
         }
 
-        // Si un sous-site impose une catégorie : on filtre en dur ici
-        // fixedCategory est toujours le nom FR (category_name du JOIN SQL)
-        // → on compare TOUJOURS contre c.categories (FR), quelle que soit la langue d'affichage
-        if (fixedCategory) {
-            data = data.filter(c =>
-                (c.categories || []).some(cat => cat.toLowerCase() === fixedCategory.toLowerCase())
-            );
+        // Si un sous-site impose une catégorie ou son subsite_id : on filtre en dur ici.
+        // Règle : sur un sous-site on montre ses cartels scopés (subsite_id) ET les cartels
+        // legacy du site principal (subsite_id NULL) partageant la catégorie.
+        if (fixedSubsiteId || fixedCategory) {
+            data = data.filter(c => {
+                const matchesSubsite = fixedSubsiteId && c.subsite_id === fixedSubsiteId;
+                const matchesCategory = fixedCategory && (c.categories || []).some(
+                    cat => cat.toLowerCase() === fixedCategory.toLowerCase()
+                );
+                if (fixedSubsiteId && matchesSubsite) return true;
+                if (fixedCategory && matchesCategory && (!c.subsite_id || c.subsite_id === fixedSubsiteId)) return true;
+                return false;
+            });
         }
 
         return data;
-    }, [cartels, currentWorkshop, isAdmin, fixedCategory]);
+    }, [cartels, currentWorkshop, isAdmin, fixedCategory, fixedSubsiteId]);
 
     // Catégories disponibles dans le dataset de base (sous-ensemble cohérent)
     const allCategories = useMemo(() => {
@@ -146,15 +154,22 @@ const Library = ({ fixedCategory = null }) => {
         return data.sort((a, b) => getYearForSort(a) - getYearForSort(b));
     }, [baseCartels, selectedCats, searchQuery, i18n.language]);
 
-    // Quand les filtres catégories changent en mode frise, scroller vers le premier cartel visible
+    // Retour d'édition : location.hash = '#cartel-<id>' (posé par rememberReturn).
+    // On restaure la sélection du Frise/TimelineMode dès que filteredCartels
+    // contient la cible. La ref empêche que les changements de filtres
+    // ultérieurs ne re-déclenchent le scroll sur un hash obsolète.
+    const hashRestoredRef = React.useRef(null);
     useEffect(() => {
-        const key = selectedCats.join(',');
-        if (key === prevSelectedCatsKey.current) return;
-        prevSelectedCatsKey.current = key;
-        if (viewMode === 'timeline' && filteredCartels.length > 0) {
-            setTargetCartelId(filteredCartels[0].id);
-        }
-    }, [selectedCats, filteredCartels, viewMode]);
+        const h = location.hash || '';
+        if (!h.startsWith('#cartel-')) return;
+        if (hashRestoredRef.current === h) return;
+        const id = h.slice('#cartel-'.length);
+        const found = filteredCartels.find(c => String(c.id) === String(id));
+        if (!found) return;
+        setTargetCartelId(found.id);
+        if (viewMode !== 'timeline' && viewMode !== 'map') setViewMode('timeline');
+        hashRestoredRef.current = h;
+    }, [location.hash, filteredCartels, viewMode]);
 
     // Sélection
     const toggleSelection = (id) => {
@@ -201,15 +216,12 @@ const Library = ({ fixedCategory = null }) => {
         <div style={{ padding: '0 20px' }}>
 
             {/* Progress overlay export ZIP */}
-            {generatingZip && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(255,255,255,0.92)', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <h3>{t('library.generating')}</h3>
-                    <div style={{ fontSize: '2rem', fontWeight: 'bold', margin: '20px 0' }}>{progress.current} / {progress.total}</div>
-                    <div style={{ width: '300px', height: '10px', background: '#eee', borderRadius: '5px', overflow: 'hidden' }}>
-                        <div style={{ width: `${(progress.current / progress.total) * 100}%`, height: '100%', background: 'var(--color-pink-darker)', transition: 'width 0.3s' }} />
-                    </div>
-                </div>
-            )}
+            <LongOperationOverlay
+                visible={generatingZip}
+                label={t('library.generating')}
+                current={progress.current}
+                total={progress.total}
+            />
 
             <div style={{ marginBottom: '20px' }}>
                 {/* Barre de contrôles */}
@@ -343,7 +355,10 @@ const Library = ({ fixedCategory = null }) => {
                             </div>
                             {isAdmin && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
-                                    <button onClick={() => navigate(`/app/create?edit=${cartel.id}`)} title="Éditer" style={{ padding: '6px', border: 'none', background: 'none', cursor: 'pointer' }}>
+                                    <button onClick={() => {
+                                            const returnTo = rememberReturn(location, { scrollId: cartel.id });
+                                            navigate(`/app/create?edit=${cartel.id}`, { state: { returnTo } });
+                                        }} title="Éditer" style={{ padding: '6px', border: 'none', background: 'none', cursor: 'pointer' }}>
                                         <Edit size={18} />
                                     </button>
                                     <button

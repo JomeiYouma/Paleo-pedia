@@ -27,7 +27,7 @@ const Drafts = () => {
     if (!isAdmin) {
         return (
             <div className="container" style={{ textAlign: 'center', padding: '60px 20px', color: '#888' }}>
-                <p>Accès réservé à l'administration.</p>
+                <p>{t('manageCartels.adminOnly')}</p>
             </div>
         );
     }
@@ -41,52 +41,52 @@ const Drafts = () => {
     const proposals = pendingCartels.filter(c => c.status === 'pending_review');
 
     const handlePublish = async (cartel) => {
-        if (!confirm(`Publier "${cartel.titre}" ?`)) return;
+        if (!confirm(t('drafts.confirmPublish', { title: cartel.titre }))) return;
         setProcessingId(cartel.id);
         try {
             await api.cartels.publish(cartel.id);
             await fetchData();
         } catch (e) {
-            alert('Erreur : ' + e.message);
+            alert(t('common.error', { msg: e.message }));
         } finally {
             setProcessingId(null);
         }
     };
 
     const handleReject = async (cartel) => {
-        if (!confirm(`Refuser et supprimer "${cartel.titre}" ?`)) return;
+        if (!confirm(t('drafts.confirmReject', { title: cartel.titre }))) return;
         setProcessingId(cartel.id);
         try {
             await api.cartels.delete(cartel.id);
             await fetchData();
         } catch (e) {
-            alert('Erreur : ' + e.message);
+            alert(t('common.error', { msg: e.message }));
         } finally {
             setProcessingId(null);
         }
     };
 
     const handleRevertDraft = async (cartel) => {
-        if (!confirm(`Remettre "${cartel.titre}" en brouillon ?`)) return;
+        if (!confirm(t('drafts.confirmRevert', { title: cartel.titre }))) return;
         setProcessingId(cartel.id);
         try {
             await api.cartels.setStatus(cartel.id, 'draft');
             await fetchData();
         } catch (e) {
-            alert('Erreur : ' + e.message);
+            alert(t('common.error', { msg: e.message }));
         } finally {
             setProcessingId(null);
         }
     };
 
     const handleArchive = async (cartel) => {
-        if (!confirm(`Archiver "${cartel.titre}" ?`)) return;
+        if (!confirm(t('drafts.confirmArchive', { title: cartel.titre }))) return;
         setProcessingId(cartel.id);
         try {
             await api.cartels.archive(cartel.id);
             await fetchData();
         } catch (e) {
-            alert('Erreur : ' + e.message);
+            alert(t('common.error', { msg: e.message }));
         } finally {
             setProcessingId(null);
         }
@@ -96,16 +96,16 @@ const Drafts = () => {
         <div className="container" style={{ paddingBottom: '100px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                 <div>
-                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800' }}>En attente de publication</h2>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800' }}>{t('drafts.waitingPublication')}</h2>
                     <p style={{ margin: '4px 0 0', color: '#888', fontSize: '0.9rem' }}>
-                        {drafts.length} brouillon{drafts.length !== 1 ? 's' : ''} · {proposals.length} proposition{proposals.length !== 1 ? 's' : ''}
+                        {t('drafts.pendingCount', { drafts: drafts.length, proposals: proposals.length })}
                     </p>
                 </div>
                 <button
                     onClick={() => navigate('/app/create')}
                     style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'black', color: 'white', border: 'none', borderRadius: '8px', padding: '10px 16px', cursor: 'pointer', fontWeight: '600' }}
                 >
-                    <Plus size={16} /> Nouveau cartel
+                    <Plus size={16} /> {t('manageCartels.newCartel')}
                 </button>
             </div>
 
@@ -113,7 +113,7 @@ const Drafts = () => {
             {proposals.length > 0 && (
                 <section style={{ marginBottom: '40px' }}>
                     <h3 style={{ borderBottom: '2px solid #e67e00', paddingBottom: '8px', color: '#e67e00', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        📥 Propositions de visiteurs <span style={{ fontSize: '0.85rem', fontWeight: '400', color: '#888' }}>— À modérer</span>
+                        {t('drafts.visitorProposalsTitle')} <span style={{ fontSize: '0.85rem', fontWeight: '400', color: '#888' }}>{t('drafts.toModerate')}</span>
                     </h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
                         {proposals.map(cartel => (
@@ -136,7 +136,7 @@ const Drafts = () => {
             {drafts.length > 0 && (
                 <section>
                     <h3 style={{ borderBottom: '2px solid #3b5bdb', paddingBottom: '8px', color: '#3b5bdb', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        🖊️ Brouillons
+                        {t('drafts.draftsSectionTitle')}
                     </h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
                         {drafts.map(cartel => (
@@ -157,8 +157,8 @@ const Drafts = () => {
 
             {pendingCartels.length === 0 && (
                 <div style={{ textAlign: 'center', padding: '60px 20px', color: '#aaa', background: '#fafafa', borderRadius: '12px' }}>
-                    <p style={{ fontSize: '1.1rem' }}>✅ Aucun cartel en attente</p>
-                    <small>Toutes les soumissions ont été traitées.</small>
+                    <p style={{ fontSize: '1.1rem' }}>{t('drafts.emptyTitle')}</p>
+                    <small>{t('drafts.emptySubtext')}</small>
                 </div>
             )}
         </div>
@@ -182,7 +182,7 @@ const PendingCard = ({ cartel, isProcessing, onPublish, onReject, onEdit, onReve
             <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: '10px', fontSize: '0.85rem', color: '#888', gap: '8px' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <Clock size={13} /> Créé le <strong>{dateStr}</strong>
+                        <Clock size={13} /> {t('drafts.createdAt')} <strong>{dateStr}</strong>
                     </span>
                     {cartel.submitter_ip && (
                         <span>IP : <code style={{ background: '#f5f5f5', padding: '1px 6px', borderRadius: '4px' }}>{cartel.submitter_ip}</code></span>
@@ -193,28 +193,28 @@ const PendingCard = ({ cartel, isProcessing, onPublish, onReject, onEdit, onReve
                         </span>
                     )}
                 </div>
-                <CartelPreview data={cartel} isDraft />
+                <CartelPreview data={cartel} isDraft showExports />
             </div>
 
             {/* Actions */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
-                <ActionBtn onClick={onPublish} disabled={isProcessing} color="green" title="Publier">
+                <ActionBtn onClick={onPublish} disabled={isProcessing} color="green" title={t('drafts.publish')}>
                     <Check size={16} />
                 </ActionBtn>
-                <ActionBtn onClick={onEdit} color="#555" title="Éditer">
+                <ActionBtn onClick={onEdit} color="#555" title={t('drafts.edit')}>
                     <Edit size={16} />
                 </ActionBtn>
                 {onRevertDraft && (
-                    <ActionBtn onClick={onRevertDraft} disabled={isProcessing} color="#e67e00" title="Repasser en brouillon">
+                    <ActionBtn onClick={onRevertDraft} disabled={isProcessing} color="#e67e00" title={t('drafts.actionRevertDraft')}>
                         ↩️
                     </ActionBtn>
                 )}
                 {onArchive && (
-                    <ActionBtn onClick={onArchive} disabled={isProcessing} color="#888" title="Archiver">
+                    <ActionBtn onClick={onArchive} disabled={isProcessing} color="#888" title={t('drafts.actionArchive')}>
                         🗄️
                     </ActionBtn>
                 )}
-                <ActionBtn onClick={onReject} disabled={isProcessing} color="red" title="Supprimer">
+                <ActionBtn onClick={onReject} disabled={isProcessing} color="red" title={t('drafts.delete')}>
                     <X size={16} />
                 </ActionBtn>
             </div>

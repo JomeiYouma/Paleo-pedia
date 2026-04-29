@@ -3,6 +3,8 @@
  * CRUD sous-sites + gestion des partenaires associés.
  */
 import { SubsiteModel } from '../models/Subsite.js';
+import { dispatchEvent } from '../services/eventDispatcher.js';
+const dispatch = (args) => { dispatchEvent(args).catch(() => {}); };
 
 export const SubsiteController = {
 
@@ -34,7 +36,14 @@ export const SubsiteController = {
           primaryPartnerIds: Array.isArray(primary_partner_ids) ? primary_partner_ids : [],
         });
       }
-      res.status(201).json(await SubsiteModel.findBySlug(subsite.slug));
+      const created = await SubsiteModel.findBySlug(subsite.slug);
+      dispatch({
+        type: 'subsite.created', req,
+        targetId: created.id, subsiteId: created.id,
+        summary: `${created.name} (${created.slug})`,
+        payload: { slug: created.slug, category_id: created.category_id },
+      });
+      res.status(201).json(created);
     } catch (e) {
       if (e.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Ce slug est déjà utilisé.' });
       res.status(500).json({ error: e.message });
@@ -54,7 +63,13 @@ export const SubsiteController = {
           primaryPartnerIds: Array.isArray(primary_partner_ids) ? primary_partner_ids : [],
         });
       }
-      res.json(await SubsiteModel.findBySlug(updated.slug));
+      const fresh = await SubsiteModel.findBySlug(updated.slug);
+      dispatch({
+        type: 'subsite.updated', req,
+        targetId: fresh.id, subsiteId: fresh.id,
+        summary: `${fresh.name} (${fresh.slug})`,
+      });
+      res.json(fresh);
     } catch (e) { res.status(500).json({ error: e.message }); }
   },
 
@@ -63,6 +78,11 @@ export const SubsiteController = {
       const existing = await SubsiteModel.findBySlug(req.params.slug);
       if (!existing) return res.status(404).json({ error: 'Sous-site introuvable' });
       await SubsiteModel.delete(req.params.slug);
+      dispatch({
+        type: 'subsite.deleted', req,
+        targetId: existing.id, subsiteId: existing.id,
+        summary: `${existing.name} (${existing.slug})`,
+      });
       res.sendStatus(204);
     } catch (e) { res.status(500).json({ error: e.message }); }
   },

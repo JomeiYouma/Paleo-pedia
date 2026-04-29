@@ -4,14 +4,18 @@ import CartelPreview from './CartelPreview';
 import ConfirmModal from './ConfirmModal';
 import { getYearForSort } from '../utils/helpers';
 import { ChevronLeft, ChevronRight, Edit, Trash2 } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getLocalizedContent } from '../utils/i18nHelpers';
+import { rememberReturn } from '../utils/navigation';
 
 const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
+    // `slug` défini uniquement quand la timeline est rendue dans /site/:slug/*
+    const { slug: subsiteSlug } = useParams();
+    const createBasePath = subsiteSlug ? `/site/${subsiteSlug}/create` : '/app/create';
     const svgRef = useRef(null);
     const containerRef = useRef(null);
     // Store zoom transform to persist across re-renders
@@ -57,14 +61,29 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
         return stacked;
     }, [cartels]);
 
-    // Sync targetId to selection
+    // Mémorise l'id du cartel courant pour pouvoir le restaurer après un
+    // changement du jeu de cartels (toggle d'un filtre catégorie, refresh...).
+    const lastSelectedIdRef = useRef(null);
     useEffect(() => {
-        if (targetId && validCartels.length > 0) {
-            const foundIndex = validCartels.findIndex(c => c.id === targetId);
-            if (foundIndex !== -1) {
-                setSelectedIndex(foundIndex);
-            }
+        const c = validCartels[selectedIndex];
+        if (c) lastSelectedIdRef.current = c.id;
+    }, [selectedIndex, validCartels]);
+
+    // Résout la sélection : targetId explicite > cartel précédent si toujours
+    // dans la liste > premier cartel. Sans ce fallback, selectedIndex peut
+    // devenir hors bornes après un filtre et plus aucun cartel ne s'affiche.
+    useEffect(() => {
+        if (!validCartels.length) return;
+        if (targetId) {
+            const idx = validCartels.findIndex(c => c.id === targetId);
+            if (idx !== -1) { setSelectedIndex(idx); return; }
         }
+        const prevId = lastSelectedIdRef.current;
+        if (prevId) {
+            const idx = validCartels.findIndex(c => c.id === prevId);
+            if (idx !== -1) { setSelectedIndex(idx); return; }
+        }
+        setSelectedIndex(0);
     }, [targetId, validCartels]);
 
     // Initialization Effect (Draws Axis, Zoom, Markers initially)
@@ -359,7 +378,10 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                             {isAdmin && (
                                 <>
                                     <button
-                                        onClick={() => navigate(`/app/create?edit=${currentCartel.id}`, { state: { returnTo: `${location.pathname}${location.search}#${currentCartel.id}` } })}
+                                        onClick={() => {
+                                            const returnTo = rememberReturn(location, { scrollId: currentCartel.id });
+                                            navigate(`${createBasePath}?edit=${currentCartel.id}`, { state: { returnTo } });
+                                        }}
                                         title={t('cartel.edit')}
                                         style={{ border: 'none', background: 'white', cursor: 'pointer', padding: '12px', borderRadius: '50%', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}
                                     >

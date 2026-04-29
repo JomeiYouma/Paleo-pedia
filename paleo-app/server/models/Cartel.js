@@ -10,8 +10,10 @@ const TEXT_FIELDS = [
 function buildSelectFull({ includeWorkshops = false } = {}) {
   return `
   SELECT
-    c.*, 
+    c.*,
     u.email AS created_by_email,
+    s.slug  AS subsite_slug,
+    s.name  AS subsite_name,
     GROUP_CONCAT(
       DISTINCT CONCAT_WS('||', cat.id, cat.name, cat.name_en, cat.color, cat.icon)
       SEPARATOR ';;'
@@ -22,6 +24,7 @@ function buildSelectFull({ includeWorkshops = false } = {}) {
     ) AS workshops_raw` : ''}
   FROM cartels c
   LEFT JOIN users u ON u.id = c.created_by
+  LEFT JOIN subsites s ON s.id = c.subsite_id
   LEFT JOIN cartel_categories cc ON cc.cartel_id = c.id
   LEFT JOIN categories cat ON cat.id = cc.category_id${includeWorkshops ? '\n  LEFT JOIN workshop_cartels wc ON wc.cartel_id = c.id\n  LEFT JOIN workshops w ON w.id = wc.workshop_id' : ''}
 `;
@@ -68,9 +71,21 @@ function parseCartel(row) {
 
 export const CartelModel = {
 
-  async findAll({ status, visible, category, search, limit = 50, offset = 0, includeWorkshops = false } = {}) {
+  async findAll({ status, visible, category, search, limit = 50, offset = 0, includeWorkshops = false, subsiteFilter } = {}) {
     const conditions = [];
     const values = [];
+
+    // Isolation par sous-site — toujours appliquée, même valeur 'none' = pas de filtre
+    // (superadmin uniquement ; les contrôleurs sont responsables de ne jamais envoyer 'none' pour un non-superadmin)
+    if (subsiteFilter === 'main') {
+      conditions.push('c.subsite_id IS NULL');
+    } else if (subsiteFilter === 'main_feed') {
+      conditions.push('(c.subsite_id IS NULL OR c.visible_on_main = 1)');
+    } else if (subsiteFilter && typeof subsiteFilter === 'object' && subsiteFilter.id) {
+      conditions.push('c.subsite_id = ?');
+      values.push(subsiteFilter.id);
+    }
+    // subsiteFilter === 'none' ou undefined → aucun filtre (superadmin global)
 
     if (status)              { conditions.push('c.status = ?');   values.push(status); }
     if (visible !== undefined) { conditions.push('c.visible = ?'); values.push(visible ? 1 : 0); }
@@ -102,20 +117,27 @@ export const CartelModel = {
     return parseCartel(rows[0]);
   },
 
-  async create(data, userId, submitterIp = null) {
+  async create(data, userId, submitterIp = null, subsiteId = null) {
     const client = await getClient();
     try {
       await client.query('START TRANSACTION');
       const id = randomUUID();
 
+      // `visible` suit `status='published'` : la colonne est vestigiale mais
+      // encore lue côté frontend pour masquer les cartels non publiés. On la
+      // synchronise ici pour qu'un cartel créé directement en 'published'
+      // apparaisse aux visiteurs anonymes.
+      const cartelStatus = data.status ?? 'draft';
+      const visible = cartelStatus === 'published' ? 1 : (data.visible ? 1 : 0);
+
       await client.query(
         `INSERT INTO cartels (
-           id, created_by, titre, titre_en, annee, description, description_en,
+           id, created_by, subsite_id, titre, titre_en, annee, description, description_en,
            exhume_par, location, location_en, lat, lng,
            image_path, image_credit, url_qr, date, status, visible, submitter_ip
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          id, userId ?? null,
+          id, userId ?? null, subsiteId,
           data.titre,            data.titre_en      ?? '',
           data.annee             ?? '',
           data.description       ?? '',
@@ -129,8 +151,8 @@ export const CartelModel = {
           data.imageCredit       ?? data.image_credit ?? '',
           data.url_qr            ?? '',
           data.date              ?? null,
-          data.status            ?? 'draft',
-          data.visible           ? 1 : 0,
+          cartelStatus,
+          visible,
           submitterIp,
         ]
       );
@@ -192,13 +214,70 @@ export const CartelModel = {
   },
 
   async setStatus(id, status) {
-    const values = [status, id];
+    // `visible` est une colonne vestigiale encore lue par le frontend
+    // (Library.jsx filtre les visiteurs anonymes sur c.visible). On la
+    // synchronise avec le statut : visible=1 uniquement quand publié.
+    const visible = status === 'published' ? 1 : 0;
     if (status === 'published') {
-      await query('UPDATE cartels SET status = ?, published_at = NOW() WHERE id = ?', values);
+      await query(
+        'UPDATE cartels SET status = ?, visible = ?, published_at = NOW() WHERE id = ?',
+        [status, visible, id]
+      );
     } else {
-      await query('UPDATE cartels SET status = ? WHERE id = ?', values);
+      await query(
+        'UPDATE cartels SET status = ?, visible = ? WHERE id = ?',
+        [status, visible, id]
+      );
     }
     return this.findById(id);
+  },
+
+  /** Marque un cartel de sous-site comme soumis pour validation sur le site principal */
+  /**
+   * Marque un cartel comme soumis pour validation sur le site principal.
+   * Idempotent : si submitted_to_main_at est déjà renseigné, on conserve
+   * l'horodatage de la première soumission (évite de perdre l'historique
+   * quand le contrôleur appelle cette méthode sur chaque update).
+   */
+  async markSubmittedToMain(id) {
+    await query(
+      `UPDATE cartels
+         SET submitted_to_main_at = IFNULL(submitted_to_main_at, NOW()),
+             visible_on_main = 0
+       WHERE id = ?`,
+      [id]
+    );
+    return this.findById(id);
+  },
+
+  /** Retire une soumission (owner side) ou la rejette (superadmin side) */
+  async clearSubmissionToMain(id) {
+    await query(
+      'UPDATE cartels SET submitted_to_main_at = NULL, visible_on_main = 0 WHERE id = ?',
+      [id]
+    );
+    return this.findById(id);
+  },
+
+  /** Superadmin : approuve un cartel soumis pour affichage sur le site principal */
+  async approveForMain(id) {
+    await query('UPDATE cartels SET visible_on_main = 1 WHERE id = ?', [id]);
+    return this.findById(id);
+  },
+
+  /** Liste des cartels de sous-sites soumis et en attente de décision */
+  async findPendingSubmissions({ limit = 50, offset = 0 } = {}) {
+    const { rows } = await query(
+      `${buildSelectFull()}
+       WHERE c.submitted_to_main_at IS NOT NULL
+         AND c.visible_on_main = 0
+         AND c.subsite_id IS NOT NULL
+       GROUP BY c.id
+       ORDER BY c.submitted_to_main_at ASC
+       LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}`,
+      []
+    );
+    return rows.map(parseCartel);
   },
 
   async delete(id) {

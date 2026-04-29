@@ -11,8 +11,12 @@ import { ImportController }    from '../controllers/importController.js';
 import { ExportController }    from '../controllers/exportController.js';
 import { authenticate, requireAdmin, optionalAuth } from '../middleware/auth.js';
 import { submissionGuard } from '../middleware/submissionGuard.js';
+import { uploadGuard } from '../middleware/uploadGuard.js';
+import { resolveTenant, requireTenantAccess } from '../middleware/tenant.js';
 import { SubsiteController }  from '../controllers/subsiteController.js';
 import { PartnerController }  from '../controllers/partnerController.js';
+import { TeamController }     from '../controllers/teamController.js';
+import { EventLogController } from '../controllers/eventLogController.js';
 
 const router = Router();
 
@@ -58,21 +62,28 @@ router.patch ('/settings',            authenticate, requireAdmin, SettingControl
 
 // ── Users (admin) ────────────────────────────────────────────
 router.get   ('/users',              authenticate, requireAdmin, UserController.getAll);
+router.post  ('/users',              authenticate, requireAdmin, UserController.create);
 router.get   ('/users/:id',          authenticate, requireAdmin, UserController.getOne);
 router.patch ('/users/:id',          authenticate, requireAdmin, UserController.update);
 router.delete('/users/:id',          authenticate, requireAdmin, UserController.delete);
 
 // ── Upload image ─────────────────────────────────────────────
-router.post('/upload', authenticate, upload.single('image'), UploadController.uploadImage);
+// optionalAuth : autorise les visiteurs anonymes (pour la soumission publique
+// de cartels avec image, côté site principal et côté /site/:slug). Multer
+// borne déjà la taille et le type (20 Mo, images uniquement), uploadGuard
+// ajoute un rate-limit par IP pour les visiteurs anonymes.
+router.post('/upload', optionalAuth, uploadGuard, upload.single('image'), UploadController.uploadImage);
 
 // ── Traduction (admin) ───────────────────────────────────────
-router.post('/translate', authenticate, requireAdmin, TranslateController.translate);
+router.post('/translate',      authenticate, requireAdmin, TranslateController.translate);
+router.post('/translate/bulk', authenticate, requireAdmin, TranslateController.bulkTranslate);
 
 // ── Import ZIP (admin) ───────────────────────────────────────
 router.post('/import', authenticate, requireAdmin, ImportController.middleware, ImportController.importZip);
 
 // ── Export archive (admin) ───────────────────────────────────
-router.get('/export', authenticate, requireAdmin, ExportController.exportArchive);
+router.get('/export/image-check', authenticate, requireAdmin, ExportController.imageCheck);
+router.get('/export',             authenticate, requireAdmin, ExportController.exportArchive);
 
 // ── Sous-sites (public GET, admin write) ─────────────────────
 router.get   ('/subsites',       SubsiteController.getAll);
@@ -81,12 +92,49 @@ router.post  ('/subsites',       authenticate, requireAdmin, SubsiteController.c
 router.patch ('/subsites/:slug', authenticate, requireAdmin, SubsiteController.update);
 router.delete('/subsites/:slug', authenticate, requireAdmin, SubsiteController.remove);
 
+// ── Routes scopées par sous-site (/s/:slug/*) ────────────────
+// Lecture publique et soumission anonyme d'un sous-site donné.
+// Les admins d'un tenant peuvent aussi y éditer (protégé par requireTenantAccess).
+router.get   ('/s/:slug/cartels',              optionalAuth, resolveTenant, CartelController.getAll);
+router.get   ('/s/:slug/cartels/:id',          optionalAuth, resolveTenant, CartelController.getOne);
+router.post  ('/s/:slug/cartels',              optionalAuth, resolveTenant, submissionGuard, CartelController.create);
+router.patch ('/s/:slug/cartels/:id',          authenticate, resolveTenant, requireTenantAccess, CartelController.update);
+router.patch ('/s/:slug/cartels/:id/status',   authenticate, resolveTenant, requireTenantAccess, CartelController.setStatus);
+router.delete('/s/:slug/cartels/:id',          authenticate, resolveTenant, requireTenantAccess, CartelController.delete);
+
+// Workflow de soumission au site principal (owner du sous-site)
+router.post  ('/s/:slug/cartels/:id/submit-to-main',  authenticate, resolveTenant, requireTenantAccess, CartelController.submitToMain);
+router.post  ('/s/:slug/cartels/:id/withdraw-from-main', authenticate, resolveTenant, requireTenantAccess, CartelController.withdrawFromMain);
+
+// File d'attente de validation (superadmin)
+router.get   ('/submissions',            authenticate, requireAdmin, CartelController.listSubmissions);
+router.post  ('/submissions/:id/approve', authenticate, requireAdmin, CartelController.approveSubmission);
+router.post  ('/submissions/:id/reject',  authenticate, requireAdmin, CartelController.rejectSubmission);
+
+// Gestion d'équipe scopée (owner du sous-site OU superadmin)
+router.get   ('/s/:slug/users',     authenticate, resolveTenant, requireTenantAccess, TeamController.list);
+router.post  ('/s/:slug/users',     authenticate, resolveTenant, requireTenantAccess, TeamController.create);
+router.patch ('/s/:slug/users/:id', authenticate, resolveTenant, requireTenantAccess, TeamController.update);
+router.delete('/s/:slug/users/:id', authenticate, resolveTenant, requireTenantAccess, TeamController.remove);
+
 // ── Partenaires (public GET, admin write) ────────────────────
-router.get   ('/partners',       PartnerController.getAll);
+// optionalAuth sur GET pour que le filtre par scope (pool public vs pool+exclusifs
+// d'un tenant admin) soit calculé depuis req.user.
+router.get   ('/partners',       optionalAuth, PartnerController.getAll);
 router.get   ('/partners/site',  PartnerController.getSiteSelection);
 router.put   ('/partners/site',  authenticate, requireAdmin, PartnerController.setSiteSelection);
-router.post  ('/partners',       authenticate, requireAdmin, PartnerController.create);
-router.patch ('/partners/:id',   authenticate, requireAdmin, PartnerController.update);
-router.delete('/partners/:id',   authenticate, requireAdmin, PartnerController.remove);
+// CREATE / UPDATE / DELETE : le superadmin passe par requireAdmin, les tenant
+// admins doivent avoir can_manage_team (contrôlé dans le contrôleur via canModifyPartner).
+// On ouvre donc aux utilisateurs authentifiés et on délègue l'authz au contrôleur.
+router.post  ('/partners',       authenticate, PartnerController.create);
+router.patch ('/partners/:id',   authenticate, PartnerController.update);
+router.delete('/partners/:id',   authenticate, PartnerController.remove);
+
+// ── Event logs + config emails (superadmin only) ─────────────
+router.get   ('/logs',                       authenticate, requireAdmin, EventLogController.list);
+router.get   ('/logs/types',                 authenticate, requireAdmin, EventLogController.distinctTypes);
+router.get   ('/logs/email-config',          authenticate, requireAdmin, EventLogController.listEmailConfig);
+router.patch ('/logs/email-config',           authenticate, requireAdmin, EventLogController.bulkUpdateRecipient);
+router.patch ('/logs/email-config/:type',    authenticate, requireAdmin, EventLogController.updateEmailConfig);
 
 export default router;

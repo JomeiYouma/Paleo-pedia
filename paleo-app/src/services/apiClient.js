@@ -62,6 +62,36 @@ export const cartels = {
   publish:         (id) => cartels.setStatus(id, 'published'),
   archive:         (id) => cartels.setStatus(id, 'archived'),
   submitForReview: (id) => cartels.setStatus(id, 'pending_review'),
+
+  // Routes scopées d'un sous-site (owner / admin tenant)
+  listForSubsite:   (slug, filters = {}) => {
+    const params = new URLSearchParams(
+      Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== undefined))
+    );
+    const qs = params.toString();
+    return get(`/s/${slug}/cartels${qs ? '?' + qs : ''}`);
+  },
+  createForSubsite: (slug, data)     => post(`/s/${slug}/cartels`, data),
+  updateInSubsite:  (slug, id, data) => patch(`/s/${slug}/cartels/${id}`, data),
+  setStatusInSubsite: (slug, id, s)  => patch(`/s/${slug}/cartels/${id}/status`, { status: s }),
+  deleteInSubsite:  (slug, id)       => del(`/s/${slug}/cartels/${id}`),
+  submitToMain:     (slug, id)       => post(`/s/${slug}/cartels/${id}/submit-to-main`),
+  withdrawFromMain: (slug, id)       => post(`/s/${slug}/cartels/${id}/withdraw-from-main`),
+};
+
+// ── File de validation (superadmin) ───────────────────────────
+export const submissions = {
+  list:    ()    => get('/submissions'),
+  approve: (id)  => post(`/submissions/${id}/approve`),
+  reject:  (id)  => post(`/submissions/${id}/reject`),
+};
+
+// ── Gestion d'équipe scopée (owner / superadmin) ──────────────
+export const team = {
+  list:    (slug)           => get(`/s/${slug}/users`),
+  create:  (slug, data)     => post(`/s/${slug}/users`, data),
+  update:  (slug, id, data) => patch(`/s/${slug}/users/${id}`, data),
+  delete:  (slug, id)       => del(`/s/${slug}/users/${id}`),
 };
 
 // ── Categories ────────────────────────────────────────────────
@@ -100,6 +130,7 @@ export const users = {
     return get(`/users?${p}`);
   },
   getOne:  (id)       => get(`/users/${id}`),
+  create:  (data)     => post('/users', data),
   update:  (id, data) => patch(`/users/${id}`, data),
   delete:  (id)       => del(`/users/${id}`),
 };
@@ -144,12 +175,43 @@ export const media = {
 
 // ── Traduction ────────────────────────────────────────────────
 export const translate = {
-  /** Traduit les champs d'un cartel (titre, description, location) via OpenAI serveur */
-  cartel: (fields) => post('/translate', fields),
+  /**
+   * Traduit les champs d'un cartel.
+   * @param {object} fields - { titre, description, location } dans la langue SOURCE.
+   * @param {object} [opts]
+   * @param {'en'|'fr'} [opts.target='en'] - Langue cible.
+   *   target='en' → réponse { titre_en, description_en, location_en }
+   *   target='fr' → réponse { titre, description, location }
+   */
+  cartel: (fields, { target = 'en' } = {}) => post('/translate', { ...fields, target }),
+
+  /**
+   * Traduit un lot de cartels vers une langue arbitraire (frise traduite).
+   * @param {object}   args
+   * @param {string[]} args.ids
+   * @param {'fr'|'en'} args.sourceLang
+   * @param {string}   args.targetLanguage  - Nom libre saisi par l'admin.
+   * Réponse : { translations: [{ id, titre, description, location }] }
+   */
+  bulk: ({ ids, sourceLang, targetLanguage }) =>
+    post('/translate/bulk', { ids, sourceLang, targetLanguage }),
 };
 
 // ── Import / Export ───────────────────────────────────────────
 export const io = {
+  /**
+   * Audit image_path — retourne { total, issues: [{ id, titre, type, ... }] }.
+   * Par défaut n'audite que les cartels publiés (ce qui sera effectivement
+   * exporté). Passer { ids: [...] } pour scoper à une sélection, ou
+   * { status: 'all' } pour tout auditer (brouillons inclus).
+   */
+  imageCheck: ({ ids, status } = {}) => {
+    const qs = [];
+    if (Array.isArray(ids) && ids.length) qs.push(`ids=${ids.join(',')}`);
+    if (status) qs.push(`status=${status}`);
+    return get(`/export/image-check${qs.length ? '?' + qs.join('&') : ''}`);
+  },
+
   /** Importe un ZIP contenant cartels.json + images — retourne { created, errors } */
   importZip: async (zipFile) => {
     const formData = new FormData();
@@ -194,5 +256,36 @@ export const io = {
   },
 };
 
-const api = { auth, cartels, categories, workshops, settings, users, media, translate, io, subsites, partners };
+// ── Event logs (superadmin) ───────────────────────────────────
+export const logs = {
+  /**
+   * @param {object} params
+   * @param {string|string[]} [params.types]
+   * @param {string} [params.actorId]
+   * @param {string} [params.subsiteId]
+   * @param {string} [params.q]
+   * @param {string} [params.since]
+   * @param {number} [params.limit]
+   * @param {number} [params.offset]
+   */
+  list: (params = {}) => {
+    const qp = new URLSearchParams();
+    if (params.types) qp.set('types', Array.isArray(params.types) ? params.types.join(',') : params.types);
+    if (params.actorId) qp.set('actorId', params.actorId);
+    if (params.subsiteId) qp.set('subsiteId', params.subsiteId);
+    if (params.q) qp.set('q', params.q);
+    if (params.since) qp.set('since', params.since);
+    if (params.limit != null) qp.set('limit', String(params.limit));
+    if (params.offset != null) qp.set('offset', String(params.offset));
+    const qs = qp.toString();
+    return get(`/logs${qs ? '?' + qs : ''}`);
+  },
+  distinctTypes:    () => get('/logs/types'),
+  getEmailConfig:   () => get('/logs/email-config'),
+  updateEmailConfig: (type, body) => patch(`/logs/email-config/${encodeURIComponent(type)}`, body),
+  /** Met à jour le destinataire de tous les types en une seule fois. */
+  bulkSetRecipient: (recipient) => patch('/logs/email-config', { recipient }),
+};
+
+const api = { auth, cartels, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners, logs };
 export default api;

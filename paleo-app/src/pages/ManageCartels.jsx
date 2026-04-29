@@ -7,14 +7,19 @@ import {
     ArrowUpDown, ArrowUp, ArrowDown,
     FileText, Inbox, Globe, Plus, ScanEye, MapPin, Image as ImageIcon,
     Languages, Upload, ChevronDown, Package, FileJson, ImageIcon as ImgIcon,
-    FolderPlus,
+    FolderPlus, AlertTriangle,
 } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { generateZip, generatePdf, generateArchive } from '../utils/zipGenerator';
 import CartelPreview from '../components/CartelPreview';
+import LongOperationOverlay from '../components/LongOperationOverlay';
+import TranslateFriseModal from '../components/TranslateFriseModal';
 import { getYearForSort } from '../utils/helpers';
 import api from '../services/apiClient';
 import ConfirmModal from '../components/ConfirmModal';
+import ImageHealthModal from '../components/ImageHealthModal';
+import ExplainerBox from '../components/ExplainerBox';
+import { rememberReturn } from '../utils/navigation';
 
 const HEX_COLORS = {
     neutral: '#4b5563',
@@ -39,6 +44,7 @@ const TABS = [
     { key: 'drafts',    labelKey: 'nav.drafts',    icon: FileText, color: '#3b5bdb', bg: '#f0f4ff', descriptionKey: 'manageCartels.draftsDescription',      filter: c => c.status === 'draft' },
     { key: 'pending',   labelKey: 'nav.pending',   icon: Inbox,    color: '#e67e00', bg: '#fff4e0', descriptionKey: 'manageCartels.pendingDescription',     filter: c => c.status === 'pending_review' },
     { key: 'published', labelKey: 'nav.published', icon: Globe,    color: '#2e7d32', bg: '#e8f5e9', descriptionKey: 'manageCartels.publishedDescription',   filter: c => c.status === 'published' || c.status === 'archived' },
+    { key: 'submissions', labelKey: 'nav.submissions', icon: Inbox, color: '#C2185B', bg: '#fce4ec', descriptionKey: 'manageCartels.submissionsDescription', filter: c => !!c.submitted_to_main_at && !c.visible_on_main && !!c.subsite_id, superadminOnly: true },
 ];
 
 const STATUS_BADGE = {
@@ -47,23 +53,6 @@ const STATUS_BADGE = {
     published:      { labelKey: 'status.published',      bg: '#e8f5e9', color: '#2e7d32' },
     archived:       { labelKey: 'status.archived',       bg: '#f5f5f5', color: '#888'   },
 };
-
-// ── Overlay de progression ────────────────────────────────────
-const ProgressOverlay = ({ label, current, total }) => (
-    <div style={{ position:'fixed', inset:0, background:'rgba(255,255,255,0.92)', zIndex:9999, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
-        <div style={{ width:'50px', height:'50px', border:'5px solid #eee', borderTop:'5px solid #D65A5A', borderRadius:'50%', animation:'spin 1s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <h3 style={{ marginTop:'20px' }}>{label}</h3>
-        {total > 0 && (
-            <>
-                <div style={{ fontSize:'1.4rem', fontWeight:'700', margin:'8px 0' }}>{current}/{total}</div>
-                <div style={{ width:'280px', height:'8px', background:'#eee', borderRadius:'4px', overflow:'hidden' }}>
-                    <div style={{ width:`${(current/total)*100}%`, height:'100%', background:'#D65A5A', transition:'width 0.3s' }} />
-                </div>
-            </>
-        )}
-    </div>
-);
 
 // ── Dropdown bouton ───────────────────────────────────────────
 const DropdownButton = ({ label, icon: Icon, color = '#555', variant = 'solid', children }) => {
@@ -172,49 +161,101 @@ const ImportModal = ({ onClose, onDone, t }) => {
 };
 
 // ── Composant principal ──────────────────────────────────────
-const ManageCartels = () => {
-    const { cartels, fetchData, deleteCartel, deleteCartels, updateCartel, isAdmin, categories, workshops, addWorkshop } = useApp();
+const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null } = {}) => {
+    const { cartels, fetchData, deleteCartel, deleteCartels, updateCartel, isAdmin, isSuperadmin, isOwner, homeSubsiteId, categories, workshops, addWorkshop } = useApp();
     const navigate = useNavigate();
     const location = useLocation();
     const { workshopId } = useParams();
     const [searchParams, setSearchParams] = useSearchParams();
     const { t, i18n } = useTranslation();
 
+    // Base path dépend du contexte : intégré dans un sous-site ou page admin globale
+    const managePrefix = lockedSubsiteSlug ? `/site/${lockedSubsiteSlug}/admin` : '/app/manage';
     const pathToTab = {
-        '/app/manage/drafts': 'drafts',
-        '/app/manage/pending': 'pending',
-        '/app/manage/published': 'published',
+        [`${managePrefix}/drafts`]: 'drafts',
+        [`${managePrefix}/pending`]: 'pending',
+        [`${managePrefix}/published`]: 'published',
+        [`${managePrefix}/submissions`]: 'submissions',
     };
     const tabToPath = {
-        drafts: '/app/manage/drafts',
-        pending: '/app/manage/pending',
-        published: '/app/manage/published',
+        drafts: `${managePrefix}/drafts`,
+        pending: `${managePrefix}/pending`,
+        published: `${managePrefix}/published`,
+        submissions: `${managePrefix}/submissions`,
     };
 
+    // L'onglet submissions est réservé à la page admin principale (file de validation
+    // globale du superadmin). Il n'a aucun sens dans un contexte sous-site verrouillé.
+    const visibleTabs = TABS.filter(tab => {
+        if (tab.key === 'submissions') return isSuperadmin && !lockedSubsiteSlug;
+        if (tab.superadminOnly) return isSuperadmin;
+        return true;
+    });
+
     const activeTab = pathToTab[location.pathname] || 'drafts';
-    const setActiveTab = (key) => navigate(tabToPath[key] || '/app/manage/drafts');
+    const setActiveTab = (key) => navigate(tabToPath[key] || tabToPath.drafts);
     const goToCreate = (editId) => {
+        const basePath = lockedSubsiteSlug ? `/site/${lockedSubsiteSlug}/create` : '/app/create';
         const workshopQuery = filterWorkshop ? `?workshopId=${filterWorkshop}` : '';
-        const target = editId ? `/app/create?edit=${editId}` : `/app/create${workshopQuery}`;
-        navigate(target, { state: { returnTo: location.pathname + location.search } });
+        const target = editId ? `${basePath}?edit=${editId}` : `${basePath}${workshopQuery}`;
+        // scrollId = editId permet de re-scroller la liste jusqu'à la ligne éditée au retour.
+        const returnTo = rememberReturn(location, { scrollId: editId || null });
+        navigate(target, { state: { returnTo } });
     };
 
     const [search,         setSearch]         = useState('');
     const [filterCategory, setFilterCategory] = useState(() => searchParams.get('cat') || '');
     const [filterWorkshop, setFilterWorkshop] = useState(workshopId || '');
-    const [sortConfig,     setSortConfig]      = useState({ key: 'date', direction: 'desc' });
-    const [selectedIds,    setSelectedIds]     = useState(new Set());
+    // Si intégré dans un sous-site, le filtre est verrouillé sur ce sous-site et
+    // ignore le query param. Sinon on lit ?subsite= depuis l'URL.
+    const filterSubsiteSlug = lockedSubsiteSlug || searchParams.get('subsite') || '';
+    // Tri persisté dans l'URL (?sort=…&dir=…) pour survivre à un aller-retour vers Create.
+    const [sortConfig, setSortConfig] = useState(() => ({
+        key: searchParams.get('sort') || 'date',
+        direction: searchParams.get('dir') === 'asc' ? 'asc' : 'desc',
+    }));
+    // Sélection persistée en sessionStorage, restaurée au mount.
+    const selectionStorageKey = `paleo:manage:selection:${lockedSubsiteSlug || 'main'}`;
+    const [selectedIds, setSelectedIds] = useState(() => {
+        try {
+            const raw = sessionStorage.getItem(selectionStorageKey);
+            return raw ? new Set(JSON.parse(raw)) : new Set();
+        } catch { return new Set(); }
+    });
+    // Persistance continue : chaque changement est reflété dans sessionStorage.
+    React.useEffect(() => {
+        try { sessionStorage.setItem(selectionStorageKey, JSON.stringify(Array.from(selectedIds))); } catch { /* noop */ }
+    }, [selectedIds, selectionStorageKey]);
     const [processingId,   setProcessingId]    = useState(null);
     const [previewCartel,  setPreviewCartel]   = useState(null);
     const [busy,           setBusy]            = useState(false);
     const [busyLabel,      setBusyLabel]       = useState('Traitement…');
     const [progress,       setProgress]        = useState({ current: 0, total: 0 });
     const [showImport,     setShowImport]      = useState(false);
+    const [showTranslateFrise, setShowTranslateFrise] = useState(false);
     const [translating,    setTranslating]     = useState(new Set()); // ids en cours de traduction
     const [confirmState,      setConfirmState]      = useState(null);
     const [showWorkshopModal, setShowWorkshopModal] = useState(false);
     const [newWorkshopName, setNewWorkshopName] = useState('');
     const [selectedWorkshopId, setSelectedWorkshopId] = useState('');
+    // ── Audit images (au chargement) ─────────────────────────
+    const [imageIssues,         setImageIssues]         = useState([]);
+    const [showImageHealthModal, setShowImageHealthModal] = useState(false);
+    const [issueIdsFilter,      setIssueIdsFilter]      = useState(null); // Set<id> ou null
+
+    React.useEffect(() => {
+        let cancelled = false;
+        api.io.imageCheck()
+            .then(({ issues }) => {
+                if (cancelled) return;
+                if (issues && issues.length > 0) {
+                    setImageIssues(issues);
+                    setShowImageHealthModal(true);
+                }
+            })
+            .catch(() => { /* silencieux : ne bloque pas la page */ });
+        return () => { cancelled = true; };
+    }, []);
 
     React.useEffect(() => {
         setFilterWorkshop(workshopId || '');
@@ -233,17 +274,43 @@ const ManageCartels = () => {
         setFilterCategory(searchParams.get('cat') || '');
     }, [location.search]);
 
+    const hashScrolledRef = useRef(null);
+
     const currentTabDef = TABS.find(t => t.key === activeTab) || TABS[0];
     const activeWorkshop = filterWorkshop ? workshops.find(w => String(w.id) === String(filterWorkshop)) : null;
 
+    // Pool de référence :
+    //   - Hors verrouillage : tous les cartels (ou scopés à un ?subsite=).
+    //   - Verrouillage sous-site : cartels scopés au sous-site + cartels du site
+    //     principal (subsite_id NULL) qui s'affichent sur la frise via la catégorie
+    //     du sous-site (consultation en lecture seule).
+    const scopedCartels = useMemo(() => {
+        if (!filterSubsiteSlug) return cartels;
+        return cartels.filter(c => {
+            if (c.subsite_slug === filterSubsiteSlug) return true;
+            if (lockedSubsiteCategory && c.subsite_id === null) {
+                const cat = lockedSubsiteCategory.toLowerCase();
+                return (c.categories || []).some(x => (x || '').toLowerCase() === cat);
+            }
+            return false;
+        });
+    }, [cartels, filterSubsiteSlug, lockedSubsiteCategory]);
+
+    // Détecte si un cartel est "du site principal" (affiché en consultation seulement)
+    const isReadOnlyMainCartel = (c) => !!lockedSubsiteSlug && c.subsite_id === null;
+
     const counts = useMemo(() => {
         const obj = {};
-        TABS.forEach(tab => { obj[tab.key] = cartels.filter(tab.filter).length; });
+        TABS.forEach(tab => { obj[tab.key] = scopedCartels.filter(tab.filter).length; });
         return obj;
-    }, [cartels]);
+    }, [scopedCartels]);
 
     const filteredCartels = useMemo(() => {
-        let data = cartels.filter(currentTabDef.filter);
+        // Mode "Voir les cartels problématiques" : on ignore le filtre d'onglet
+        // pour rassembler tous les cartels cassés, quel que soit leur statut.
+        let data = issueIdsFilter
+            ? scopedCartels.filter(c => issueIdsFilter.has(c.id))
+            : scopedCartels.filter(currentTabDef.filter);
         if (filterWorkshop) {
             data = data.filter(c => (c.workshopIds || []).map(String).includes(String(filterWorkshop)));
         }
@@ -272,7 +339,32 @@ const ManageCartels = () => {
             return 0;
         });
         return data;
-    }, [cartels, currentTabDef, search, filterCategory, filterWorkshop, sortConfig]);
+    }, [cartels, currentTabDef, search, filterCategory, filterWorkshop, filterSubsiteSlug, sortConfig, issueIdsFilter, scopedCartels]);
+
+    // ── Scroll vers la ligne éditée au retour : location.hash = '#cartel-<id>'
+    // (posé par rememberReturn(location, { scrollId })). On déclenche quand
+    // filteredCartels est prêt pour que la ligne existe dans le DOM.
+    React.useEffect(() => {
+        const h = location.hash || '';
+        if (!h.startsWith('#cartel-')) return;
+        if (hashScrolledRef.current === h) return;
+        const id = h.slice('#cartel-'.length);
+        const el = document.getElementById(`cartel-${id}`);
+        if (el) {
+            el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            const prevBg = el.style.background;
+            el.style.transition = 'background 0.6s ease';
+            el.style.background = '#fff8d6';
+            setTimeout(() => { el.style.background = prevBg; }, 1400);
+            hashScrolledRef.current = h;
+        }
+    }, [location.hash, filteredCartels]);
+
+    const subsiteScopedName = useMemo(() => {
+        if (!filterSubsiteSlug) return null;
+        const sample = cartels.find(c => c.subsite_slug === filterSubsiteSlug);
+        return sample?.subsite_name || filterSubsiteSlug;
+    }, [filterSubsiteSlug, cartels]);
 
     if (!isAdmin) {
         return <div style={{ textAlign:'center', padding:'80px 20px', color:'#aaa' }}><p>{t('manageCartels.adminOnly')}</p></div>;
@@ -285,49 +377,85 @@ const ManageCartels = () => {
     const act = async (id, fn) => {
         setProcessingId(id);
         try { await fn(); await fetchData(); }
-        catch (e) { alert('Erreur : ' + e.message); }
+        catch (e) { alert(t('common.error', { msg: e.message })); }
         finally { setProcessingId(null); }
     };
 
     const handlePublish = (c) => askConfirm(
-        `Publier "${c.titre}" ?`,
+        t('manageCartels.confirmPublish', { title: c.titre }),
         () => act(c.id, () => api.cartels.publish(c.id)),
-        { danger: false, confirmLabel: 'Publier' }
+        { danger: false, confirmLabel: t('manageCartels.publish') }
     );
     const handleToDraft = (c) => askConfirm(
-        `Repasser "${c.titre}" en brouillon ?`,
+        t('manageCartels.confirmDraft', { title: c.titre }),
         () => act(c.id, () => api.cartels.setStatus(c.id, 'draft')),
-        { danger: false, confirmLabel: 'Brouillon' }
+        { danger: false, confirmLabel: t('manageCartels.draft') }
     );
     const handleArchive = (c) => askConfirm(
-        `Archiver "${c.titre}" ?`,
+        t('manageCartels.confirmArchive', { title: c.titre }),
         () => act(c.id, () => api.cartels.archive(c.id)),
-        { danger: false, confirmLabel: 'Archiver' }
+        { danger: false, confirmLabel: t('manageCartels.archive') }
     );
     const handleDelete = (id) => askConfirm(
-        t('messages.confirmDelete', 'Supprimer ce cartel ?'),
+        t('messages.confirmDelete'),
         () => act(id, () => api.cartels.delete(id))
     );
 
-    // ── Traduction unitaire ───────────────────────────────────
-    const handleTranslate = (cartel) => askConfirm(
-        `Retraduire "${cartel.titre}" en anglais via IA ? Les champs anglais existants seront écrasés.`,
-        async () => {
-            setTranslating(prev => new Set([...prev, cartel.id]));
-            try {
-                const translated = await api.translate.cartel({
-                    titre: cartel.titre, description: cartel.description, location: cartel.location,
-                });
-                await api.cartels.update(cartel.id, translated);
-                await fetchData();
-            } catch (e) {
-                alert('Erreur traduction : ' + e.message);
-            } finally {
-                setTranslating(prev => { const s = new Set(prev); s.delete(cartel.id); return s; });
-            }
-        },
-        { danger: false, confirmLabel: 'Retraduire' }
+    const handleApproveSubmission = (c) => askConfirm(
+        t('manageCartels.confirmApproveSubmission', { title: c.titre }),
+        () => act(c.id, () => api.submissions.approve(c.id)),
+        { danger: false, confirmLabel: t('manageCartels.approve') }
     );
+    const handleRejectSubmission = (c) => askConfirm(
+        t('manageCartels.confirmRejectSubmission', { title: c.titre }),
+        () => act(c.id, () => api.submissions.reject(c.id)),
+        { danger: true, confirmLabel: t('manageCartels.reject') }
+    );
+
+    // ── Workflow owner → submit/withdraw au site principal ────
+    const canSubmitThisCartel = (c) => {
+        if (!c.subsite_id || !c.subsite_slug) return false;
+        if (c.status !== 'published') return false;
+        if (isSuperadmin) return true;
+        return isOwner && c.subsite_id === homeSubsiteId;
+    };
+
+    const handleSubmitToMain = (c) => askConfirm(
+        t('manageCartels.confirmSubmitMain', { title: c.titre }),
+        () => act(c.id, () => api.cartels.submitToMain(c.subsite_slug, c.id)),
+        { danger: false, confirmLabel: t('manageCartels.submit') }
+    );
+    const handleWithdrawFromMain = (c) => askConfirm(
+        t('manageCartels.confirmWithdrawMain', { title: c.titre }),
+        () => act(c.id, () => api.cartels.withdrawFromMain(c.subsite_slug, c.id)),
+        { danger: true, confirmLabel: t('manageCartels.withdraw') }
+    );
+
+    // ── Traduction unitaire ───────────────────────────────────
+    const handleRetranslate = (cartel, target) => {
+        const targetLabel   = target === 'fr' ? 'français' : 'anglais';
+        const overwriteSide = target === 'fr' ? 'français' : 'anglais';
+        const sourceFields  = target === 'fr'
+            ? { titre: cartel.titre_en || '', description: cartel.description_en || '', location: cartel.location_en || '' }
+            : { titre: cartel.titre    || '', description: cartel.description    || '', location: cartel.location    || '' };
+
+        askConfirm(
+            `Retraduire "${cartel.titre || cartel.titre_en || ''}" en ${targetLabel} via IA ? Les champs ${overwriteSide} existants seront écrasés.`,
+            async () => {
+                setTranslating(prev => new Set([...prev, cartel.id]));
+                try {
+                    const translated = await api.translate.cartel(sourceFields, { target });
+                    await api.cartels.update(cartel.id, translated);
+                    await fetchData();
+                } catch (e) {
+                    alert(t('errors.translationPrefix', { msg: e.message }));
+                } finally {
+                    setTranslating(prev => { const s = new Set(prev); s.delete(cartel.id); return s; });
+                }
+            },
+            { danger: false, confirmLabel: 'Retraduire' }
+        );
+    };
 
     // ── Actions batch ─────────────────────────────────────────
     const withBusy = async (label, fn) => {
@@ -339,8 +467,8 @@ const ManageCartels = () => {
     const handleBulkDelete = () => {
         if (!selectedIds.size) return;
         askConfirm(
-            `Supprimer ces ${selectedIds.size} cartel${selectedIds.size > 1 ? 's' : ''} ?`,
-            () => withBusy('Suppression…', async () => {
+            t('manageCartels.confirmBulkDelete', { count: selectedIds.size }),
+            () => withBusy(t('manageCartels.busyDeleting'), async () => {
                 for (const id of selectedIds) await api.cartels.delete(id);
                 await fetchData();
                 setSelectedIds(new Set());
@@ -351,11 +479,11 @@ const ManageCartels = () => {
     const handleBulkWorkshop = async () => {
         if (!selectedIds.size) return;
         if (!newWorkshopName.trim() && !selectedWorkshopId) {
-            alert('Choisissez un workshop existant ou saisissez un nouveau nom.');
+            alert(t('manageCartels.chooseWorkshopWarning'));
             return;
         }
 
-        await withBusy('Association workshop…', async () => {
+        await withBusy(t('manageCartels.busyAssigningWorkshop'), async () => {
             if (newWorkshopName.trim()) {
                 await addWorkshop(newWorkshopName.trim(), Array.from(selectedIds));
             } else {
@@ -371,7 +499,7 @@ const ManageCartels = () => {
 
     const handleBulkPublish = async () => {
         if (!selectedIds.size) return;
-        await withBusy('Publication…', async () => {
+        await withBusy(t('manageCartels.busyPublishing'), async () => {
             for (const id of selectedIds) {
                 const c = cartels.find(x => x.id === id);
                 if (c && c.status !== 'published') await api.cartels.publish(id);
@@ -384,8 +512,8 @@ const ManageCartels = () => {
     const handleBulkTranslate = () => {
         if (!selectedIds.size) return;
         askConfirm(
-            `Retraduire ${selectedIds.size} cartel${selectedIds.size > 1 ? 's' : ''} via IA ?`,
-            () => withBusy('Traduction IA…', async () => {
+            t('manageCartels.confirmBulkTranslate', { count: selectedIds.size }),
+            () => withBusy(t('manageCartels.busyTranslating'), async () => {
                 let count = 0;
                 for (const id of selectedIds) {
                     count++;
@@ -426,6 +554,43 @@ const ManageCartels = () => {
         });
     };
 
+    /**
+     * Frise traduite : on demande la langue cible via modal, on appelle l'API
+     * bulk pour récupérer les traductions, puis on génère le PDF avec des
+     * cartels-clones où les champs source sont remplacés par la traduction.
+     * La langue source est l'i18n active (FR ou EN) — le PDF est généré
+     * dans la même clé de langue, le contenu étant déjà traduit.
+     */
+    const handleTranslateFrise = async (targetLanguage) => {
+        setShowTranslateFrise(false);
+        if (!selectedIds.size) return;
+        const sourceLang = i18n.language === 'en' ? 'en' : 'fr';
+        const ids = Array.from(selectedIds);
+
+        await withBusy(t('translateFrise.busyTranslating', { defaultValue: `Traduction vers ${targetLanguage}…` }), async () => {
+            setProgress({ current: 0, total: ids.length });
+            const { translations } = await api.translate.bulk({ ids, sourceLang, targetLanguage });
+            setProgress({ current: ids.length, total: ids.length });
+
+            const byId = new Map(translations.map(tr => [String(tr.id), tr]));
+            const items = cartels
+                .filter(c => selectedIds.has(c.id))
+                .map(c => {
+                    const tr = byId.get(String(c.id));
+                    if (!tr) return c;
+                    // On remplace les champs de la langue source : generatePdf
+                    // affichera ces champs traduits puisqu'on garde la même langue.
+                    return sourceLang === 'en'
+                        ? { ...c, titre_en: tr.titre, description_en: tr.description, location_en: tr.location }
+                        : { ...c, titre: tr.titre, description: tr.description, location: tr.location };
+                });
+
+            setBusyLabel(t('translateFrise.busyGenerating', { defaultValue: 'Génération du PDF traduit…' }));
+            setProgress({ current: 0, total: items.length });
+            await generatePdf(items, sourceLang, (cur, tot) => setProgress({ current: cur, total: tot }));
+        });
+    };
+
     const handleExportArchive = async (close) => {
         close?.();
         if (!selectedIds.size) {
@@ -444,7 +609,15 @@ const ManageCartels = () => {
     const selectAll    = () => setSelectedIds(selectedIds.size === filteredCartels.length ? new Set() : new Set(filteredCartels.map(c => c.id)));
 
     // ── Tri ───────────────────────────────────────────────────
-    const handleSort = (key) => setSortConfig(prev => ({ key, direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc' }));
+    const handleSort = (key) => setSortConfig(prev => {
+        const next = { key, direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc' };
+        // Écrire dans l'URL pour que le tri survive à un aller-retour vers Create.
+        const qp = new URLSearchParams(searchParams);
+        qp.set('sort', next.key);
+        qp.set('dir', next.direction);
+        setSearchParams(qp, { replace: true });
+        return next;
+    });
     const SortIcon = ({ k }) => {
         if (sortConfig.key !== k) return <ArrowUpDown size={13} color="#ccc" />;
         return sortConfig.direction === 'asc' ? <ArrowUp size={13} color="#333" /> : <ArrowDown size={13} color="#333" />;
@@ -454,7 +627,7 @@ const ManageCartels = () => {
         <div style={{ maxWidth:'1400px', margin:'0 auto', padding:'0 24px 80px' }}>
 
             {/* Overlay */}
-            {busy && <ProgressOverlay label={busyLabel} current={progress.current} total={progress.total} />}
+            <LongOperationOverlay visible={busy} label={busyLabel} current={progress.current} total={progress.total} />
 
             {/* Confirmation */}
             {confirmState && (
@@ -476,11 +649,65 @@ const ManageCartels = () => {
                 />
             )}
 
+            {/* Modal frise traduite */}
+            {showTranslateFrise && (
+                <TranslateFriseModal
+                    count={selectedIds.size}
+                    sourceLang={i18n.language === 'en' ? 'en' : 'fr'}
+                    onCancel={() => setShowTranslateFrise(false)}
+                    onSubmit={handleTranslateFrise}
+                />
+            )}
+
+            {/* Modal audit images (au chargement) */}
+            {showImageHealthModal && (
+                <ImageHealthModal
+                    issues={imageIssues}
+                    onContinue={() => setShowImageHealthModal(false)}
+                    onShowIssues={() => {
+                        setIssueIdsFilter(new Set(imageIssues.map(i => i.id)));
+                        setShowImageHealthModal(false);
+                    }}
+                />
+            )}
+
+            {/* Bannière filtre "cartels problématiques" actif */}
+            {issueIdsFilter && (
+                <div style={{ margin: '16px 0 0', padding: '10px 14px', background: '#fff5f5', border: '1px solid #fecaca', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.88rem', color: '#7a2222' }}>
+                    <AlertTriangle size={16} color="#e53e3e" />
+                    <span>{t('manageCartels.issueFilterBanner', { count: filteredCartels.length })}</span>
+                    <button
+                        onClick={() => setIssueIdsFilter(null)}
+                        style={{ marginLeft: 'auto', padding: '5px 12px', borderRadius: '6px', border: '1px solid #fecaca', background: 'white', cursor: 'pointer', fontSize: '0.82rem', color: '#7a2222' }}
+                    >
+                        {t('manageCartels.clearFilter')}
+                    </button>
+                </div>
+            )}
+
+            {/* ── Info contextuelle (sous-site) ──────────────── */}
+            {lockedSubsiteSlug && (
+                <div style={{ padding: '20px 0 0' }}>
+                    <ExplainerBox
+                        color="#c2185b"
+                        background="#fce4ec"
+                        border="#f8bbd0"
+                        title={t('manageCartels.lockedIntroTitle', { name: subsiteScopedName || lockedSubsiteSlug })}
+                    >
+                        <ul style={{ margin: '8px 0 0', paddingLeft: '18px', lineHeight: '1.7' }}>
+                            <li><Trans i18nKey="manageCartels.lockedIntroPoint1" components={{ strong: <strong />, em: <em /> }} /></li>
+                            <li><Trans i18nKey="manageCartels.lockedIntroPoint2" components={{ strong: <strong />, em: <em /> }} /></li>
+                            <li><Trans i18nKey="manageCartels.lockedIntroPoint3" components={{ strong: <strong />, em: <em /> }} /></li>
+                        </ul>
+                    </ExplainerBox>
+                </div>
+            )}
+
             {/* ── En-tête ────────────────────────────────────── */}
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'28px 0 20px', flexWrap:'wrap', gap:'12px' }}>
                 <div>
                     <h1 style={{ margin:0, fontSize:'1.6rem', fontWeight:'800', color:'#1a1a1a' }}>{t('admin.title')}</h1>
-                    <p style={{ margin:'4px 0 0', color:'#999', fontSize:'0.88rem' }}>{t('manageCartels.totalCount', { count: cartels.length })}</p>
+                    <p style={{ margin:'4px 0 0', color:'#999', fontSize:'0.88rem' }}>{t('manageCartels.totalCount', { count: scopedCartels.length })}</p>
                 </div>
                 <div style={{ display:'flex', gap:'8px', flexWrap:'wrap' }}>
                     <button
@@ -500,7 +727,7 @@ const ManageCartels = () => {
 
             {/* ── Onglets ────────────────────────────────────── */}
             <div style={{ display:'flex', gap:'4px', background:'#f5f5f5', borderRadius:'14px', padding:'4px', marginBottom:'24px' }}>
-                {TABS.map(tab => {
+                {visibleTabs.map(tab => {
                     const Icon   = tab.icon;
                     const active = tab.key === activeTab;
                     return (
@@ -515,10 +742,53 @@ const ManageCartels = () => {
                 })}
             </div>
 
+            {/* Bandeau scope sous-site — uniquement hors /site/:slug/admin
+                (dans la page admin principale, on garde le bandeau compact avec
+                 le bouton pour retirer le filtre). En mode lockedSubsiteSlug,
+                 l'info box contextuelle au-dessus du titre couvre déjà ce rôle. */}
+            {filterSubsiteSlug && !lockedSubsiteSlug && (
+                <div style={{
+                    display:'flex', alignItems:'center', gap:'10px',
+                    background:'#fce4ec', border:'1px solid #f8bbd0',
+                    borderRadius:'10px', padding:'10px 14px', marginBottom:'16px',
+                    color:'#c2185b', fontSize:'0.88rem', fontWeight:'600',
+                }}>
+                    <span><Trans i18nKey="manageCartels.subsiteFilterBanner" values={{ name: subsiteScopedName }} components={[<strong key="s" />]} /></span>
+                    <span style={{ flex: 1 }} />
+                    <button
+                        onClick={() => { const next = new URLSearchParams(searchParams); next.delete('subsite'); setSearchParams(next, { replace: true }); }}
+                        style={{ background:'white', border:'1px solid #f8bbd0', color:'#c2185b', borderRadius:'6px', padding:'4px 10px', fontSize:'0.78rem', fontWeight:'700', cursor:'pointer', fontFamily:'inherit' }}
+                    >
+                        {t('manageCartels.removeSubsiteFilter')}
+                    </button>
+                    <button
+                        onClick={() => navigate(`/site/${filterSubsiteSlug}`)}
+                        style={{ background:'#c2185b', border:'none', color:'white', borderRadius:'6px', padding:'4px 10px', fontSize:'0.78rem', fontWeight:'700', cursor:'pointer', fontFamily:'inherit' }}
+                    >
+                        {t('manageCartels.backToSubsite')}
+                    </button>
+                </div>
+            )}
+
             {/* Description onglet */}
-            <p style={{ background:currentTabDef.bg, color:currentTabDef.color, borderRadius:'8px', padding:'10px 16px', fontSize:'0.85rem', fontWeight:'600', margin:'0 0 20px' }}>
-                {t(currentTabDef.descriptionKey)}
-            </p>
+            {activeTab === 'submissions' ? (
+                <ExplainerBox
+                    color="#C2185B"
+                    background="#fce4ec"
+                    border="#f8bbd0"
+                    title={t('manageCartels.submissionsExplainerTitle')}
+                >
+                    {t('manageCartels.submissionsExplainerIntro')}<br />
+                    <ul style={{ margin: '8px 0 0', paddingLeft: '18px', lineHeight: '1.7' }}>
+                        <li><Trans i18nKey="manageCartels.submissionsExplainerApprove" components={{ strong: <strong /> }} /></li>
+                        <li><Trans i18nKey="manageCartels.submissionsExplainerReject" components={{ strong: <strong /> }} /></li>
+                    </ul>
+                </ExplainerBox>
+            ) : (
+                <p style={{ background:currentTabDef.bg, color:currentTabDef.color, borderRadius:'8px', padding:'10px 16px', fontSize:'0.85rem', fontWeight:'600', margin:'0 0 20px' }}>
+                    {t(currentTabDef.descriptionKey)}
+                </p>
+            )}
 
             {/* ── Barre filtres + actions ───────────────────── */}
             <div style={{ display:'flex', gap:'10px', flexWrap:'wrap', alignItems:'center', background:'#fafafa', border:'1px solid #eee', borderRadius:'12px', padding:'12px 16px', marginBottom:'16px' }}>
@@ -577,6 +847,7 @@ const ManageCartels = () => {
                             {close => (<>
                                 <DropItem icon={ImgIcon}   label={t('manageCartels.imagesZip')} onClick={() => handleExportImages(close)} />
                                 <DropItem icon={FileText}  label={t('manageCartels.pdfPrint')} onClick={() => handleExportPdf(close)} />
+                                <DropItem icon={Languages} label={t('translateFrise.menuLabel', 'PDF traduit (autre langue)…')} onClick={() => { close(); setShowTranslateFrise(true); }} />
                                 <DropItem icon={Package}   label={t('manageCartels.fullArchive')} onClick={() => handleExportArchive(close)} />
                             </>)}
                         </DropdownButton>
@@ -600,25 +871,35 @@ const ManageCartels = () => {
             </div>
 
             {/* ── Tableau ────────────────────────────────────── */}
-            <div style={{ background:'white', borderRadius:'12px', border:'1px solid #eee', overflow:'hidden', boxShadow:'0 2px 8px rgba(0,0,0,0.04)' }}>
+            {/* Scroll interne : seules les lignes défilent, filtres/onglets/entête
+                de page restent visibles. thead reste collé en haut grâce au sticky. */}
+            <div style={{ background:'white', borderRadius:'12px', border:'1px solid #eee', overflow:'hidden', boxShadow:'0 2px 8px rgba(0,0,0,0.04)', maxHeight:'calc(100vh - 340px)', overflowY:'auto' }}>
                 {filteredCartels.length === 0 ? (
                     <div style={{ textAlign:'center', padding:'60px 20px', color:'#bbb' }}>
                         <p style={{ fontSize:'1.1rem' }}>{t('manageCartels.noCartelsTab')}</p>
                     </div>
                 ) : (
                     <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'0.88rem' }}>
+                        {/* Sticky sur chaque <th> (plus fiable cross-browser que sur <thead>).
+                            top:0 relatif au conteneur de scroll au-dessus. */}
                         <thead style={{ background:'#f8f8f8', borderBottom:'2px solid #eee' }}>
                             <tr>
-                                <th style={{ padding:'12px', width:'36px' }} />
-                                <th style={{ padding:'12px', width:'50px', textAlign:'left' }}>Img</th>
-                                <th onClick={() => handleSort('date')}  style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none', whiteSpace:'nowrap' }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.year')} <SortIcon k="date" /></div></th>
-                                <th onClick={() => handleSort('titre')} style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none' }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.title')} <SortIcon k="titre" /></div></th>
-                                <th style={{ padding:'12px', textAlign:'left' }}>{t('manageCartels.categories')}</th>
-                                <th style={{ padding:'12px', textAlign:'left' }}>{t('manageCartels.workshops')}</th>
-                                <th onClick={() => handleSort('loc')}   style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none' }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.location')} <SortIcon k="loc" /></div></th>
-                                {activeTab === 'pending' && <th style={{ padding:'12px', textAlign:'left' }}>IP</th>}
-                                <th style={{ padding:'12px', textAlign:'center' }}>{t('manageCartels.status')}</th>
-                                <th style={{ padding:'12px', textAlign:'center' }}>{t('manageCartels.actions')}</th>
+                                {(() => {
+                                    const thSticky = { position:'sticky', top:0, background:'#f8f8f8', zIndex:2, boxShadow:'inset 0 -2px 0 #eee' };
+                                    return <>
+                                        <th style={{ padding:'12px', width:'36px', ...thSticky }} />
+                                        <th style={{ padding:'12px', width:'50px', textAlign:'left', ...thSticky }}>Img</th>
+                                        <th onClick={() => handleSort('date')}  style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none', whiteSpace:'nowrap', ...thSticky }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.year')} <SortIcon k="date" /></div></th>
+                                        <th onClick={() => handleSort('titre')} style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none', ...thSticky }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.title')} <SortIcon k="titre" /></div></th>
+                                        <th style={{ padding:'12px', textAlign:'left', ...thSticky }}>{t('manageCartels.categories')}</th>
+                                        <th style={{ padding:'12px', textAlign:'left', ...thSticky }}>{t('manageCartels.workshops')}</th>
+                                        <th onClick={() => handleSort('loc')}   style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none', ...thSticky }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.location')} <SortIcon k="loc" /></div></th>
+                                        {activeTab === 'pending' && <th style={{ padding:'12px', textAlign:'left', ...thSticky }}>IP</th>}
+                                        {activeTab === 'submissions' && <th style={{ padding:'12px', textAlign:'left', ...thSticky }}>{t('manageCartels.subsite')}</th>}
+                                        <th style={{ padding:'12px', textAlign:'center', ...thSticky }}>{t('manageCartels.status')}</th>
+                                        <th style={{ padding:'12px', textAlign:'center', ...thSticky }}>{t('manageCartels.actions')}</th>
+                                    </>;
+                                })()}
                             </tr>
                         </thead>
                         <tbody>
@@ -626,9 +907,10 @@ const ManageCartels = () => {
                                 const badge   = STATUS_BADGE[cartel.status] || {};
                                 const isProc  = processingId === cartel.id;
                                 const isTrans = translating.has(cartel.id);
+                                const readOnly = isReadOnlyMainCartel(cartel);
 
                                 return (
-                                    <tr key={cartel.id} style={{ borderBottom:'1px solid #f0f0f0', background: isProc ? '#fffbf0' : 'white', opacity: isProc ? 0.7 : 1 }}>
+                                    <tr key={cartel.id} id={`cartel-${cartel.id}`} style={{ borderBottom:'1px solid #f0f0f0', background: isProc ? '#fffbf0' : 'white', opacity: isProc ? 0.7 : 1 }}>
 
                                         {/* Checkbox */}
                                         <td style={{ padding:'10px', textAlign:'center' }}>
@@ -656,6 +938,18 @@ const ManageCartels = () => {
                                             <div style={{ fontWeight:'700', color:'#1a1a1a', lineHeight:'1.3' }}>{cartel.titre || '(sans titre)'}</div>
                                             {cartel.titre_en && <div style={{ color:'#999', fontSize:'0.82rem', marginTop:'2px' }}>{cartel.titre_en}</div>}
                                             {!cartel.titre_en && <div style={{ color:'#f5a623', fontSize:'0.78rem', marginTop:'2px' }}>⚠ Pas de traduction EN</div>}
+                                            {/* Badge sous-site d'origine (affiché sur les onglets hors submissions) */}
+                                            {activeTab !== 'submissions' && cartel.subsite_name && (
+                                                <span style={{ display:'inline-block', marginTop:'4px', background:'#fce4ec', color:'#c2185b', borderRadius:'10px', padding:'1px 7px', fontSize:'0.72rem', fontWeight:'700' }}>
+                                                    {cartel.subsite_name}
+                                                </span>
+                                            )}
+                                            {/* Badge "Site principal" pour les cartels en consultation seule */}
+                                            {isReadOnlyMainCartel(cartel) && (
+                                                <span style={{ display:'inline-block', marginTop:'4px', background:'#e8f0fe', color:'#1a56db', borderRadius:'10px', padding:'1px 7px', fontSize:'0.72rem', fontWeight:'700' }}>
+                                                    Site principal · consultation
+                                                </span>
+                                            )}
                                             {activeTab === 'pending' && cartel.created_at && (
                                                 <div style={{ color:'#bbb', fontSize:'0.78rem', marginTop:'3px', display:'flex', alignItems:'center', gap:'4px' }}>
                                                     <Clock size={11} />
@@ -697,6 +991,21 @@ const ManageCartels = () => {
                                             </td>
                                         )}
 
+                                        {/* Sous-site d'origine */}
+                                        {activeTab === 'submissions' && (
+                                            <td style={{ padding:'10px' }}>
+                                                {cartel.subsite_name ? (
+                                                    <span style={{ background:'#fce4ec', color:'#C2185B', borderRadius:'10px', padding:'2px 8px', fontSize:'0.78rem', fontWeight:'600' }}>{cartel.subsite_name}</span>
+                                                ) : <span style={{ color:'#bbb' }}>—</span>}
+                                                {cartel.submitted_to_main_at && (
+                                                    <div style={{ color:'#aaa', fontSize:'0.75rem', marginTop:'3px' }}>
+                                                        <Clock size={10} style={{ verticalAlign:'middle', marginRight:'2px' }} />
+                                                        {new Date(cartel.submitted_to_main_at).toLocaleString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}
+                                                    </div>
+                                                )}
+                                            </td>
+                                        )}
+
                                         {/* Statut */}
                                         <td style={{ padding:'10px', textAlign:'center' }}>
                                             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px' }}>
@@ -708,23 +1017,53 @@ const ManageCartels = () => {
                                         <td style={{ padding:'10px' }}>
                                             <div style={{ display:'flex', gap:'4px', justifyContent:'center', flexWrap:'wrap' }}>
                                                 <ActionBtn onClick={() => setPreviewCartel(cartel)} title={t('manageCartels.preview')} color={HEX_COLORS.neutral}><ScanEye size={15} /></ActionBtn>
-                                                <ActionBtn onClick={() => goToCreate(cartel.id)} title={t('manageCartels.edit')} color="#3b5bdb"><Edit size={15} /></ActionBtn>
+                                                {!readOnly && <ActionBtn onClick={() => goToCreate(cartel.id)} title={t('manageCartels.edit')} color="#3b5bdb"><Edit size={15} /></ActionBtn>}
 
-                                                {/* Retraduire */}
-                                                <ActionBtn onClick={() => handleTranslate(cartel)} title={t('manageCartels.retranslate')} color="#6741d9" disabled={isTrans}>
-                                                    {isTrans ? <Clock size={15} /> : <Languages size={15} />}
-                                                </ActionBtn>
+                                                {/* Retraduire (désactivé en lecture seule) */}
+                                                {!readOnly && (
+                                                    <>
+                                                        <ActionBtn onClick={() => handleRetranslate(cartel, 'en')} title={t('manageCartels.retranslateEn', 'Retraduire en anglais')} color="#6741d9" disabled={isTrans}>
+                                                            {isTrans ? <Clock size={15} /> : <Languages size={15} />}
+                                                        </ActionBtn>
+                                                        <ActionBtn onClick={() => handleRetranslate(cartel, 'fr')} title={t('manageCartels.retranslateFr', 'Retraduire en français')} color="#3b82c4" disabled={isTrans}>
+                                                            {isTrans ? <Clock size={15} /> : <Languages size={15} />}
+                                                        </ActionBtn>
+                                                    </>
+                                                )}
 
-                                                {(cartel.status === 'draft' || cartel.status === 'pending_review') && (
+                                                {activeTab === 'submissions' && (
+                                                    <>
+                                                        <ActionBtn onClick={() => handleApproveSubmission(cartel)} title={t('manageCartels.approve')} color="#2e7d32" disabled={isProc}><Check size={15} /></ActionBtn>
+                                                        <ActionBtn onClick={() => handleRejectSubmission(cartel)} title={t('manageCartels.reject')} color="#d32f2f" disabled={isProc}><X size={15} /></ActionBtn>
+                                                    </>
+                                                )}
+
+                                                {!readOnly && activeTab !== 'submissions' && (cartel.status === 'draft' || cartel.status === 'pending_review') && (
                                                     <ActionBtn onClick={() => handlePublish(cartel)} title={t('manageCartels.publish')} color="#2e7d32" disabled={isProc}><Check size={15} /></ActionBtn>
                                                 )}
-                                                {(cartel.status === 'pending_review' || cartel.status === 'published') && (
+                                                {!readOnly && activeTab !== 'submissions' && (cartel.status === 'pending_review' || cartel.status === 'published') && (
                                                     <ActionBtn onClick={() => handleToDraft(cartel)} title={t('status.draft')} color="#e67e00" disabled={isProc}><FileText size={15} /></ActionBtn>
                                                 )}
-                                                {cartel.status === 'published' && (
+                                                {!readOnly && activeTab !== 'submissions' && cartel.status === 'published' && (
                                                     <ActionBtn onClick={() => handleArchive(cartel)} title={t('manageCartels.archive')} color="#6b7280" disabled={isProc}><X size={15} /></ActionBtn>
                                                 )}
-                                                <ActionBtn onClick={() => handleDelete(cartel.id)} title={t('manageCartels.delete')} color="#d32f2f" disabled={isProc}><Trash2 size={15} /></ActionBtn>
+
+                                                {/* Workflow site principal (owner/superadmin sur cartels de sous-site) */}
+                                                {!readOnly && activeTab !== 'submissions' && canSubmitThisCartel(cartel) && (
+                                                    <>
+                                                        {cartel.visible_on_main ? (
+                                                            <ActionBtn onClick={() => handleWithdrawFromMain(cartel)} title={t('manageCartels.tipVisibleOnMain')} color="#2e7d32" disabled={isProc}><Globe size={15} /></ActionBtn>
+                                                        ) : cartel.submitted_to_main_at ? (
+                                                            <ActionBtn onClick={() => handleWithdrawFromMain(cartel)} title={t('manageCartels.tipPendingMain')} color="#C2185B" disabled={isProc}><Clock size={15} /></ActionBtn>
+                                                        ) : (
+                                                            <ActionBtn onClick={() => handleSubmitToMain(cartel)} title={t('manageCartels.tipSubmitToMain')} color="#6741d9" disabled={isProc}><Upload size={15} /></ActionBtn>
+                                                        )}
+                                                    </>
+                                                )}
+
+                                                {!readOnly && activeTab !== 'submissions' && (
+                                                    <ActionBtn onClick={() => handleDelete(cartel.id)} title={t('manageCartels.delete')} color="#d32f2f" disabled={isProc}><Trash2 size={15} /></ActionBtn>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -742,16 +1081,20 @@ const ManageCartels = () => {
                         <button onClick={() => setPreviewCartel(null)} style={{ position:'absolute', top:'16px', right:'16px', background:'#f5f5f5', border:'none', borderRadius:'50%', width:'32px', height:'32px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={16} /></button>
                         <h3 style={{ margin:'0 0 16px', fontSize:'1rem', fontWeight:'700' }}>{t('manageCartels.preview')}</h3>
                         <div style={{ border:'1px solid #eee', borderRadius:'10px', padding:'12px', height:'400px', overflow:'hidden' }}>
-                            <CartelPreview data={previewCartel} />
+                            <CartelPreview data={previewCartel} showExports />
                         </div>
                         <div style={{ display:'flex', gap:'10px', marginTop:'16px', justifyContent:'flex-end' }}>
                             <button onClick={() => { setPreviewCartel(null); goToCreate(previewCartel.id); }}
                                 style={{ display:'flex', alignItems:'center', gap:'6px', background:'#3b5bdb', color:'white', border:'none', padding:'10px 18px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', fontFamily:'inherit' }}>
                                 <Edit size={15} /> {t('manageCartels.edit')}
                             </button>
-                            <button onClick={() => handleTranslate(previewCartel)}
+                            <button onClick={() => handleRetranslate(previewCartel, 'en')}
                                 style={{ display:'flex', alignItems:'center', gap:'6px', background:'#6741d9', color:'white', border:'none', padding:'10px 18px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', fontFamily:'inherit' }}>
-                                <Languages size={15} /> {t('manageCartels.retranslate')}
+                                <Languages size={15} /> {t('manageCartels.retranslateEn', 'Retraduire en anglais')}
+                            </button>
+                            <button onClick={() => handleRetranslate(previewCartel, 'fr')}
+                                style={{ display:'flex', alignItems:'center', gap:'6px', background:'#3b82c4', color:'white', border:'none', padding:'10px 18px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', fontFamily:'inherit' }}>
+                                <Languages size={15} /> {t('manageCartels.retranslateFr', 'Retraduire en français')}
                             </button>
                             <button onClick={() => setPreviewCartel(null)} style={{ padding:'10px 18px', borderRadius:'8px', border:'1px solid #ddd', cursor:'pointer', fontFamily:'inherit' }}>{t('manageCartels.importClose')}</button>
                         </div>

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useLocation, NavLink } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import {
     Menu, X, Lock, LogIn, LogOut,
-    Library, PlusCircle, ClipboardList, Settings2, LayoutDashboard
+    Library, PlusCircle, ClipboardList, Settings2,
 } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useNavigate } from 'react-router-dom';
@@ -28,13 +28,36 @@ const APP_NAV_VISITOR = [
     { path: '/app/create', labelKey: 'nav.create', icon: PlusCircle },
 ];
 
+// Une seule entrée "Cartels" remplace l'ancien trio drafts/pending/published :
+// les filtres par statut sont déjà sur la page elle-même (onglets internes), pas
+// la peine de les redoubler dans la nav. La pastille rouge reste sur les cartels
+// en attente, c'est l'info dont l'admin a besoin d'un coup d'œil.
 const APP_NAV_ADMIN = [
-    { path: '/app',              labelKey: 'nav.library',         icon: Library,         end: true },
-    { path: '/app/manage/drafts',   labelKey: 'nav.drafts',   icon: ClipboardList },
-    { path: '/app/manage/pending',  labelKey: 'nav.pending', icon: ClipboardList },
-    { path: '/app/manage/published',labelKey: 'nav.published',      icon: LayoutDashboard },
-    { path: '/app/admin',           labelKey: 'nav.admin',        icon: Settings2 },
+    { path: '/app',         labelKey: 'nav.library', icon: Library,         end: true },
+    { path: '/app/manage',  labelKey: 'nav.cartels', icon: ClipboardList,   countKey: 'pending' },
+    { path: '/app/admin',   labelKey: 'nav.admin',   icon: Settings2 },
 ];
+
+// Pastille rouge type "notification" affichée à côté du libellé "Cartels"
+// quand des cartels en attente attendent une modération. Cachée si compteur=0.
+const NavBadge = ({ count }) => {
+    if (!count) return null;
+    return (
+        <span
+            style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                minWidth: '18px', height: '18px', padding: '0 6px',
+                marginLeft: '6px', borderRadius: '999px',
+                background: '#e53935',
+                color: 'white', fontSize: '0.68rem', fontWeight: '800',
+                lineHeight: 1,
+                boxShadow: '0 1px 2px rgba(229, 57, 53, 0.4)',
+            }}
+        >
+            {count > 99 ? '99+' : count}
+        </span>
+    );
+};
 
 /**
  * Header unifié — un seul header pour tout le site.
@@ -46,10 +69,22 @@ const APP_NAV_ADMIN = [
  *   currentWorkshop, quitWorkshop
  */
 const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
-    const { user, isAdmin, login, logout } = useApp();
+    const { user, isAdmin, homeSubsiteId, login, logout, cartels = [] } = useApp();
     const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
+
+    // Compteur visible à côté de l'onglet "Cartels" : on veut attirer l'œil sur
+    // ce qui attend une action (modération), sans faire clignoter le reste.
+    const adminNavCounts = useMemo(() => {
+        if (!isAdmin) return { pending: 0 };
+        const scoped = homeSubsiteId
+            ? cartels.filter(c => c.subsite_id === homeSubsiteId)
+            : cartels;
+        return {
+            pending: scoped.filter(c => c.status === 'pending_review').length,
+        };
+    }, [cartels, isAdmin, homeSubsiteId]);
 
     const [isMenuOpen,     setIsMenuOpen]     = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -70,6 +105,15 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
             subsitesApi.getAll().then(d => setSubsites(Array.isArray(d) ? d : [])).catch(() => {});
         }
     };
+
+    // Précharger les sous-sites pour afficher le badge tenant si l'utilisateur en a un
+    useEffect(() => {
+        if (homeSubsiteId && subsites.length === 0) {
+            subsitesApi.getAll().then(d => setSubsites(Array.isArray(d) ? d : [])).catch(() => {});
+        }
+    }, [homeSubsiteId]);
+
+    const homeSubsite = homeSubsiteId ? subsites.find(s => s.id === homeSubsiteId) : null;
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -217,6 +261,9 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                                     >
                                                         <Icon size={15} />
                                                         {t(link.labelKey)}
+                                                        {link.countKey && (
+                                                            <NavBadge count={adminNavCounts[link.countKey]} />
+                                                        )}
                                                     </Link>
                                                 );
                                             })}
@@ -374,7 +421,27 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
 
                         {!currentWorkshop && (
                             user ? (
-                                <div style={{ position: 'relative' }}>
+                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {homeSubsite && (
+                                        <span
+                                            title={`Sous-site géré : ${homeSubsite.name}`}
+                                            style={{
+                                                background: '#f3e5f5',
+                                                color: '#6741d9',
+                                                border: '1px solid #d9ccff',
+                                                borderRadius: '14px',
+                                                padding: '3px 10px',
+                                                fontSize: '0.74rem',
+                                                fontWeight: '700',
+                                                whiteSpace: 'nowrap',
+                                                maxWidth: '140px',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                            }}
+                                        >
+                                            {homeSubsite.name}
+                                        </span>
+                                    )}
                                     <button
                                         onClick={() => setIsUserMenuOpen(v => !v)}
                                         style={{
@@ -556,6 +623,9 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                     >
                                         <Icon size={14} />
                                         {t(link.labelKey)}
+                                        {link.countKey && (
+                                            <NavBadge count={adminNavCounts[link.countKey]} />
+                                        )}
                                     </Link>
                                 );
                             })}

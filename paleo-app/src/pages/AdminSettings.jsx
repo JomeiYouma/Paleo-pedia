@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { useNavigate } from 'react-router-dom';
 import {
     Shield, Users, Key, Save, RefreshCw,
-    ToggleLeft, ToggleRight, Clock, Hash, AlertCircle, CheckCircle2, Check,
-    Globe, Plus, Trash2, Edit, ExternalLink, ChevronDown, ChevronUp, Upload
+    ToggleLeft, ToggleRight, AlertCircle, CheckCircle2, Check,
+    Globe, Plus, Trash2, Edit, ExternalLink, ChevronDown, ChevronUp,
+    FolderOpen, Activity,
 } from 'lucide-react';
 import api from '../services/apiClient';
+import i18n from '../i18n';
 import SubsiteEditor from '../components/SubsiteEditor';
 
 // ── Composants de formulaire ─────────────────────────────────
@@ -103,6 +106,7 @@ const Section = ({ icon: Icon, title, color = '#333', children }) => (
 // ── Page Admin ───────────────────────────────────────────────
 const AdminSettings = () => {
     const { isAdmin } = useApp();
+    const navigate = useNavigate();
 
     const [settings, setSettings]   = useState(null);
     const [openaiKey, setOpenaiKey] = useState('');
@@ -119,9 +123,6 @@ const AdminSettings = () => {
     const [sitePrimaryPartnerIds, setSitePrimaryPartnerIds] = useState([]);
     const [sitePartnerIds, setSitePartnerIds] = useState([]);
     const [partnersExpanded, setPartnersExpanded] = useState(false);
-    const [partnerName, setPartnerName] = useState('');
-    const [partnerUrl, setPartnerUrl] = useState('');
-    const [partnerLogoFile, setPartnerLogoFile] = useState(null);
     const [savingPartners, setSavingPartners] = useState(false);
 
     const loadSubsites = () => api.subsites.getAll().then(d => setSubsites(Array.isArray(d) ? d : [])).catch(() => {});
@@ -167,7 +168,7 @@ const AdminSettings = () => {
                     setAiKey(k.openai_key || '');
                 } catch { /* pas critique */ }
             } catch (e) {
-                showToast('error', 'Erreur de chargement : ' + e.message);
+                showToast('error', i18n.t('errors.loadingPrefix', { msg: e.message }));
             } finally {
                 setLoading(false);
             }
@@ -193,9 +194,9 @@ const AdminSettings = () => {
             if (aiKey !== undefined) payload.openai_key = aiKey;
 
             await api.settings.update(payload);
-            showToast('success', 'Paramètres sauvegardés !');
+            showToast('success', i18n.t('toasts.settingsSaved'));
         } catch (e) {
-            showToast('error', 'Erreur : ' + e.message);
+            showToast('error', i18n.t('common.error', { msg: e.message }));
         } finally {
             setSaving(false);
         }
@@ -209,46 +210,6 @@ const AdminSettings = () => {
     const toggleSitePartner = (id) => {
         setSitePartnerIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
         setSitePrimaryPartnerIds(prev => prev.filter(x => x !== id));
-    };
-
-    const handleCreatePartner = async () => {
-        if (!partnerName.trim()) {
-            showToast('error', 'Le nom du partenaire est requis.');
-            return;
-        }
-        setSavingPartners(true);
-        try {
-            let logoPath = null;
-            if (partnerLogoFile) {
-                const uploadRes = await api.media.upload(partnerLogoFile);
-                logoPath = uploadRes?.url || null;
-            }
-            await api.partners.create({
-                name: partnerName.trim(),
-                url: partnerUrl.trim() || null,
-                logo_path: logoPath,
-            });
-            setPartnerName('');
-            setPartnerUrl('');
-            setPartnerLogoFile(null);
-            await loadPartners();
-            showToast('success', 'Partenaire importé.');
-        } catch (e) {
-            showToast('error', 'Erreur import partenaire : ' + e.message);
-        } finally {
-            setSavingPartners(false);
-        }
-    };
-
-    const handleDeletePartner = async (id, name) => {
-        if (!confirm(`Supprimer le partenaire "${name}" ?`)) return;
-        try {
-            await api.partners.delete(id);
-            await Promise.all([loadPartners(), loadMainSitePartners()]);
-            showToast('success', 'Partenaire supprimé.');
-        } catch (e) {
-            showToast('error', 'Erreur suppression partenaire : ' + e.message);
-        }
     };
 
     const handleSaveMainSitePartners = async () => {
@@ -268,9 +229,9 @@ const AdminSettings = () => {
                 });
             }
 
-            showToast('success', 'Partenaires du site principal enregistrés.');
+            showToast('success', i18n.t('toasts.mainSitePartnersSaved'));
         } catch (e) {
-            showToast('error', 'Erreur enregistrement partenaires : ' + e.message);
+            showToast('error', i18n.t('errors.savingPartnersPrefix', { msg: e.message }));
         } finally {
             setSavingPartners(false);
         }
@@ -292,7 +253,7 @@ const AdminSettings = () => {
                 <SubsiteEditor
                     subsite={editSubsite === 'new' ? null : editSubsite}
                     onClose={() => setEditSubsite(null)}
-                    onSaved={() => { loadSubsites(); showToast('success', 'Sous-site sauvegardé !'); }}
+                    onSaved={() => { loadSubsites(); showToast('success', i18n.t('toasts.subsiteSaved')); }}
                 />
             )}
 
@@ -518,6 +479,78 @@ const AdminSettings = () => {
                         </Field>
                     </Section>
 
+                    {/* ── Section 3a : Gestion d'équipe (lien) ──────────── */}
+                    <Section icon={Users} title="Gestion d'équipe" color="#6741d9">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/app/admin/team')}
+                            style={{
+                                width: '100%',
+                                display: 'flex', alignItems: 'center', gap: '12px',
+                                padding: '14px 18px',
+                                background: '#f3efff', border: '1px solid #d9ccff',
+                                borderRadius: '10px', cursor: 'pointer',
+                                fontFamily: 'inherit', color: '#5327b5',
+                                fontSize: '0.9rem', fontWeight: '700',
+                            }}
+                        >
+                            <ExternalLink size={16} />
+                            <span style={{ flex: 1, textAlign: 'left' }}>Inviter ou gérer les membres d'un sous-site</span>
+                            <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
+                        </button>
+                        <p style={{ margin: '10px 0 0', fontSize: '0.8rem', color: '#888' }}>
+                            Owners : gérez votre propre équipe. Superadmins : vous pouvez aussi utiliser la page globale des utilisateurs.
+                        </p>
+                    </Section>
+
+                    {/* ── Section 3b : Catégories & ateliers ──────────── */}
+                    <Section icon={FolderOpen} title="Catégories & ateliers" color="#0d9488">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/app/admin/taxonomies')}
+                            style={{
+                                width: '100%',
+                                display: 'flex', alignItems: 'center', gap: '12px',
+                                padding: '14px 18px',
+                                background: '#ecfdf5', border: '1px solid #b7e4d8',
+                                borderRadius: '10px', cursor: 'pointer',
+                                fontFamily: 'inherit', color: '#0d6b60',
+                                fontSize: '0.9rem', fontWeight: '700',
+                            }}
+                        >
+                            <ExternalLink size={16} />
+                            <span style={{ flex: 1, textAlign: 'left' }}>Modifier ou supprimer les catégories et ateliers</span>
+                            <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
+                        </button>
+                        <p style={{ margin: '10px 0 0', fontSize: '0.8rem', color: '#888' }}>
+                            Gérez la taxonomie des cartels (couleurs, traductions) et le cycle de vie des ateliers.
+                        </p>
+                    </Section>
+
+                    {/* ── Section 3c : Journal d'événements ──────────── */}
+                    <Section icon={Activity} title="Journal d'événements" color="#6741d9">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/app/admin/logs')}
+                            style={{
+                                width: '100%',
+                                display: 'flex', alignItems: 'center', gap: '12px',
+                                padding: '14px 18px',
+                                background: '#f3efff', border: '1px solid #d9ccff',
+                                borderRadius: '10px', cursor: 'pointer',
+                                fontFamily: 'inherit', color: '#5327b5',
+                                fontSize: '0.9rem', fontWeight: '700',
+                            }}
+                        >
+                            <ExternalLink size={16} />
+                            <span style={{ flex: 1, textAlign: 'left' }}>Consulter le journal et configurer les notifications email</span>
+                            <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
+                        </button>
+                        <p style={{ margin: '10px 0 0', fontSize: '0.8rem', color: '#888' }}>
+                            Audit complet des actions (publications, modifications, créations de comptes…) et activation des notifications par email à l'équipe.
+                        </p>
+                    </Section>
+
                     {/* ── Section 3 : Partenaires ──────────── */}
                     <Section icon={Users} title="Partenaires" color="#00897b">
                         {/* Toggler */}
@@ -539,102 +572,34 @@ const AdminSettings = () => {
                             {partnersExpanded && (
                                 <div style={{ background: 'white' }}>
 
-                                    {/* ── Bloc A : Bibliothèque ── */}
-                                    <div style={{ padding: '20px 20px 0' }}>
-                                        <p style={{ margin: '0 0 14px', fontWeight: '800', fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#00897b' }}>
-                                            A — Bibliothèque de partenaires
-                                        </p>
-                                        <p style={{ margin: '0 0 14px', fontSize: '0.82rem', color: '#888' }}>
-                                            Chaque partenaire ajouté ici est disponible pour le site principal et tous les sous-sites.
-                                        </p>
-
-                                        {/* Formulaire d'ajout */}
-                                        <div style={{ background: '#f8fffe', border: '1px solid #d0ede8', borderRadius: '10px', padding: '14px', marginBottom: '16px' }}>
-                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
-                                                <input
-                                                    value={partnerName}
-                                                    onChange={e => setPartnerName(e.target.value)}
-                                                    placeholder="Nom du partenaire *"
-                                                    style={{ padding: '9px 12px', borderRadius: '8px', border: '1px solid #ddd', fontFamily: 'inherit', fontSize: '0.88rem' }}
-                                                />
-                                                <input
-                                                    value={partnerUrl}
-                                                    onChange={e => setPartnerUrl(e.target.value)}
-                                                    placeholder="URL (https://...)"
-                                                    style={{ padding: '9px 12px', borderRadius: '8px', border: '1px solid #ddd', fontFamily: 'inherit', fontSize: '0.88rem' }}
-                                                />
-                                            </div>
-                                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                                <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', border: '1px dashed #b2dfdb', borderRadius: '8px', cursor: 'pointer', fontSize: '0.83rem', color: '#555', background: 'white' }}>
-                                                    <Upload size={14} color="#00897b" />
-                                                    {partnerLogoFile ? partnerLogoFile.name : 'Choisir un logo…'}
-                                                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => setPartnerLogoFile(e.target.files?.[0] || null)} />
-                                                </label>
-                                                <button
-                                                    type="button"
-                                                    onClick={handleCreatePartner}
-                                                    disabled={savingPartners || !partnerName.trim()}
-                                                    style={{
-                                                        flexShrink: 0, border: 'none', borderRadius: '8px', padding: '9px 16px',
-                                                        background: (savingPartners || !partnerName.trim()) ? '#b2dfdb' : '#00897b',
-                                                        color: 'white', fontWeight: '700', cursor: (savingPartners || !partnerName.trim()) ? 'not-allowed' : 'pointer',
-                                                        fontFamily: 'inherit', fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '6px',
-                                                    }}
-                                                >
-                                                    <Plus size={14} /> Ajouter
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {/* Liste des partenaires */}
-                                        {partners.length === 0 ? (
-                                            <p style={{ textAlign: 'center', color: '#bbb', padding: '16px 0', fontSize: '0.85rem' }}>
-                                                Aucun partenaire dans la bibliothèque.
-                                            </p>
-                                        ) : (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '6px' }}>
-                                                {partners.map(p => {
-                                                    const isPrimary = sitePrimaryPartnerIds.includes(p.id);
-                                                    const isRegular = sitePartnerIds.includes(p.id);
-                                                    return (
-                                                        <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid #eee', borderRadius: '10px', padding: '8px 12px', background: '#fafafa' }}>
-                                                            {/* Logo ou initiale */}
-                                                            {p.logo_path ? (
-                                                                <img src={p.logo_path} alt={p.name} style={{ width: '36px', height: '36px', objectFit: 'contain', borderRadius: '6px', background: 'white', border: '1px solid #eee' }} />
-                                                            ) : (
-                                                                <div style={{ width: '36px', height: '36px', borderRadius: '6px', background: '#e0f2f1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', color: '#00897b', fontSize: '0.9rem', flexShrink: 0 }}>
-                                                                    {p.name.charAt(0).toUpperCase()}
-                                                                </div>
-                                                            )}
-                                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                                <div style={{ fontWeight: '700', fontSize: '0.88rem', color: '#1a1a1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                                                                {p.url && <div style={{ fontSize: '0.75rem', color: '#aaa', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.url}</div>}
-                                                            </div>
-                                                            {/* Badge de statut */}
-                                                            {isPrimary && <span style={{ fontSize: '0.72rem', fontWeight: '700', padding: '2px 8px', borderRadius: '20px', background: '#e0f2f1', color: '#00695c', whiteSpace: 'nowrap' }}>★ Principal</span>}
-                                                            {isRegular && <span style={{ fontSize: '0.72rem', fontWeight: '700', padding: '2px 8px', borderRadius: '20px', background: '#eceff1', color: '#546e7a', whiteSpace: 'nowrap' }}>Standard</span>}
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleDeletePartner(p.id, p.name)}
-                                                                style={{ flexShrink: 0, border: '1px solid #fecaca', background: 'white', color: '#b42318', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center' }}
-                                                                title="Supprimer"
-                                                            >
-                                                                <Trash2 size={13} />
-                                                            </button>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
+                                    {/* ── Bloc A : Lien vers la page dédiée ── */}
+                                    <div style={{ padding: '20px' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => navigate('/app/admin/partners')}
+                                            style={{
+                                                width: '100%',
+                                                display: 'flex', alignItems: 'center', gap: '12px',
+                                                padding: '14px 18px',
+                                                background: '#e0f2f1', border: '1px solid #b2dfdb',
+                                                borderRadius: '10px', cursor: 'pointer',
+                                                fontFamily: 'inherit', color: '#00695c',
+                                                fontSize: '0.9rem', fontWeight: '700',
+                                            }}
+                                        >
+                                            <ExternalLink size={16} />
+                                            <span style={{ flex: 1, textAlign: 'left' }}>Gérer la bibliothèque (obligatoires / pool / exclusifs)</span>
+                                            <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
+                                        </button>
                                     </div>
 
                                     {/* Séparateur */}
-                                    <div style={{ margin: '20px 0', borderTop: '1px solid #e8f5f3' }} />
+                                    <div style={{ margin: '0 0 0', borderTop: '1px solid #e8f5f3' }} />
 
                                     {/* ── Bloc B : Sélection site principal ── */}
-                                    <div style={{ padding: '0 20px 20px' }}>
+                                    <div style={{ padding: '20px' }}>
                                         <p style={{ margin: '0 0 4px', fontWeight: '800', fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#00897b' }}>
-                                            B — Affichage sur le site principal
+                                            Affichage sur le site principal
                                         </p>
                                         <p style={{ margin: '0 0 16px', fontSize: '0.82rem', color: '#888' }}>
                                             Un partenaire ne peut être que dans une seule liste. Cliquez pour cocher/décocher.

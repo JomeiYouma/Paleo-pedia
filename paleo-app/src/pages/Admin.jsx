@@ -5,13 +5,16 @@ import { Edit, Trash2, Globe, MapPin, Image as ImageIcon, Eye, EyeOff, Download,
 import { useTranslation } from 'react-i18next';
 import { generateZip } from '../utils/zipGenerator';
 import CartelPreview from '../components/CartelPreview';
+import LongOperationOverlay from '../components/LongOperationOverlay';
 import { getYearForSort } from '../utils/helpers'; // Import helper
+import { rememberReturn } from '../utils/navigation';
 import api from '../services/apiClient';
 
 const Admin = () => {
     const { cartels, deleteCartel, deleteCartels, fetchData, isAdmin, categories, addWorkshop, deleteWorkshop, workshops } = useApp();
     const navigate = useNavigate();
     const location = useLocation();
+    const hashScrolledRef = React.useRef(null);
     const { t, i18n } = useTranslation();
     const isEn = i18n.language === 'en';
 
@@ -43,6 +46,23 @@ const Admin = () => {
         const locs = new Set(source.map(c => c.location).filter(Boolean));
         return Array.from(locs).sort();
     }, [cartels, isAdmin, activeWorkshop]);
+
+    // Scroll vers la ligne éditée au retour (location.hash = '#cartel-<id>').
+    React.useEffect(() => {
+        const h = location.hash || '';
+        if (!h.startsWith('#cartel-')) return;
+        if (hashScrolledRef.current === h) return;
+        const id = h.slice('#cartel-'.length);
+        const el = document.getElementById(`cartel-${id}`);
+        if (el) {
+            el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            const prevBg = el.style.background;
+            el.style.transition = 'background 0.6s ease';
+            el.style.background = '#fff8d6';
+            setTimeout(() => { el.style.background = prevBg; }, 1400);
+            hashScrolledRef.current = h;
+        }
+    }, [location.hash, cartels]);
 
     const filteredCartels = useMemo(() => {
         if (!isAdmin) return [];
@@ -238,35 +258,12 @@ const Admin = () => {
         <div className="container" style={{ paddingBottom: '100px', maxWidth: '1400px' }}>
 
             {/* Loading / Export Overlay */}
-            {generatingZip && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(255,255,255,0.9)',
-                    zIndex: 9999,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--color-black)'
-                }}>
-                    <div className="spinner" style={{ width: '50px', height: '50px', border: '5px solid #eee', borderTop: '5px solid var(--color-pink-darker)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                    <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-
-                    <h3 style={{ marginTop: '20px' }}>Génération de l'export...</h3>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: '10px 0' }}>
-                        {progress.current} / {progress.total}
-                    </div>
-                    <div style={{ width: '300px', height: '10px', backgroundColor: '#eee', borderRadius: '5px', overflow: 'hidden' }}>
-                        <div style={{
-                            width: progress.total ? `${(progress.current / progress.total) * 100}%` : '0%',
-                            height: '100%',
-                            backgroundColor: 'var(--color-pink-darker)',
-                            transition: 'width 0.3s ease'
-                        }} />
-                    </div>
-                </div>
-            )}
+            <LongOperationOverlay
+                visible={generatingZip}
+                label={t('library.generating')}
+                current={progress.current}
+                total={progress.total}
+            />
 
             {/* Header / Nav */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
@@ -373,7 +370,11 @@ const Admin = () => {
                     </button>
 
                     <button
-                        onClick={() => navigate(activeWorkshop ? `/app/create?workshopId=${activeWorkshop.id}` : '/app/create')}
+                        onClick={() => {
+                            const target = activeWorkshop ? `/app/create?workshopId=${activeWorkshop.id}` : '/app/create';
+                            const returnTo = rememberReturn(location);
+                            navigate(target, { state: { returnTo } });
+                        }}
                         style={{ background: 'black', color: 'white', border: 'none', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer' }}
                     >
                         + {t('nav.create')}
@@ -448,10 +449,15 @@ const Admin = () => {
                         </button>
                         <h3 style={{ marginTop: 0 }}>Aperçu</h3>
                         <div style={{ border: '1px solid #eee', padding: '10px', borderRadius: '8px' }}>
-                            <CartelPreview data={previewCartel} />
+                            <CartelPreview data={previewCartel} showExports />
                         </div>
                         <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                            <button onClick={() => { setPreviewCartel(null); navigate(`/app/create?edit=${previewCartel.id}`, { state: { returnTo: `${location.pathname}${location.search}#${previewCartel.id}` } }); }}
+                            <button onClick={() => {
+                                    const id = previewCartel.id;
+                                    setPreviewCartel(null);
+                                    const returnTo = rememberReturn(location, { scrollId: id });
+                                    navigate(`/app/create?edit=${id}`, { state: { returnTo } });
+                                }}
                                 style={{ background: 'blue', color: 'white', border: 'none', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer' }}>
                                 <Edit size={16} style={{ marginRight: '5px', verticalAlign: 'text-bottom' }} /> Editer
                             </button>
@@ -553,41 +559,48 @@ const Admin = () => {
                 </button>
             </div>
 
-            <div style={{ overflowX: 'auto', background: 'white', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
+            {/* Scroll interne : seules les lignes défilent, la barre de filtres reste visible.
+                thead sticky au sommet du conteneur de scroll. */}
+            <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: 'calc(100vh - 340px)', background: 'white', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9em' }}>
                     <thead style={{ background: '#f4f4f4', borderBottom: '2px solid #ddd' }}>
                         <tr>
-                            <th style={{ padding: '12px', width: '40px' }}></th>
-                            <th style={{ padding: '12px', textAlign: 'left', width: '60px' }}>Img</th>
+                            {(() => {
+                                const thSticky = { position: 'sticky', top: 0, background: '#f4f4f4', zIndex: 2, boxShadow: 'inset 0 -2px 0 #ddd' };
+                                return <>
+                                    <th style={{ padding: '12px', width: '40px', ...thSticky }}></th>
+                                    <th style={{ padding: '12px', textAlign: 'left', width: '60px', ...thSticky }}>Img</th>
 
-                            <th onClick={() => handleSort('date')} style={{ padding: '12px', textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                    Date {getSortIcon('date')}
-                                </div>
-                            </th>
+                                    <th onClick={() => handleSort('date')} style={{ padding: '12px', textAlign: 'left', cursor: 'pointer', userSelect: 'none', ...thSticky }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                            Date {getSortIcon('date')}
+                                        </div>
+                                    </th>
 
-                            <th onClick={() => handleSort('titre')} style={{ padding: '12px', textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                    Titre (FR / EN) {getSortIcon('titre')}
-                                </div>
-                            </th>
+                                    <th onClick={() => handleSort('titre')} style={{ padding: '12px', textAlign: 'left', cursor: 'pointer', userSelect: 'none', ...thSticky }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                            Titre (FR / EN) {getSortIcon('titre')}
+                                        </div>
+                                    </th>
 
-                            <th style={{ padding: '12px', textAlign: 'left' }}>Catégories</th>
+                                    <th style={{ padding: '12px', textAlign: 'left', ...thSticky }}>Catégories</th>
 
-                            <th onClick={() => handleSort('location')} style={{ padding: '12px', textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                    Localisation {getSortIcon('location')}
-                                </div>
-                            </th>
+                                    <th onClick={() => handleSort('location')} style={{ padding: '12px', textAlign: 'left', cursor: 'pointer', userSelect: 'none', ...thSticky }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                            Localisation {getSortIcon('location')}
+                                        </div>
+                                    </th>
 
-                            <th onClick={() => handleSort('origin')} style={{ padding: '12px', textAlign: 'center', cursor: 'pointer', userSelect: 'none' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', justifyContent: 'center' }}>
-                                    Origine {getSortIcon('origin')}
-                                </div>
-                            </th>
+                                    <th onClick={() => handleSort('origin')} style={{ padding: '12px', textAlign: 'center', cursor: 'pointer', userSelect: 'none', ...thSticky }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', justifyContent: 'center' }}>
+                                            Origine {getSortIcon('origin')}
+                                        </div>
+                                    </th>
 
-                            <th style={{ padding: '12px', textAlign: 'center' }}>Statut</th>
-                            <th style={{ padding: '12px', textAlign: 'center', width: '100px' }}>Actions</th>
+                                    <th style={{ padding: '12px', textAlign: 'center', ...thSticky }}>Statut</th>
+                                    <th style={{ padding: '12px', textAlign: 'center', width: '100px', ...thSticky }}>Actions</th>
+                                </>;
+                            })()}
                         </tr>
                     </thead>
                     <tbody>
@@ -602,7 +615,7 @@ const Admin = () => {
                                 statusLabel === 'archived' ? '#666' : '#2754c5';
 
                             return (
-                                <tr key={cartel.id} style={{ borderBottom: '1px solid #eee', background: 'white' }}>
+                                <tr key={cartel.id} id={`cartel-${cartel.id}`} style={{ borderBottom: '1px solid #eee', background: 'white' }}>
                                     <td style={{ padding: '10px', textAlign: 'center' }}>
                                         <div onClick={() => toggleSelection(cartel.id)} style={{ cursor: 'pointer' }}>
                                             {selectedIds.has(cartel.id) ? <CheckSquare size={18} color="blue" /> : <Square size={18} color="#ccc" />}
@@ -688,7 +701,10 @@ const Admin = () => {
                                                 <ScanEye size={18} />
                                             </button>
                                             <button
-                                                onClick={() => navigate(`/app/create?edit=${cartel.id}`, { state: { returnTo: `${location.pathname}${location.search}#${cartel.id}` } })}
+                                                onClick={() => {
+                                                    const returnTo = rememberReturn(location, { scrollId: cartel.id });
+                                                    navigate(`/app/create?edit=${cartel.id}`, { state: { returnTo } });
+                                                }}
                                                 title={t('drafts.edit')}
                                                 style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'blue' }}
                                             >

@@ -153,7 +153,7 @@ const ProposalItem = ({ draft, onPublish, onPublishHidden, onDelete, onEdit, onR
                         Source : <strong>{draft.origin || 'Accès Général'}</strong>
                     </span>
                 </div>
-                <CartelPreview data={draft} isDraft />
+                <CartelPreview data={draft} isDraft showExports />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <button

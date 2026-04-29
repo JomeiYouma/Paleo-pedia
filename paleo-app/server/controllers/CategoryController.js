@@ -1,4 +1,6 @@
 import { CategoryModel } from '../models/Category.js';
+import { dispatchEvent } from '../services/eventDispatcher.js';
+const dispatch = (args) => { dispatchEvent(args).catch(() => {}); };
 
 export const CategoryController = {
 
@@ -24,6 +26,10 @@ export const CategoryController = {
   async create(req, res) {
     try {
       const cat = await CategoryModel.create(req.body);
+      dispatch({
+        type: 'category.created', req,
+        targetId: cat.id, summary: cat.name,
+      });
       res.status(201).json(cat);
     } catch (err) {
       if (err.code === '23505') return res.status(409).json({ error: 'ID déjà utilisé' });
@@ -35,6 +41,10 @@ export const CategoryController = {
     try {
       const cat = await CategoryModel.update(req.params.id, req.body);
       if (!cat) return res.status(404).json({ error: 'Catégorie introuvable' });
+      dispatch({
+        type: 'category.updated', req,
+        targetId: cat.id, summary: cat.name,
+      });
       res.json(cat);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -43,7 +53,13 @@ export const CategoryController = {
 
   async delete(req, res) {
     try {
+      const existing = await CategoryModel.findById(req.params.id);
       await CategoryModel.delete(req.params.id);
+      dispatch({
+        type: 'category.deleted', req,
+        targetId: req.params.id,
+        summary: existing?.name || req.params.id,
+      });
       res.status(204).send();
     } catch (err) {
       res.status(500).json({ error: err.message });

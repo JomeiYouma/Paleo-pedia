@@ -98,10 +98,13 @@ const frOrdinal = (n) => (n === 1 ? 'er' : 'e');
 
 export const formatYear = (yearStr, lang) => {
     if (!yearStr) return '';
-    // FIX 6 : normaliser les caractères accentués (ème → eme) pour fiabiliser les regex
-    let val = String(yearStr).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-
+    // Mode EN : on décompose les diacritiques (ème → eme, siècle → siecle) pour
+    // que les regex FR→EN matchent quelle que soit l'orthographe de l'entrée.
+    // Mode FR : les regex ne ciblent que des tokens anglais (BC, early, century…)
+    // donc on NE touche PAS aux accents — sinon "XVe siècle" ressort sans accent
+    // puisqu'aucune regex ne vient le réécrire.
     const isEn = lang && lang.startsWith('en');
+    let val = !isEn ? String(yearStr) : String(yearStr).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
     if (isEn) {
         // FIX 1 : BC/AD en premier, avant tout autre remplacement
@@ -161,11 +164,17 @@ export const formatYear = (yearStr, lang) => {
 
     } else {
         // FIX 1 : BC/AD en premier, avant le remplacement de "c." → "vers"
-        val = val.replace(/\bB\.?C\.?\b/gi, 'av. J.-C.');
-        val = val.replace(/\bA\.?D\.?\b/gi, 'ap. J.-C.');
+        // (?!\w) plutôt que \b à la fin : sans ça, une saisie "B.C." laisse
+        // le point final en queue (le \b échoue entre '.' et EOL, le dernier
+        // \.? est abandonné), ce qui produit "av. J.-C.." avec un double point.
+        val = val.replace(/\bB\.?C\.?(?!\w)/gi, 'av. J.-C.');
+        val = val.replace(/\bA\.?D\.?(?!\w)/gi, 'ap. J.-C.');
 
         // ── Qualificatifs temporels EN → FR ──────────────────────────
-        val = val.replace(/\bc\./gi, 'vers');
+        // Pas de flag `i` : sans ça, le "C." dans "av. J.-C." (produit juste
+        // au-dessus par le remplacement BC→av. J.-C.) serait réécrit en
+        // "av. J.-vers". On ne cible donc que le "c." minuscule (circa).
+        val = val.replace(/\bc\./g, 'vers');
         val = val.replace(/\bearly\b/gi, 'Début');
         val = val.replace(/\blate\b/gi, 'Fin');
         val = val.replace(/\bmid-?\b/gi, 'Milieu');

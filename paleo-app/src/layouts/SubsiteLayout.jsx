@@ -6,11 +6,12 @@
  * - Header propre + footer discret avec retour au site principal
  */
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Outlet, Link, NavLink, useParams, useNavigate } from 'react-router-dom';
-import { Menu, X, Lock, LogOut, Languages } from 'lucide-react';
+import { Outlet, Link, NavLink, useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Menu, X, Lock, LogOut, Languages, PlusCircle, Settings2, LogIn } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import api from '../services/apiClient';
+import { rememberReturn } from '../utils/navigation';
 
 // ── Contexte interne sous-site ────────────────────────────────
 export const SubsiteContext = createContext(null);
@@ -27,13 +28,36 @@ const NAV = (slug) => [
 
 const SubsiteLayout = () => {
     const { slug } = useParams();
-    const { user, isAdmin, logout } = useApp();
+    const location = useLocation();
+    const { user, isAdmin, login, logout } = useApp();
     const navigate = useNavigate();
 
     const [subsite,    setSubsite]    = useState(null);
     const [loading,    setLoading]    = useState(true);
     const [error,      setError]      = useState(null);
     const [menuOpen,   setMenuOpen]   = useState(false);
+
+    const [showLogin,     setShowLogin]     = useState(false);
+    const [loginEmail,    setLoginEmail]    = useState('');
+    const [loginPassword, setLoginPassword] = useState('');
+    const [loginError,    setLoginError]    = useState('');
+    const [loginLoading,  setLoginLoading]  = useState(false);
+
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setLoginError('');
+        setLoginLoading(true);
+        try {
+            await login(loginEmail, loginPassword);
+            setShowLogin(false);
+            setLoginEmail('');
+            setLoginPassword('');
+        } catch (err) {
+            setLoginError(err.message || 'Identifiants incorrects');
+        } finally {
+            setLoginLoading(false);
+        }
+    };
 
     useEffect(() => {
         setLoading(true);
@@ -119,19 +143,37 @@ const SubsiteLayout = () => {
                         {/* Actions droite */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
                             <LanguageSwitcher />
+
+                            {/* Proposer un cartel (visiteurs + admins) */}
+                            <button
+                                onClick={() => {
+                                    const returnTo = rememberReturn(location);
+                                    navigate(`/site/${slug}/create`, { state: { returnTo } });
+                                }}
+                                title="Proposer un cartel pour ce sous-site"
+                                style={{ background: color, border: 'none', borderRadius: '8px', padding: '6px 12px', color: 'white', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}
+                            >
+                                <PlusCircle size={14} /> Proposer un cartel
+                            </button>
+
                             {isAdmin && (
                                 <button
-                                    onClick={() => navigate('/app/admin')}
-                                    title="Administration"
-                                    style={{ background: `${color}18`, border: `1px solid ${color}40`, borderRadius: '8px', padding: '6px 12px', color, cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700', fontFamily: 'inherit' }}
+                                    onClick={() => navigate(`/site/${slug}/admin/drafts`)}
+                                    title="Gérer les cartels de ce sous-site"
+                                    style={{ background: `${color}18`, border: `1px solid ${color}40`, borderRadius: '8px', padding: '6px 12px', color, cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}
                                 >
-                                    Admin ↗
+                                    <Settings2 size={14} /> Gérer
                                 </button>
                             )}
-                            {user && (
-                                <button onClick={() => { logout(); navigate('/'); }} title="Se déconnecter"
+                            {user ? (
+                                <button onClick={() => { logout(); navigate(`/site/${slug}`); }} title="Se déconnecter"
                                     style={{ background: 'none', border: '1px solid #e0e0e0', borderRadius: '8px', padding: '6px 10px', cursor: 'pointer', color: '#888', display: 'flex', alignItems: 'center' }}>
                                     <LogOut size={14} />
+                                </button>
+                            ) : (
+                                <button onClick={() => setShowLogin(true)} title="Se connecter"
+                                    style={{ background: 'white', border: `1px solid ${color}40`, borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', color, display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: '700', fontFamily: 'inherit' }}>
+                                    <LogIn size={14} /> Se connecter
                                 </button>
                             )}
                         </div>
@@ -142,6 +184,64 @@ const SubsiteLayout = () => {
                 <main style={{ flex: 1 }}>
                     <Outlet />
                 </main>
+
+                {/* ── Modal de connexion ───────────────────── */}
+                {showLogin && (
+                    <div
+                        onClick={() => setShowLogin(false)}
+                        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+                    >
+                        <div
+                            onClick={e => e.stopPropagation()}
+                            style={{ background: 'white', borderRadius: '14px', padding: '24px 28px', maxWidth: '380px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <LogIn size={16} color={color} />
+                                </div>
+                                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800' }}>Se connecter</h3>
+                            </div>
+                            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                <input
+                                    type="email"
+                                    value={loginEmail}
+                                    onChange={e => setLoginEmail(e.target.value)}
+                                    placeholder="email@exemple.org"
+                                    required
+                                    autoFocus
+                                    style={{ padding: '9px 12px', borderRadius: '8px', border: '1px solid #ddd', fontFamily: 'inherit', fontSize: '0.9rem' }}
+                                />
+                                <input
+                                    type="password"
+                                    value={loginPassword}
+                                    onChange={e => setLoginPassword(e.target.value)}
+                                    placeholder="Mot de passe"
+                                    required
+                                    style={{ padding: '9px 12px', borderRadius: '8px', border: '1px solid #ddd', fontFamily: 'inherit', fontSize: '0.9rem' }}
+                                />
+                                {loginError && (
+                                    <p style={{ margin: 0, fontSize: '0.82rem', color: '#d32f2f' }}>{loginError}</p>
+                                )}
+                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowLogin(false)}
+                                        style={{ padding: '9px 14px', borderRadius: '8px', border: '1px solid #ddd', background: 'white', color: '#555', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: '600' }}
+                                    >
+                                        Annuler
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={loginLoading}
+                                        style={{ padding: '9px 18px', borderRadius: '8px', border: 'none', background: loginLoading ? `${color}80` : color, color: 'white', cursor: loginLoading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: '700' }}
+                                    >
+                                        {loginLoading ? '…' : 'Se connecter'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
 
                 {/* ── Footer ───────────────────────────────── */}
                 <footer style={{ background: '#f8f9fa', borderTop: '1px solid #eee', padding: '32px 24px' }}>

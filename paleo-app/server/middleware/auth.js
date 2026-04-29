@@ -16,14 +16,16 @@ export async function authenticate(req, res, next) {
   }
   try {
     const decoded = verifyToken(auth.slice(7));
-    // Le payload contient déjà id, role, et les 3 permissions
     req.user = {
       id:                 decoded.id,
+      email:              decoded.email ?? null,
       role:               decoded.role,
       can_create_cartel:  !!decoded.can_create_cartel,
       can_publish_cartel: !!decoded.can_publish_cartel,
       can_manage_admin:   !!decoded.can_manage_admin,
       can_create_subsite: !!decoded.can_create_subsite,
+      can_manage_team:    !!decoded.can_manage_team,
+      home_subsite_id:    decoded.home_subsite_id ?? null,
     };
     next();
   } catch {
@@ -60,11 +62,14 @@ export function optionalAuth(req, res, next) {
       const decoded = verifyToken(auth.slice(7));
       req.user = {
         id:                 decoded.id,
+        email:              decoded.email ?? null,
         role:               decoded.role,
         can_create_cartel:  !!decoded.can_create_cartel,
         can_publish_cartel: !!decoded.can_publish_cartel,
         can_manage_admin:   !!decoded.can_manage_admin,
         can_create_subsite: !!decoded.can_create_subsite,
+        can_manage_team:    !!decoded.can_manage_team,
+        home_subsite_id:    decoded.home_subsite_id ?? null,
       };
     } catch {
       req.user = null;
