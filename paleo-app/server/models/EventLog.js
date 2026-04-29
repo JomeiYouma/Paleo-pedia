@@ -12,10 +12,13 @@ export const EventLogModel = {
    * Tous les champs sauf `type` sont optionnels.
    */
   async insert({ type, actorId = null, actorEmail = null, subsiteId = null, targetId = null, summary = '', payload = null }) {
+    // MariaDB ne supporte pas `CAST(? AS JSON)` — son type JSON est un alias
+    // de LONGTEXT avec validation. On passe la chaîne JSON directement, le
+    // moteur valide à l'INSERT. Compatible MySQL 8 et MariaDB 10+.
     const { rows } = await query(
       `INSERT INTO event_logs
          (type, actor_id, actor_email, subsite_id, target_id, summary, payload)
-       VALUES (?, ?, ?, ?, ?, ?, CAST(? AS JSON))`,
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         type,
         actorId,
@@ -26,7 +29,7 @@ export const EventLogModel = {
         payload ? JSON.stringify(payload) : null,
       ]
     );
-    return rows.insertId;
+    return rows[0]?.insertId ?? rows.insertId;
   },
 
   /**
