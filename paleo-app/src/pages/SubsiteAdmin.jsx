@@ -15,9 +15,9 @@ const SubsiteAdmin = () => {
     const { isAdmin } = useApp();
     const subsite = useSubsite();
 
-    // Redirige /site/:slug/admin → /site/:slug/admin/drafts pour activer l'onglet par défaut
+    // Redirige /site/:slug/admin → /site/:slug/admin/published pour activer l'onglet par défaut
     if (location.pathname === `/site/${slug}/admin`) {
-        return <Navigate to={`/site/${slug}/admin/drafts`} replace />;
+        return <Navigate to={`/site/${slug}/admin/published`} replace />;
     }
 
     if (!isAdmin) {

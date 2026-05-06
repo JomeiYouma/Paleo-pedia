@@ -120,7 +120,7 @@ const router = createHashRouter(
         <Route index element={<Library />} />
         <Route path="workshop/:workshopId" element={<Library />} />
         <Route path="create" element={<Create />} />
-        <Route path="manage"            element={<Navigate to="/app/manage/drafts" replace />} />
+        <Route path="manage"            element={<Navigate to="/app/manage/published" replace />} />
         <Route path="manage/drafts"     element={<ManageCartels />} />
         <Route path="manage/pending"    element={<ManageCartels />} />
         <Route path="manage/published"  element={<ManageCartels />} />

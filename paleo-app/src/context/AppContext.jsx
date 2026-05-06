@@ -8,6 +8,11 @@ const AppContext = createContext();
 export const AppProvider = ({ children }) => {
     const [cartels, setCartels] = useState([]);
     const [loading, setLoading] = useState(false);
+    // hasFetched passe à true après le tout premier fetchData (succès ou échec).
+    // Sert à différencier "premier chargement en cours" (afficher un spinner)
+    // de "données chargées mais vides" (afficher 'aucun cartel'). Empêche les
+    // pages de montrer un état vide trompeur tant que l'API n'a pas répondu.
+    const [hasFetched, setHasFetched] = useState(false);
     const [categories, setCategories] = useState([]);
     const [workshops, setWorkshops] = useState([]);
     const [user, setUser] = useState(null); // { id, email, role, can_manage_admin, can_manage_team, home_subsite_id, ... }
@@ -120,11 +125,17 @@ export const AppProvider = ({ children }) => {
             setWorkshops(Array.isArray(ws) ? ws : []);
         } catch (err) {
             console.error('fetchData error:', err.message);
-            setCartels([]);
-            setCategories([]);
-            setWorkshops([]);
+            // En cas d'erreur après un premier succès, on conserve les
+            // dernières données connues — vider provoque le clignotement
+            // "aucun cartel" puis "liste qui repousse" qu'on cherche à éviter.
+            if (!hasFetched) {
+                setCartels([]);
+                setCategories([]);
+                setWorkshops([]);
+            }
         } finally {
             setLoading(false);
+            setHasFetched(true);
         }
     };
 
@@ -325,7 +336,7 @@ export const AppProvider = ({ children }) => {
     return (
         <AppContext.Provider value={{
             // Data
-            cartels, loading, categories, workshops, user,
+            cartels, loading, hasFetched, categories, workshops, user,
             // Computed
             isAdmin, isSuperadmin, isOwner, homeSubsiteId,
             currentWorkshopId, currentWorkshop, setWorkshopContext,

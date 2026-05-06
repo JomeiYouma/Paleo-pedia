@@ -158,7 +158,7 @@ const SubsiteLayout = () => {
 
                             {isAdmin && (
                                 <button
-                                    onClick={() => navigate(`/site/${slug}/admin/drafts`)}
+                                    onClick={() => navigate(`/site/${slug}/admin/published`)}
                                     title="Gérer les cartels de ce sous-site"
                                     style={{ background: `${color}18`, border: `1px solid ${color}40`, borderRadius: '8px', padding: '6px 12px', color, cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}
                                 >

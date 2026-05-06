@@ -7,7 +7,7 @@ import {
     ArrowUpDown, ArrowUp, ArrowDown,
     FileText, Inbox, Globe, Plus, ScanEye, MapPin, Image as ImageIcon,
     Languages, Upload, ChevronDown, Package, FileJson, ImageIcon as ImgIcon,
-    FolderPlus, AlertTriangle,
+    FolderPlus, AlertTriangle, Loader2,
 } from 'lucide-react';
 import { useTranslation, Trans } from 'react-i18next';
 import { generateZip, generatePdf, generateArchive } from '../utils/zipGenerator';
@@ -41,10 +41,13 @@ function hexToRgba(hex, alpha) {
 }
 
 // ── Onglets ──────────────────────────────────────────────────
+// Ordre d'affichage : Publiés en tête (le contenu visible publiquement, le plus
+// consulté), puis les états de production (Brouillons, En attente), enfin
+// Soumissions (file de modération superadmin).
 const TABS = [
+    { key: 'published', labelKey: 'nav.published', icon: Globe,    color: '#2e7d32', bg: '#e8f5e9', descriptionKey: 'manageCartels.publishedDescription',   filter: c => c.status === 'published' || c.status === 'archived' },
     { key: 'drafts',    labelKey: 'nav.drafts',    icon: FileText, color: '#3b5bdb', bg: '#f0f4ff', descriptionKey: 'manageCartels.draftsDescription',      filter: c => c.status === 'draft' },
     { key: 'pending',   labelKey: 'nav.pending',   icon: Inbox,    color: '#e67e00', bg: '#fff4e0', descriptionKey: 'manageCartels.pendingDescription',     filter: c => c.status === 'pending_review' },
-    { key: 'published', labelKey: 'nav.published', icon: Globe,    color: '#2e7d32', bg: '#e8f5e9', descriptionKey: 'manageCartels.publishedDescription',   filter: c => c.status === 'published' || c.status === 'archived' },
     { key: 'submissions', labelKey: 'nav.submissions', icon: Inbox, color: '#C2185B', bg: '#fce4ec', descriptionKey: 'manageCartels.submissionsDescription', filter: c => !!c.submitted_to_main_at && !c.visible_on_main && !!c.subsite_id, superadminOnly: true },
 ];
 
@@ -163,7 +166,7 @@ const ImportModal = ({ onClose, onDone, t }) => {
 
 // ── Composant principal ──────────────────────────────────────
 const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null } = {}) => {
-    const { cartels, fetchData, deleteCartel, deleteCartels, updateCartel, isAdmin, isSuperadmin, isOwner, homeSubsiteId, categories, workshops, addWorkshop } = useApp();
+    const { cartels, fetchData, deleteCartel, deleteCartels, updateCartel, isAdmin, isSuperadmin, isOwner, homeSubsiteId, categories, workshops, addWorkshop, loading: appLoading, hasFetched } = useApp();
     const navigate = useNavigate();
     const location = useLocation();
     const { workshopId } = useParams();
@@ -193,8 +196,8 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
         return true;
     });
 
-    const activeTab = pathToTab[location.pathname] || 'drafts';
-    const setActiveTab = (key) => navigate(tabToPath[key] || tabToPath.drafts);
+    const activeTab = pathToTab[location.pathname] || 'published';
+    const setActiveTab = (key) => navigate(tabToPath[key] || tabToPath.published);
     const goToCreate = (editId) => {
         const basePath = lockedSubsiteSlug ? `/site/${lockedSubsiteSlug}/create` : '/app/create';
         const workshopQuery = filterWorkshop ? `?workshopId=${filterWorkshop}` : '';
@@ -892,11 +895,31 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                 )}
             </div>
 
+            {/* Indicateur discret de rafraîchissement en cours, montré
+                uniquement après le premier chargement réussi (sinon le bloc
+                "Chargement…" plein vide ci-dessous prend le relais). */}
+            {appLoading && hasFetched && (
+                <div style={{ display:'flex', alignItems:'center', gap:'8px', padding:'8px 4px', color:'#888', fontSize:'0.82rem' }}>
+                    <Loader2 size={14} style={{ animation:'paleoSpin 1s linear infinite' }} />
+                    <span>{t('manageCartels.refreshing', 'Mise à jour…')}</span>
+                    <style>{`@keyframes paleoSpin { to { transform: rotate(360deg); } }`}</style>
+                </div>
+            )}
+
             {/* ── Tableau ────────────────────────────────────── */}
             {/* Scroll interne : seules les lignes défilent, filtres/onglets/entête
                 de page restent visibles. thead reste collé en haut grâce au sticky. */}
             <div style={{ background:'white', borderRadius:'12px', border:'1px solid #eee', overflow:'hidden', boxShadow:'0 2px 8px rgba(0,0,0,0.04)', maxHeight:'calc(100vh - 340px)', overflowY:'auto' }}>
-                {filteredCartels.length === 0 ? (
+                {(!hasFetched || (appLoading && cartels.length === 0)) ? (
+                    /* Premier chargement : on n'a aucune donnée à afficher,
+                       donc on remplace l'état vide par un spinner pour ne pas
+                       laisser croire que le gestionnaire est cassé / vide. */
+                    <div style={{ textAlign:'center', padding:'80px 20px', color:'#888', display:'flex', flexDirection:'column', alignItems:'center', gap:'14px' }}>
+                        <Loader2 size={32} color="#C2185B" style={{ animation:'paleoSpin 1s linear infinite' }} />
+                        <p style={{ fontSize:'0.95rem', margin:0 }}>{t('common.loading', 'Chargement…')}</p>
+                        <style>{`@keyframes paleoSpin { to { transform: rotate(360deg); } }`}</style>
+                    </div>
+                ) : filteredCartels.length === 0 ? (
                     <div style={{ textAlign:'center', padding:'60px 20px', color:'#bbb' }}>
                         <p style={{ fontSize:'1.1rem' }}>{t('manageCartels.noCartelsTab')}</p>
                     </div>
