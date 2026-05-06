@@ -56,14 +56,16 @@ const setupContainer = () => {
 
 // ── Rendu d'un cartel → Canvas ────────────────────────────────
 
-const renderCartelToCanvas = async (cartel, container, lang) => {
+const renderCartelToCanvas = async (cartel, container, lang, overrides) => {
   const isEn  = lang && lang.startsWith('en');
   const title = (isEn && cartel.titre_en)       ? cartel.titre_en       : cartel.titre;
   const desc  = (isEn && cartel.description_en) ? cartel.description_en : (cartel.description || '');
   const loc   = isEn
     ? (cartel.location_en || cartel.location || '')
     : (cartel.location    || cartel.location_en || '');
-  const cats  = (isEn ? cartel.categories_en : cartel.categories) || [];
+  const rawCats = (isEn ? cartel.categories_en : cartel.categories) || [];
+  const oCategoryMap = overrides?.categoryMap || null;
+  const cats  = oCategoryMap ? rawCats.map(c => oCategoryMap[c] || c) : rawCats;
   const imageCredit = (cartel.imageCredit || cartel.image_credit || '').trim();
 
   // QR Code
@@ -75,12 +77,13 @@ const renderCartelToCanvas = async (cartel, container, lang) => {
     });
   }
 
-  // Textes localisés
-  const moreText    = isEn ? 'Read more'   : 'Pour aller plus loin';
-  const exhumeText  = isEn ? 'Exhumed by'  : 'Exhumé par';
-  const catText     = isEn ? 'Categories'  : 'Catégories';
-  const creditText  = isEn ? 'Image source' : 'Source image';
-  const unknownText = isEn ? 'Unknown'     : 'Inconnu';
+  // Textes localisés (overrides.labels prend le dessus pour la frise traduite)
+  const oLabels = overrides?.labels || {};
+  const moreText    = oLabels.moreText    || (isEn ? 'Read more'    : 'Pour aller plus loin');
+  const exhumeText  = oLabels.exhumeText  || (isEn ? 'Exhumed by'   : 'Exhumé par');
+  const catText     = oLabels.catText     || (isEn ? 'Categories'   : 'Catégories');
+  const creditText  = oLabels.creditText  || (isEn ? 'Image source' : 'Source image');
+  const unknownText = oLabels.unknownText || (isEn ? 'Unknown'      : 'Inconnu');
 
   const parseMd = (t) => t
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -242,8 +245,11 @@ export const generateImage = async (cartel, lang = 'fr') => {
  * @param {Array}    cartels
  * @param {string}   lang       'fr' | 'en'
  * @param {Function} onProgress (current, total) => void
+ * @param {object}   [overrides]
+ * @param {object}   [overrides.labels]      - { moreText, exhumeText, catText, creditText, unknownText } pour la frise traduite.
+ * @param {object}   [overrides.categoryMap] - { [catSrc]: catTraduit } pour la frise traduite.
  */
-export const generatePdf = async (cartels, lang = 'fr', onProgress) => {
+export const generatePdf = async (cartels, lang = 'fr', onProgress, overrides) => {
   const pdf       = new jsPDF('l', 'mm', 'a4');
   const container = setupContainer();
   let   count     = 0;
@@ -252,7 +258,7 @@ export const generatePdf = async (cartels, lang = 'fr', onProgress) => {
     count++;
     onProgress?.(count, cartels.length);
     try {
-      const canvas  = await renderCartelToCanvas(cartel, container, lang);
+      const canvas  = await renderCartelToCanvas(cartel, container, lang, overrides);
       const imgData = canvas.toDataURL('image/jpeg', 0.90);
       if (count > 1) pdf.addPage('a4', 'l');
       pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);

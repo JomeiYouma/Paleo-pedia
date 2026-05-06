@@ -191,7 +191,11 @@ export const translate = {
    * @param {string[]} args.ids
    * @param {'fr'|'en'} args.sourceLang
    * @param {string}   args.targetLanguage  - Nom libre saisi par l'admin.
-   * Réponse : { translations: [{ id, titre, description, location }] }
+   * Réponse : {
+   *   translations: [{ id, titre, description, location }],
+   *   labels:       { moreText, exhumeText, catText, creditText, unknownText }, // libellés UI traduits
+   *   categoryMap:  { [catSrc]: catTraduit }                                    // map nom-catégorie source → traduite
+   * }
    */
   bulk: ({ ids, sourceLang, targetLanguage }) =>
     post('/translate/bulk', { ids, sourceLang, targetLanguage }),

@@ -6,7 +6,7 @@
  * Routes admin (token requis).
  */
 
-import { translateCartel, translateCartelToLanguage } from '../services/translationService.js';
+import { translateCartel, translateCartelToLanguage, translateLabelsAndCategories } from '../services/translationService.js';
 import { CartelModel } from '../models/Cartel.js';
 
 export const TranslateController = {
@@ -77,7 +77,39 @@ export const TranslateController = {
         translations.push(...results);
       }
 
-      res.json({ translations });
+      // Libellés UI + catégories uniques traduits en un seul appel supplémentaire,
+      // pour que generatePdf puisse afficher "Exhumé par", "Catégories", noms de
+      // catégories, etc. dans la langue cible.
+      const sourceLabels = normalizedSource === 'en'
+        ? { moreText: 'Read more', exhumeText: 'Exhumed by', catText: 'Categories', creditText: 'Image source', unknownText: 'Unknown' }
+        : { moreText: 'Pour aller plus loin', exhumeText: 'Exhumé par', catText: 'Catégories', creditText: 'Source image', unknownText: 'Inconnu' };
+
+      const catKey = normalizedSource === 'en' ? 'categories_en' : 'categories';
+      const uniqueCats = [...new Set(
+        cartels.flatMap(c => (Array.isArray(c[catKey]) ? c[catKey] : c.categories) || [])
+               .filter(Boolean)
+      )];
+
+      let labels = sourceLabels;
+      let categoryMap = {};
+      try {
+        const localized = await translateLabelsAndCategories({
+          labels: sourceLabels,
+          categories: uniqueCats,
+          sourceLang: normalizedSource,
+          targetLanguageName: String(targetLanguage).trim(),
+        });
+        labels = { ...sourceLabels, ...localized.labels };
+        uniqueCats.forEach((src, i) => {
+          if (localized.categories[i]) categoryMap[src] = localized.categories[i];
+        });
+      } catch (e) {
+        // Si la traduction des libellés échoue, on n'empêche pas l'export :
+        // on retombe sur les libellés source.
+        console.warn('[translate.bulk] échec libellés/catégories, fallback source:', e.message);
+      }
+
+      res.json({ translations, labels, categoryMap });
     } catch (err) {
       const status = err.message.includes('Clé API non configurée') ? 503 : 500;
       res.status(status).json({ error: err.message });

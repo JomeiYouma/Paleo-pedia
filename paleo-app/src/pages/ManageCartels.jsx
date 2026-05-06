@@ -572,7 +572,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
         try {
             await withBusy(t('translateFrise.busyTranslating', { defaultValue: `Traduction vers ${targetLanguage}…` }), async () => {
                 setProgress({ current: 0, total: ids.length });
-                const { translations } = await api.translate.bulk({ ids, sourceLang, targetLanguage });
+                const { translations, labels, categoryMap } = await api.translate.bulk({ ids, sourceLang, targetLanguage });
                 setProgress({ current: ids.length, total: ids.length });
 
                 const byId = new Map(translations.map(tr => [String(tr.id), tr]));
@@ -590,7 +590,12 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
 
                 setBusyLabel(t('translateFrise.busyGenerating', { defaultValue: 'Génération du PDF traduit…' }));
                 setProgress({ current: 0, total: items.length });
-                await generatePdf(items, sourceLang, (cur, tot) => setProgress({ current: cur, total: tot }));
+                await generatePdf(
+                    items,
+                    sourceLang,
+                    (cur, tot) => setProgress({ current: cur, total: tot }),
+                    { labels, categoryMap }
+                );
             });
         } catch (err) {
             // Le serveur renvoie un message technique quand DeepL est configuré.

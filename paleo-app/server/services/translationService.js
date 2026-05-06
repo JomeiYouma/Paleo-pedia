@@ -208,3 +208,84 @@ ${JSON.stringify(payload, null, 2)}`;
     location:    (parsed.location    || '').trim(),
   };
 }
+
+/**
+ * Traduit en un seul appel OpenAI un objet de libellés UI + une liste de noms
+ * de catégories, depuis FR/EN vers une langue arbitraire (frise traduite).
+ * Utilisé pour que l'export PDF affiche les "Pour aller plus loin", "Exhumé par",
+ * "Catégories", noms de catégories, etc. dans la langue cible.
+ *
+ * @param {object} args
+ * @param {object} args.labels             - { key: stringSource, ... }
+ * @param {string[]} args.categories       - Liste de noms de catégories en langue source.
+ * @param {'fr'|'en'} [args.sourceLang]    - Langue source.
+ * @param {string} args.targetLanguageName - Nom libre de la langue cible.
+ * Retourne : { labels: {...mêmes clés, valeurs traduites}, categories: [...même longueur] }
+ */
+export async function translateLabelsAndCategories({ labels = {}, categories = [], sourceLang = 'fr', targetLanguageName } = {}) {
+  if (!targetLanguageName || !String(targetLanguageName).trim()) {
+    throw new Error('Langue cible manquante.');
+  }
+  const apiKey = await SettingModel.get('openai_key');
+  if (!apiKey) throw new Error('Clé API non configurée dans les réglages.');
+
+  const isOpenAI = apiKey.startsWith('sk-') || apiKey.startsWith('proj-');
+  if (!isOpenAI) {
+    throw new Error('La traduction vers une langue arbitraire requiert une clé OpenAI (DeepL non supporté pour ce flux).');
+  }
+
+  const labelKeys = Object.keys(labels);
+  const cleanCategories = Array.isArray(categories) ? categories.filter(Boolean) : [];
+
+  if (labelKeys.length === 0 && cleanCategories.length === 0) {
+    return { labels: {}, categories: [] };
+  }
+
+  const client = new OpenAI({ apiKey });
+  const sourceLangName = SOURCE_LANG_NAMES[sourceLang] || 'French';
+
+  const payload = { labels, categories: cleanCategories };
+
+  const prompt = `Translate UI labels and category names from ${sourceLangName} to ${targetLanguageName} for a scientific exhibition catalog about historical energy ("Paléo-Énergétique").
+Return ONLY a valid JSON object with the EXACT same shape as the input:
+{ "labels": { same keys as input, translated values }, "categories": [ same length, each item translated ] }
+If "${targetLanguageName}" is ambiguous, infer the most likely language.
+Keep empty strings empty. No explanations, no markdown fences.
+
+Input:
+${JSON.stringify(payload, null, 2)}`;
+
+  const chat = await client.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      { role: 'system', content: `You translate JSON from ${sourceLangName} to ${targetLanguageName}. Output only valid JSON with the same shape.` },
+      { role: 'user',   content: prompt },
+    ],
+    temperature: 0.2,
+    max_tokens:  1200,
+  });
+
+  const raw = chat.choices[0]?.message?.content?.trim() ?? '';
+  const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const jsonStr = jsonMatch ? jsonMatch[1] : raw;
+
+  let parsed;
+  try {
+    parsed = JSON.parse(jsonStr);
+  } catch {
+    throw new Error(`Réponse OpenAI non-JSON : ${raw.slice(0, 200)}`);
+  }
+
+  const outLabels = {};
+  for (const k of labelKeys) {
+    const v = parsed?.labels?.[k];
+    outLabels[k] = (typeof v === 'string' ? v : labels[k] || '').trim();
+  }
+  const outCats = Array.isArray(parsed?.categories) ? parsed.categories : [];
+  const normalizedCats = cleanCategories.map((src, i) => {
+    const t = outCats[i];
+    return (typeof t === 'string' && t.trim()) ? t.trim() : src;
+  });
+
+  return { labels: outLabels, categories: normalizedCats };
+}
