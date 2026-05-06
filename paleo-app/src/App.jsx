@@ -26,6 +26,7 @@ import Museum from './pages/Museum';
 import Contact from './pages/Contact';
 import Partners from './pages/Partners';
 import LandingPage from './pages/LandingPage';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import SiteLayout from './components/SiteLayout';
 import SubsiteLayout from './layouts/SubsiteLayout';
 import SubsiteHome from './pages/SubsiteHome';
@@ -78,6 +79,7 @@ const router = createHashRouter(
         <Route path="museum"       element={<Museum />} />
         <Route path="partenaires"  element={<Partners />} />
         <Route path="contact"      element={<Contact />} />
+        <Route path="politique-confidentialite" element={<PrivacyPolicy />} />
       </Route>
 
       {/* ── Sous-sites (/site/:slug/*) ────────────────── */}

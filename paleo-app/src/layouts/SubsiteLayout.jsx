@@ -252,6 +252,7 @@ const SubsiteLayout = () => {
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
                             <Link to={`/site/${slug}/mentions`} style={{ color: '#aaa', fontSize: '0.82rem', textDecoration: 'none' }}>Mentions légales</Link>
+                            <Link to="/politique-confidentialite" style={{ color: '#aaa', fontSize: '0.82rem', textDecoration: 'none' }}>Politique de confidentialité</Link>
                             <Link to="/contact" style={{ color: '#aaa', fontSize: '0.82rem', textDecoration: 'none' }}>Contact</Link>
                             {/* Lien retour discret */}
                             <Link to="/" style={{ color: '#ccc', fontSize: '0.76rem', textDecoration: 'none', marginTop: '8px' }}>
