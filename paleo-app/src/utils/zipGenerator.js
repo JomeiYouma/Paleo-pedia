@@ -26,20 +26,43 @@ const FONTS_CSS = `
 
 // ── Helpers ───────────────────────────────────────────────────
 
-/** Charge une image et la renvoie en base64 (contourne CORS html2canvas). */
+/**
+ * Charge une image et la renvoie en base64 (contourne CORS html2canvas).
+ *
+ * Optimisation perf : on **downscale** à `MAX_IMG_DIM` côté max avant d'encoder
+ * le dataURL. La zone d'image dans le PDF fait au plus ~1530×1100 px ; encoder
+ * une image legacy de 5000×3500 à sa taille native gonflait le dataURL à
+ * plusieurs Mo et faisait exploser le temps de rendu html2canvas (O(n²) sur
+ * les pixels source). Le ratio est strictement préservé, donc la mise en page
+ * en aval (`imgRatio = width / height`) est inchangée.
+ */
+const MAX_IMG_DIM = 1600;
 const loadAndEncodeImage = (src) =>
   new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'Anonymous';
     img.onload = () => {
+      const natW = img.naturalWidth;
+      const natH = img.naturalHeight;
+      // Si dimensions invalides (ex: SVG sans width/height intrinsèques), on
+      // retombe en mode "passe-plat" pour ne rien casser.
+      if (!natW || !natH) {
+        resolve({ img, width: natW || 1, height: natH || 1, dataUrl: src });
+        return;
+      }
+      const ratio = Math.min(1, MAX_IMG_DIM / Math.max(natW, natH));
+      const w = Math.max(1, Math.round(natW * ratio));
+      const h = Math.max(1, Math.round(natH * ratio));
       try {
         const canvas = document.createElement('canvas');
-        canvas.width  = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        canvas.getContext('2d').drawImage(img, 0, 0);
-        resolve({ img, width: img.naturalWidth, height: img.naturalHeight, dataUrl: canvas.toDataURL('image/jpeg', 0.92) });
+        canvas.width  = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve({ img, width: w, height: h, dataUrl: canvas.toDataURL('image/jpeg', 0.92) });
       } catch {
-        resolve({ img, width: img.naturalWidth, height: img.naturalHeight, dataUrl: src });
+        // Canvas tainted (CORS) : on retombe sur la source originale, ratio
+        // recalculé depuis les dimensions natives — html2canvas s'en chargera.
+        resolve({ img, width: natW, height: natH, dataUrl: src });
       }
     };
     img.onerror = () => resolve(null);
