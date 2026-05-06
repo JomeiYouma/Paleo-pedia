@@ -126,7 +126,8 @@
         "workshopCreatePrefix": "Erreur création atelier : {{msg}}",
         "submitFailedTitle": "Votre cartel n'a pas été enregistré.",
         "submitFailedRetry": "L'envoi a échoué : {{msg}}. Vérifiez votre connexion et réessayez.",
-        "updateFailedRetry": "La mise à jour a échoué. Vos modifications n'ont pas été enregistrées."
+        "updateFailedRetry": "La mise à jour a échoué. Vos modifications n'ont pas été enregistrées.",
+        "sessionExpired": "Votre session a expiré. Reconnectez-vous pour continuer."
     },
     "messages": {
         "editDraft": "Modifier le Brouillon",

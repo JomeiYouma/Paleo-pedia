@@ -12,6 +12,17 @@ const token = {
 };
 
 // ── Core fetch ────────────────────────────────────────────────
+// Cas multi-onglets : si l'utilisateur s'est déconnecté ailleurs (ou si le
+// token a expiré côté serveur), un 401 retourné alors qu'on avait envoyé un
+// token signifie que la session est morte. On purge le token et on prévient
+// l'app via un événement window pour que l'UI réagisse (toast + déco).
+function notifySessionExpired() {
+  token.clear();
+  try {
+    window.dispatchEvent(new CustomEvent('paleo:session-expired'));
+  } catch { /* SSR / tests : noop */ }
+}
+
 async function request(method, path, body, requireAuth = true) {
   const headers = { 'Content-Type': 'application/json' };
   const t = token.get();
@@ -22,6 +33,7 @@ async function request(method, path, body, requireAuth = true) {
     headers,
     body: body ? JSON.stringify(body) : undefined,
   });
+  if (res.status === 401 && t) notifySessionExpired();
   if (res.status === 204) return null;
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? `Erreur ${res.status}`);
@@ -166,6 +178,7 @@ export const media = {
       headers: t ? { Authorization: `Bearer ${t}` } : {},
       body: formData,
     });
+    if (res.status === 401 && t) notifySessionExpired();
     if (res.status === 204) return null;
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? `Erreur ${res.status}`);
@@ -226,6 +239,7 @@ export const io = {
       headers: t ? { Authorization: `Bearer ${t}` } : {},
       body: formData,
     });
+    if (res.status === 401 && t) notifySessionExpired();
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? `Erreur ${res.status}`);
     return data;

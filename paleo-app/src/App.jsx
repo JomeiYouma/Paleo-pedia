@@ -9,7 +9,8 @@ import {
   useParams,
   useLocation,
 } from 'react-router-dom';
-import { AppProvider } from './context/AppContext';
+import { AppProvider, useApp } from './context/AppContext';
+import Toast from './components/Toast';
 import Layout from './components/Layout';
 import Library from './pages/Library';
 import Create from './pages/Create';
@@ -48,12 +49,30 @@ function ScrollToTopOnRouteChange() {
   return null;
 }
 
+// Toast applicatif global, monté au-dessus de tout. Sert aux notifications
+// déclenchées par le contexte (session expirée depuis un autre onglet,
+// erreurs cross-page, etc.). Doit être un descendant de AppProvider pour
+// pouvoir lire le state du contexte.
+function GlobalToast() {
+  const { globalToast, setGlobalToast } = useApp();
+  return (
+    <Toast
+      visible={!!globalToast}
+      type={globalToast?.type}
+      message={globalToast?.message}
+      onDismiss={() => setGlobalToast(null)}
+      autoDismiss={6000}
+    />
+  );
+}
+
 // AppProvider doit être à l'intérieur du router (il utilise useLocation/useNavigate),
 // donc on l'expose via un layout racine dont chaque branche est enfant.
 function RootLayout() {
   return (
     <AppProvider>
       <ScrollToTopOnRouteChange />
+      <GlobalToast />
       <Outlet />
     </AppProvider>
   );

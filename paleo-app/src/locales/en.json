@@ -126,7 +126,8 @@
         "workshopCreatePrefix": "Workshop creation error: {{msg}}",
         "submitFailedTitle": "Your cartel was not saved.",
         "submitFailedRetry": "Submission failed: {{msg}}. Please check your connection and try again.",
-        "updateFailedRetry": "Update failed. Your changes were not saved."
+        "updateFailedRetry": "Update failed. Your changes were not saved.",
+        "sessionExpired": "Your session has expired. Please log in again."
     },
     "messages": {
         "editDraft": "Edit Draft",

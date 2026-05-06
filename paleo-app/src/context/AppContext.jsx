@@ -11,6 +11,11 @@ export const AppProvider = ({ children }) => {
     const [categories, setCategories] = useState([]);
     const [workshops, setWorkshops] = useState([]);
     const [user, setUser] = useState(null); // { id, email, role, can_manage_admin, can_manage_team, home_subsite_id, ... }
+    // Toast global déclenché par des événements globaux (session expirée
+    // depuis un autre onglet, etc.). Les pages qui veulent leur propre toast
+    // local continuent à utiliser leur propre state ; celui-ci est rendu au
+    // niveau racine pour rester visible quel que soit l'écran.
+    const [globalToast, setGlobalToast] = useState(null); // { type, message } | null
     const isSuperadmin = !!user?.can_manage_admin;
     const isOwner      = !!user?.can_manage_team;
     const homeSubsiteId = user?.home_subsite_id ?? null;
@@ -38,6 +43,42 @@ export const AppProvider = ({ children }) => {
             fetchData();
         };
         init();
+    }, []);
+
+    // Session expirée (401 retourné alors qu'un token avait été envoyé,
+    // OU déconnexion détectée dans un autre onglet via le storage event).
+    // On remet le user à null, on affiche un toast global persistant, et on
+    // retente un fetchData public pour rafraîchir l'affichage avec les seuls
+    // cartels publiés (sinon l'utilisateur reste sur une vue admin obsolète).
+    useEffect(() => {
+        const showSessionExpiredToast = () => {
+            setUser(null);
+            setGlobalToast({
+                type: 'error',
+                message: i18n.t(
+                    'errors.sessionExpired',
+                    'Votre session a expiré. Reconnectez-vous pour continuer.'
+                ),
+            });
+            fetchData().catch(() => {});
+        };
+
+        const onExpired = () => showSessionExpiredToast();
+
+        // Cross-onglets : si le token est supprimé ailleurs (logout, clear),
+        // l'événement 'storage' est dispatché dans tous les autres onglets.
+        // newValue === null sur un removeItem ; on filtre sur la clé.
+        const onStorage = (e) => {
+            if (e.key !== 'paleo_token') return;
+            if (e.newValue == null) showSessionExpiredToast();
+        };
+
+        window.addEventListener('paleo:session-expired', onExpired);
+        window.addEventListener('storage', onStorage);
+        return () => {
+            window.removeEventListener('paleo:session-expired', onExpired);
+            window.removeEventListener('storage', onStorage);
+        };
     }, []);
 
     // Détecter le workshop depuis l'URL
@@ -296,6 +337,8 @@ export const AppProvider = ({ children }) => {
             addLocalCategory,
             // Workshops
             addWorkshop, deleteWorkshop, quitWorkshop,
+            // Toast global (session expirée, etc.)
+            globalToast, setGlobalToast,
             // Legacy compatibility (certains composants utilisent encore drafts)
             drafts: cartels.filter(c => c.status === 'draft' || c.status === 'pending_review'),
         }}>
