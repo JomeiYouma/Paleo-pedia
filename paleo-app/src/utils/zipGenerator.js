@@ -156,7 +156,7 @@ const renderCartelToCanvas = async (cartel, container, lang, overrides) => {
       .psr { font-family:'PT Serif',serif;            font-weight:400; color:#141414; }
       .fi  { position:absolute; left:${footer_text_x}px; top:${qr_y}px; min-height:${qr_size}px; display:flex; flex-direction:column; justify-content:center; z-index:10; width:${footer_max_w}px; max-width:${footer_max_w}px; }
       .ml  { font-family:'PT Sans Narrow',sans-serif; font-weight:700; font-size:35px; color:#000; margin-bottom:5px; display:flex; align-items:center; }
-      .cl  { font-family:'PT Sans Narrow',sans-serif; font-weight:400; font-size:30px; color:#505050; }
+      .cl  { font-family:'PT Sans Narrow',sans-serif; font-weight:700; font-size:55px; color:#000; line-height:1.05; }
       .sl  { font-family:'PT Sans Narrow',sans-serif; font-weight:400; font-size:22px; color:#666; line-height:1.2; margin-top:4px; width:100%; max-width:100%; white-space:normal; word-break:break-word; overflow-wrap:anywhere; }
       .tc  { position:absolute; left:${text_start_x}px; top:${initial_y}px; width:${text_width}px; display:flex; flex-direction:column; align-items:flex-end; z-index:10; }
       .yl  { font-size:90px; margin-bottom:5px; }
