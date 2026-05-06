@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useSearchParams, useNavigate, useLocation, useParams, useBlocker } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate, useLocation, useParams, useBlocker } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { geocodingService } from '../services/geocoding';
 import { Save, ArrowLeft, MapPin, Check, X, Bold, Italic, AlertTriangle, Info } from 'lucide-react';
@@ -66,6 +66,10 @@ const Create = () => {
         lng: null,
         image_path: '',
         workshopIds: workshopIdParam ? [workshopIdParam] : [],
+        // Contact du soumissionnaire (visiteurs anonymes uniquement) : email
+        // ou téléphone pour qu'on puisse le recontacter à propos de sa
+        // proposition. Stocké en BDD via la colonne submitter_contact.
+        submitter_contact: '',
         // Honeypot : toujours '' pour un humain. Si rempli, le backend rejette
         // la soumission (guard anti-bot côté submissionGuard).
         website: '',
@@ -182,22 +186,25 @@ const Create = () => {
         });
     };
 
-    // Load existing data
+    // Pré-remplissage initial en mode edit. On ne le fait qu'UNE seule fois,
+    // sinon chaque refetch de `cartels` (déclenché par toutes les mutations du
+    // contexte via fetchData) écrase silencieusement les modifs en cours de
+    // l'utilisateur — y compris la prévisu d'image qu'il vient de choisir.
+    const initializedRef = useRef(false);
     useEffect(() => {
-        if (editId) {
-            const existing = cartels.find(c => c.id === editId);
-            if (existing) {
-                setForm(prev => ({
-                    ...prev,
-                    ...existing,
-                    imageUrl: existing.image_path || '',
-                    categories: existing.categories || [],
-                    categories_en: existing.categories_en || [],
-                    workshopIds: existing.workshopIds || [],
-                }));
-                if (existing.lat != null && existing.lng != null) setGeoStatus('success');
-            }
-        }
+        if (!editId || initializedRef.current) return;
+        const existing = cartels.find(c => c.id === editId);
+        if (!existing) return;
+        initializedRef.current = true;
+        setForm(prev => ({
+            ...prev,
+            ...existing,
+            imageUrl: existing.image_path || '',
+            categories: existing.categories || [],
+            categories_en: existing.categories_en || [],
+            workshopIds: existing.workshopIds || [],
+        }));
+        if (existing.lat != null && existing.lng != null) setGeoStatus('success');
     }, [editId, cartels]);
 
     const handleInputChange = (e) => {
@@ -744,6 +751,36 @@ const Create = () => {
                     <label>{t('create.fieldUrlQR')}</label>
                     <input name="url_qr" value={form.url_qr} onChange={handleInputChange} style={{ width: '100%', padding: '8px' }} />
                 </div>
+
+                {/* Contact (visiteurs uniquement) — obligatoire car c'est notre
+                    seul moyen de revenir vers le proposant pour une clarification
+                    ou un retour de modération. Pour un admin connecté, on a déjà
+                    son email via created_by, on n'affiche donc rien. */}
+                {!isAdmin && (
+                    <div>
+                        <label htmlFor="submitter_contact">
+                            {t('create.fieldContact', 'Votre contact (email ou téléphone)')}
+                            <RequiredMark />
+                        </label>
+                        <input
+                            id="submitter_contact"
+                            name="submitter_contact"
+                            type="text"
+                            value={form.submitter_contact || ''}
+                            onChange={handleInputChange}
+                            required
+                            maxLength={255}
+                            placeholder={t('create.fieldContactPlaceholder', 'ex: vous@exemple.org ou 06 12 34 56 78')}
+                            style={{ width: '100%', padding: '8px' }}
+                        />
+                        <small style={{ color: '#777', display: 'block', marginTop: '4px', fontSize: '0.82rem', lineHeight: 1.4 }}>
+                            {t('create.fieldContactHelp', 'Indispensable pour pouvoir vous recontacter au sujet de votre proposition. ')}
+                            <Link to="/politique-confidentialite" style={{ color: '#555', textDecoration: 'underline' }}>
+                                {t('create.fieldContactPolicyLink', 'Politique de confidentialité')}
+                            </Link>
+                        </small>
+                    </div>
+                )}
 
                 {/* Buttons */}
                 <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>

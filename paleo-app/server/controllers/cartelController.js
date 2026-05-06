@@ -24,6 +24,7 @@ const MAX_LENGTHS = {
   imageCredit:    300,
   image_path:     500,
   url_qr:         500,
+  submitter_contact: 255,
 };
 
 /**

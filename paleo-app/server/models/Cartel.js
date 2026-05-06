@@ -130,12 +130,21 @@ export const CartelModel = {
       const cartelStatus = data.status ?? 'draft';
       const visible = cartelStatus === 'published' ? 1 : (data.visible ? 1 : 0);
 
+      // submitter_contact : email/tél laissé par un visiteur non-authentifié
+      // pour qu'on puisse le recontacter. Toujours null pour les utilisateurs
+      // connectés (on a déjà leur email via created_by).
+      const submitterContact = userId
+        ? null
+        : (typeof data.submitter_contact === 'string'
+            ? data.submitter_contact.trim().slice(0, 255) || null
+            : null);
+
       await client.query(
         `INSERT INTO cartels (
            id, created_by, subsite_id, titre, titre_en, annee, description, description_en,
            exhume_par, location, location_en, lat, lng,
-           image_path, image_credit, url_qr, date, status, visible, submitter_ip
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           image_path, image_credit, url_qr, date, status, visible, submitter_ip, submitter_contact
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id, userId ?? null, subsiteId,
           data.titre,            data.titre_en      ?? '',
@@ -154,6 +163,7 @@ export const CartelModel = {
           cartelStatus,
           visible,
           submitterIp,
+          submitterContact,
         ]
       );
 

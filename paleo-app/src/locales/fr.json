@@ -63,7 +63,11 @@
         "imageCredit": "Crédit image",
         "imageCreditPlaceholder": "ex: Wikimedia Commons, Auteur inconnu...",
         "saveDraft": "Sauvegarder brouillon",
-        "sendProposal": "Envoyer la proposition"
+        "sendProposal": "Envoyer la proposition",
+        "fieldContact": "Votre contact (email ou téléphone)",
+        "fieldContactPlaceholder": "ex: vous@exemple.org ou 06 12 34 56 78",
+        "fieldContactHelp": "Indispensable pour pouvoir vous recontacter au sujet de votre proposition. ",
+        "fieldContactPolicyLink": "Politique de confidentialité"
     },
     "cartel": {
         "moreInfo": "Pour aller plus loin",

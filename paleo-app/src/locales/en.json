@@ -63,7 +63,11 @@
         "imageCredit": "Image credit",
         "imageCreditPlaceholder": "e.g. Wikimedia Commons, Unknown author...",
         "saveDraft": "Save Draft",
-        "sendProposal": "Send Proposal"
+        "sendProposal": "Send Proposal",
+        "fieldContact": "Your contact (email or phone)",
+        "fieldContactPlaceholder": "e.g. you@example.org or +1 555 123 4567",
+        "fieldContactHelp": "Required so we can reach out about your proposal. ",
+        "fieldContactPolicyLink": "Privacy policy"
     },
     "cartel": {
         "moreInfo": "Learn more",
