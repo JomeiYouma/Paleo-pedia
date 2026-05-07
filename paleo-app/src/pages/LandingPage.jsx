@@ -105,25 +105,8 @@ const LandingPage = () => {
                     <Link
                         to="/app"
                         id="cta-explorer-frise"
-                        style={{
-                            background: ACCENT,
-                            color: PRIMARY,
-                            padding: '14px 32px',
-                            borderRadius: 'var(--radius-md)',
-                            textDecoration: 'none',
-                            fontSize: '0.95rem',
-                            fontWeight: '700',
-                            fontFamily: 'var(--font-heading)',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.6px',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            border: '2px solid ' + ACCENT,
-                            transition: 'background-color 0.2s, color 0.2s',
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-accent-hover)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = ACCENT; }}
+                        className="paleo-btn paleo-btn--yellow"
+                        style={{ padding: '14px 32px', fontSize: '0.95rem', letterSpacing: '0.6px' }}
                     >
                         Explorer la Frise <ArrowRight size={18} />
                     </Link>
@@ -131,25 +114,8 @@ const LandingPage = () => {
                     <button
                         id="cta-explorer-thematique"
                         onClick={openCategoryModal}
-                        style={{
-                            background: 'transparent',
-                            color: 'var(--color-white)',
-                            padding: '14px 32px',
-                            borderRadius: 'var(--radius-md)',
-                            border: '2px solid var(--color-white)',
-                            fontSize: '0.95rem',
-                            fontWeight: '700',
-                            fontFamily: 'var(--font-heading)',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.6px',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            cursor: 'pointer',
-                            transition: 'background-color 0.2s, color 0.2s, border-color 0.2s',
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.background = ACCENT; e.currentTarget.style.color = PRIMARY; e.currentTarget.style.borderColor = ACCENT; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-white)'; e.currentTarget.style.borderColor = 'var(--color-white)'; }}
+                        className="paleo-btn paleo-btn--inverse"
+                        style={{ padding: '14px 32px', fontSize: '0.95rem', letterSpacing: '0.6px' }}
                     >
                         <Layers size={18} /> Explorer une thématique
                     </button>

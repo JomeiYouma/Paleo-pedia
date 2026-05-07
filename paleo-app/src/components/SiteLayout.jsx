@@ -43,6 +43,8 @@ const SiteLayout = () => {
                         <h4 style={{ margin: '0 0 10px 0' }}>Liens</h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                             <a href="#/app"     style={{ color: '#666', textDecoration: 'none' }}>La Frise Chronologique</a>
+                            <a href="#/participer" style={{ color: '#666', textDecoration: 'none' }}>Appel à participation</a>
+                            <a href="#/presse" style={{ color: '#666', textDecoration: 'none' }}>Presse</a>
                             <a href="#/partenaires" style={{ color: '#666', textDecoration: 'none' }}>Partenaires</a>
                             <a href="#/contact" style={{ color: '#666', textDecoration: 'none' }}>Nous contacter</a>
                             <a href="#/politique-confidentialite" style={{ color: '#666', textDecoration: 'none' }}>Politique de confidentialité</a>

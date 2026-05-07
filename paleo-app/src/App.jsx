@@ -26,6 +26,8 @@ import Ouvrages from './pages/Ouvrages';
 import Museum from './pages/Museum';
 import Contact from './pages/Contact';
 import Partners from './pages/Partners';
+import Participer from './pages/Participer';
+import Presse from './pages/Presse';
 import LandingPage from './pages/LandingPage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import SiteLayout from './components/SiteLayout';
@@ -96,6 +98,8 @@ const router = createHashRouter(
         <Route path="prestations"  element={<Prestations />} />
         <Route path="ouvrages"     element={<Ouvrages />} />
         <Route path="museum"       element={<Museum />} />
+        <Route path="participer"   element={<Participer />} />
+        <Route path="presse"       element={<Presse />} />
         <Route path="partenaires"  element={<Partners />} />
         <Route path="contact"      element={<Contact />} />
         <Route path="politique-confidentialite" element={<PrivacyPolicy />} />

@@ -13,13 +13,15 @@ import { useTranslation } from 'react-i18next';
 // ── Liens du site public (inclut la frise) ──────────────────
 const SITE_NAV = [
     { path: '/',             labelKey: 'header.home' },
+    { path: '/app',          labelKey: 'header.timeline' },
+    { path: '/museum',       labelKey: 'header.museum' },
     { path: '/presentation', labelKey: 'header.presentation' },
     { path: '/prestations',  labelKey: 'header.prestations' },
+    { path: '/participer',   labelKey: 'header.participer' },
     { path: '/ouvrages',     labelKey: 'header.ouvrages' },
-    { path: '/museum',       labelKey: 'header.museum' },
+    { path: '/presse',       labelKey: 'header.presse' },
     { path: '/partenaires',  labelKey: 'header.partners' },
     { path: '/contact',      labelKey: 'header.contact' },
-    { path: '/app',          labelKey: 'header.timeline' },
 ];
 
 // ── Liens de l'application (frise) ───────────────────────────
@@ -423,9 +425,10 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                 <Link
                                     key={p}
                                     to={p}
+                                    className="paleo-nav-link"
                                     aria-current={isActive ? 'page' : undefined}
                                     style={{
-                                        padding: '8px 16px',
+                                        padding: '8px 16px 10px',
                                         borderRadius: 'var(--radius-md)',
                                         textDecoration: 'none',
                                         fontFamily: 'var(--font-heading)',
@@ -435,9 +438,9 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                         letterSpacing: '0.4px',
                                         color: isActive ? 'var(--color-primary)' : 'var(--color-white)',
                                         background: isActive ? 'var(--color-accent)' : 'transparent',
-                                        transition: 'background-color 0.15s, color 0.15s',
+                                        transition: 'background-color 0.18s, color 0.18s',
                                     }}
-                                    onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'rgba(255,231,0,0.18)'; e.currentTarget.style.color = 'var(--color-accent)'; } }}
+                                    onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'rgba(255,231,0,0.12)'; e.currentTarget.style.color = 'var(--color-accent)'; } }}
                                     onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-white)'; } }}
                                 >
                                     {t(link.labelKey)}
