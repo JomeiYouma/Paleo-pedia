@@ -18,6 +18,7 @@ import ManageCartels from './pages/ManageCartels';
 import AdminSettings from './pages/AdminSettings';
 import AdminPartners from './pages/AdminPartners';
 import AdminTeam from './pages/AdminTeam';
+import AdminTeamContent from './pages/AdminTeamContent';
 import AdminCategoriesWorkshops from './pages/AdminCategoriesWorkshops';
 import AdminLogs from './pages/AdminLogs';
 import Presentation from './pages/Presentation';
@@ -132,6 +133,7 @@ const router = createHashRouter(
         <Route path="admin"             element={<AdminSettings />} />
         <Route path="admin/partners"    element={<AdminPartners />} />
         <Route path="admin/team"        element={<AdminTeam />} />
+        <Route path="admin/team-content" element={<AdminTeamContent />} />
         <Route path="admin/taxonomies"  element={<AdminCategoriesWorkshops />} />
         <Route path="admin/logs"        element={<AdminLogs />} />
         <Route path="admin/workshop/:workshopId" element={<ManageCartels />} />

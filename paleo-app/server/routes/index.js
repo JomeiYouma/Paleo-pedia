@@ -16,6 +16,7 @@ import { resolveTenant, requireTenantAccess } from '../middleware/tenant.js';
 import { SubsiteController }  from '../controllers/subsiteController.js';
 import { PartnerController }  from '../controllers/partnerController.js';
 import { TeamController }     from '../controllers/teamController.js';
+import { TeamMemberController } from '../controllers/teamMemberController.js';
 import { EventLogController } from '../controllers/eventLogController.js';
 
 const router = Router();
@@ -130,6 +131,13 @@ router.put   ('/partners/site',  authenticate, requireAdmin, PartnerController.s
 router.post  ('/partners',       authenticate, PartnerController.create);
 router.patch ('/partners/:id',   authenticate, PartnerController.update);
 router.delete('/partners/:id',   authenticate, PartnerController.remove);
+
+// ── Membres d'équipe (page publique « À propos ») ────────────
+// GET public, write réservé au superadmin.
+router.get   ('/team-members',     TeamMemberController.getAll);
+router.post  ('/team-members',     authenticate, requireAdmin, TeamMemberController.create);
+router.patch ('/team-members/:id', authenticate, requireAdmin, TeamMemberController.update);
+router.delete('/team-members/:id', authenticate, requireAdmin, TeamMemberController.remove);
 
 // ── Event logs + config emails (superadmin only) ─────────────
 router.get   ('/logs',                       authenticate, requireAdmin, EventLogController.list);

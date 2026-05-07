@@ -167,6 +167,15 @@ export const partners = {
   delete:  (id)         => del(`/partners/${id}`),
 };
 
+// ── Membres d'équipe (page publique « À propos ») ─────────────
+// Lecture publique, écriture réservée au superadmin.
+export const teamMembers = {
+  getAll:  ()           => get('/team-members'),
+  create:  (data)       => post('/team-members', data),
+  update:  (id, data)   => patch(`/team-members/${id}`, data),
+  delete:  (id)         => del(`/team-members/${id}`),
+};
+
 // ── Upload image ──────────────────────────────────────────────
 export const media = {
   /** Envoie un fichier image au serveur, retourne { url } */
@@ -306,5 +315,5 @@ export const logs = {
   bulkSetRecipient: (recipient) => patch('/logs/email-config', { recipient }),
 };
 
-const api = { auth, cartels, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners, logs };
+const api = { auth, cartels, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners, teamMembers, logs };
 export default api;
