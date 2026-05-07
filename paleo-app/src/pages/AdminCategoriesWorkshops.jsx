@@ -2,66 +2,63 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import {
-    FolderOpen, Hammer, ArrowLeft, Edit, Trash2, Save, X, Check,
-    CheckCircle2, AlertCircle, Plus,
+    FolderOpen, Hammer, Edit, Trash2, Save, X, Plus,
 } from 'lucide-react';
 import api from '../services/apiClient';
+import {
+    AdminPageHeader, AdminSection, AdminToast, useAdminToast,
+    primaryBtnStyle, ghostBtnStyle, dangerBtnStyle, inputStyle, labelStyle,
+} from '../components/adminUI';
 
-const ACCENT = '#0d9488';
-const ACCENT_BG = '#ecfdf5';
-const ACCENT_BORDER = '#b7e4d8';
-
-const Section = ({ icon: Icon, title, color, children, right }) => (
+// ── Sous-section avec en-tête iconisé ─────────────────────────
+const SubSection = ({ icon: Icon, title, children }) => (
     <div style={{
-        background: 'white',
-        border: '1px solid #eee',
-        borderRadius: '14px',
+        background: 'var(--color-surface)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-md)',
         overflow: 'hidden',
         marginBottom: '24px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+        boxShadow: 'var(--shadow-sm)',
     }}>
         <div style={{
             display: 'flex', alignItems: 'center', gap: '12px',
-            padding: '18px 24px',
-            borderBottom: '1px solid #f0f0f0',
-            background: '#fafafa',
+            padding: '14px 20px',
+            borderBottom: '1px solid var(--color-border)',
+            background: 'var(--color-surface-2)',
         }}>
             <div style={{
-                width: '36px', height: '36px',
-                background: `${color}18`, borderRadius: '10px',
+                width: '34px', height: '34px',
+                background: 'var(--color-accent)', borderRadius: 'var(--radius-md)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
             }}>
-                <Icon size={18} color={color} />
+                <Icon size={16} color="var(--color-primary)" />
             </div>
-            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#1a1a1a', flex: 1 }}>{title}</h3>
-            {right}
+            <h3 style={{
+                margin: 0, fontSize: '1rem', flex: 1,
+                fontFamily: 'var(--font-heading)',
+                textTransform: 'uppercase', letterSpacing: '0.5px',
+            }}>{title}</h3>
         </div>
-        <div style={{ padding: '20px 24px' }}>{children}</div>
+        <div style={{ padding: '20px' }}>{children}</div>
     </div>
 );
 
 const AdminCategoriesWorkshops = () => {
     const { isAdmin, fetchData } = useApp();
     const navigate = useNavigate();
+    const { toast, showToast } = useAdminToast(3500);
 
     const [categories, setCategories] = useState([]);
     const [workshops, setWorkshops]   = useState([]);
     const [loading, setLoading]       = useState(true);
-    const [toast, setToast]           = useState(null);
 
-    // édition inline
-    const [editingCategory, setEditingCategory] = useState(null); // { id, name, name_en, color, icon }
-    const [editingWorkshop, setEditingWorkshop] = useState(null); // { id, name, is_immersive }
+    const [editingCategory, setEditingCategory] = useState(null);
+    const [editingWorkshop, setEditingWorkshop] = useState(null);
 
-    // création catégorie
-    const [newCatName, setNewCatName]   = useState('');
+    const [newCatName, setNewCatName]     = useState('');
     const [newCatNameEn, setNewCatNameEn] = useState('');
-    const [newCatColor, setNewCatColor] = useState('#888888');
-
-    const showToast = (type, msg) => {
-        setToast({ type, msg });
-        setTimeout(() => setToast(null), 3500);
-    };
+    const [newCatColor, setNewCatColor]   = useState('#888888');
 
     const load = async () => {
         setLoading(true);
@@ -123,7 +120,7 @@ const AdminCategoriesWorkshops = () => {
     };
 
     const handleDeleteCategory = async (cat) => {
-        if (!confirm(`Supprimer la catégorie "${cat.name}" ? Les cartels qui la portent la perdront.`)) return;
+        if (!confirm(`Supprimer la catégorie « ${cat.name} » ? Les cartels qui la portent la perdront.`)) return;
         try {
             await api.categories.delete(cat.id);
             await load();
@@ -152,7 +149,7 @@ const AdminCategoriesWorkshops = () => {
     };
 
     const handleDeleteWorkshop = async (w) => {
-        if (!confirm(`Supprimer l'atelier "${w.name}" ? Les cartels associés ne seront pas supprimés mais ne seront plus liés.`)) return;
+        if (!confirm(`Supprimer l'atelier « ${w.name} » ? Les cartels associés ne seront pas supprimés mais ne seront plus liés.`)) return;
         try {
             await api.workshops.delete(w.id);
             await load();
@@ -165,111 +162,100 @@ const AdminCategoriesWorkshops = () => {
 
     if (!isAdmin) {
         return (
-            <div style={{ textAlign: 'center', padding: '80px 20px', color: '#aaa' }}>
+            <div style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--color-text-subtle)' }}>
                 Accès réservé à l'administration.
             </div>
         );
     }
 
+    const colorInputStyle = {
+        width: '42px', height: '36px',
+        border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-md)',
+        background: 'var(--color-surface)',
+        cursor: 'pointer',
+        padding: '2px',
+    };
+
     return (
-        <div style={{ maxWidth: '880px', margin: '0 auto', padding: '28px 24px 80px' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '28px 24px 80px' }}>
+            <AdminToast toast={toast} />
 
-            {toast && (
-                <div style={{
-                    position: 'fixed', top: '80px', right: '24px', zIndex: 9999,
-                    background: toast.type === 'success' ? '#e8f5e9' : '#fff0f0',
-                    border: `1px solid ${toast.type === 'success' ? '#a5d6a7' : '#ffcdd2'}`,
-                    borderRadius: '12px', padding: '14px 20px',
-                    display: 'flex', alignItems: 'center', gap: '10px',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxWidth: '340px',
-                }}>
-                    {toast.type === 'success'
-                        ? <CheckCircle2 size={18} color="#2e7d32" />
-                        : <AlertCircle size={18} color="#d32f2f" />
-                    }
-                    <span style={{ fontWeight: 600, fontSize: '0.88rem', color: toast.type === 'success' ? '#2e7d32' : '#d32f2f' }}>
-                        {toast.msg}
-                    </span>
-                </div>
-            )}
+            <AdminPageHeader icon={FolderOpen} title="Catégories & ateliers" />
 
-            {/* En-tête */}
-            <div style={{ marginBottom: '24px' }}>
-                <button
-                    onClick={() => navigate('/app/admin')}
-                    style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '6px',
-                        background: 'none', border: 'none', cursor: 'pointer',
-                        color: '#666', fontFamily: 'inherit', fontSize: '0.85rem',
-                        padding: '4px 0', marginBottom: '10px',
-                    }}
-                >
-                    <ArrowLeft size={14} /> Retour aux paramètres
-                </button>
-                <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 800 }}>Catégories & ateliers</h1>
-                <p style={{ margin: '4px 0 0', color: '#999', fontSize: '0.88rem' }}>
-                    Modifier ou supprimer les catégories et ateliers existants.
-                </p>
-            </div>
+            <p style={{
+                background: 'var(--color-surface-2)',
+                borderLeft: '3px solid var(--color-accent)',
+                padding: '10px 16px',
+                fontSize: '0.85rem',
+                color: 'var(--color-text-muted)',
+                margin: '0 0 20px',
+            }}>
+                Modifier ou supprimer les catégories et ateliers existants.
+            </p>
 
             {loading ? (
-                <div style={{ textAlign: 'center', padding: '60px', color: '#bbb' }}>Chargement…</div>
+                <p style={{ textAlign: 'center', padding: '60px', color: 'var(--color-text-subtle)' }}>Chargement…</p>
             ) : (
                 <>
                     {/* ── Catégories ──────────────────────────── */}
-                    <Section icon={FolderOpen} title="Catégories" color={ACCENT}>
+                    <SubSection icon={FolderOpen} title="Catégories">
                         {/* Création rapide */}
                         <div style={{
-                            background: ACCENT_BG, border: `1px solid ${ACCENT_BORDER}`,
-                            borderRadius: '10px', padding: '14px', marginBottom: '16px',
-                            display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center',
+                            background: 'var(--color-accent-soft)',
+                            border: '1px solid var(--color-accent)',
+                            borderRadius: 'var(--radius-md)',
+                            padding: '14px',
+                            marginBottom: '16px',
+                            display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-end',
                         }}>
-                            <input
-                                type="text"
-                                placeholder="Nom (FR)"
-                                value={newCatName}
-                                onChange={e => setNewCatName(e.target.value)}
-                                style={{ flex: '1 1 180px', padding: '8px 12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.9rem', fontFamily: 'inherit' }}
-                            />
-                            <input
-                                type="text"
-                                placeholder="Name (EN)"
-                                value={newCatNameEn}
-                                onChange={e => setNewCatNameEn(e.target.value)}
-                                style={{ flex: '1 1 180px', padding: '8px 12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.9rem', fontFamily: 'inherit' }}
-                            />
-                            <input
-                                type="color"
-                                value={newCatColor}
-                                onChange={e => setNewCatColor(e.target.value)}
-                                title="Couleur"
-                                style={{ width: '42px', height: '36px', border: '1px solid #ddd', borderRadius: '8px', background: 'white', cursor: 'pointer', padding: '2px' }}
-                            />
-                            <button
-                                onClick={handleCreateCategory}
-                                style={{
-                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                    background: ACCENT, color: 'white', border: 'none',
-                                    borderRadius: '8px', padding: '9px 14px', cursor: 'pointer',
-                                    fontWeight: 700, fontSize: '0.85rem', fontFamily: 'inherit',
-                                }}
-                            >
+                            <div style={{ flex: '1 1 180px' }}>
+                                <label style={labelStyle}>Nom (FR)</label>
+                                <input
+                                    type="text"
+                                    placeholder="Ex : Mobilité"
+                                    value={newCatName}
+                                    onChange={e => setNewCatName(e.target.value)}
+                                    style={inputStyle}
+                                />
+                            </div>
+                            <div style={{ flex: '1 1 180px' }}>
+                                <label style={labelStyle}>Name (EN)</label>
+                                <input
+                                    type="text"
+                                    placeholder="Ex : Mobility"
+                                    value={newCatNameEn}
+                                    onChange={e => setNewCatNameEn(e.target.value)}
+                                    style={inputStyle}
+                                />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Couleur</label>
+                                <input
+                                    type="color"
+                                    value={newCatColor}
+                                    onChange={e => setNewCatColor(e.target.value)}
+                                    title="Couleur"
+                                    style={colorInputStyle}
+                                />
+                            </div>
+                            <button onClick={handleCreateCategory} style={primaryBtnStyle}>
                                 <Plus size={14} /> Ajouter
                             </button>
                         </div>
 
                         {categories.length === 0 ? (
-                            <p style={{ color: '#bbb', textAlign: 'center', padding: '24px 0' }}>Aucune catégorie.</p>
+                            <p style={{ color: 'var(--color-text-subtle)', textAlign: 'center', padding: '24px 0' }}>Aucune catégorie.</p>
                         ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                 {categories.map(cat => {
                                     const editing = editingCategory?.id === cat.id;
                                     return (
                                         <div key={cat.id} style={{
                                             display: 'flex', alignItems: 'center', gap: '10px',
-                                            background: editing ? '#f8fafc' : '#fafafa',
-                                            border: `1px solid ${editing ? ACCENT_BORDER : '#eee'}`,
-                                            borderRadius: '10px', padding: '10px 14px',
+                                            background: 'var(--color-surface-2)',
+                                            border: `1px solid ${editing ? 'var(--color-accent)' : 'var(--color-border)'}`,
+                                            borderRadius: 'var(--radius-md)', padding: '10px 14px',
                                         }}>
                                             {editing ? (
                                                 <>
@@ -277,57 +263,57 @@ const AdminCategoriesWorkshops = () => {
                                                         type="color"
                                                         value={editingCategory.color || '#888888'}
                                                         onChange={e => setEditingCategory({ ...editingCategory, color: e.target.value })}
-                                                        style={{ width: '32px', height: '32px', border: '1px solid #ddd', borderRadius: '6px', background: 'white', cursor: 'pointer', padding: '2px', flexShrink: 0 }}
+                                                        style={{ ...colorInputStyle, width: '32px', height: '32px' }}
                                                     />
                                                     <input
                                                         type="text"
                                                         value={editingCategory.name || ''}
                                                         onChange={e => setEditingCategory({ ...editingCategory, name: e.target.value })}
                                                         placeholder="Nom (FR)"
-                                                        style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '0.88rem', fontFamily: 'inherit' }}
+                                                        style={{ ...inputStyle, flex: 1 }}
                                                     />
                                                     <input
                                                         type="text"
                                                         value={editingCategory.name_en || ''}
                                                         onChange={e => setEditingCategory({ ...editingCategory, name_en: e.target.value })}
                                                         placeholder="Name (EN)"
-                                                        style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '0.88rem', fontFamily: 'inherit' }}
+                                                        style={{ ...inputStyle, flex: 1 }}
                                                     />
                                                     <button
                                                         onClick={handleSaveCategory}
                                                         title="Enregistrer"
-                                                        style={{ background: ACCENT, color: 'white', border: 'none', borderRadius: '6px', padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                                        style={{ ...primaryBtnStyle, padding: '7px 10px' }}
                                                     >
                                                         <Save size={14} />
                                                     </button>
                                                     <button
                                                         onClick={() => setEditingCategory(null)}
                                                         title="Annuler"
-                                                        style={{ background: 'none', border: '1px solid #ddd', borderRadius: '6px', padding: '6px 10px', cursor: 'pointer', color: '#555', display: 'flex', alignItems: 'center' }}
+                                                        style={{ ...ghostBtnStyle, padding: '7px 10px' }}
                                                     >
                                                         <X size={14} />
                                                     </button>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: cat.color || '#888', flexShrink: 0 }} />
+                                                    <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: cat.color || 'var(--color-text-subtle)', flexShrink: 0 }} />
                                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                                        <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{cat.name}</div>
-                                                        <div style={{ color: '#aaa', fontSize: '0.78rem' }}>
+                                                        <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--color-text)' }}>{cat.name}</div>
+                                                        <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.78rem' }}>
                                                             {cat.id}{cat.name_en ? ` · ${cat.name_en}` : ''}
                                                         </div>
                                                     </div>
                                                     <button
                                                         onClick={() => setEditingCategory({ id: cat.id, name: cat.name, name_en: cat.name_en || '', color: cat.color || '#888888', icon: cat.icon || '' })}
                                                         title="Modifier"
-                                                        style={{ background: 'none', border: '1px solid #ddd', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', color: '#555', display: 'flex', alignItems: 'center' }}
+                                                        style={{ ...ghostBtnStyle, padding: '5px 10px' }}
                                                     >
                                                         <Edit size={13} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteCategory(cat)}
                                                         title="Supprimer"
-                                                        style={{ background: 'none', border: '1px solid #fcc', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', color: '#d32f2f', display: 'flex', alignItems: 'center' }}
+                                                        style={{ ...dangerBtnStyle, padding: '5px 10px' }}
                                                     >
                                                         <Trash2 size={13} />
                                                     </button>
@@ -338,26 +324,26 @@ const AdminCategoriesWorkshops = () => {
                                 })}
                             </div>
                         )}
-                    </Section>
+                    </SubSection>
 
                     {/* ── Ateliers ────────────────────────────── */}
-                    <Section icon={Hammer} title="Ateliers" color="#6741d9">
-                        <p style={{ margin: '0 0 12px', fontSize: '0.82rem', color: '#888' }}>
+                    <SubSection icon={Hammer} title="Ateliers">
+                        <p style={{ margin: '0 0 12px', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
                             Créez les ateliers depuis la page de gestion des cartels (sélection + « Créer un atelier »).
                         </p>
 
                         {workshops.length === 0 ? (
-                            <p style={{ color: '#bbb', textAlign: 'center', padding: '24px 0' }}>Aucun atelier.</p>
+                            <p style={{ color: 'var(--color-text-subtle)', textAlign: 'center', padding: '24px 0' }}>Aucun atelier.</p>
                         ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                 {workshops.map(w => {
                                     const editing = editingWorkshop?.id === w.id;
                                     return (
                                         <div key={w.id} style={{
                                             display: 'flex', alignItems: 'center', gap: '10px',
-                                            background: editing ? '#f6f4ff' : '#fafafa',
-                                            border: `1px solid ${editing ? '#d9ccff' : '#eee'}`,
-                                            borderRadius: '10px', padding: '10px 14px',
+                                            background: 'var(--color-surface-2)',
+                                            border: `1px solid ${editing ? 'var(--color-accent)' : 'var(--color-border)'}`,
+                                            borderRadius: 'var(--radius-md)', padding: '10px 14px',
                                         }}>
                                             {editing ? (
                                                 <>
@@ -366,9 +352,9 @@ const AdminCategoriesWorkshops = () => {
                                                         value={editingWorkshop.name || ''}
                                                         onChange={e => setEditingWorkshop({ ...editingWorkshop, name: e.target.value })}
                                                         placeholder="Nom de l'atelier"
-                                                        style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '0.88rem', fontFamily: 'inherit' }}
+                                                        style={{ ...inputStyle, flex: 1 }}
                                                     />
-                                                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', color: '#555' }}>
+                                                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
                                                         <input
                                                             type="checkbox"
                                                             checked={!!editingWorkshop.is_immersive}
@@ -379,14 +365,14 @@ const AdminCategoriesWorkshops = () => {
                                                     <button
                                                         onClick={handleSaveWorkshop}
                                                         title="Enregistrer"
-                                                        style={{ background: '#6741d9', color: 'white', border: 'none', borderRadius: '6px', padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                                        style={{ ...primaryBtnStyle, padding: '7px 10px' }}
                                                     >
                                                         <Save size={14} />
                                                     </button>
                                                     <button
                                                         onClick={() => setEditingWorkshop(null)}
                                                         title="Annuler"
-                                                        style={{ background: 'none', border: '1px solid #ddd', borderRadius: '6px', padding: '6px 10px', cursor: 'pointer', color: '#555', display: 'flex', alignItems: 'center' }}
+                                                        style={{ ...ghostBtnStyle, padding: '7px 10px' }}
                                                     >
                                                         <X size={14} />
                                                     </button>
@@ -394,15 +380,25 @@ const AdminCategoriesWorkshops = () => {
                                             ) : (
                                                 <>
                                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                                        <div style={{ fontWeight: 700, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                             {w.name}
-                                                            {w.is_immersive ? (
-                                                                <span style={{ background: '#f3efff', color: '#5327b5', fontSize: '0.7rem', padding: '1px 7px', borderRadius: '999px', fontWeight: 700 }}>
-                                                                    IMMERSIF
+                                                            {w.is_immersive && (
+                                                                <span style={{
+                                                                    background: 'var(--color-accent)',
+                                                                    color: 'var(--color-primary)',
+                                                                    fontSize: '0.68rem',
+                                                                    padding: '2px 8px',
+                                                                    borderRadius: 'var(--radius-md)',
+                                                                    fontWeight: '700',
+                                                                    fontFamily: 'var(--font-heading)',
+                                                                    textTransform: 'uppercase',
+                                                                    letterSpacing: '0.5px',
+                                                                }}>
+                                                                    Immersif
                                                                 </span>
-                                                            ) : null}
+                                                            )}
                                                         </div>
-                                                        <div style={{ color: '#aaa', fontSize: '0.78rem' }}>
+                                                        <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.78rem' }}>
                                                             {w.cartel_count ?? 0} cartel{(w.cartel_count ?? 0) > 1 ? 's' : ''}
                                                             {w.created_by_email ? ` · ${w.created_by_email}` : ''}
                                                         </div>
@@ -410,21 +406,21 @@ const AdminCategoriesWorkshops = () => {
                                                     <button
                                                         onClick={() => navigate(`/app/admin/workshop/${w.id}`)}
                                                         title="Gérer les cartels"
-                                                        style={{ background: 'none', border: '1px solid #ddd', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', color: '#555', fontSize: '0.78rem', fontFamily: 'inherit' }}
+                                                        style={{ ...ghostBtnStyle, padding: '6px 12px', fontSize: '0.74rem' }}
                                                     >
                                                         Cartels
                                                     </button>
                                                     <button
                                                         onClick={() => setEditingWorkshop({ id: w.id, name: w.name, is_immersive: !!w.is_immersive })}
                                                         title="Modifier"
-                                                        style={{ background: 'none', border: '1px solid #ddd', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', color: '#555', display: 'flex', alignItems: 'center' }}
+                                                        style={{ ...ghostBtnStyle, padding: '5px 10px' }}
                                                     >
                                                         <Edit size={13} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteWorkshop(w)}
                                                         title="Supprimer"
-                                                        style={{ background: 'none', border: '1px solid #fcc', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', color: '#d32f2f', display: 'flex', alignItems: 'center' }}
+                                                        style={{ ...dangerBtnStyle, padding: '5px 10px' }}
                                                     >
                                                         <Trash2 size={13} />
                                                     </button>
@@ -435,7 +431,7 @@ const AdminCategoriesWorkshops = () => {
                                 })}
                             </div>
                         )}
-                    </Section>
+                    </SubSection>
                 </>
             )}
         </div>

@@ -1,37 +1,43 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import { useNavigate } from 'react-router-dom';
 import {
-    UserPlus, Trash2, ArrowLeft, Mail, Crown, Users as UsersIcon,
-    CheckCircle2, AlertCircle, Shield, Home, HelpCircle,
+    UserPlus, Trash2, Mail, Crown, Users as UsersIcon,
+    Shield, Home, HelpCircle,
 } from 'lucide-react';
 import api from '../services/apiClient';
 import i18n from '../i18n';
 import ExplainerBox from '../components/ExplainerBox';
+import {
+    AdminPageHeader, AdminSection, AdminToast, useAdminToast,
+    primaryBtnStyle, ghostBtnStyle, dangerBtnStyle, inputStyle, labelStyle,
+} from '../components/adminUI';
 
-const ACCENT = '#6741d9';       // violet cohérent avec le lien d'AdminSettings
-const ACCENT_BG = '#f3efff';
-const ACCENT_BORDER = '#d9ccff';
-
-// Sentinelle utilisée par le picker pour représenter « Site principal » (pas de sous-site)
+// Sentinelle utilisée par le picker pour représenter « Site principal »
 const MAIN_SITE = { id: null, name: 'Site principal', slug: null, __main: true };
 
+// ── Bouton-toggle (permission) ────────────────────────────────
 const Toggle = ({ value, onChange, label, hint, disabled }) => (
     <button
         onClick={() => !disabled && onChange(!value)}
         disabled={disabled}
         title={hint}
+        aria-pressed={!!value}
         style={{
             display: 'inline-flex', alignItems: 'center', gap: '6px',
-            padding: '5px 11px', borderRadius: '16px',
-            border: `1px solid ${value ? ACCENT : '#e0e0e0'}`,
-            background: value ? ACCENT : '#f5f5f5',
-            color: value ? 'white' : '#888',
-            fontSize: '0.76rem', fontWeight: '700',
+            padding: '5px 11px',
+            borderRadius: 'var(--radius-md)',
+            border: `1px solid ${value ? 'var(--color-primary)' : 'var(--color-border)'}`,
+            background: value ? 'var(--color-primary)' : 'var(--color-surface)',
+            color: value ? 'var(--color-accent)' : 'var(--color-text-subtle)',
+            fontSize: '0.74rem',
+            fontFamily: 'var(--font-heading)',
+            fontWeight: '700',
+            textTransform: 'uppercase',
+            letterSpacing: '0.4px',
             cursor: disabled ? 'not-allowed' : 'pointer',
             opacity: disabled ? 0.5 : 1,
-            fontFamily: 'inherit',
             whiteSpace: 'nowrap',
+            transition: 'background-color 0.15s, color 0.15s, border-color 0.15s',
         }}
     >
         {label}
@@ -40,27 +46,20 @@ const Toggle = ({ value, onChange, label, hint, disabled }) => (
 
 const AdminTeam = () => {
     const { user, isSuperadmin, isOwner, homeSubsiteId } = useApp();
-    const navigate = useNavigate();
+    const { toast, showToast } = useAdminToast();
 
-    const [selected, setSelected] = useState(null); // sous-site courant ou MAIN_SITE
+    const [selected, setSelected] = useState(null);
     const [subsites, setSubsites] = useState([]);
     const [members,  setMembers]  = useState([]);
     const [loading,  setLoading]  = useState(true);
-    const [toast,    setToast]    = useState(null);
 
-    // Création
     const [newEmail,    setNewEmail]    = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [creating,    setCreating]    = useState(false);
 
-    const showToast = (type, message) => {
-        setToast({ type, message });
-        setTimeout(() => setToast(null), 4000);
-    };
-
     const isMain = selected?.__main === true;
 
-    // Chargement initial : liste des sous-sites + détermine la sélection par défaut
+    // Chargement initial
     useEffect(() => {
         const init = async () => {
             setLoading(true);
@@ -68,10 +67,8 @@ const AdminTeam = () => {
                 const all = await api.subsites.getAll();
                 const list = Array.isArray(all) ? all : [];
                 setSubsites(list);
-                // Owner : on pointe sur son propre sous-site
                 const mine = list.find(s => s.id === homeSubsiteId);
                 if (mine) setSelected(mine);
-                // Superadmin sans sous-site d'attache : on pointe sur le site principal par défaut
                 else if (isSuperadmin) setSelected(MAIN_SITE);
             } catch (e) {
                 showToast('error', e.message || i18n.t('errors.loading'));
@@ -82,7 +79,7 @@ const AdminTeam = () => {
         init();
     }, [homeSubsiteId, isSuperadmin]);
 
-    // Chargement des membres quand la sélection change
+    // Chargement des membres
     useEffect(() => {
         if (!selected) return;
         setLoading(true);
@@ -111,7 +108,6 @@ const AdminTeam = () => {
         try {
             let created;
             if (isMain) {
-                // Superadmin crée un compte rattaché au site principal (home_subsite_id = null)
                 created = await api.users.create({
                     email: newEmail.trim(),
                     password: newPassword,
@@ -128,7 +124,7 @@ const AdminTeam = () => {
             setMembers(prev => [created, ...prev]);
             setNewEmail('');
             setNewPassword('');
-            showToast('success', `Compte "${created.email}" créé`);
+            showToast('success', `Compte « ${created.email} » créé`);
         } catch (err) {
             showToast('error', err.message || i18n.t('errors.creating'));
         } finally {
@@ -162,79 +158,33 @@ const AdminTeam = () => {
 
     if (!isSuperadmin && !isOwner) {
         return (
-            <div style={{ textAlign: 'center', padding: '80px 20px', color: '#aaa' }}>
-                <Shield size={32} style={{ marginBottom: '12px', color: '#ccc' }} />
+            <div style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--color-text-subtle)' }}>
+                <Shield size={32} style={{ marginBottom: '12px', color: 'var(--color-border-strong)' }} />
                 <p>Accès réservé aux owners de sous-sites et aux superadmins.</p>
             </div>
         );
     }
 
-    // Options du picker (superadmin uniquement)
     const pickerOptions = isSuperadmin
         ? [MAIN_SITE, ...subsites]
         : subsites.filter(s => s.id === homeSubsiteId);
 
     return (
         <div style={{ maxWidth: '900px', margin: '0 auto', padding: '28px 24px 80px' }}>
+            <AdminToast toast={toast} />
 
-            {toast && (
-                <div style={{
-                    position: 'fixed', top: '20px', right: '20px', zIndex: 2000,
-                    background: toast.type === 'error' ? '#fee' : '#efe',
-                    color: toast.type === 'error' ? '#c00' : '#080',
-                    border: `1px solid ${toast.type === 'error' ? '#fcc' : '#cfc'}`,
-                    borderRadius: '10px', padding: '12px 16px',
-                    display: 'flex', alignItems: 'center', gap: '8px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                    fontSize: '0.88rem', fontWeight: '600',
-                }}>
-                    {toast.type === 'error' ? <AlertCircle size={16} /> : <CheckCircle2 size={16} />}
-                    {toast.message}
-                </div>
-            )}
+            <AdminPageHeader icon={UsersIcon} title="Gestion d'équipe (comptes)" />
 
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-                <button
-                    onClick={() => navigate('/app/admin')}
-                    style={{
-                        background: '#f5f5f5', border: '1px solid #e0e0e0',
-                        borderRadius: '8px', padding: '6px 10px', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: '6px',
-                        fontSize: '0.84rem', color: '#666', fontFamily: 'inherit',
-                    }}
-                >
-                    <ArrowLeft size={14} /> Retour
-                </button>
-                <div style={{
-                    width: '40px', height: '40px',
-                    background: ACCENT_BG, borderRadius: '10px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                    <UsersIcon size={20} color={ACCENT} />
-                </div>
-                <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: '800', color: '#1a1a1a' }}>
-                    Gestion d'équipe
-                </h1>
-            </div>
-
-            {/* Paragraphe explicatif */}
-            <ExplainerBox
-                color={ACCENT}
-                background={ACCENT_BG}
-                border={ACCENT_BORDER}
-                title="À quoi sert cette page ?"
-            >
+            <ExplainerBox title="À quoi sert cette page ?">
                 Gérer les comptes utilisateurs <strong>d'un sous-site précis</strong> (ou du site principal si
                 vous êtes superadmin). Chaque compte créé ici est automatiquement rattaché au contexte choisi
                 dans le sélecteur ci-dessous.<br />
                 Les <em>owners</em> de sous-site peuvent inviter et gérer les membres de leur propre équipe.
                 Les <em>superadmins</em> peuvent en plus basculer entre le site principal et n'importe quel
-                sous-site, et déléguer la permission <strong>Gérer équipe</strong> (qui permet à son tour de gérer
-                l'équipe du sous-site).
+                sous-site, et déléguer la permission <strong>Gérer équipe</strong>.
             </ExplainerBox>
 
-            {/* Sélecteur (superadmin ou owner avec plusieurs options) */}
+            {/* Sélecteur (chips) */}
             {pickerOptions.length > 1 && (
                 <div style={{ marginBottom: '16px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                     {pickerOptions.map(opt => {
@@ -248,12 +198,18 @@ const AdminTeam = () => {
                                 onClick={() => setSelected(opt)}
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: '6px',
-                                    border: `1px solid ${active ? ACCENT : '#e0e0e0'}`,
-                                    background: active ? ACCENT : 'white',
-                                    color: active ? 'white' : '#555',
-                                    borderRadius: '20px', padding: '6px 12px',
-                                    cursor: 'pointer', fontFamily: 'inherit',
-                                    fontSize: '0.84rem', fontWeight: '600',
+                                    border: `1px solid ${active ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                                    background: active ? 'var(--color-primary)' : 'var(--color-surface)',
+                                    color: active ? 'var(--color-accent)' : 'var(--color-text-muted)',
+                                    borderRadius: 'var(--radius-md)',
+                                    padding: '7px 14px',
+                                    cursor: 'pointer',
+                                    fontFamily: 'var(--font-heading)',
+                                    fontSize: '0.82rem',
+                                    fontWeight: '700',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.4px',
+                                    transition: 'background-color 0.15s, color 0.15s, border-color 0.15s',
                                 }}
                             >
                                 <Icon size={13} />
@@ -266,9 +222,12 @@ const AdminTeam = () => {
 
             {selected && (
                 <p style={{
-                    background: '#fafafa', border: '1px solid #eee',
-                    borderRadius: '8px', padding: '10px 14px',
-                    fontSize: '0.85rem', color: '#555', margin: '0 0 20px',
+                    background: 'var(--color-surface-2)',
+                    borderLeft: '3px solid var(--color-accent)',
+                    borderRadius: 0,
+                    padding: '10px 16px',
+                    fontSize: '0.85rem', color: 'var(--color-text-muted)',
+                    margin: '0 0 20px',
                 }}>
                     {isMain
                         ? <>Équipe du <strong>site principal</strong> ({members.length} membre{members.length > 1 ? 's' : ''})</>
@@ -278,82 +237,74 @@ const AdminTeam = () => {
 
             {/* Formulaire d'invitation */}
             {canManageCurrent && (
-                <div style={{
-                    background: 'white', border: '1px solid #eee', borderRadius: '14px',
-                    padding: '18px', marginBottom: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                }}>
-                    <p style={{ margin: '0 0 12px', fontWeight: '800', fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: ACCENT }}>
+                <AdminSection>
+                    <p style={{ margin: '0 0 14px', fontWeight: '800', fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-primary)', fontFamily: 'var(--font-heading)' }}>
                         Inviter un membre
                     </p>
-                    <form onSubmit={handleCreate} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <input
-                            type="email"
-                            value={newEmail}
-                            onChange={e => setNewEmail(e.target.value)}
-                            placeholder="email@exemple.org"
-                            required
-                            style={{ flex: '1 1 220px', padding: '9px 12px', borderRadius: '8px', border: '1px solid #ddd', fontFamily: 'inherit', fontSize: '0.88rem' }}
-                        />
-                        <input
-                            type="password"
-                            value={newPassword}
-                            onChange={e => setNewPassword(e.target.value)}
-                            placeholder="Mot de passe (8+ car.)"
-                            required
-                            minLength={8}
-                            style={{ flex: '1 1 180px', padding: '9px 12px', borderRadius: '8px', border: '1px solid #ddd', fontFamily: 'inherit', fontSize: '0.88rem' }}
-                        />
+                    <form onSubmit={handleCreate} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                        <div style={{ flex: '1 1 220px' }}>
+                            <label style={labelStyle}>Email</label>
+                            <input
+                                type="email"
+                                value={newEmail}
+                                onChange={e => setNewEmail(e.target.value)}
+                                placeholder="email@exemple.org"
+                                required
+                                style={inputStyle}
+                            />
+                        </div>
+                        <div style={{ flex: '1 1 180px' }}>
+                            <label style={labelStyle}>Mot de passe (8+ car.)</label>
+                            <input
+                                type="password"
+                                value={newPassword}
+                                onChange={e => setNewPassword(e.target.value)}
+                                placeholder="••••••••"
+                                required
+                                minLength={8}
+                                style={inputStyle}
+                            />
+                        </div>
                         <button
                             type="submit"
                             disabled={creating}
                             style={{
-                                flexShrink: 0, border: 'none', borderRadius: '8px', padding: '9px 16px',
-                                background: creating ? ACCENT_BORDER : ACCENT,
-                                color: 'white', fontWeight: '700',
+                                ...primaryBtnStyle,
+                                opacity: creating ? 0.5 : 1,
                                 cursor: creating ? 'not-allowed' : 'pointer',
-                                fontFamily: 'inherit', fontSize: '0.88rem',
-                                display: 'flex', alignItems: 'center', gap: '6px',
                             }}
                         >
-                            <UserPlus size={14} /> Inviter
+                            <UserPlus size={14} /> {creating ? 'Envoi…' : 'Inviter'}
                         </button>
                     </form>
-                    <p style={{ margin: '10px 0 0', fontSize: '0.78rem', color: '#888' }}>
-                        Le compte est créé avec un mot de passe temporaire. Le nouveau membre peut se connecter immédiatement ; pensez à lui demander de le changer.
-                        Par défaut, il peut seulement <strong>créer des cartels</strong>. Ajoutez d'autres permissions ci-dessous.
+                    <p style={{ margin: '10px 0 0', fontSize: '0.78rem', color: 'var(--color-text-subtle)' }}>
+                        Le compte est créé avec un mot de passe temporaire. Le nouveau membre peut se connecter immédiatement ;
+                        pensez à lui demander de le changer. Par défaut, il peut seulement <strong>créer des cartels</strong>.
+                        Ajoutez d'autres permissions ci-dessous.
                     </p>
-                </div>
+                </AdminSection>
             )}
 
             {/* Légende des permissions */}
             {canManageCurrent && (
-                <ExplainerBox
-                    color="#0288d1"
-                    background="#e6f4fa"
-                    border="#b3e0f2"
-                    icon={HelpCircle}
-                    title="Permissions disponibles"
-                >
+                <ExplainerBox icon={HelpCircle} title="Permissions disponibles">
                     <ul style={{ margin: '8px 0 0', paddingLeft: '18px', lineHeight: '1.7' }}>
                         <li><strong>Créer cartels</strong> — le membre peut créer de nouveaux cartels (en brouillon par défaut).</li>
                         <li><strong>Publier</strong> — le membre peut faire passer un cartel en statut <em>publié</em> (sinon ils restent en brouillon ou en attente).</li>
-                        <li><strong>Gérer équipe</strong> — <em>owner</em> : le membre peut inviter, modifier et supprimer d'autres comptes dans le contexte courant (ce sous-site ou le site principal).</li>
+                        <li><strong>Gérer équipe</strong> — <em>owner</em> : le membre peut inviter, modifier et supprimer d'autres comptes dans le contexte courant.</li>
                         {isSuperadmin && (
-                            <li><strong>Créer sous-sites</strong> — superadmin uniquement : le membre peut créer de nouveaux sous-sites depuis les réglages.</li>
+                            <li><strong>Créer sous-sites</strong> — superadmin uniquement : le membre peut créer de nouveaux sous-sites.</li>
                         )}
                     </ul>
                 </ExplainerBox>
             )}
 
             {/* Liste des membres */}
-            <div style={{
-                background: 'white', border: '1px solid #eee', borderRadius: '14px',
-                padding: '18px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-            }}>
+            <AdminSection>
                 {loading ? (
-                    <p style={{ textAlign: 'center', color: '#bbb', padding: '40px 0' }}>Chargement…</p>
+                    <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0' }}>Chargement…</p>
                 ) : members.length === 0 ? (
-                    <p style={{ textAlign: 'center', color: '#bbb', padding: '40px 0', fontSize: '0.9rem' }}>
+                    <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0', fontSize: '0.9rem' }}>
                         Aucun membre dans ce contexte.
                     </p>
                 ) : (
@@ -362,22 +313,21 @@ const AdminTeam = () => {
                             const isSelf = m.id === user?.id;
                             const isSuper = !!m.can_manage_admin;
                             const readOnly = (isSuper && !isSuperadmin) || !canManageCurrent;
-
                             return (
                                 <div key={m.id} style={{
                                     display: 'flex', alignItems: 'center', gap: '12px',
-                                    border: '1px solid #eee', borderRadius: '10px',
-                                    padding: '10px 14px', background: '#fafafa',
+                                    border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
+                                    padding: '10px 14px', background: 'var(--color-surface-2)',
                                     flexWrap: 'wrap',
                                 }}>
-                                    <Mail size={16} color={ACCENT} style={{ flexShrink: 0 }} />
+                                    <Mail size={16} color="var(--color-primary)" style={{ flexShrink: 0 }} />
                                     <div style={{ flex: '1 1 220px', minWidth: 0 }}>
-                                        <div style={{ fontWeight: '700', fontSize: '0.9rem', color: '#1a1a1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        <div style={{ fontWeight: '700', fontSize: '0.9rem', color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                             {m.email}
-                                            {isSelf && <span style={{ color: '#aaa', fontWeight: '400', marginLeft: '6px' }}>(vous)</span>}
+                                            {isSelf && <span style={{ color: 'var(--color-text-subtle)', fontWeight: '400', marginLeft: '6px' }}>(vous)</span>}
                                         </div>
                                         {isSuper && (
-                                            <div style={{ fontSize: '0.75rem', color: '#9c27b0', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.4px', fontWeight: '700' }}>
                                                 <Crown size={11} /> Superadmin
                                             </div>
                                         )}
@@ -419,11 +369,7 @@ const AdminTeam = () => {
                                     {canManageCurrent && !isSelf && !readOnly && (
                                         <button
                                             onClick={() => handleDelete(m)}
-                                            style={{
-                                                flexShrink: 0, border: '1px solid #fecaca', background: 'white',
-                                                color: '#b42318', borderRadius: '6px', padding: '6px 8px',
-                                                cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center',
-                                            }}
+                                            style={{ ...dangerBtnStyle, padding: '5px 10px' }}
                                             title="Supprimer ce compte"
                                         >
                                             <Trash2 size={13} />
@@ -434,7 +380,7 @@ const AdminTeam = () => {
                         })}
                     </div>
                 )}
-            </div>
+            </AdminSection>
         </div>
     );
 };
