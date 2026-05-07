@@ -130,6 +130,7 @@ export const workshops = {
 export const settings = {
   getAll:      ()         => get('/settings'),
   getOpenAIKey: ()        => get('/settings/openai-key'),
+  getDeepLKey:  ()        => get('/settings/deepl-key'),
   update:      (data)     => patch('/settings', data),
 };
 

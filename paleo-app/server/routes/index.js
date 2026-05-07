@@ -58,6 +58,7 @@ router.delete('/workshops/:id',      authenticate,     WorkshopController.delete
 // ── Settings (admin) ─────────────────────────────────────────
 router.get   ('/settings',            authenticate, requireAdmin, SettingController.getAll);
 router.get   ('/settings/openai-key', authenticate, requireAdmin, SettingController.getOpenAIKey);
+router.get   ('/settings/deepl-key',  authenticate, requireAdmin, SettingController.getDeepLKey);
 router.patch ('/settings',            authenticate, requireAdmin, SettingController.updateMany);
 
 // ── Users (admin) ────────────────────────────────────────────

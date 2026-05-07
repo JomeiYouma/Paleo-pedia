@@ -8,14 +8,13 @@ import { getLocalizedContent } from '../utils/i18nHelpers';
 import { rememberReturn } from '../utils/navigation';
 import 'leaflet/dist/leaflet.css';
 
-// Marqueur de carte : noir par défaut, le cœur passe en jaune quand
-// le marqueur est sélectionné (popup ouvert). Le badge de cluster
-// reste noir pour ne pas concurrencer l'état de focus.
-const getMarkerIcon = (count, focused = false) => {
+// Marqueur de carte : ring blanc, corps noir, cœur gris (visible mais discret).
+// Au focus (popup ouvert), le cœur passe à la couleur "signature" — jaune
+// sur le site principal, couleur du sous-site sinon (override CSS var).
+const getMarkerIcon = (count, focused = false, focusColor = '#FFE700') => {
     const size = count > 1 ? 40 : 30;
     const innerSize = count > 1 ? 24 : 12;
-    const innerColor = focused ? '#FFE700' : '#1a1a1a';
-    const ring = focused ? '3px solid #FFE700' : '3px solid white';
+    const innerColor = focused ? focusColor : '#9a9a9a';
 
     return L.divIcon({
         className: 'custom-geo-marker',
@@ -24,7 +23,7 @@ const getMarkerIcon = (count, focused = false) => {
             width: ${size}px;
             height: ${size}px;
             border-radius: 50%;
-            border: ${ring};
+            border: 3px solid white;
             box-shadow: 0 3px 8px rgba(0,0,0,0.4);
             display: flex;
             align-items: center;
@@ -55,7 +54,7 @@ const getMarkerIcon = (count, focused = false) => {
                      height: ${innerSize}px;
                      border-radius: 50%;
                      background-color: ${innerColor};
-                     opacity: ${focused ? 1 : 0.2};
+                     opacity: ${focused ? 1 : 0.5};
                 "></div>
             ` : `
                 <div style="
@@ -168,8 +167,16 @@ const MapMode = ({ cartels, onGoToTimeline, isAdmin }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Marqueur dont le popup est ouvert : cœur jaune pour matérialiser le focus.
+    // Marqueur dont le popup est ouvert : cœur en couleur signature pour
+    // matérialiser le focus. La couleur est lue depuis la CSS var au moment
+    // où elle est utilisée pour respecter l'override des sous-sites.
     const [focusedKey, setFocusedKey] = React.useState(null);
+    const focusColor = React.useMemo(() => {
+        if (typeof window === 'undefined') return '#FFE700';
+        const v = getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim();
+        return v || '#FFE700';
+    // re-évalué à chaque ouverture pour capter l'override appliqué par SubsiteLayout
+    }, [focusedKey]);
 
     // Group cartels by coordinates
     const clusters = React.useMemo(() => {
@@ -221,7 +228,7 @@ const MapMode = ({ cartels, onGoToTimeline, isAdmin }) => {
                             <Marker
                                 key={key}
                                 position={position}
-                                icon={getMarkerIcon(group.length, focused)}
+                                icon={getMarkerIcon(group.length, focused, focusColor)}
                                 eventHandlers={{
                                     popupopen:  () => setFocusedKey(key),
                                     popupclose: () => setFocusedKey(prev => prev === key ? null : prev),

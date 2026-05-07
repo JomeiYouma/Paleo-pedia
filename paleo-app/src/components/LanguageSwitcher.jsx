@@ -26,11 +26,15 @@ const LanguageSwitcher = () => {
         transition: 'background-color 0.12s, color 0.12s, border-color 0.12s',
     };
 
+    // Active : surface claire + texte foncé, le liseré coloré reprend
+    // l'accent (jaune sur main, couleur du sous-site sinon). Évite les
+    // problèmes de contraste si la couleur du sous-site est foncée.
     const activeStyle = {
         ...baseStyle,
-        background: 'var(--color-accent)',
+        background: 'var(--color-white)',
         color: 'var(--color-primary)',
-        border: '1px solid var(--color-accent)',
+        border: '2px solid var(--color-accent)',
+        padding: '3px 9px',
     };
 
     const inactiveStyle = {

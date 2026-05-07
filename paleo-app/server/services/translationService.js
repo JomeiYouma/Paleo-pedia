@@ -1,13 +1,53 @@
 /**
  * translationService.js
- * Traduit les champs d'un cartel FR → EN via l'API OpenAI ou DeepL.
- * La clé est lue depuis la table `settings` de la BDD.
+ * Traduit les champs d'un cartel via les API OpenAI et/ou DeepL.
+ * Les clés sont lues depuis la table `settings` de la BDD.
+ *
+ * Stratégie de routage :
+ *  - FR↔EN : si `deepl_key` est renseignée → DeepL (moins coûteux),
+ *            sinon fallback sur `openai_key`.
+ *  - Autres langues : OpenAI uniquement (DeepL ne gère pas une langue cible libre).
  */
 
 import OpenAI from 'openai';
 import { SettingModel } from '../models/Setting.js';
 
 const SOURCE_LANG_NAMES = { fr: 'French', en: 'English' };
+
+const isOpenAIKey = (k) => typeof k === 'string' && (k.startsWith('sk-') || k.startsWith('proj-'));
+const isDeepLKey  = (k) => typeof k === 'string' && k.length > 0 && !isOpenAIKey(k);
+
+async function translateWithDeepL({ apiKey, target, fields }) {
+  const isFree = apiKey.endsWith(':fx');
+  const url = isFree ? 'https://api-free.deepl.com/v2/translate' : 'https://api.deepl.com/v2/translate';
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `DeepL-Auth-Key ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      text: fields,
+      target_lang: target === 'en' ? 'EN' : 'FR',
+    }),
+  });
+
+  if (!response.ok) {
+    let errorMsg = response.statusText;
+    try {
+      const errBody = await response.json();
+      errorMsg = errBody.message || errorMsg;
+    } catch { /* ignore */ }
+    throw new Error(`Erreur DeepL API: ${response.status} - ${errorMsg}`);
+  }
+
+  const data = await response.json();
+  if (!data.translations || !Array.isArray(data.translations)) {
+    throw new Error(`Réponse DeepL invalide`);
+  }
+  return data.translations.map(t => t.text);
+}
 
 /**
  * Traduit un cartel.
@@ -23,10 +63,21 @@ export async function translateCartel(cartelData, { target = 'en' } = {}) {
     throw new Error(`Langue cible non supportée : ${target}`);
   }
 
-  const apiKey = await SettingModel.get('openai_key');
-  if (!apiKey) throw new Error('Clé API non configurée dans les réglages.');
+  // Préférer DeepL pour FR↔EN si une clé dédiée est configurée (moins coûteux qu'OpenAI).
+  // Rétro-compat : une clé DeepL stockée historiquement dans `openai_key` est aussi acceptée.
+  const deeplKey  = await SettingModel.get('deepl_key');
+  const openaiKey = await SettingModel.get('openai_key');
 
-  const isDeepL = apiKey.endsWith(':fx') || (!apiKey.startsWith('sk-') && !apiKey.startsWith('proj-'));
+  let apiKey, useDeepL;
+  if (deeplKey) {
+    apiKey = deeplKey;
+    useDeepL = true;
+  } else if (openaiKey) {
+    apiKey = openaiKey;
+    useDeepL = isDeepLKey(openaiKey); // ancienne config : DeepL collée dans le champ unique
+  } else {
+    throw new Error('Clé API non configurée dans les réglages.');
+  }
 
   // Clés de sortie selon la cible
   const outKeys = target === 'en'
@@ -36,7 +87,7 @@ export async function translateCartel(cartelData, { target = 'en' } = {}) {
   const sourceLangName = target === 'en' ? 'French' : 'English';
   const targetLangName = target === 'en' ? 'English' : 'French';
 
-  if (!isDeepL) {
+  if (!useDeepL) {
     // ── OpenAI ──────────────────────────────────────────────────
     const client = new OpenAI({ apiKey });
 
@@ -83,9 +134,6 @@ ${JSON.stringify(payload, null, 2)}`;
     };
   } else {
     // ── DeepL ───────────────────────────────────────────────────
-    const isFree = apiKey.endsWith(':fx');
-    const url = isFree ? 'https://api-free.deepl.com/v2/translate' : 'https://api.deepl.com/v2/translate';
-
     const fieldsToTranslate = [];
     const mapping = [];
 
@@ -93,50 +141,16 @@ ${JSON.stringify(payload, null, 2)}`;
     if (cartelData.description) { fieldsToTranslate.push(cartelData.description); mapping.push(outKeys.description); }
     if (cartelData.location)    { fieldsToTranslate.push(cartelData.location);    mapping.push(outKeys.location); }
 
-    if (fieldsToTranslate.length === 0) {
-      return {
-        [outKeys.titre]: '',
-        [outKeys.description]: '',
-        [outKeys.location]: '',
-      };
-    }
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `DeepL-Auth-Key ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        text: fieldsToTranslate,
-        target_lang: target === 'en' ? 'EN' : 'FR',
-      }),
-    });
-
-    if (!response.ok) {
-      let errorMsg = response.statusText;
-      try {
-        const errBody = await response.json();
-        errorMsg = errBody.message || errorMsg;
-      } catch {
-        // On ignore l'erreur de parsing
-      }
-      throw new Error(`Erreur DeepL API: ${response.status} - ${errorMsg}`);
-    }
-
-    const data = await response.json();
-    if (!data.translations || !Array.isArray(data.translations)) {
-      throw new Error(`Réponse DeepL invalide`);
-    }
-
     const result = {
       [outKeys.titre]: '',
       [outKeys.description]: '',
       [outKeys.location]: '',
     };
-    mapping.forEach((key, index) => {
-      result[key] = data.translations[index].text;
-    });
+
+    if (fieldsToTranslate.length === 0) return result;
+
+    const translated = await translateWithDeepL({ apiKey, target, fields: fieldsToTranslate });
+    mapping.forEach((key, index) => { result[key] = translated[index]; });
     return result;
   }
 }
@@ -156,10 +170,8 @@ export async function translateCartelToLanguage(cartelData, { sourceLang = 'fr',
     throw new Error('Langue cible manquante.');
   }
   const apiKey = await SettingModel.get('openai_key');
-  if (!apiKey) throw new Error('Clé API non configurée dans les réglages.');
-
-  const isOpenAI = apiKey.startsWith('sk-') || apiKey.startsWith('proj-');
-  if (!isOpenAI) {
+  if (!apiKey) throw new Error('Clé OpenAI non configurée dans les réglages (requise pour les langues autres que FR/EN).');
+  if (!isOpenAIKey(apiKey)) {
     throw new Error('La traduction vers une langue arbitraire requiert une clé OpenAI (DeepL non supporté pour ce flux).');
   }
 
@@ -227,10 +239,8 @@ export async function translateLabelsAndCategories({ labels = {}, categories = [
     throw new Error('Langue cible manquante.');
   }
   const apiKey = await SettingModel.get('openai_key');
-  if (!apiKey) throw new Error('Clé API non configurée dans les réglages.');
-
-  const isOpenAI = apiKey.startsWith('sk-') || apiKey.startsWith('proj-');
-  if (!isOpenAI) {
+  if (!apiKey) throw new Error('Clé OpenAI non configurée dans les réglages (requise pour les langues autres que FR/EN).');
+  if (!isOpenAIKey(apiKey)) {
     throw new Error('La traduction vers une langue arbitraire requiert une clé OpenAI (DeepL non supporté pour ce flux).');
   }
 

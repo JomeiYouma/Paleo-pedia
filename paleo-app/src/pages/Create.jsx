@@ -683,28 +683,45 @@ const Create = () => {
                 {/* Categories */}
                 <div>
                     <label>{t('create.fieldCategories')}</label>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '10px' }}>
+                    <p style={{ margin: '0 0 8px', fontSize: '0.82rem', color: 'var(--color-text-subtle)' }}>
+                        {t('create.fieldCategoriesHint', 'Cliquez sur les catégories correspondantes.')}
+                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
                         {Array.from(new Set([
                             // Les catégories globales sont des objets {id, name, ...} → on extrait .name
                             ...(globalCats || []).map(c => (typeof c === 'object' ? c.name : c)),
                             ...(form.categories || [])
-                        ])).map(catName => (
-                            <button
-                                type="button"
-                                key={catName}
-                                onClick={() => handleCategoryToggle(catName)}
-                                style={{
-                                    backgroundColor: (form.categories || []).includes(catName) ? 'var(--color-pink-darker)' : 'transparent',
-                                    border: '1px solid #ccc', borderRadius: '15px', fontSize: '0.8rem', padding: '4px 8px'
-                                }}
-                            >
-                                {catName}
-                            </button>
-                        ))}
+                        ])).map(catName => {
+                            const active = (form.categories || []).includes(catName);
+                            return (
+                                <button
+                                    type="button"
+                                    key={catName}
+                                    onClick={() => handleCategoryToggle(catName)}
+                                    aria-pressed={active}
+                                    style={{
+                                        backgroundColor: active ? 'var(--color-primary)' : 'var(--color-surface)',
+                                        color: active ? 'var(--color-white)' : 'var(--color-text)',
+                                        border: `1px solid ${active ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                                        borderRadius: '999px',
+                                        fontFamily: 'var(--font-heading)',
+                                        fontSize: '0.78rem',
+                                        fontWeight: '700',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.4px',
+                                        padding: '5px 12px',
+                                        cursor: 'pointer',
+                                        transition: 'background-color 0.12s, color 0.12s, border-color 0.12s',
+                                    }}
+                                >
+                                    {catName}
+                                </button>
+                            );
+                        })}
                     </div>
-                    <div style={{ display: 'flex', gap: '5px' }}>
-                        <input placeholder={t('common.otherCategory')} value={newCategory} onChange={e => setNewCategory(e.target.value)} style={{ flex: 1, padding: '4px' }} />
-                        <button type="button" onClick={handleAddCategory}>{t('common.add')}</button>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                        <input placeholder={t('common.otherCategory')} value={newCategory} onChange={e => setNewCategory(e.target.value)} style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--color-border)', fontFamily: 'inherit', fontSize: '0.9rem' }} />
+                        <button type="button" onClick={handleAddCategory} style={{ padding: '8px 14px', borderRadius: '6px', border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: '0.78rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('common.add')}</button>
                     </div>
                 </div>
 
@@ -752,35 +769,40 @@ const Create = () => {
                     <input name="url_qr" value={form.url_qr} onChange={handleInputChange} style={{ width: '100%', padding: '8px' }} />
                 </div>
 
-                {/* Contact (visiteurs uniquement) — obligatoire car c'est notre
-                    seul moyen de revenir vers le proposant pour une clarification
-                    ou un retour de modération. Pour un admin connecté, on a déjà
-                    son email via created_by, on n'affiche donc rien. */}
-                {!isAdmin && (
-                    <div>
-                        <label htmlFor="submitter_contact">
-                            {t('create.fieldContact', 'Votre contact (email ou téléphone)')}
-                            <RequiredMark />
-                        </label>
-                        <input
-                            id="submitter_contact"
-                            name="submitter_contact"
-                            type="text"
-                            value={form.submitter_contact || ''}
-                            onChange={handleInputChange}
-                            required
-                            maxLength={255}
-                            placeholder={t('create.fieldContactPlaceholder', 'ex: vous@exemple.org ou 06 12 34 56 78')}
-                            style={{ width: '100%', padding: '8px' }}
-                        />
-                        <small style={{ color: '#777', display: 'block', marginTop: '4px', fontSize: '0.82rem', lineHeight: 1.4 }}>
-                            {t('create.fieldContactHelp', 'Indispensable pour pouvoir vous recontacter au sujet de votre proposition. ')}
+                {/* Contact :
+                    - Visiteur non connecté : obligatoire (seul moyen de le recontacter).
+                    - Admin connecté : optionnel, utile pour saisir un cartel au nom
+                      d'une autre personne (l'auteur réel n'est pas l'utilisateur
+                      connecté). Si vide, on retombe sur l'email du compte. */}
+                <div>
+                    <label htmlFor="submitter_contact">
+                        {isAdmin
+                            ? t('create.fieldContactOptional', "Contact de l'auteur (email ou téléphone)")
+                            : t('create.fieldContact', 'Votre contact (email ou téléphone)')}
+                        {!isAdmin && <RequiredMark />}
+                    </label>
+                    <input
+                        id="submitter_contact"
+                        name="submitter_contact"
+                        type="text"
+                        value={form.submitter_contact || ''}
+                        onChange={handleInputChange}
+                        required={!isAdmin}
+                        maxLength={255}
+                        placeholder={t('create.fieldContactPlaceholder', 'ex: vous@exemple.org ou 06 12 34 56 78')}
+                        style={{ width: '100%', padding: '8px' }}
+                    />
+                    <small style={{ color: '#777', display: 'block', marginTop: '4px', fontSize: '0.82rem', lineHeight: 1.4 }}>
+                        {isAdmin
+                            ? t('create.fieldContactAdminHelp', "Renseignez si vous saisissez un cartel pour quelqu'un d'autre. Laissez vide si vous êtes l'auteur·rice.")
+                            : t('create.fieldContactHelp', 'Indispensable pour pouvoir vous recontacter au sujet de votre proposition. ')}
+                        {!isAdmin && (
                             <Link to="/politique-confidentialite" style={{ color: '#555', textDecoration: 'underline' }}>
                                 {t('create.fieldContactPolicyLink', 'Politique de confidentialité')}
                             </Link>
-                        </small>
-                    </div>
-                )}
+                        )}
+                    </small>
+                </div>
 
                 {/* Buttons */}
                 <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>

@@ -94,6 +94,72 @@ const Group = ({ title, color, children }) => (
     </section>
 );
 
+// ── Champ "clé API" (réutilisé pour OpenAI et DeepL) ─────────
+const ApiKeyField = ({ label, hint, placeholder, value, onChange, show, onToggleShow, onSave, saving, loading, detect }) => (
+    <Field label={label} hint={hint}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <input
+                type={show ? 'text' : 'password'}
+                value={value}
+                onChange={e => onChange(e.target.value)}
+                placeholder={placeholder}
+                style={{
+                    flex: 1,
+                    minWidth: '260px',
+                    padding: '10px 14px',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--color-border)',
+                    fontSize: '0.9rem',
+                    fontFamily: 'inherit',
+                }}
+            />
+            <button
+                onClick={onToggleShow}
+                style={{
+                    padding: '10px 14px',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--color-border)',
+                    background: 'var(--color-surface-2)',
+                    cursor: 'pointer',
+                    fontSize: '0.78rem',
+                    fontFamily: 'var(--font-heading)',
+                    color: 'var(--color-text-muted)',
+                    fontWeight: '700',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                }}
+            >
+                {show ? 'Masquer' : 'Afficher'}
+            </button>
+            <button
+                type="button"
+                onClick={onSave}
+                disabled={saving || loading}
+                style={{
+                    padding: '10px 14px',
+                    borderRadius: 'var(--radius-md)',
+                    border: 'none',
+                    background: saving ? 'var(--color-border-strong)' : 'var(--color-theme-system)',
+                    color: 'var(--color-white)',
+                    cursor: saving || loading ? 'not-allowed' : 'pointer',
+                    fontSize: '0.78rem',
+                    fontWeight: '700',
+                    fontFamily: 'var(--font-heading)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                }}
+            >
+                {saving ? 'Envoi…' : 'Enregistrer'}
+            </button>
+        </div>
+        {value && detect && (
+            <p style={{ margin: '6px 0 0', fontSize: '0.82rem', color: 'var(--color-text-subtle)' }}>
+                {detect(value)}
+            </p>
+        )}
+    </Field>
+);
+
 // ── Section card ─────────────────────────────────────────────
 const Section = ({ icon: Icon, title, color = 'var(--color-primary)', bg, children }) => (
     <div style={{
@@ -135,7 +201,6 @@ const AdminSettings = () => {
     const navigate = useNavigate();
 
     const [settings, setSettings]   = useState(null);
-    const [openaiKey, setOpenaiKey] = useState('');
     const [loading, setLoading]     = useState(true);
     const [saving, setSaving]       = useState(false);
     const [toast, setToast]         = useState(null);
@@ -166,8 +231,10 @@ const AdminSettings = () => {
     const [maxTotal,      setMaxTotal]      = useState(10);
     const [maxWindow,     setMaxWindow]     = useState(3);
     const [windowMinutes, setWindowMinutes] = useState(60);
-    const [aiKey,         setAiKey]         = useState('');
-    const [showKey,       setShowKey]       = useState(false);
+    const [openaiKey,     setOpenaiKey]    = useState('');
+    const [deeplKey,      setDeeplKey]     = useState('');
+    const [showOpenaiKey, setShowOpenaiKey] = useState(false);
+    const [showDeeplKey,  setShowDeeplKey]  = useState(false);
 
     // ── Chargement initial ───────────────────────────────────
     useEffect(() => {
@@ -188,10 +255,14 @@ const AdminSettings = () => {
                     setSitePartnerIds([]);
                 }
 
-                // Clé OpenAI séparée (endpoint dédié)
+                // Clés API (endpoints dédiés, admin only)
                 try {
-                    const k = await api.settings.getOpenAIKey();
-                    setAiKey(k.openai_key || '');
+                    const [k1, k2] = await Promise.all([
+                        api.settings.getOpenAIKey().catch(() => ({ openai_key: '' })),
+                        api.settings.getDeepLKey().catch(()  => ({ deepl_key:  '' })),
+                    ]);
+                    setOpenaiKey(k1.openai_key || '');
+                    setDeeplKey(k2.deepl_key   || '');
                 } catch { /* pas critique */ }
             } catch (e) {
                 showToast('error', i18n.t('errors.loadingPrefix', { msg: e.message }));
@@ -216,8 +287,9 @@ const AdminSettings = () => {
                 max_submissions_per_ip_total:  String(maxTotal),
                 max_submissions_per_ip_window: String(maxWindow),
                 submission_window_minutes:     String(windowMinutes),
+                openai_key: openaiKey,
+                deepl_key:  deeplKey,
             };
-            if (aiKey !== undefined) payload.openai_key = aiKey;
 
             await api.settings.update(payload);
             showToast('success', i18n.t('toasts.settingsSaved'));
@@ -701,77 +773,54 @@ const AdminSettings = () => {
                        ════════════════════════════════════════════════════════ */}
                     <Group title="Système" color="var(--color-theme-system)">
 
-                        {/* ── Clé API ──────── */}
-                        <Section icon={Key} title="Clé API (traduction automatique)"
+                        {/* ── Clés API ──────── */}
+                        <Section icon={Key} title="Clés API (traduction automatique)"
                             color="var(--color-theme-system)" bg="var(--color-theme-system-bg)">
-                            <Field
-                                label="Clé OpenAI ou DeepL"
-                                hint="Utilisée pour la traduction automatique des cartels. Commence par sk-… (OpenAI) ou se termine par :fx (DeepL Free)."
-                            >
-                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                                    <input
-                                        type={showKey ? 'text' : 'password'}
-                                        value={aiKey}
-                                        onChange={e => setAiKey(e.target.value)}
-                                        placeholder="sk-… ou votre clé DeepL"
-                                        style={{
-                                            flex: 1,
-                                            minWidth: '260px',
-                                            padding: '10px 14px',
-                                            borderRadius: 'var(--radius-md)',
-                                            border: '1px solid var(--color-border)',
-                                            fontSize: '0.9rem',
-                                            fontFamily: 'inherit',
-                                        }}
-                                    />
-                                    <button
-                                        onClick={() => setShowKey(!showKey)}
-                                        style={{
-                                            padding: '10px 14px',
-                                            borderRadius: 'var(--radius-md)',
-                                            border: '1px solid var(--color-border)',
-                                            background: 'var(--color-surface-2)',
-                                            cursor: 'pointer',
-                                            fontSize: '0.78rem',
-                                            fontFamily: 'var(--font-heading)',
-                                            color: 'var(--color-text-muted)',
-                                            fontWeight: '700',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.5px',
-                                        }}
-                                    >
-                                        {showKey ? 'Masquer' : 'Afficher'}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={handleSave}
-                                        disabled={saving || loading}
-                                        style={{
-                                            padding: '10px 14px',
-                                            borderRadius: 'var(--radius-md)',
-                                            border: 'none',
-                                            background: saving ? 'var(--color-border-strong)' : 'var(--color-theme-system)',
-                                            color: 'var(--color-white)',
-                                            cursor: saving || loading ? 'not-allowed' : 'pointer',
-                                            fontSize: '0.78rem',
-                                            fontWeight: '700',
-                                            fontFamily: 'var(--font-heading)',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.5px',
-                                        }}
-                                    >
-                                        {saving ? 'Envoi…' : 'Enregistrer la clé'}
-                                    </button>
-                                </div>
-                                {aiKey && (
-                                    <p style={{ margin: '6px 0 0', fontSize: '0.82rem', color: 'var(--color-text-subtle)' }}>
-                                        {aiKey.startsWith('sk-') ? 'Format OpenAI détecté' : aiKey.endsWith(':fx') ? 'Format DeepL Free détecté' : 'Format non reconnu'}
-                                    </p>
-                                )}
-                                <p style={{ margin: '8px 0 0', fontSize: '0.82rem', color: 'var(--color-text-muted)' }}>
-                                    Cliquez sur « Enregistrer la clé » après collage pour confirmer la prise en compte.
-                                </p>
-                            </Field>
+
+                            <p style={{ margin: '0 0 18px', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                                Si une clé DeepL est renseignée, elle est utilisée pour les traductions <strong>FR&nbsp;↔&nbsp;EN</strong> (moins coûteux).
+                                La clé OpenAI prend le relais pour toutes les <strong>autres langues</strong> (export PDF multilingue).
+                            </p>
+
+                            <ApiKeyField
+                                label="Clé DeepL (FR ↔ EN)"
+                                hint="Optionnelle. Se termine par :fx pour DeepL Free, ou clé brute pour DeepL Pro."
+                                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:fx"
+                                value={deeplKey}
+                                onChange={setDeeplKey}
+                                show={showDeeplKey}
+                                onToggleShow={() => setShowDeeplKey(!showDeeplKey)}
+                                onSave={handleSave}
+                                saving={saving}
+                                loading={loading}
+                                detect={(k) => {
+                                    if (k.endsWith(':fx')) return 'Format DeepL Free détecté';
+                                    if (k.startsWith('sk-') || k.startsWith('proj-')) return 'Attention : ressemble à une clé OpenAI — à coller dans le champ ci-dessous';
+                                    return 'Format DeepL Pro (présumé)';
+                                }}
+                            />
+
+                            <ApiKeyField
+                                label="Clé OpenAI (autres langues)"
+                                hint="Requise pour traduire vers une langue autre que FR/EN. Commence par sk-… ou proj-…"
+                                placeholder="sk-…"
+                                value={openaiKey}
+                                onChange={setOpenaiKey}
+                                show={showOpenaiKey}
+                                onToggleShow={() => setShowOpenaiKey(!showOpenaiKey)}
+                                onSave={handleSave}
+                                saving={saving}
+                                loading={loading}
+                                detect={(k) => {
+                                    if (k.startsWith('sk-') || k.startsWith('proj-')) return 'Format OpenAI détecté';
+                                    if (k.endsWith(':fx')) return 'Attention : ressemble à une clé DeepL — à coller dans le champ ci-dessus';
+                                    return 'Format non reconnu';
+                                }}
+                            />
+
+                            <p style={{ margin: '8px 0 0', fontSize: '0.82rem', color: 'var(--color-text-muted)' }}>
+                                Cliquez sur « Enregistrer » après collage pour confirmer la prise en compte.
+                            </p>
                         </Section>
 
                         {/* ── Informations système ──────── */}
@@ -782,7 +831,8 @@ const AdminSettings = () => {
                                     { label: 'Soumissions anonymes',  value: allowAnon ? 'Autorisées' : 'Bloquées' },
                                     { label: 'Limite globale / IP',   value: `${maxTotal} cartels` },
                                     { label: 'Limite sur fenêtre',    value: `${maxWindow} cartels / ${windowMinutes} min` },
-                                    { label: 'Clé IA configurée',     value: aiKey ? 'Oui' : 'Non' },
+                                    { label: 'Clé OpenAI configurée', value: openaiKey ? 'Oui' : 'Non' },
+                                    { label: 'Clé DeepL configurée',  value: deeplKey  ? 'Oui' : 'Non' },
                                 ].map(({ label, value }) => (
                                     <div
                                         key={label}

@@ -67,20 +67,31 @@ const SubsiteLayout = () => {
             .finally(() => setLoading(false));
     }, [slug]);
 
-    // Injecter la couleur primaire en CSS variable + surcharger les tokens globaux
+    // Injecter la couleur primaire en CSS variable + surcharger les tokens globaux.
+    // L'accent jaune du site principal est remplacé par la couleur du sous-site
+    // partout où il joue un rôle de signature (active nav, liseré cartel, focus
+    // ring, etc.).
     useEffect(() => {
         if (!subsite) return;
         const el = document.documentElement;
-        el.style.setProperty('--subsite-color', subsite.primary_color);
-        // Surcharger les tokens globaux pour que les composants partagés héritent de la bonne couleur
-        el.style.setProperty('--color-pink-darker', subsite.primary_color);
-        el.style.setProperty('--color-red-accent', subsite.primary_color);
+        const primary = subsite.primary_color;
+        el.style.setProperty('--subsite-color', primary);
+        el.style.setProperty('--color-pink-darker', primary);
+        el.style.setProperty('--color-red-accent',  primary);
+        el.style.setProperty('--color-accent',      primary);
+        el.style.setProperty('--color-accent-hover', `color-mix(in srgb, ${primary} 80%, black)`);
+        el.style.setProperty('--color-accent-soft', `color-mix(in srgb, ${primary} 15%, white)`);
+        el.style.setProperty('--focus-ring-color',  primary);
         // Version très atténuée pour les fonds (ex: cartel-card)
-        el.style.setProperty('--color-pink', `color-mix(in srgb, ${subsite.primary_color} 12%, white)`);
+        el.style.setProperty('--color-pink', `color-mix(in srgb, ${primary} 12%, white)`);
         return () => {
             el.style.removeProperty('--subsite-color');
             el.style.removeProperty('--color-pink-darker');
             el.style.removeProperty('--color-red-accent');
+            el.style.removeProperty('--color-accent');
+            el.style.removeProperty('--color-accent-hover');
+            el.style.removeProperty('--color-accent-soft');
+            el.style.removeProperty('--focus-ring-color');
             el.style.removeProperty('--color-pink');
         };
     }, [subsite]);
@@ -137,6 +148,17 @@ const SubsiteLayout = () => {
                                         background: isActive ? color : 'transparent',
                                         transition: 'background-color 0.12s, color 0.12s',
                                     })}
+                                    onMouseEnter={(e) => {
+                                        if (e.currentTarget.getAttribute('aria-current') === 'page') return;
+                                        // Tint léger de la couleur du sous-site pour signaler la cible cliquable
+                                        e.currentTarget.style.background = `color-mix(in srgb, ${color} 25%, transparent)`;
+                                        e.currentTarget.style.color = color;
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (e.currentTarget.getAttribute('aria-current') === 'page') return;
+                                        e.currentTarget.style.background = 'transparent';
+                                        e.currentTarget.style.color = 'var(--color-white)';
+                                    }}
                                 >
                                     {l.label}
                                 </NavLink>
@@ -163,7 +185,7 @@ const SubsiteLayout = () => {
                                 <button
                                     onClick={() => navigate(`/site/${slug}/admin/published`)}
                                     title="Gérer les cartels de ce sous-site"
-                                    style={{ background: 'transparent', border: `1px solid ${color}`, borderRadius: 'var(--radius-md)', padding: '7px 14px', color, cursor: 'pointer', fontSize: '0.78rem', fontWeight: '700', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                    style={{ background: 'var(--color-white)', border: `1px solid ${color}`, borderRadius: 'var(--radius-md)', padding: '7px 14px', color, cursor: 'pointer', fontSize: '0.78rem', fontWeight: '700', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}
                                 >
                                     <Settings2 size={14} /> Gérer
                                 </button>

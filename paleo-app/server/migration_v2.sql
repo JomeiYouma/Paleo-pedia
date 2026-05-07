@@ -31,7 +31,8 @@ INSERT IGNORE INTO `settings` (`key_name`, `value`) VALUES
   ('max_submissions_per_ip_total',  '10'),
   ('max_submissions_per_ip_window', '3'),
   ('submission_window_minutes',     '60'),
-  ('openai_key',                    '');
+  ('openai_key',                    ''),
+  ('deepl_key',                     '');
 
 -- ============================================================
 -- 3. TABLE WORKSHOPS
