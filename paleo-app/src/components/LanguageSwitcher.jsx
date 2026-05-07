@@ -10,32 +10,51 @@ const LanguageSwitcher = () => {
         localStorage.setItem('paleo-app-lang', lng);
     };
 
+    // Les boutons héritent la couleur du parent via `currentColor` :
+    // sur header sombre (color: white) → texte/bordure blancs, lisibles.
+    // L'état actif passe en jaune avec texte foncé pour un contraste maximal.
+    const baseStyle = {
+        borderRadius: 'var(--radius-md)',
+        padding: '4px 10px',
+        cursor: 'pointer',
+        fontFamily: 'var(--font-heading)',
+        fontSize: '0.78rem',
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px',
+        lineHeight: 1.2,
+        transition: 'background-color 0.12s, color 0.12s, border-color 0.12s',
+    };
+
+    const activeStyle = {
+        ...baseStyle,
+        background: 'var(--color-accent)',
+        color: 'var(--color-primary)',
+        border: '1px solid var(--color-accent)',
+    };
+
+    const inactiveStyle = {
+        ...baseStyle,
+        background: 'transparent',
+        color: 'currentColor',
+        border: '1px solid currentColor',
+        opacity: 0.85,
+    };
+
     return (
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div role="group" aria-label="Choix de la langue" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
             <button
                 onClick={() => changeLanguage('fr')}
-                style={{
-                    border: activeLanguage === 'fr' ? '2px solid black' : '1px solid #ccc',
-                    borderRadius: '4px',
-                    padding: '5px',
-                    background: activeLanguage === 'fr' ? '#fff' : 'transparent',
-                    cursor: 'pointer',
-                    opacity: activeLanguage === 'fr' ? 1 : 0.6
-                }}
+                aria-pressed={activeLanguage === 'fr'}
+                style={activeLanguage === 'fr' ? activeStyle : inactiveStyle}
                 title="Français"
             >
                 FR
             </button>
             <button
                 onClick={() => changeLanguage('en')}
-                style={{
-                    border: activeLanguage === 'en' ? '2px solid black' : '1px solid #ccc',
-                    borderRadius: '4px',
-                    padding: '5px',
-                    background: activeLanguage === 'en' ? '#fff' : 'transparent',
-                    cursor: 'pointer',
-                    opacity: activeLanguage === 'en' ? 1 : 0.6
-                }}
+                aria-pressed={activeLanguage === 'en'}
+                style={activeLanguage === 'en' ? activeStyle : inactiveStyle}
                 title="English"
             >
                 EN

@@ -103,36 +103,39 @@ const SubsiteLayout = () => {
 
     return (
         <SubsiteContext.Provider value={subsite}>
-            <div style={{ fontFamily: "'Outfit', sans-serif", minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontFamily: 'var(--font-body)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
 
-                {/* ── Header ────────────────────────────────── */}
-                <header style={{ background: 'white', borderBottom: '1px solid #eee', position: 'sticky', top: 0, zIndex: 1000 }}>
-                    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', gap: '16px', height: '58px' }}>
+                {/* ── Header (dark, signature couleur du sous-site) ───────────── */}
+                <header style={{ background: 'var(--color-primary)', color: 'var(--color-white)', position: 'sticky', top: 0, zIndex: 1000 }}>
+                    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', gap: '16px', height: '60px' }}>
 
                         {/* Logo / nom */}
-                        <Link to={`/site/${slug}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-                            <div style={{ width: '10px', height: '32px', borderRadius: '3px', background: color }} />
-                            <span style={{ fontSize: '1.15rem', fontWeight: '800', color: '#1a1a1a', letterSpacing: '-0.3px' }}>
+                        <Link to={`/site/${slug}`} style={{ textDecoration: 'none', color: 'var(--color-white)', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                            <div style={{ width: '6px', height: '32px', background: color }} />
+                            <span style={{ fontSize: '1.25rem', fontFamily: 'var(--font-display)', fontWeight: '400', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                                 {subsite.name}
                             </span>
                         </Link>
 
                         {/* Nav desktop */}
-                        <nav style={{ display: 'flex', gap: '2px', flex: 1 }}>
+                        <nav aria-label={`Navigation ${subsite.name}`} style={{ display: 'flex', gap: '2px', flex: 1, marginLeft: '20px' }}>
                             {navLinks.map(l => (
                                 <NavLink
                                     key={l.to}
                                     to={l.to}
                                     end={l.end}
                                     style={({ isActive }) => ({
-                                        padding: '6px 14px',
-                                        borderRadius: '8px',
+                                        padding: '8px 16px',
+                                        borderRadius: 'var(--radius-md)',
                                         textDecoration: 'none',
-                                        fontSize: '0.88rem',
-                                        fontWeight: '600',
-                                        color: isActive ? color : '#666',
-                                        background: isActive ? `${color}15` : 'transparent',
-                                        transition: 'all 0.12s',
+                                        fontSize: '0.85rem',
+                                        fontWeight: '700',
+                                        fontFamily: 'var(--font-heading)',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.5px',
+                                        color: isActive ? 'var(--color-primary)' : 'var(--color-white)',
+                                        background: isActive ? color : 'transparent',
+                                        transition: 'background-color 0.12s, color 0.12s',
                                     })}
                                 >
                                     {l.label}
@@ -141,7 +144,7 @@ const SubsiteLayout = () => {
                         </nav>
 
                         {/* Actions droite */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                             <LanguageSwitcher />
 
                             {/* Proposer un cartel (visiteurs + admins) */}
@@ -151,7 +154,7 @@ const SubsiteLayout = () => {
                                     navigate(`/site/${slug}/create`, { state: { returnTo } });
                                 }}
                                 title="Proposer un cartel pour ce sous-site"
-                                style={{ background: color, border: 'none', borderRadius: '8px', padding: '6px 12px', color: 'white', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                style={{ background: color, border: 'none', borderRadius: 'var(--radius-md)', padding: '7px 14px', color: 'var(--color-white)', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '700', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}
                             >
                                 <PlusCircle size={14} /> Proposer un cartel
                             </button>
@@ -160,19 +163,19 @@ const SubsiteLayout = () => {
                                 <button
                                     onClick={() => navigate(`/site/${slug}/admin/published`)}
                                     title="Gérer les cartels de ce sous-site"
-                                    style={{ background: `${color}18`, border: `1px solid ${color}40`, borderRadius: '8px', padding: '6px 12px', color, cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                    style={{ background: 'transparent', border: `1px solid ${color}`, borderRadius: 'var(--radius-md)', padding: '7px 14px', color, cursor: 'pointer', fontSize: '0.78rem', fontWeight: '700', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}
                                 >
                                     <Settings2 size={14} /> Gérer
                                 </button>
                             )}
                             {user ? (
-                                <button onClick={() => { logout(); navigate(`/site/${slug}`); }} title="Se déconnecter"
-                                    style={{ background: 'none', border: '1px solid #e0e0e0', borderRadius: '8px', padding: '6px 10px', cursor: 'pointer', color: '#888', display: 'flex', alignItems: 'center' }}>
+                                <button onClick={() => { logout(); navigate(`/site/${slug}`); }} title="Se déconnecter" aria-label="Se déconnecter"
+                                    style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 'var(--radius-md)', padding: '7px 10px', cursor: 'pointer', color: 'var(--color-white)', display: 'flex', alignItems: 'center' }}>
                                     <LogOut size={14} />
                                 </button>
                             ) : (
                                 <button onClick={() => setShowLogin(true)} title="Se connecter"
-                                    style={{ background: 'white', border: `1px solid ${color}40`, borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', color, display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: '700', fontFamily: 'inherit' }}>
+                                    style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 'var(--radius-md)', padding: '7px 14px', cursor: 'pointer', color: 'var(--color-white)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', fontWeight: '700', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                     <LogIn size={14} /> Se connecter
                                 </button>
                             )}
@@ -193,13 +196,13 @@ const SubsiteLayout = () => {
                     >
                         <div
                             onClick={e => e.stopPropagation()}
-                            style={{ background: 'white', borderRadius: '14px', padding: '24px 28px', maxWidth: '380px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}
+                            style={{ background: 'var(--color-surface)', borderRadius: 'var(--radius-md)', padding: '28px', maxWidth: '380px', width: '100%', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--color-border)' }}
                         >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <LogIn size={16} color={color} />
+                                <div style={{ width: '36px', height: '36px', borderRadius: 'var(--radius-md)', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <LogIn size={16} color="var(--color-white)" />
                                 </div>
-                                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800' }}>Se connecter</h3>
+                                <h3 style={{ margin: 0, fontSize: '1.2rem' }}>Se connecter</h3>
                             </div>
                             <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                 <input
@@ -209,7 +212,7 @@ const SubsiteLayout = () => {
                                     placeholder="email@exemple.org"
                                     required
                                     autoFocus
-                                    style={{ padding: '9px 12px', borderRadius: '8px', border: '1px solid #ddd', fontFamily: 'inherit', fontSize: '0.9rem' }}
+                                    style={{ padding: '10px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', fontFamily: 'inherit', fontSize: '0.9rem' }}
                                 />
                                 <input
                                     type="password"
@@ -217,23 +220,23 @@ const SubsiteLayout = () => {
                                     onChange={e => setLoginPassword(e.target.value)}
                                     placeholder="Mot de passe"
                                     required
-                                    style={{ padding: '9px 12px', borderRadius: '8px', border: '1px solid #ddd', fontFamily: 'inherit', fontSize: '0.9rem' }}
+                                    style={{ padding: '10px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', fontFamily: 'inherit', fontSize: '0.9rem' }}
                                 />
                                 {loginError && (
-                                    <p style={{ margin: 0, fontSize: '0.82rem', color: '#d32f2f' }}>{loginError}</p>
+                                    <p role="alert" style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-error)' }}>{loginError}</p>
                                 )}
                                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
                                     <button
                                         type="button"
                                         onClick={() => setShowLogin(false)}
-                                        style={{ padding: '9px 14px', borderRadius: '8px', border: '1px solid #ddd', background: 'white', color: '#555', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: '600' }}
+                                        style={{ padding: '10px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text-muted)', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: '0.82rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}
                                     >
                                         Annuler
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={loginLoading}
-                                        style={{ padding: '9px 18px', borderRadius: '8px', border: 'none', background: loginLoading ? `${color}80` : color, color: 'white', cursor: loginLoading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: '700' }}
+                                        style={{ padding: '10px 18px', borderRadius: 'var(--radius-md)', border: 'none', background: loginLoading ? 'var(--color-border-strong)' : color, color: 'var(--color-white)', cursor: loginLoading ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-heading)', fontSize: '0.82rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}
                                     >
                                         {loginLoading ? '…' : 'Se connecter'}
                                     </button>
@@ -244,21 +247,20 @@ const SubsiteLayout = () => {
                 )}
 
                 {/* ── Footer ───────────────────────────────── */}
-                <footer style={{ background: '#f8f9fa', borderTop: '1px solid #eee', padding: '32px 24px' }}>
+                <footer style={{ background: 'var(--color-primary)', color: 'var(--color-white)', padding: '32px 24px', borderTop: `4px solid ${color}` }}>
                     <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '24px' }}>
                         <div>
-                            <div style={{ fontWeight: '800', fontSize: '1rem', color: '#1a1a1a', marginBottom: '4px' }}>{subsite.name}</div>
-                            <div style={{ color: '#999', fontSize: '0.82rem' }}>© {new Date().getFullYear()} Atelier 21</div>
+                            <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', color: 'var(--color-white)', marginBottom: '4px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>{subsite.name}</div>
+                            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem' }}>© {new Date().getFullYear()} Atelier 21</div>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
-                            <Link to={`/site/${slug}/mentions`} style={{ color: '#aaa', fontSize: '0.82rem', textDecoration: 'none' }}>Mentions légales</Link>
-                            <Link to="/politique-confidentialite" style={{ color: '#aaa', fontSize: '0.82rem', textDecoration: 'none' }}>Politique de confidentialité</Link>
-                            <Link to="/contact" style={{ color: '#aaa', fontSize: '0.82rem', textDecoration: 'none' }}>Contact</Link>
-                            {/* Lien retour discret */}
-                            <Link to="/" style={{ color: '#ccc', fontSize: '0.76rem', textDecoration: 'none', marginTop: '8px' }}>
+                        <nav aria-label="Liens secondaires" style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
+                            <Link to={`/site/${slug}/mentions`} style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', textDecoration: 'none' }}>Mentions légales</Link>
+                            <Link to="/politique-confidentialite" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', textDecoration: 'none' }}>Politique de confidentialité</Link>
+                            <Link to="/contact" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', textDecoration: 'none' }}>Contact</Link>
+                            <Link to="/" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem', textDecoration: 'none', marginTop: '8px' }}>
                                 ← Retour au site Paléo-Énergétique
                             </Link>
-                        </div>
+                        </nav>
                     </div>
                 </footer>
             </div>

@@ -14,10 +14,10 @@ import SubsiteEditor from '../components/SubsiteEditor';
 // ── Composants de formulaire ─────────────────────────────────
 const Field = ({ label, hint, children }) => (
     <div style={{ marginBottom: '20px' }}>
-        <label style={{ display: 'block', fontWeight: '700', fontSize: '0.88rem', color: '#333', marginBottom: '4px' }}>
+        <label style={{ display: 'block', fontWeight: '700', fontSize: '0.78rem', color: 'var(--color-text-muted)', marginBottom: '4px', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             {label}
         </label>
-        {hint && <p style={{ margin: '0 0 8px', fontSize: '0.8rem', color: '#999' }}>{hint}</p>}
+        {hint && <p style={{ margin: '0 0 8px', fontSize: '0.85rem', color: 'var(--color-text-subtle)' }}>{hint}</p>}
         {children}
     </div>
 );
@@ -33,20 +33,22 @@ const NumberInput = ({ value, onChange, min = 0, max = 9999, suffix }) => (
             style={{
                 width: '100px',
                 padding: '9px 12px',
-                borderRadius: '8px',
-                border: '1px solid #ddd',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--color-border)',
                 fontSize: '0.95rem',
-                fontWeight: '600',
+                fontWeight: '700',
                 textAlign: 'center',
+                fontFamily: 'inherit',
             }}
         />
-        {suffix && <span style={{ fontSize: '0.85rem', color: '#888' }}>{suffix}</span>}
+        {suffix && <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>{suffix}</span>}
     </div>
 );
 
 const Toggle = ({ value, onChange, label }) => (
     <button
         onClick={() => onChange(!value)}
+        aria-pressed={value}
         style={{
             display: 'flex',
             alignItems: 'center',
@@ -59,43 +61,67 @@ const Toggle = ({ value, onChange, label }) => (
         }}
     >
         {value
-            ? <ToggleRight size={32} color="#2e7d32" />
-            : <ToggleLeft size={32} color="#bbb" />
+            ? <ToggleRight size={32} color="var(--color-success)" />
+            : <ToggleLeft size={32} color="var(--color-border-strong)" />
         }
-        <span style={{ fontWeight: '600', fontSize: '0.9rem', color: value ? '#2e7d32' : '#888' }}>
+        <span style={{ fontWeight: '700', fontSize: '0.85rem', color: value ? 'var(--color-success)' : 'var(--color-text-muted)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
             {value ? 'Activé' : 'Désactivé'}
         </span>
-        {label && <span style={{ color: '#555', fontSize: '0.88rem' }}>— {label}</span>}
+        {label && <span style={{ color: 'var(--color-text-muted)', fontSize: '0.88rem' }}>— {label}</span>}
     </button>
 );
 
+// ── Groupe thématique : titre + bandeau coloré qui rassemble plusieurs Section ──
+// On regroupe pour que la page de réglages soit lisible d'un coup d'œil :
+// l'œil sait où chercher Contenus / Communauté / Système.
+const Group = ({ title, color, children }) => (
+    <section style={{ marginBottom: '40px' }} aria-label={title}>
+        <header style={{
+            display: 'flex', alignItems: 'center', gap: '14px',
+            margin: '0 0 16px',
+            paddingLeft: '10px',
+            borderLeft: `4px solid ${color}`,
+        }}>
+            <h2 style={{
+                margin: 0,
+                fontSize: '1.15rem',
+                fontFamily: 'var(--font-display)',
+                color: color,
+                letterSpacing: '0.04em',
+            }}>{title}</h2>
+        </header>
+        {children}
+    </section>
+);
+
 // ── Section card ─────────────────────────────────────────────
-const Section = ({ icon: Icon, title, color = '#333', children }) => (
+const Section = ({ icon: Icon, title, color = 'var(--color-primary)', bg, children }) => (
     <div style={{
-        background: 'white',
-        border: '1px solid #eee',
-        borderRadius: '14px',
+        background: 'var(--color-surface)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-md)',
         overflow: 'hidden',
-        marginBottom: '24px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+        marginBottom: '14px',
+        boxShadow: 'var(--shadow-sm)',
     }}>
         <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
-            padding: '18px 24px',
-            borderBottom: '1px solid #f0f0f0',
-            background: '#fafafa',
+            padding: '14px 20px',
+            borderBottom: '1px solid var(--color-border)',
+            background: bg || 'var(--color-surface-2)',
         }}>
             <div style={{
-                width: '36px', height: '36px',
-                background: `${color}18`,
-                borderRadius: '10px',
+                width: '32px', height: '32px',
+                background: color,
+                borderRadius: 'var(--radius-md)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
             }}>
-                <Icon size={18} color={color} />
+                <Icon size={16} color="white" />
             </div>
-            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: '#1a1a1a' }}>{title}</h3>
+            <h3 style={{ margin: 0, fontSize: '0.95rem', fontFamily: 'var(--font-heading)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text)' }}>{title}</h3>
         </div>
         <div style={{ padding: '24px' }}>
             {children}
@@ -259,37 +285,37 @@ const AdminSettings = () => {
 
             {/* ── Toast ─────────────────────────────────────── */}
             {toast && (
-                <div style={{
+                <div role="status" style={{
                     position: 'fixed',
                     top: '80px',
                     right: '24px',
                     zIndex: 9999,
-                    background: toast.type === 'success' ? '#e8f5e9' : '#fff0f0',
-                    border: `1px solid ${toast.type === 'success' ? '#a5d6a7' : '#ffcdd2'}`,
-                    borderRadius: '12px',
+                    background: toast.type === 'success' ? 'var(--color-success-bg)' : 'var(--color-error-bg)',
+                    border: `1px solid ${toast.type === 'success' ? 'var(--color-success)' : 'var(--color-error)'}`,
+                    borderRadius: 'var(--radius-md)',
                     padding: '14px 20px',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '10px',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                    boxShadow: 'var(--shadow-lg)',
                     animation: 'slideIn 0.2s ease-out',
                     maxWidth: '340px',
                 }}>
                     {toast.type === 'success'
-                        ? <CheckCircle2 size={18} color="#2e7d32" />
-                        : <AlertCircle size={18} color="#d32f2f" />
+                        ? <CheckCircle2 size={18} color="var(--color-success)" />
+                        : <AlertCircle size={18} color="var(--color-error)" />
                     }
-                    <span style={{ fontWeight: '600', fontSize: '0.88rem', color: toast.type === 'success' ? '#2e7d32' : '#d32f2f' }}>
+                    <span style={{ fontWeight: '700', fontSize: '0.88rem', color: toast.type === 'success' ? 'var(--color-success)' : 'var(--color-error)' }}>
                         {toast.msg}
                     </span>
                 </div>
             )}
 
             {/* ── En-tête ──────────────────────────────────── */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', gap: '16px', flexWrap: 'wrap' }}>
                 <div>
-                    <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: '800' }}>Administration</h1>
-                    <p style={{ margin: '4px 0 0', color: '#999', fontSize: '0.88rem' }}>Paramètres globaux de l'application</p>
+                    <h1 style={{ margin: 0, fontSize: '2rem' }}>Administration</h1>
+                    <p style={{ margin: '4px 0 0', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Paramètres globaux de l'application</p>
                 </div>
                 <button
                     onClick={handleSave}
@@ -298,15 +324,17 @@ const AdminSettings = () => {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
-                        background: saving ? '#ccc' : '#1a1a1a',
-                        color: 'white',
+                        background: saving ? 'var(--color-border-strong)' : 'var(--color-primary)',
+                        color: 'var(--color-white)',
                         border: 'none',
-                        borderRadius: '10px',
+                        borderRadius: 'var(--radius-md)',
                         padding: '12px 22px',
                         cursor: saving ? 'not-allowed' : 'pointer',
                         fontWeight: '700',
-                        fontSize: '0.9rem',
-                        fontFamily: 'inherit',
+                        fontSize: '0.85rem',
+                        fontFamily: 'var(--font-heading)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
                     }}
                 >
                     {saving
@@ -320,445 +348,462 @@ const AdminSettings = () => {
                 <div style={{ textAlign: 'center', padding: '60px', color: '#bbb' }}>Chargement…</div>
             ) : (
                 <>
-                    {/* ── Section 1 : soumissions anonymes ─── */}
-                    <Section icon={Users} title="Soumissions de visiteurs" color="#3b5bdb">
+                    {/* ════════════════════════════════════════════════════════
+                        GROUPE 1 — CONTENUS : ce qui peuple le site
+                       ════════════════════════════════════════════════════════ */}
+                    <Group title="Contenus" color="var(--color-theme-content)">
 
-                        <Field
-                            label="Autoriser les soumissions anonymes"
-                            hint="Si désactivé, seuls les utilisateurs connectés pourront proposer des cartels."
-                        >
-                            <Toggle value={allowAnon} onChange={setAllowAnon} />
-                        </Field>
-
-                        {allowAnon && (
-                            <div style={{
-                                background: '#f8f9ff',
-                                border: '1px solid #e0e4ff',
-                                borderRadius: '12px',
-                                padding: '20px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '20px',
-                            }}>
-                                {/* Limite totale par IP */}
-                                <Field
-                                    label="Maximum de soumissions par adresse IP (total)"
-                                    hint="Nombre total de cartels qu'une même IP peut soumettre, toutes périodes confondues."
-                                >
-                                    <NumberInput
-                                        value={maxTotal}
-                                        onChange={v => setMaxTotal(Number(v))}
-                                        min={1}
-                                        max={500}
-                                        suffix="cartels max"
-                                    />
-                                </Field>
-
-                                {/* Fenêtre glissante */}
-                                <div style={{ borderTop: '1px solid #e0e4ff', paddingTop: '20px' }}>
-                                    <p style={{ margin: '0 0 14px', fontWeight: '700', fontSize: '0.88rem', color: '#333' }}>
-                                        Limite sur fenêtre glissante
-                                    </p>
-                                    <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                                        <Field
-                                            label="Soumissions autorisées par fenêtre"
-                                            hint="Nombre max de cartels sur la période définie ci-dessous."
-                                        >
-                                            <NumberInput
-                                                value={maxWindow}
-                                                onChange={v => setMaxWindow(Number(v))}
-                                                min={1}
-                                                max={50}
-                                                suffix="cartels"
-                                            />
-                                        </Field>
-
-                                        <Field
-                                            label="Durée de la fenêtre"
-                                            hint="Période glissante de contrôle."
-                                        >
-                                            <NumberInput
-                                                value={windowMinutes}
-                                                onChange={v => setWindowMinutes(Number(v))}
-                                                min={1}
-                                                max={1440}
-                                                suffix="minutes"
-                                            />
-                                        </Field>
-                                    </div>
-
-                                    {/* Résumé lisible */}
-                                    <div style={{
-                                        background: '#e8ecff',
-                                        borderRadius: '8px',
-                                        padding: '12px 16px',
-                                        marginTop: '4px',
-                                        fontSize: '0.87rem',
-                                        color: '#3b5bdb',
-                                        fontWeight: '600',
-                                    }}>
-                                        Règle active : chaque IP peut soumettre au maximum{' '}
-                                        <strong>{maxWindow} cartel{maxWindow > 1 ? 's' : ''}</strong> toutes les{' '}
-                                        <strong>
-                                            {windowMinutes >= 60
-                                                ? `${Math.floor(windowMinutes / 60)}h${windowMinutes % 60 > 0 ? ` ${windowMinutes % 60}min` : ''}`
-                                                : `${windowMinutes} min`
-                                            }
-                                        </strong>,
-                                        et <strong>{maxTotal} cartel{maxTotal > 1 ? 's' : ''} au total</strong>.
-                                    </div>
+                        {/* ── Sous-sites ──────────── */}
+                        <Section icon={Globe} title="Sous-sites thématiques"
+                            color="var(--color-theme-content)" bg="var(--color-theme-content-bg)">
+                            <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+                                <button onClick={() => setEditSubsite('new')}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--color-theme-content)', color: 'white', border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 16px', cursor: 'pointer', fontWeight: '700', fontSize: '0.82rem', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                    <Plus size={14} /> Nouveau sous-site
+                                </button>
+                            </div>
+                            {subsites.length === 0 ? (
+                                <p style={{ color: 'var(--color-text-subtle)', textAlign: 'center', padding: '24px 0' }}>Aucun sous-site configuré.</p>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {subsites.map(s => (
+                                        <div key={s.slug} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '12px 16px' }}>
+                                            <div style={{ width: '4px', height: '32px', background: s.primary_color, flexShrink: 0 }} />
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontWeight: '700', fontSize: '0.95rem' }}>{s.name}</div>
+                                                <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.8rem' }}>/site/{s.slug} · {s.category_name}</div>
+                                            </div>
+                                            <a href={`#/site/${s.slug}`} target="_blank" rel="noopener" title="Ouvrir" style={{ color: 'var(--color-text-muted)', display: 'flex' }}><ExternalLink size={14} /></a>
+                                            <button onClick={() => setEditSubsite(s)} title="Modifier" aria-label={`Modifier ${s.name}`}
+                                                style={{ background: 'none', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '5px 10px', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center' }}>
+                                                <Edit size={13} />
+                                            </button>
+                                            <button onClick={async () => { if (!confirm(`Supprimer "${s.name}" ?`)) return; await api.subsites.delete(s.slug); loadSubsites(); }} title="Supprimer" aria-label={`Supprimer ${s.name}`}
+                                                style={{ background: 'none', border: '1px solid var(--color-error)', borderRadius: 'var(--radius-md)', padding: '5px 10px', cursor: 'pointer', color: 'var(--color-error)', display: 'flex', alignItems: 'center' }}>
+                                                <Trash2 size={13} />
+                                            </button>
+                                        </div>
+                                    ))}
                                 </div>
-                            </div>
-                        )}
-                    </Section>
-
-                    {/* ── Section 2 : clé API IA ───────────── */}
-                    <Section icon={Key} title="Clé API (traduction automatique)" color="#e67e00">
-                        <Field
-                            label="Clé OpenAI ou DeepL"
-                            hint="Utilisée pour la traduction automatique des cartels. Commence par sk-… (OpenAI) ou se termine par :fx (DeepL Free)."
-                        >
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                                <input
-                                    type={showKey ? 'text' : 'password'}
-                                    value={aiKey}
-                                    onChange={e => setAiKey(e.target.value)}
-                                    placeholder="sk-… ou votre clé DeepL"
-                                    style={{
-                                        flex: 1,
-                                        minWidth: '260px',
-                                        padding: '10px 14px',
-                                        borderRadius: '8px',
-                                        border: '1px solid #ddd',
-                                        fontSize: '0.9rem',
-                                        fontFamily: 'inherit',
-                                    }}
-                                />
-                                <button
-                                    onClick={() => setShowKey(!showKey)}
-                                    style={{
-                                        padding: '10px 14px',
-                                        borderRadius: '8px',
-                                        border: '1px solid #ddd',
-                                        background: '#f8f8f8',
-                                        cursor: 'pointer',
-                                        fontSize: '0.82rem',
-                                        fontFamily: 'inherit',
-                                        color: '#666',
-                                    }}
-                                >
-                                    {showKey ? 'Masquer' : 'Afficher'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={handleSave}
-                                    disabled={saving || loading}
-                                    style={{
-                                        padding: '10px 14px',
-                                        borderRadius: '8px',
-                                        border: 'none',
-                                        background: saving ? '#999' : '#e67e00',
-                                        color: 'white',
-                                        cursor: saving || loading ? 'not-allowed' : 'pointer',
-                                        fontSize: '0.82rem',
-                                        fontWeight: '700',
-                                        fontFamily: 'inherit',
-                                    }}
-                                >
-                                    {saving ? 'Envoi…' : 'Enregistrer la clé'}
-                                </button>
-                            </div>
-                            {aiKey && (
-                                <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: '#aaa' }}>
-                                    {aiKey.startsWith('sk-') ? 'Format OpenAI détecté' : aiKey.endsWith(':fx') ? 'Format DeepL Free détecté' : 'Format non reconnu'}
-                                </p>
                             )}
-                            <p style={{ margin: '8px 0 0', fontSize: '0.8rem', color: '#888' }}>
-                                Cliquez sur « Enregistrer la clé » après collage pour confirmer la prise en compte.
-                            </p>
-                        </Field>
-                    </Section>
+                        </Section>
 
-                    {/* ── Section 3a : Gestion d'équipe (lien) ──────────── */}
-                    <Section icon={Users} title="Gestion d'équipe" color="#6741d9">
-                        <button
-                            type="button"
-                            onClick={() => navigate('/app/admin/team')}
-                            style={{
-                                width: '100%',
-                                display: 'flex', alignItems: 'center', gap: '12px',
-                                padding: '14px 18px',
-                                background: '#f3efff', border: '1px solid #d9ccff',
-                                borderRadius: '10px', cursor: 'pointer',
-                                fontFamily: 'inherit', color: '#5327b5',
-                                fontSize: '0.9rem', fontWeight: '700',
-                            }}
-                        >
-                            <ExternalLink size={16} />
-                            <span style={{ flex: 1, textAlign: 'left' }}>Inviter ou gérer les membres d'un sous-site</span>
-                            <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
-                        </button>
-                        <p style={{ margin: '10px 0 0', fontSize: '0.8rem', color: '#888' }}>
-                            Owners : gérez votre propre équipe. Superadmins : vous pouvez aussi utiliser la page globale des utilisateurs.
-                        </p>
-                    </Section>
-
-                    {/* ── Section 3b : Catégories & ateliers ──────────── */}
-                    <Section icon={FolderOpen} title="Catégories & ateliers" color="#0d9488">
-                        <button
-                            type="button"
-                            onClick={() => navigate('/app/admin/taxonomies')}
-                            style={{
-                                width: '100%',
-                                display: 'flex', alignItems: 'center', gap: '12px',
-                                padding: '14px 18px',
-                                background: '#ecfdf5', border: '1px solid #b7e4d8',
-                                borderRadius: '10px', cursor: 'pointer',
-                                fontFamily: 'inherit', color: '#0d6b60',
-                                fontSize: '0.9rem', fontWeight: '700',
-                            }}
-                        >
-                            <ExternalLink size={16} />
-                            <span style={{ flex: 1, textAlign: 'left' }}>Modifier ou supprimer les catégories et ateliers</span>
-                            <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
-                        </button>
-                        <p style={{ margin: '10px 0 0', fontSize: '0.8rem', color: '#888' }}>
-                            Gérez la taxonomie des cartels (couleurs, traductions) et le cycle de vie des ateliers.
-                        </p>
-                    </Section>
-
-                    {/* ── Section 3c : Journal d'événements ──────────── */}
-                    <Section icon={Activity} title="Journal d'événements" color="#6741d9">
-                        <button
-                            type="button"
-                            onClick={() => navigate('/app/admin/logs')}
-                            style={{
-                                width: '100%',
-                                display: 'flex', alignItems: 'center', gap: '12px',
-                                padding: '14px 18px',
-                                background: '#f3efff', border: '1px solid #d9ccff',
-                                borderRadius: '10px', cursor: 'pointer',
-                                fontFamily: 'inherit', color: '#5327b5',
-                                fontSize: '0.9rem', fontWeight: '700',
-                            }}
-                        >
-                            <ExternalLink size={16} />
-                            <span style={{ flex: 1, textAlign: 'left' }}>Consulter le journal et configurer les notifications email</span>
-                            <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
-                        </button>
-                        <p style={{ margin: '10px 0 0', fontSize: '0.8rem', color: '#888' }}>
-                            Audit complet des actions (publications, modifications, créations de comptes…) et activation des notifications par email à l'équipe.
-                        </p>
-                    </Section>
-
-                    {/* ── Section 3 : Partenaires ──────────── */}
-                    <Section icon={Users} title="Partenaires" color="#00897b">
-                        {/* Toggler */}
-                        <div style={{ border: '1px solid #e6f2ef', borderRadius: '12px', overflow: 'hidden' }}>
+                        {/* ── Catégories & ateliers ──────────── */}
+                        <Section icon={FolderOpen} title="Catégories & ateliers"
+                            color="var(--color-theme-content)" bg="var(--color-theme-content-bg)">
                             <button
                                 type="button"
-                                onClick={() => setPartnersExpanded(v => !v)}
+                                onClick={() => navigate('/app/admin/taxonomies')}
                                 style={{
-                                    width: '100%', border: 'none', background: '#f4fbf9',
-                                    padding: '14px 18px', display: 'flex', alignItems: 'center',
-                                    justifyContent: 'space-between', cursor: 'pointer',
-                                    fontWeight: '700', color: '#16695f', fontFamily: 'inherit',
+                                    width: '100%',
+                                    display: 'flex', alignItems: 'center', gap: '12px',
+                                    padding: '14px 18px',
+                                    background: 'var(--color-theme-content-bg)', border: '1px solid var(--color-theme-content)',
+                                    borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-content)',
+                                    fontSize: '0.85rem', fontWeight: '700',
+                                    textTransform: 'uppercase', letterSpacing: '0.5px',
                                 }}
                             >
-                                <span>Gérer les partenaires du site et des sous-sites</span>
-                                {partnersExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                <ExternalLink size={16} />
+                                <span style={{ flex: 1, textAlign: 'left' }}>Modifier ou supprimer les catégories et ateliers</span>
+                                <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
                             </button>
+                            <p style={{ margin: '10px 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                                Gérez la taxonomie des cartels (couleurs, traductions) et le cycle de vie des ateliers.
+                            </p>
+                        </Section>
 
-                            {partnersExpanded && (
-                                <div style={{ background: 'white' }}>
+                        {/* ── Partenaires ──────────── */}
+                        <Section icon={Users} title="Partenaires"
+                            color="var(--color-theme-content)" bg="var(--color-theme-content-bg)">
+                            <div style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setPartnersExpanded(v => !v)}
+                                    aria-expanded={partnersExpanded}
+                                    style={{
+                                        width: '100%', border: 'none', background: 'var(--color-surface-2)',
+                                        padding: '14px 18px', display: 'flex', alignItems: 'center',
+                                        justifyContent: 'space-between', cursor: 'pointer',
+                                        fontWeight: '700', color: 'var(--color-text)',
+                                        fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px',
+                                        fontSize: '0.85rem',
+                                    }}
+                                >
+                                    <span>Gérer les partenaires du site et des sous-sites</span>
+                                    {partnersExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                </button>
 
-                                    {/* ── Bloc A : Lien vers la page dédiée ── */}
-                                    <div style={{ padding: '20px' }}>
-                                        <button
-                                            type="button"
-                                            onClick={() => navigate('/app/admin/partners')}
-                                            style={{
-                                                width: '100%',
-                                                display: 'flex', alignItems: 'center', gap: '12px',
-                                                padding: '14px 18px',
-                                                background: '#e0f2f1', border: '1px solid #b2dfdb',
-                                                borderRadius: '10px', cursor: 'pointer',
-                                                fontFamily: 'inherit', color: '#00695c',
-                                                fontSize: '0.9rem', fontWeight: '700',
-                                            }}
-                                        >
-                                            <ExternalLink size={16} />
-                                            <span style={{ flex: 1, textAlign: 'left' }}>Gérer la bibliothèque (obligatoires / pool / exclusifs)</span>
-                                            <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
-                                        </button>
+                                {partnersExpanded && (
+                                    <div style={{ background: 'var(--color-surface)' }}>
+                                        <div style={{ padding: '20px' }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => navigate('/app/admin/partners')}
+                                                style={{
+                                                    width: '100%',
+                                                    display: 'flex', alignItems: 'center', gap: '12px',
+                                                    padding: '14px 18px',
+                                                    background: 'var(--color-theme-content-bg)', border: '1px solid var(--color-theme-content)',
+                                                    borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-content)',
+                                                    fontSize: '0.85rem', fontWeight: '700',
+                                                    textTransform: 'uppercase', letterSpacing: '0.5px',
+                                                }}
+                                            >
+                                                <ExternalLink size={16} />
+                                                <span style={{ flex: 1, textAlign: 'left' }}>Gérer la bibliothèque (obligatoires / pool / exclusifs)</span>
+                                                <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
+                                            </button>
+                                        </div>
+
+                                        <div style={{ borderTop: '1px solid var(--color-border)' }} />
+
+                                        <div style={{ padding: '20px' }}>
+                                            <p style={{ margin: '0 0 4px', fontWeight: '700', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-theme-content)', fontFamily: 'var(--font-heading)' }}>
+                                                Affichage sur le site principal
+                                            </p>
+                                            <p style={{ margin: '0 0 16px', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                                                Un partenaire ne peut être que dans une seule liste. Cliquez pour cocher/décocher.
+                                            </p>
+
+                                            {partners.length === 0 ? (
+                                                <p style={{ fontSize: '0.85rem', color: 'var(--color-text-subtle)' }}>Ajoutez d'abord des partenaires dans la bibliothèque.</p>
+                                            ) : (
+                                                <>
+                                                    <div style={{ marginBottom: '16px' }}>
+                                                        <div style={{ fontWeight: '700', fontSize: '0.78rem', color: 'var(--color-theme-content)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                                            <span style={{ background: 'var(--color-theme-content-bg)', borderRadius: 'var(--radius-md)', padding: '2px 8px' }}>★ Principaux</span>
+                                                            <span style={{ fontWeight: '400', color: 'var(--color-text-subtle)' }}>— mis en avant (grande vignette)</span>
+                                                        </div>
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                            {partners.map(p => {
+                                                                const active = sitePrimaryPartnerIds.includes(p.id);
+                                                                return (
+                                                                    <button
+                                                                        key={`site-primary-${p.id}`}
+                                                                        type="button"
+                                                                        onClick={() => toggleSitePrimaryPartner(p.id)}
+                                                                        aria-pressed={active}
+                                                                        style={{
+                                                                            display: 'flex', alignItems: 'center', gap: '6px',
+                                                                            borderRadius: 'var(--radius-md)',
+                                                                            border: active ? '2px solid var(--color-theme-content)' : '2px solid var(--color-border)',
+                                                                            background: active ? 'var(--color-theme-content)' : 'var(--color-surface-2)',
+                                                                            color: active ? 'var(--color-white)' : 'var(--color-text-muted)',
+                                                                            padding: '6px 12px', fontSize: '0.82rem',
+                                                                            cursor: 'pointer', fontFamily: 'var(--font-heading)', fontWeight: '700',
+                                                                            textTransform: 'uppercase', letterSpacing: '0.4px',
+                                                                            transition: 'background-color 0.12s, border-color 0.12s, color 0.12s',
+                                                                        }}
+                                                                    >
+                                                                        {p.logo_path && <img src={p.logo_path} alt="" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />}
+                                                                        {p.name}
+                                                                        {active && <Check size={12} />}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+
+                                                    <div style={{ marginBottom: '16px' }}>
+                                                        <div style={{ fontWeight: '700', fontSize: '0.78rem', color: 'var(--color-text-muted)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                                            <span style={{ background: 'var(--color-neutral-bg)', borderRadius: 'var(--radius-md)', padding: '2px 8px' }}>Standards</span>
+                                                            <span style={{ fontWeight: '400', color: 'var(--color-text-subtle)' }}>— affichage secondaire</span>
+                                                        </div>
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                            {partners.map(p => {
+                                                                const active = sitePartnerIds.includes(p.id);
+                                                                return (
+                                                                    <button
+                                                                        key={`site-regular-${p.id}`}
+                                                                        type="button"
+                                                                        onClick={() => toggleSitePartner(p.id)}
+                                                                        aria-pressed={active}
+                                                                        style={{
+                                                                            display: 'flex', alignItems: 'center', gap: '6px',
+                                                                            borderRadius: 'var(--radius-md)',
+                                                                            border: active ? '2px solid var(--color-text-muted)' : '2px solid var(--color-border)',
+                                                                            background: active ? 'var(--color-text-muted)' : 'var(--color-surface-2)',
+                                                                            color: active ? 'var(--color-white)' : 'var(--color-text-muted)',
+                                                                            padding: '6px 12px', fontSize: '0.82rem',
+                                                                            cursor: 'pointer', fontFamily: 'var(--font-heading)', fontWeight: '700',
+                                                                            textTransform: 'uppercase', letterSpacing: '0.4px',
+                                                                            transition: 'background-color 0.12s, border-color 0.12s, color 0.12s',
+                                                                        }}
+                                                                    >
+                                                                        {p.logo_path && <img src={p.logo_path} alt="" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />}
+                                                                        {p.name}
+                                                                        {active && <Check size={12} />}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleSaveMainSitePartners}
+                                                        disabled={savingPartners}
+                                                        style={{
+                                                            border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 18px',
+                                                            background: savingPartners ? 'var(--color-border-strong)' : 'var(--color-theme-content)', color: 'var(--color-white)',
+                                                            fontWeight: '700', cursor: savingPartners ? 'not-allowed' : 'pointer',
+                                                            fontFamily: 'var(--font-heading)', fontSize: '0.82rem',
+                                                            textTransform: 'uppercase', letterSpacing: '0.5px',
+                                                            display: 'flex', alignItems: 'center', gap: '6px',
+                                                        }}
+                                                    >
+                                                        <Save size={14} /> Enregistrer la sélection
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
+                                )}
+                            </div>
+                        </Section>
+                    </Group>
 
-                                    {/* Séparateur */}
-                                    <div style={{ margin: '0 0 0', borderTop: '1px solid #e8f5f3' }} />
+                    {/* ════════════════════════════════════════════════════════
+                        GROUPE 2 — COMMUNAUTÉ & MODÉRATION
+                       ════════════════════════════════════════════════════════ */}
+                    <Group title="Communauté & modération" color="var(--color-theme-people)">
 
-                                    {/* ── Bloc B : Sélection site principal ── */}
-                                    <div style={{ padding: '20px' }}>
-                                        <p style={{ margin: '0 0 4px', fontWeight: '800', fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#00897b' }}>
-                                            Affichage sur le site principal
+                        {/* ── Soumissions de visiteurs ──────── */}
+                        <Section icon={Users} title="Soumissions de visiteurs"
+                            color="var(--color-theme-people)" bg="var(--color-theme-people-bg)">
+
+                            <Field
+                                label="Autoriser les soumissions anonymes"
+                                hint="Si désactivé, seuls les utilisateurs connectés pourront proposer des cartels."
+                            >
+                                <Toggle value={allowAnon} onChange={setAllowAnon} />
+                            </Field>
+
+                            {allowAnon && (
+                                <div style={{
+                                    background: 'var(--color-theme-people-bg)',
+                                    border: '1px solid var(--color-theme-people)',
+                                    borderRadius: 'var(--radius-md)',
+                                    padding: '20px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '20px',
+                                }}>
+                                    <Field
+                                        label="Maximum de soumissions par adresse IP (total)"
+                                        hint="Nombre total de cartels qu'une même IP peut soumettre, toutes périodes confondues."
+                                    >
+                                        <NumberInput
+                                            value={maxTotal}
+                                            onChange={v => setMaxTotal(Number(v))}
+                                            min={1}
+                                            max={500}
+                                            suffix="cartels max"
+                                        />
+                                    </Field>
+
+                                    <div style={{ borderTop: '1px solid var(--color-theme-people)', paddingTop: '20px' }}>
+                                        <p style={{ margin: '0 0 14px', fontWeight: '700', fontSize: '0.78rem', color: 'var(--color-theme-people)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                            Limite sur fenêtre glissante
                                         </p>
-                                        <p style={{ margin: '0 0 16px', fontSize: '0.82rem', color: '#888' }}>
-                                            Un partenaire ne peut être que dans une seule liste. Cliquez pour cocher/décocher.
-                                        </p>
+                                        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                                            <Field label="Soumissions autorisées par fenêtre" hint="Nombre max de cartels sur la période définie ci-dessous.">
+                                                <NumberInput value={maxWindow} onChange={v => setMaxWindow(Number(v))} min={1} max={50} suffix="cartels" />
+                                            </Field>
+                                            <Field label="Durée de la fenêtre" hint="Période glissante de contrôle.">
+                                                <NumberInput value={windowMinutes} onChange={v => setWindowMinutes(Number(v))} min={1} max={1440} suffix="minutes" />
+                                            </Field>
+                                        </div>
 
-                                        {partners.length === 0 ? (
-                                            <p style={{ fontSize: '0.85rem', color: '#bbb' }}>Ajoutez d'abord des partenaires dans la bibliothèque.</p>
-                                        ) : (
-                                            <>
-                                                {/* Principaux */}
-                                                <div style={{ marginBottom: '16px' }}>
-                                                    <div style={{ fontWeight: '700', fontSize: '0.82rem', color: '#00695c', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                        <span style={{ background: '#e0f2f1', borderRadius: '4px', padding: '2px 7px' }}>★ Principaux</span>
-                                                        <span style={{ fontWeight: '400', color: '#aaa' }}>— mis en avant (grande vignette)</span>
-                                                    </div>
-                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                                        {partners.map(p => {
-                                                            const active = sitePrimaryPartnerIds.includes(p.id);
-                                                            return (
-                                                                <button
-                                                                    key={`site-primary-${p.id}`}
-                                                                    type="button"
-                                                                    onClick={() => toggleSitePrimaryPartner(p.id)}
-                                                                    style={{
-                                                                        display: 'flex', alignItems: 'center', gap: '6px',
-                                                                        borderRadius: '20px',
-                                                                        border: active ? '2px solid #00695c' : '2px solid #e0e0e0',
-                                                                        background: active ? '#00897b' : '#f5f5f5',
-                                                                        color: active ? 'white' : '#555',
-                                                                        padding: '5px 12px', fontSize: '0.84rem',
-                                                                        cursor: 'pointer', fontFamily: 'inherit', fontWeight: '600',
-                                                                        transition: 'all 0.12s',
-                                                                    }}
-                                                                >
-                                                                    {p.logo_path && <img src={p.logo_path} alt="" style={{ width: '16px', height: '16px', objectFit: 'contain', borderRadius: '3px' }} />}
-                                                                    {p.name}
-                                                                    {active && <Check size={12} />}
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </div>
-
-                                                {/* Standards */}
-                                                <div style={{ marginBottom: '16px' }}>
-                                                    <div style={{ fontWeight: '700', fontSize: '0.82rem', color: '#546e7a', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                        <span style={{ background: '#eceff1', borderRadius: '4px', padding: '2px 7px' }}>Standards</span>
-                                                        <span style={{ fontWeight: '400', color: '#aaa' }}>— affichage secondaire</span>
-                                                    </div>
-                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                                        {partners.map(p => {
-                                                            const active = sitePartnerIds.includes(p.id);
-                                                            return (
-                                                                <button
-                                                                    key={`site-regular-${p.id}`}
-                                                                    type="button"
-                                                                    onClick={() => toggleSitePartner(p.id)}
-                                                                    style={{
-                                                                        display: 'flex', alignItems: 'center', gap: '6px',
-                                                                        borderRadius: '20px',
-                                                                        border: active ? '2px solid #546e7a' : '2px solid #e0e0e0',
-                                                                        background: active ? '#78909c' : '#f5f5f5',
-                                                                        color: active ? 'white' : '#555',
-                                                                        padding: '5px 12px', fontSize: '0.84rem',
-                                                                        cursor: 'pointer', fontFamily: 'inherit', fontWeight: '600',
-                                                                        transition: 'all 0.12s',
-                                                                    }}
-                                                                >
-                                                                    {p.logo_path && <img src={p.logo_path} alt="" style={{ width: '16px', height: '16px', objectFit: 'contain', borderRadius: '3px' }} />}
-                                                                    {p.name}
-                                                                    {active && <Check size={12} />}
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </div>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={handleSaveMainSitePartners}
-                                                    disabled={savingPartners}
-                                                    style={{
-                                                        border: 'none', borderRadius: '8px', padding: '10px 18px',
-                                                        background: savingPartners ? '#9fb6b1' : '#00695c', color: 'white',
-                                                        fontWeight: '700', cursor: savingPartners ? 'not-allowed' : 'pointer',
-                                                        fontFamily: 'inherit', fontSize: '0.88rem',
-                                                        display: 'flex', alignItems: 'center', gap: '6px',
-                                                    }}
-                                                >
-                                                    <Save size={14} /> Enregistrer la sélection
-                                                </button>
-                                            </>
-                                        )}
+                                        <div style={{
+                                            background: 'var(--color-surface)',
+                                            border: '1px solid var(--color-theme-people)',
+                                            borderRadius: 'var(--radius-md)',
+                                            padding: '12px 16px',
+                                            marginTop: '4px',
+                                            fontSize: '0.87rem',
+                                            color: 'var(--color-theme-people)',
+                                            fontWeight: '600',
+                                        }}>
+                                            Règle active : chaque IP peut soumettre au maximum{' '}
+                                            <strong>{maxWindow} cartel{maxWindow > 1 ? 's' : ''}</strong> toutes les{' '}
+                                            <strong>
+                                                {windowMinutes >= 60
+                                                    ? `${Math.floor(windowMinutes / 60)}h${windowMinutes % 60 > 0 ? ` ${windowMinutes % 60}min` : ''}`
+                                                    : `${windowMinutes} min`
+                                                }
+                                            </strong>,
+                                            et <strong>{maxTotal} cartel{maxTotal > 1 ? 's' : ''} au total</strong>.
+                                        </div>
                                     </div>
                                 </div>
                             )}
-                        </div>
-                    </Section>
+                        </Section>
 
-                    {/* ── Section 3 : info système ─────────── */}
-                    <Section icon={Shield} title="Informations système" color="#888">
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                            {[
-                                { label: 'Soumissions anonymes',  value: allowAnon ? 'Autorisées' : 'Bloquées' },
-                                { label: 'Limite globale / IP',   value: `${maxTotal} cartels` },
-                                { label: 'Limite sur fenêtre',    value: `${maxWindow} cartels / ${windowMinutes} min` },
-                                { label: 'Clé IA configurée',     value: aiKey ? 'Oui' : 'Non' },
-                            ].map(({ label, value }) => (
-                                <div
-                                    key={label}
-                                    style={{
-                                        background: '#f8f8f8',
-                                        borderRadius: '10px',
-                                        padding: '14px 16px',
-                                    }}
-                                >
-                                    <div style={{ fontSize: '0.78rem', color: '#aaa', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '4px' }}>
-                                        {label}
-                                    </div>
-                                    <div style={{ fontWeight: '700', fontSize: '0.95rem', color: '#333' }}>
-                                        {value}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </Section>
-                    {/* ── Section 4 : Sous-sites ──────────── */}
-                    <Section icon={Globe} title="Sous-sites thématiques" color="#6741d9">
-                        <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'flex-end' }}>
-                            <button onClick={() => setEditSubsite('new')}
-                                style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#6741d9', color: 'white', border: 'none', borderRadius: '10px', padding: '10px 16px', cursor: 'pointer', fontWeight: '700', fontSize: '0.88rem', fontFamily: 'inherit' }}>
-                                <Plus size={14} /> Nouveau sous-site
+                        {/* ── Gestion d'équipe ──────────── */}
+                        <Section icon={Users} title="Gestion d'équipe"
+                            color="var(--color-theme-people)" bg="var(--color-theme-people-bg)">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/app/admin/team')}
+                                style={{
+                                    width: '100%',
+                                    display: 'flex', alignItems: 'center', gap: '12px',
+                                    padding: '14px 18px',
+                                    background: 'var(--color-theme-people-bg)', border: '1px solid var(--color-theme-people)',
+                                    borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-people)',
+                                    fontSize: '0.85rem', fontWeight: '700',
+                                    textTransform: 'uppercase', letterSpacing: '0.5px',
+                                }}
+                            >
+                                <ExternalLink size={16} />
+                                <span style={{ flex: 1, textAlign: 'left' }}>Inviter ou gérer les membres d'un sous-site</span>
+                                <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
                             </button>
-                        </div>
-                        {subsites.length === 0 ? (
-                            <p style={{ color: '#bbb', textAlign: 'center', padding: '24px 0' }}>Aucun sous-site configuré.</p>
-                        ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                {subsites.map(s => (
-                                    <div key={s.slug} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#fafafa', border: '1px solid #eee', borderRadius: '10px', padding: '12px 16px' }}>
-                                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: s.primary_color, flexShrink: 0 }} />
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ fontWeight: '700', fontSize: '0.95rem' }}>{s.name}</div>
-                                            <div style={{ color: '#aaa', fontSize: '0.78rem' }}>/site/{s.slug} · {s.category_name}</div>
+                            <p style={{ margin: '10px 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                                Owners : gérez votre propre équipe. Superadmins : vous pouvez aussi utiliser la page globale des utilisateurs.
+                            </p>
+                        </Section>
+
+                        {/* ── Journal d'événements ──────────── */}
+                        <Section icon={Activity} title="Journal d'événements"
+                            color="var(--color-theme-people)" bg="var(--color-theme-people-bg)">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/app/admin/logs')}
+                                style={{
+                                    width: '100%',
+                                    display: 'flex', alignItems: 'center', gap: '12px',
+                                    padding: '14px 18px',
+                                    background: 'var(--color-theme-people-bg)', border: '1px solid var(--color-theme-people)',
+                                    borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-people)',
+                                    fontSize: '0.85rem', fontWeight: '700',
+                                    textTransform: 'uppercase', letterSpacing: '0.5px',
+                                }}
+                            >
+                                <ExternalLink size={16} />
+                                <span style={{ flex: 1, textAlign: 'left' }}>Consulter le journal et configurer les notifications email</span>
+                                <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
+                            </button>
+                            <p style={{ margin: '10px 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                                Audit complet des actions (publications, modifications, créations de comptes…) et activation des notifications par email à l'équipe.
+                            </p>
+                        </Section>
+                    </Group>
+
+                    {/* ════════════════════════════════════════════════════════
+                        GROUPE 3 — SYSTÈME : config technique & état
+                       ════════════════════════════════════════════════════════ */}
+                    <Group title="Système" color="var(--color-theme-system)">
+
+                        {/* ── Clé API ──────── */}
+                        <Section icon={Key} title="Clé API (traduction automatique)"
+                            color="var(--color-theme-system)" bg="var(--color-theme-system-bg)">
+                            <Field
+                                label="Clé OpenAI ou DeepL"
+                                hint="Utilisée pour la traduction automatique des cartels. Commence par sk-… (OpenAI) ou se termine par :fx (DeepL Free)."
+                            >
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <input
+                                        type={showKey ? 'text' : 'password'}
+                                        value={aiKey}
+                                        onChange={e => setAiKey(e.target.value)}
+                                        placeholder="sk-… ou votre clé DeepL"
+                                        style={{
+                                            flex: 1,
+                                            minWidth: '260px',
+                                            padding: '10px 14px',
+                                            borderRadius: 'var(--radius-md)',
+                                            border: '1px solid var(--color-border)',
+                                            fontSize: '0.9rem',
+                                            fontFamily: 'inherit',
+                                        }}
+                                    />
+                                    <button
+                                        onClick={() => setShowKey(!showKey)}
+                                        style={{
+                                            padding: '10px 14px',
+                                            borderRadius: 'var(--radius-md)',
+                                            border: '1px solid var(--color-border)',
+                                            background: 'var(--color-surface-2)',
+                                            cursor: 'pointer',
+                                            fontSize: '0.78rem',
+                                            fontFamily: 'var(--font-heading)',
+                                            color: 'var(--color-text-muted)',
+                                            fontWeight: '700',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.5px',
+                                        }}
+                                    >
+                                        {showKey ? 'Masquer' : 'Afficher'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleSave}
+                                        disabled={saving || loading}
+                                        style={{
+                                            padding: '10px 14px',
+                                            borderRadius: 'var(--radius-md)',
+                                            border: 'none',
+                                            background: saving ? 'var(--color-border-strong)' : 'var(--color-theme-system)',
+                                            color: 'var(--color-white)',
+                                            cursor: saving || loading ? 'not-allowed' : 'pointer',
+                                            fontSize: '0.78rem',
+                                            fontWeight: '700',
+                                            fontFamily: 'var(--font-heading)',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.5px',
+                                        }}
+                                    >
+                                        {saving ? 'Envoi…' : 'Enregistrer la clé'}
+                                    </button>
+                                </div>
+                                {aiKey && (
+                                    <p style={{ margin: '6px 0 0', fontSize: '0.82rem', color: 'var(--color-text-subtle)' }}>
+                                        {aiKey.startsWith('sk-') ? 'Format OpenAI détecté' : aiKey.endsWith(':fx') ? 'Format DeepL Free détecté' : 'Format non reconnu'}
+                                    </p>
+                                )}
+                                <p style={{ margin: '8px 0 0', fontSize: '0.82rem', color: 'var(--color-text-muted)' }}>
+                                    Cliquez sur « Enregistrer la clé » après collage pour confirmer la prise en compte.
+                                </p>
+                            </Field>
+                        </Section>
+
+                        {/* ── Informations système ──────── */}
+                        <Section icon={Shield} title="Informations système"
+                            color="var(--color-theme-system)" bg="var(--color-theme-system-bg)">
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+                                {[
+                                    { label: 'Soumissions anonymes',  value: allowAnon ? 'Autorisées' : 'Bloquées' },
+                                    { label: 'Limite globale / IP',   value: `${maxTotal} cartels` },
+                                    { label: 'Limite sur fenêtre',    value: `${maxWindow} cartels / ${windowMinutes} min` },
+                                    { label: 'Clé IA configurée',     value: aiKey ? 'Oui' : 'Non' },
+                                ].map(({ label, value }) => (
+                                    <div
+                                        key={label}
+                                        style={{
+                                            background: 'var(--color-surface-2)',
+                                            border: '1px solid var(--color-border)',
+                                            borderRadius: 'var(--radius-md)',
+                                            padding: '14px 16px',
+                                        }}
+                                    >
+                                        <div style={{ fontSize: '0.74rem', color: 'var(--color-text-subtle)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', fontFamily: 'var(--font-heading)' }}>
+                                            {label}
                                         </div>
-                                        <a href={`#/site/${s.slug}`} target="_blank" rel="noopener" title="Ouvrir" style={{ color: '#aaa', display: 'flex' }}><ExternalLink size={14} /></a>
-                                        <button onClick={() => setEditSubsite(s)} title="Modifier"
-                                            style={{ background: 'none', border: '1px solid #ddd', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', color: '#555', display: 'flex', alignItems: 'center' }}>
-                                            <Edit size={13} />
-                                        </button>
-                                        <button onClick={async () => { if (!confirm(`Supprimer "${s.name}" ?`)) return; await api.subsites.delete(s.slug); loadSubsites(); }} title="Supprimer"
-                                            style={{ background: 'none', border: '1px solid #fcc', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', color: '#d32f2f', display: 'flex', alignItems: 'center' }}>
-                                            <Trash2 size={13} />
-                                        </button>
+                                        <div style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--color-text)' }}>
+                                            {value}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
-                        )}
-                    </Section>
+                        </Section>
+                    </Group>
                 </>
             )}
 

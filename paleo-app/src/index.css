@@ -1,52 +1,85 @@
-@import url('https://fonts.googleapis.com/css2?family=PT+Sans+Narrow:wght@400;700&family=PT+Serif:wght@400;700&display=swap');
-
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap');
+/* Bebas Neue (display, titres) + PT Sans Narrow (UI + corps) — aucune police à empattements */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=PT+Sans+Narrow:wght@400;700&display=swap');
 
 :root {
-  /* ── Palette de base (SubsiteLayout les override pour les sous-sites) ── */
-  --color-pink: #FCEDEC;
-  --color-pink-darker: #E0B0B0;
-  --color-red-accent: #D65A5A;
-  --color-text: #222;
-  --color-background: #FAFAFA;
-  --color-black: #000000;
-  --color-white: #FFFFFF;
+  /* ── Identité de marque ────────────────────────────────────── */
+  --color-primary:        #333333;
+  --color-primary-hover:  #1a1a1a;
+  --color-primary-soft:   #ededed;
+  --color-accent:         #FFE700;
+  --color-accent-hover:   #f5dc00;
+  --color-accent-soft:    #fff9c4;
 
-  /* ── Couleurs sémantiques ────────────────────────────────────────────── */
+  /* ── Surfaces & texte (tous AA WCAG sur leurs fonds nominaux) ─ */
+  --color-bg:             #f4f4f4;
+  --color-surface:        #ffffff;
+  --color-surface-2:      #fafafa;
+  --color-text:           #1a1a1a;       /* 17.4:1 sur #f4f4f4 */
+  --color-text-muted:     #545454;       /* 7.5:1  sur #f4f4f4 */
+  --color-text-subtle:    #6e6e6e;       /* 4.7:1  sur #f4f4f4 (AA) */
+  --color-border:         #d4d4d4;
+  --color-border-strong:  #a8a8a8;
+  --color-black:          #000000;
+  --color-white:          #ffffff;
+
+  /* ── Cartel : conserve l'identité rose pour la cohérence WYSIWYG avec l'export PDF ── */
+  --color-pink:           #FCEDEC;
+  --color-pink-darker:    #333333;       /* legacy : redirigé sur primary */
+  --color-red-accent:     #333333;       /* legacy : redirigé sur primary */
+
+  /* ── Couleurs sémantiques (toutes AA sur fond clair) ────────── */
   --color-success:     #2e7d32;
   --color-success-bg:  #e8f5e9;
-  --color-warning:     #e67e00;
+  --color-warning:     #b85e00;
   --color-warning-bg:  #fff4e0;
-  --color-error:       #d32f2f;
+  --color-error:       #c62828;
   --color-error-bg:    #ffebee;
-  --color-info:        #3b5bdb;
+  --color-info:        #2649c4;
   --color-info-bg:     #f0f4ff;
-  --color-neutral:     #6b7280;
-  --color-neutral-bg:  #f3f4f6;
+  --color-neutral:     #545454;
+  --color-neutral-bg:  #ededed;
 
-  /* ── Typographie ─────────────────────────────────────────────────────── */
-  --font-heading: 'PT Sans Narrow', sans-serif;
-  --font-body: 'PT Serif', serif;
-  --text-xs:   0.75rem;
-  --text-sm:   0.875rem;
-  --text-base: 1rem;
-  --text-lg:   1.125rem;
+  /* ── Couleurs thématiques de gestion (Admin) ────────────────── */
+  --color-theme-content:    #2c5530;     /* vert sombre — Contenus & taxonomies */
+  --color-theme-content-bg: #e6efe7;
+  --color-theme-people:     #5a3d8c;     /* violet — Communauté & soumissions */
+  --color-theme-people-bg:  #efe9f7;
+  --color-theme-system:     #7a4a00;     /* ambre sombre — Système & API */
+  --color-theme-system-bg:  #fdf0d7;
 
-  /* ── Espacements ─────────────────────────────────────────────────────── */
+  /* ── Typographie ────────────────────────────────────────────── */
+  --font-display: 'Bebas Neue', 'Oswald', sans-serif;     /* h1–h6 : titres impactants */
+  --font-heading: 'PT Sans Narrow', sans-serif;            /* UI : nav, boutons, labels */
+  --font-body:    'PT Sans Narrow', sans-serif;            /* corps long — sans-serif partout, plus aucune police à empattements */
+
+  --text-xs:    0.75rem;
+  --text-sm:    0.85rem;
+  --text-base:  1rem;
+  --text-lg:    1.125rem;
+  --text-xl:    1.5rem;
+  --text-2xl:   2rem;
+  --text-3xl:   2.75rem;
+
+  /* ── Espacements ─────────────────────────────────────────────── */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
   --spacing-md: 1rem;
   --spacing-lg: 2rem;
   --spacing-xl: 3rem;
 
-  /* ── Bordures & ombres ───────────────────────────────────────────────── */
-  --radius-sm:   6px;
-  --radius-md:   10px;
-  --radius-lg:   16px;
-  --radius-full: 999px;
-  --shadow-sm:   0 1px 3px rgba(0,0,0,0.06);
-  --shadow-md:   0 4px 12px rgba(0,0,0,0.08);
-  --shadow-lg:   0 8px 24px rgba(0,0,0,0.14);
+  /* ── Bordures & ombres : arêtes vives, ombres discrètes ───── */
+  --radius-sm:   0;
+  --radius-md:   2px;
+  --radius-lg:   4px;
+  --radius-full: 0;
+  --shadow-sm:   0 1px 0 rgba(0,0,0,0.05);
+  --shadow-md:   0 2px 6px rgba(0,0,0,0.06);
+  --shadow-lg:   0 6px 18px rgba(0,0,0,0.08);
+
+  /* ── Accessibilité (Opquast) ────────────────────────────────── */
+  --focus-ring-color: #FFE700;
+  --focus-ring-width: 3px;
+  --focus-ring-offset: 2px;
 }
 
 * {
@@ -55,25 +88,26 @@
 
 body {
   margin: 0;
-  background-color: var(--color-background);
+  background-color: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: var(--font-heading);
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
   text-transform: uppercase;
+  letter-spacing: 0.02em;
   margin-top: 0;
   margin-bottom: var(--spacing-md);
-  line-height: 1.1;
+  line-height: 1.05;
+  color: var(--color-text);
 }
+
+h1 { font-size: var(--text-3xl); }
+h2 { font-size: var(--text-2xl); }
+h3 { font-size: var(--text-xl); }
 
 a {
   color: inherit;
@@ -84,10 +118,31 @@ button {
   cursor: pointer;
   font-family: var(--font-heading);
   text-transform: uppercase;
-  transition: all 0.2s;
+  letter-spacing: 0.02em;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 
-/* Utilities */
+/* ── Focus-visible global (Opquast — visibilité de la prise de focus) ── */
+:focus { outline: none; }
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: var(--radius-md);
+}
+/* Focus jaune sur fond jaune : on bascule en focus noir pour rester visible */
+[style*="background:#FFE700"]:focus-visible,
+[style*="background: #FFE700"]:focus-visible,
+.btn-accent:focus-visible {
+  outline-color: var(--color-primary);
+}
+
+/* ── Sélection texte ──────────────────────────────────────────── */
+::selection {
+  background: var(--color-accent);
+  color: var(--color-primary);
+}
+
+/* ── Utilities ─────────────────────────────────────────────────── */
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -95,21 +150,18 @@ button {
 }
 
 .card {
-  background: var(--color-white);
-  border: 1px solid #eee;
-  border-radius: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   padding: var(--spacing-md);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
 }
 
-/* Loading Spinner */
+/* ── Loading Spinner ──────────────────────────────────────────── */
 .loading-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.85);
+  inset: 0;
+  background: rgba(255, 255, 255, 0.9);
   z-index: 10000;
   display: flex;
   flex-direction: column;
@@ -121,22 +173,26 @@ button {
 .spinner {
   width: 50px;
   height: 50px;
-  border: 5px solid #eee;
-  border-top-color: var(--color-pink-darker);
-  border-radius: 50%;
+  border: 4px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;       /* le spinner reste rond — c'est un mécanisme universel */
   animation: spin 1s linear infinite;
   margin-bottom: 20px;
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
-/* Arborescence Mode Override */
+/* ── Arborescence Mode Override (frise SVG) ───────────────────── */
 .arborescence-label {
   fill: #000000 !important;
   text-shadow: none !important;
   font-family: var(--font-heading) !important;
+}
+
+/* ── Compatibilité legacy : on neutralise les rayons "pilule" ── */
+.nav-container,
+.nav-item {
+  /* Navigation.css définit ses propres rayons : ils sont déjà alignés sur la nouvelle DA */
 }

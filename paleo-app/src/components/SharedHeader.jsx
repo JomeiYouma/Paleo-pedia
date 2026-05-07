@@ -38,21 +38,24 @@ const APP_NAV_ADMIN = [
     { path: '/app/admin',   labelKey: 'nav.admin',   icon: Settings2 },
 ];
 
-// Pastille rouge type "notification" affichée à côté du libellé "Cartels"
-// quand des cartels en attente attendent une modération. Cachée si compteur=0.
+// Pastille de notification à côté du libellé "Cartels" : jaune vif sur fond noir,
+// fort contraste pour qu'on la repère immédiatement (Opquast — visibilité de l'info).
 const NavBadge = ({ count }) => {
     if (!count) return null;
     return (
         <span
             style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                minWidth: '18px', height: '18px', padding: '0 6px',
-                marginLeft: '6px', borderRadius: '999px',
-                background: '#e53935',
-                color: 'white', fontSize: '0.68rem', fontWeight: '800',
+                minWidth: '20px', height: '20px', padding: '0 6px',
+                marginLeft: '6px', borderRadius: 'var(--radius-md)',
+                background: 'var(--color-accent)',
+                color: 'var(--color-primary)',
+                fontSize: '0.7rem', fontWeight: '800',
                 lineHeight: 1,
-                boxShadow: '0 1px 2px rgba(229, 57, 53, 0.4)',
+                fontFamily: 'var(--font-heading)',
+                border: '1px solid var(--color-primary)',
             }}
+            aria-label={`${count} en attente`}
         >
             {count > 99 ? '99+' : count}
         </span>
@@ -139,28 +142,33 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
             {/* ── Bandeau atelier ─────────────────────────────── */}
             {currentWorkshop && !currentWorkshop.is_immersive && (
                 <div style={{
-                    background: 'linear-gradient(90deg, #006064, #00838f)',
-                    color: 'white',
+                    background: 'var(--color-primary)',
+                    color: 'var(--color-accent)',
                     padding: '8px 24px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '16px',
                     fontSize: '0.88rem',
-                    fontWeight: '600',
+                    fontWeight: '700',
                     letterSpacing: '0.3px',
+                    fontFamily: 'var(--font-heading)',
+                    textTransform: 'uppercase',
                 }}>
                     <span>⚗️ {t('header.workspaceMode')} : {currentWorkshop.name}</span>
                     <button
                         onClick={quitWorkshop}
                         style={{
-                            background: 'rgba(255,255,255,0.2)',
-                            border: '1px solid rgba(255,255,255,0.4)',
-                            color: 'white',
-                            borderRadius: '20px',
-                            padding: '3px 12px',
+                            background: 'var(--color-accent)',
+                            border: 'none',
+                            color: 'var(--color-primary)',
+                            borderRadius: 'var(--radius-md)',
+                            padding: '4px 14px',
                             cursor: 'pointer',
-                            fontSize: '0.8rem',
+                            fontSize: '0.78rem',
+                            fontWeight: '700',
+                            fontFamily: 'var(--font-heading)',
+                            textTransform: 'uppercase',
                         }}
                     >
                         {t('header.exit')}
@@ -169,11 +177,12 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
             )}
 
             {/* ════════════════════════════════════════════════
-                BANDE 1 — Navigation du site public
+                BANDE 1 — Navigation du site public (dark)
             ════════════════════════════════════════════════ */}
             <header style={{
-                background: 'white',
-                borderBottom: isInApp ? '1px solid #f0f0f0' : '1px solid #eee',
+                background: 'var(--color-primary)',
+                color: 'var(--color-white)',
+                borderBottom: 'none',
                 position: 'sticky',
                 top: 0,
                 zIndex: 1000,
@@ -194,20 +203,21 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                             <button
                                 onClick={handleMenuOpen}
                                 style={{
-                                    background: '#f8f8f8',
-                                    border: '1px solid #e8e8e8',
-                                    borderRadius: '10px',
+                                    background: 'transparent',
+                                    border: '1px solid rgba(255,255,255,0.25)',
+                                    borderRadius: 'var(--radius-md)',
                                     padding: '8px 10px',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '6px',
                                     fontSize: '0.78rem',
-                                    fontWeight: '600',
-                                    color: '#555',
+                                    fontWeight: '700',
+                                    color: 'var(--color-white)',
                                     letterSpacing: '0.4px',
                                     textTransform: 'uppercase',
-                                    transition: 'all 0.15s',
+                                    fontFamily: 'var(--font-heading)',
+                                    transition: 'background-color 0.15s',
                                 }}
                                 title={t('header.home')}
                             >
@@ -219,21 +229,21 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                             {isMenuOpen && (
                                 <div style={{
                                     position: 'absolute',
-                                    top: 'calc(100% + 8px)',
+                                    top: 'calc(100% + 6px)',
                                     left: 0,
                                     zIndex: 2000,
-                                    background: 'white',
-                                    border: '1px solid #eee',
-                                    borderRadius: '14px',
-                                    boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-                                    minWidth: '240px',
-                                    padding: '8px',
+                                    background: 'var(--color-surface)',
+                                    border: '1px solid var(--color-border)',
+                                    borderRadius: 'var(--radius-md)',
+                                    boxShadow: 'var(--shadow-lg)',
+                                    minWidth: '260px',
+                                    padding: '6px',
                                     animation: 'menuFadeIn 0.18s ease-out',
                                 }}>
                                     {/* En mode app : liens de l'application */}
                                     {isInApp ? (
                                         <>
-                                            <div style={{ fontSize: '0.72rem', fontWeight: '700', color: '#bbb', padding: '4px 14px 6px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                                            <div style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--color-text-subtle)', padding: '4px 14px 6px', textTransform: 'uppercase', letterSpacing: '0.6px', fontFamily: 'var(--font-heading)' }}>
                                                 {t('header.navigation', 'Navigation')}
                                             </div>
                                             {appLinks.map(link => {
@@ -246,17 +256,21 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                                         key={link.path}
                                                         to={link.path}
                                                         onClick={() => setIsMenuOpen(false)}
+                                                        aria-current={isActive ? 'page' : undefined}
                                                         style={{
                                                             display: 'flex', alignItems: 'center', gap: '10px',
-                                                            padding: '10px 14px', borderRadius: '8px',
+                                                            padding: '10px 14px', borderRadius: 'var(--radius-md)',
                                                             textDecoration: 'none',
-                                                            color: isActive ? 'var(--color-red-accent, #D65A5A)' : '#333',
-                                                            fontWeight: isActive ? '700' : '500',
-                                                            fontSize: '0.93rem',
-                                                            background: isActive ? '#fff0f0' : 'transparent',
-                                                            transition: 'all 0.12s',
+                                                            color: isActive ? 'var(--color-primary)' : 'var(--color-text)',
+                                                            fontWeight: '700',
+                                                            fontSize: '0.9rem',
+                                                            fontFamily: 'var(--font-heading)',
+                                                            textTransform: 'uppercase',
+                                                            letterSpacing: '0.3px',
+                                                            background: isActive ? 'var(--color-accent)' : 'transparent',
+                                                            transition: 'background-color 0.12s, color 0.12s',
                                                         }}
-                                                        onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = '#f5f5f5'; }}
+                                                        onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--color-primary-soft)'; }}
                                                         onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
                                                     >
                                                         <Icon size={15} />
@@ -272,11 +286,13 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                                 to="/"
                                                 onClick={() => setIsMenuOpen(false)}
                                                 style={{
-                                                    display: 'block', padding: '10px 14px', borderRadius: '8px',
-                                                    textDecoration: 'none', color: '#888',
-                                                    fontSize: '0.88rem', fontWeight: '500',
+                                                    display: 'block', padding: '10px 14px', borderRadius: 'var(--radius-md)',
+                                                    textDecoration: 'none', color: 'var(--color-text-muted)',
+                                                    fontSize: '0.85rem', fontWeight: '700',
+                                                    fontFamily: 'var(--font-heading)',
+                                                    textTransform: 'uppercase', letterSpacing: '0.3px',
                                                 }}
-                                                onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                                                onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-soft)'}
                                                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                             >
                                                 ← {t('header.backToSite', 'Retour au site')}
@@ -285,41 +301,48 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                     ) : (
                                         <>
                                             {/* Liens site principal */}
-                                            {SITE_NAV.map(link => (
+                                            {SITE_NAV.map(link => {
+                                                const isActive = location.pathname === link.path;
+                                                return (
                                                 <Link
                                                     key={link.path}
                                                     to={link.path}
                                                     onClick={() => setIsMenuOpen(false)}
+                                                    aria-current={isActive ? 'page' : undefined}
                                                     style={{
                                                         display: 'block',
                                                         padding: '10px 14px',
-                                                        borderRadius: '8px',
+                                                        borderRadius: 'var(--radius-md)',
                                                         textDecoration: 'none',
-                                                        color: location.pathname === link.path ? 'var(--color-pink-darker, #C2185B)' : '#333',
-                                                        fontWeight: location.pathname === link.path ? '700' : '500',
-                                                        fontSize: '0.93rem',
-                                                        background: location.pathname === link.path ? '#fce4ec' : 'transparent',
-                                                        transition: 'all 0.12s',
+                                                        color: isActive ? 'var(--color-primary)' : 'var(--color-text)',
+                                                        fontWeight: '700',
+                                                        fontSize: '0.9rem',
+                                                        fontFamily: 'var(--font-heading)',
+                                                        textTransform: 'uppercase',
+                                                        letterSpacing: '0.3px',
+                                                        background: isActive ? 'var(--color-accent)' : 'transparent',
+                                                        transition: 'background-color 0.12s, color 0.12s',
                                                     }}
-                                                    onMouseEnter={e => { if (location.pathname !== link.path) e.currentTarget.style.background = '#f5f5f5'; }}
-                                                    onMouseLeave={e => { if (location.pathname !== link.path) e.currentTarget.style.background = 'transparent'; }}
+                                                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--color-primary-soft)'; }}
+                                                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
                                                 >
                                                     {t(link.labelKey)}
                                                 </Link>
-                                            ))}
+                                                );
+                                            })}
 
                                             {/* Sous-sites / Thématiques */}
                                             {subsites.length > 0 && (
-                                                <div style={{ borderTop: '1px solid #f0f0f0', margin: '6px 0', paddingTop: '6px' }}>
-                                                    <div style={{ fontSize: '0.72rem', fontWeight: '700', color: '#bbb', padding: '2px 14px 6px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>{t('header.themes')}</div>
+                                                <div style={{ borderTop: '1px solid var(--color-border)', margin: '6px 0', paddingTop: '6px' }}>
+                                                    <div style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--color-text-subtle)', padding: '2px 14px 6px', textTransform: 'uppercase', letterSpacing: '0.6px', fontFamily: 'var(--font-heading)' }}>{t('header.themes')}</div>
                                                     {subsites.map(s => (
                                                         <Link key={s.slug} to={`/site/${s.slug}`}
                                                             onClick={() => setIsMenuOpen(false)}
-                                                            style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 14px', borderRadius: '8px', textDecoration: 'none', color: '#333', fontSize: '0.9rem', fontWeight: '600', transition: 'background 0.12s' }}
-                                                            onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                                                            style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 14px', borderRadius: 'var(--radius-md)', textDecoration: 'none', color: 'var(--color-text)', fontSize: '0.9rem', fontWeight: '700', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.3px', transition: 'background-color 0.12s' }}
+                                                            onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-soft)'}
                                                             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                                         >
-                                                            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: s.primary_color, flexShrink: 0 }} />
+                                                            <div style={{ width: '4px', height: '18px', background: s.primary_color, flexShrink: 0 }} />
                                                             {s.name}
                                                         </Link>
                                                     ))}
@@ -327,24 +350,28 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                             )}
 
                                             {/* Lien vers la frise */}
-                                            <div style={{ borderTop: '1px solid #f0f0f0', margin: '6px 0' }} />
+                                            <div style={{ borderTop: '1px solid var(--color-border)', margin: '6px 0' }} />
                                             <Link
                                                 to="/app"
                                                 onClick={() => setIsMenuOpen(false)}
                                                 style={{
                                                     display: 'block',
                                                     padding: '10px 14px',
-                                                    borderRadius: '8px',
+                                                    borderRadius: 'var(--radius-md)',
                                                     textDecoration: 'none',
-                                                    color: '#C2185B',
+                                                    color: 'var(--color-primary)',
                                                     fontWeight: '700',
-                                                    fontSize: '0.93rem',
-                                                    background: 'transparent',
+                                                    fontSize: '0.9rem',
+                                                    fontFamily: 'var(--font-heading)',
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.3px',
+                                                    background: 'var(--color-accent)',
+                                                    transition: 'background-color 0.12s',
                                                 }}
-                                                onMouseEnter={e => e.currentTarget.style.background = '#fce4ec'}
-                                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                onMouseEnter={e => e.currentTarget.style.background = 'var(--color-accent-hover)'}
+                                                onMouseLeave={e => e.currentTarget.style.background = 'var(--color-accent)'}
                                             >
-                                                🗓 {t('header.timeline')}
+                                                {t('header.timeline')} →
                                             </Link>
                                         </>
                                     )}
@@ -357,24 +384,25 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                             to="/"
                             style={{
                                 textDecoration: 'none',
-                                color: 'inherit',
+                                color: 'var(--color-white)',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '10px',
+                                gap: '12px',
                             }}
                         >
                             <div style={{
-                                width: '32px',
+                                width: '6px',
                                 height: '32px',
-                                background: 'var(--color-pink-darker, #C2185B)',
-                                borderRadius: '50%',
+                                background: 'var(--color-accent)',
                                 flexShrink: 0,
                             }} />
                             <span style={{
-                                fontSize: '1.1rem',
-                                fontWeight: '800',
-                                letterSpacing: '-0.4px',
-                                color: '#1a1a1a',
+                                fontSize: '1.25rem',
+                                fontFamily: 'var(--font-display)',
+                                fontWeight: '400',
+                                letterSpacing: '0.04em',
+                                textTransform: 'uppercase',
+                                color: 'var(--color-white)',
                             }}>
                                 {currentWorkshop ? currentWorkshop.name : 'Paléo-Énergétique'}
                             </span>
@@ -383,9 +411,9 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
 
                     {/* ── Centre : liens rapides (toujours visibles sur desktop) ── */}
                     <nav className="desktop-nav" style={{
-                        gap: '4px',
+                        gap: '2px',
                         flexWrap: 'wrap',
-                    }}>
+                    }} aria-label={t('header.navigation', 'Navigation')}>
                         {SITE_NAV.map(link => {
                             const p = link.path;
                             const isActive = p === '/app'
@@ -395,19 +423,22 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                 <Link
                                     key={p}
                                     to={p}
+                                    aria-current={isActive ? 'page' : undefined}
                                     style={{
-                                        padding: '7px 16px',
-                                        borderRadius: '20px',
+                                        padding: '8px 16px',
+                                        borderRadius: 'var(--radius-md)',
                                         textDecoration: 'none',
-                                        fontWeight: '600',
-                                        fontSize: '0.83rem',
-                                        color: isActive ? 'white' : '#555',
-                                        background: isActive ? 'var(--color-red-accent, #D65A5A)' : 'transparent',
-                                        transition: 'all 0.15s',
-                                        letterSpacing: '0.2px',
+                                        fontFamily: 'var(--font-heading)',
+                                        fontWeight: '700',
+                                        fontSize: '0.85rem',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.4px',
+                                        color: isActive ? 'var(--color-primary)' : 'var(--color-white)',
+                                        background: isActive ? 'var(--color-accent)' : 'transparent',
+                                        transition: 'background-color 0.15s, color 0.15s',
                                     }}
-                                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = '#f5f5f5'; }}
-                                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+                                    onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'rgba(255,231,0,0.18)'; e.currentTarget.style.color = 'var(--color-accent)'; } }}
+                                    onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-white)'; } }}
                                 >
                                     {t(link.labelKey)}
                                 </Link>
@@ -426,13 +457,15 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                         <span
                                             title={`Sous-site géré : ${homeSubsite.name}`}
                                             style={{
-                                                background: '#f3e5f5',
-                                                color: '#6741d9',
-                                                border: '1px solid #d9ccff',
-                                                borderRadius: '14px',
-                                                padding: '3px 10px',
+                                                background: 'rgba(255,255,255,0.12)',
+                                                color: 'var(--color-white)',
+                                                border: '1px solid rgba(255,255,255,0.25)',
+                                                borderRadius: 'var(--radius-md)',
+                                                padding: '4px 10px',
                                                 fontSize: '0.74rem',
                                                 fontWeight: '700',
+                                                fontFamily: 'var(--font-heading)',
+                                                textTransform: 'uppercase',
                                                 whiteSpace: 'nowrap',
                                                 maxWidth: '140px',
                                                 overflow: 'hidden',
@@ -445,21 +478,24 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                     <button
                                         onClick={() => setIsUserMenuOpen(v => !v)}
                                         style={{
-                                            background: '#f8f8f8',
-                                            border: '1px solid #e8e8e8',
-                                            borderRadius: '8px',
+                                            background: 'transparent',
+                                            border: '1px solid rgba(255,255,255,0.25)',
+                                            borderRadius: 'var(--radius-md)',
                                             padding: '6px 12px',
                                             cursor: 'pointer',
                                             fontSize: '0.8rem',
-                                            color: '#444',
+                                            color: 'var(--color-white)',
                                             maxWidth: '200px',
                                             overflow: 'hidden',
                                             textOverflow: 'ellipsis',
                                             whiteSpace: 'nowrap',
-                                            fontFamily: 'inherit',
+                                            fontFamily: 'var(--font-heading)',
+                                            fontWeight: '700',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.3px',
                                         }}
                                     >
-                                        {isAdmin && <span style={{ color: '#C2185B', marginRight: '4px' }}>●</span>}
+                                        {isAdmin && <span style={{ color: 'var(--color-accent)', marginRight: '6px' }}>●</span>}
                                         {user.email}
                                     </button>
 
@@ -471,14 +507,14 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                             />
                                             <div style={{
                                                 position: 'absolute',
-                                                top: 'calc(100% + 8px)',
+                                                top: 'calc(100% + 6px)',
                                                 right: 0,
                                                 zIndex: 2000,
-                                                background: 'white',
-                                                border: '1px solid #eee',
-                                                borderRadius: '12px',
-                                                boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                                                minWidth: '200px',
+                                                background: 'var(--color-surface)',
+                                                border: '1px solid var(--color-border)',
+                                                borderRadius: 'var(--radius-md)',
+                                                boxShadow: 'var(--shadow-lg)',
+                                                minWidth: '220px',
                                                 padding: '6px',
                                             }}>
                                                 {isAdmin && (
@@ -491,15 +527,18 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                                             width: '100%',
                                                             background: 'none',
                                                             border: 'none',
-                                                            borderRadius: '8px',
+                                                            borderRadius: 'var(--radius-md)',
                                                             padding: '8px 12px',
                                                             cursor: 'pointer',
-                                                            fontSize: '0.85rem',
-                                                            color: '#333',
+                                                            fontSize: '0.82rem',
+                                                            color: 'var(--color-text)',
                                                             textAlign: 'left',
-                                                            fontFamily: 'inherit',
+                                                            fontFamily: 'var(--font-heading)',
+                                                            fontWeight: '700',
+                                                            textTransform: 'uppercase',
+                                                            letterSpacing: '0.3px',
                                                         }}
-                                                        onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-soft)'}
                                                         onMouseLeave={e => e.currentTarget.style.background = 'none'}
                                                     >
                                                         <Settings2 size={14} />
@@ -541,20 +580,23 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                 <button
                                     onClick={() => setShowLogin(true)}
                                     style={{
-                                        background: 'none',
-                                        border: '1px solid #ddd',
-                                        borderRadius: '8px',
+                                        background: 'transparent',
+                                        border: '1px solid rgba(255,255,255,0.3)',
+                                        borderRadius: 'var(--radius-md)',
                                         padding: '7px 14px',
                                         cursor: 'pointer',
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: '6px',
-                                        color: '#666',
-                                        fontSize: '0.84rem',
-                                        fontFamily: 'inherit',
+                                        color: 'var(--color-white)',
+                                        fontSize: '0.82rem',
+                                        fontFamily: 'var(--font-heading)',
+                                        fontWeight: '700',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.4px',
                                     }}
                                 >
-                                    <Lock size={13} color="#aaa" /> {t('header.login')}
+                                    <Lock size={13} /> {t('header.login')}
                                 </button>
                             )
                         )}
@@ -567,8 +609,9 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                 ════════════════════════════════════════════════ */}
                 {isInApp && (
                     <div style={{
-                        background: 'linear-gradient(180deg, #fafafa 0%, #f4f4f4 100%)',
-                        borderTop: '1px solid #ececec',
+                        background: 'var(--color-surface)',
+                        borderTop: '1px solid var(--color-border)',
+                        borderBottom: '1px solid var(--color-border)',
                         padding: '0 28px',
                     }}>
                         <div style={{
@@ -576,8 +619,8 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                             margin: '0 auto',
                             display: 'flex',
                             alignItems: 'stretch',
-                            gap: '2px',
-                            height: '44px',
+                            gap: '0',
+                            height: '46px',
                         }}>
                             {appLinks.map(link => {
                                 const Icon = link.icon;
@@ -590,34 +633,36 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                     <Link
                                         key={link.path}
                                         to={link.path}
+                                        aria-current={isActive ? 'page' : undefined}
                                         style={{
                                             display: 'flex',
                                             alignItems: 'center',
                                             gap: '6px',
-                                            padding: '0 16px',
+                                            padding: '0 18px',
                                             textDecoration: 'none',
-                                            fontSize: '0.8rem',
+                                            fontSize: '0.82rem',
                                             fontWeight: '700',
                                             letterSpacing: '0.5px',
                                             textTransform: 'uppercase',
-                                            fontFamily: 'var(--font-heading, sans-serif)',
-                                            color: isActive ? 'var(--color-red-accent, #D65A5A)' : '#666',
+                                            fontFamily: 'var(--font-heading)',
+                                            color: isActive ? 'var(--color-primary)' : 'var(--color-text-muted)',
                                             borderBottom: isActive
-                                                ? '2px solid var(--color-red-accent, #D65A5A)'
-                                                : '2px solid transparent',
-                                            transition: 'all 0.15s',
+                                                ? '3px solid var(--color-accent)'
+                                                : '3px solid transparent',
+                                            background: isActive ? 'var(--color-accent-soft)' : 'transparent',
+                                            transition: 'background-color 0.15s, color 0.15s, border-color 0.15s',
                                             whiteSpace: 'nowrap',
                                         }}
                                         onMouseEnter={e => {
                                             if (!isActive) {
-                                                e.currentTarget.style.color = '#333';
-                                                e.currentTarget.style.borderBottomColor = '#ddd';
+                                                e.currentTarget.style.color = 'var(--color-primary)';
+                                                e.currentTarget.style.background = 'var(--color-primary-soft)';
                                             }
                                         }}
                                         onMouseLeave={e => {
                                             if (!isActive) {
-                                                e.currentTarget.style.color = '#666';
-                                                e.currentTarget.style.borderBottomColor = 'transparent';
+                                                e.currentTarget.style.color = 'var(--color-text-muted)';
+                                                e.currentTarget.style.background = 'transparent';
                                             }
                                         }}
                                     >
@@ -641,17 +686,17 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                             display: 'flex',
                                             alignItems: 'center',
                                             gap: '6px',
-                                            padding: '0 16px',
+                                            padding: '0 18px',
                                             textDecoration: 'none',
-                                            fontSize: '0.8rem',
+                                            fontSize: '0.82rem',
                                             fontWeight: '700',
                                             letterSpacing: '0.5px',
                                             textTransform: 'uppercase',
-                                            fontFamily: 'var(--font-heading, sans-serif)',
-                                            color: location.pathname === '/app/create' ? 'white' : 'white',
-                                            background: 'var(--color-red-accent, #D65A5A)',
+                                            fontFamily: 'var(--font-heading)',
+                                            color: 'var(--color-primary)',
+                                            background: 'var(--color-accent)',
                                             margin: '8px 0',
-                                            borderRadius: '8px',
+                                            borderRadius: 'var(--radius-md)',
                                         }}
                                     >
                                         <PlusCircle size={14} />
@@ -681,27 +726,32 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                     <div
                         onClick={e => e.stopPropagation()}
                         style={{
-                            background: 'white',
-                            borderRadius: '18px',
+                            background: 'var(--color-surface)',
+                            borderRadius: 'var(--radius-lg)',
                             padding: '40px',
                             width: '100%',
                             maxWidth: '400px',
-                            boxShadow: '0 24px 80px rgba(0,0,0,0.2)',
+                            boxShadow: 'var(--shadow-lg)',
+                            border: '1px solid var(--color-border)',
                         }}
                     >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px' }}>
                             <div>
-                                <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '800' }}>{t('header.login')}</h2>
-                                <p style={{ margin: '4px 0 0', color: '#999', fontSize: '0.85rem' }}>{t('header.adminAccess')}</p>
+                                <h2 style={{ margin: 0, fontSize: '1.6rem' }}>{t('header.login')}</h2>
+                                <p style={{ margin: '4px 0 0', color: 'var(--color-text-subtle)', fontSize: '0.88rem' }}>{t('header.adminAccess')}</p>
                             </div>
-                            <button onClick={() => { setShowLogin(false); setLoginError(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb' }}>
+                            <button
+                                onClick={() => { setShowLogin(false); setLoginError(''); }}
+                                aria-label="Fermer"
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}
+                            >
                                 <X size={22} />
                             </button>
                         </div>
 
                         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: '700', color: '#555', marginBottom: '6px' }}>Email</label>
+                                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: 'var(--color-text-muted)', marginBottom: '6px', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Email</label>
                                 <input
                                     type="email"
                                     value={loginEmail}
@@ -709,23 +759,23 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                     placeholder="admin@example.com"
                                     required
                                     autoFocus
-                                    style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #ddd', fontSize: '0.95rem', boxSizing: 'border-box' }}
+                                    style={{ width: '100%', padding: '11px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', fontSize: '0.95rem', boxSizing: 'border-box', fontFamily: 'inherit' }}
                                 />
                             </div>
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.83rem', fontWeight: '700', color: '#555', marginBottom: '6px' }}>Mot de passe</label>
+                                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: 'var(--color-text-muted)', marginBottom: '6px', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mot de passe</label>
                                 <input
                                     type="password"
                                     value={loginPassword}
                                     onChange={e => setLoginPassword(e.target.value)}
                                     placeholder="••••••••"
                                     required
-                                    style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #ddd', fontSize: '0.95rem', boxSizing: 'border-box' }}
+                                    style={{ width: '100%', padding: '11px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', fontSize: '0.95rem', boxSizing: 'border-box', fontFamily: 'inherit' }}
                                 />
                             </div>
 
                             {loginError && (
-                                <div style={{ background: '#fff0f0', border: '1px solid #fcc', borderRadius: '8px', padding: '10px 14px', color: '#c0392b', fontSize: '0.87rem' }}>
+                                <div role="alert" style={{ background: 'var(--color-error-bg)', border: '1px solid var(--color-error)', borderRadius: 'var(--radius-md)', padding: '10px 14px', color: 'var(--color-error)', fontSize: '0.87rem' }}>
                                     {loginError}
                                 </div>
                             )}
@@ -734,13 +784,16 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                 type="submit"
                                 disabled={loginLoading}
                                 style={{
-                                    background: loginLoading ? '#ccc' : '#1a1a1a',
-                                    color: 'white',
+                                    background: loginLoading ? 'var(--color-border-strong)' : 'var(--color-primary)',
+                                    color: 'var(--color-white)',
                                     border: 'none',
-                                    borderRadius: '10px',
+                                    borderRadius: 'var(--radius-md)',
                                     padding: '13px',
-                                    fontSize: '0.95rem',
+                                    fontSize: '0.9rem',
                                     fontWeight: '700',
+                                    fontFamily: 'var(--font-heading)',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px',
                                     cursor: loginLoading ? 'not-allowed' : 'pointer',
                                     display: 'flex',
                                     alignItems: 'center',

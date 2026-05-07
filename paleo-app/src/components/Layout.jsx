@@ -11,11 +11,12 @@ const Layout = () => {
 
     return (
         <div style={{
-            fontFamily: "'Outfit', sans-serif",
+            fontFamily: 'var(--font-body)',
             minHeight: '100vh',
             display: 'flex',
             flexDirection: 'column',
-            background: '#FAFAFA',
+            background: 'var(--color-bg)',
+            color: 'var(--color-text)',
         }}>
             <SharedHeader
                 currentWorkshop={currentWorkshop}

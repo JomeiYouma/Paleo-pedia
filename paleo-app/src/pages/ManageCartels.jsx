@@ -750,16 +750,47 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                 </div>
             </div>
 
-            {/* ── Onglets ────────────────────────────────────── */}
-            <div style={{ display:'flex', gap:'4px', background:'#f5f5f5', borderRadius:'14px', padding:'4px', marginBottom:'24px' }}>
+            {/* ── Onglets : chaque tab est un bouton bordé pour qu'on voie tout
+                  de suite que c'est cliquable, l'actif est rempli, les autres
+                  restent en outline avec leur couleur sémantique. ───────── */}
+            <div role="tablist" aria-label="Statuts des cartels" style={{ display:'flex', gap:'8px', marginBottom:'24px', flexWrap:'wrap' }}>
                 {visibleTabs.map(tab => {
                     const Icon   = tab.icon;
                     const active = tab.key === activeTab;
                     return (
-                        <button key={tab.key} onClick={() => { setActiveTab(tab.key); setSelectedIds(new Set()); }} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:'8px', padding:'12px 16px', borderRadius:'10px', border:'none', cursor:'pointer', fontWeight:'700', fontSize:'0.88rem', fontFamily:'inherit', background: active ? 'white' : 'transparent', color: active ? tab.color : '#888', boxShadow: active ? '0 2px 8px rgba(0,0,0,0.08)' : 'none', transition:'all 0.15s' }}>
+                        <button
+                            key={tab.key}
+                            role="tab"
+                            aria-selected={active}
+                            onClick={() => { setActiveTab(tab.key); setSelectedIds(new Set()); }}
+                            style={{
+                                flex:1, minWidth:'180px',
+                                display:'flex', alignItems:'center', justifyContent:'center', gap:'10px',
+                                padding:'12px 18px',
+                                borderRadius:'var(--radius-md)',
+                                border: `1px solid ${active ? tab.color : 'var(--color-border)'}`,
+                                cursor:'pointer',
+                                fontFamily: 'var(--font-heading)',
+                                fontWeight:'700', fontSize:'0.85rem',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px',
+                                background: active ? tab.bg : 'var(--color-surface)',
+                                color: active ? tab.color : 'var(--color-text-muted)',
+                                transition:'background-color 0.15s, color 0.15s, border-color 0.15s',
+                            }}
+                            onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'var(--color-primary-soft)'; }}
+                            onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'var(--color-surface)'; }}
+                        >
                             <Icon size={15} />
                             {t(tab.labelKey)}
-                            <span style={{ background: active ? tab.bg : '#e8e8e8', color: active ? tab.color : '#999', borderRadius:'20px', padding:'1px 8px', fontSize:'0.78rem', fontWeight:'800', minWidth:'22px', textAlign:'center' }}>
+                            <span style={{
+                                background: active ? tab.color : 'var(--color-neutral-bg)',
+                                color: active ? 'var(--color-white)' : 'var(--color-text-muted)',
+                                borderRadius:'var(--radius-md)',
+                                padding:'2px 8px', fontSize:'0.78rem', fontWeight:'700',
+                                minWidth:'22px', textAlign:'center',
+                                fontFamily: 'var(--font-heading)',
+                            }}>
                                 {counts[tab.key] ?? 0}
                             </span>
                         </button>

@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, BookOpen, Map, PenTool, Layers, X, ChevronRight, ExternalLink } from 'lucide-react';
 import { categories as categoriesApi, subsites as subsitesApi } from '../services/apiClient';
 
-const PINK = 'var(--color-pink-darker, #C2185B)';
+const PRIMARY = 'var(--color-primary)';
+const ACCENT  = 'var(--color-accent)';
 
 const LandingPage = () => {
     const navigate = useNavigate();
@@ -64,80 +65,93 @@ const LandingPage = () => {
         <div>
             {/* ── Hero Section ─────────────────────────────────────── */}
             <section style={{
-                background: 'linear-gradient(135deg, #fce4ec 0%, #ffffff 100%)',
-                padding: '80px 20px',
+                background: PRIMARY,
+                color: 'var(--color-white)',
+                padding: '96px 20px',
                 textAlign: 'center',
                 minHeight: '60vh',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',
+                position: 'relative',
+                overflow: 'hidden',
             }}>
+                {/* Bande accent jaune en bas — accent visuel discret de la nouvelle DA */}
+                <div aria-hidden="true" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '6px', background: ACCENT }} />
+
                 <h1 style={{
-                    fontSize: '4rem',
+                    fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
                     marginBottom: '20px',
-                    color: PINK,
-                    maxWidth: '800px',
-                    lineHeight: '1.1',
+                    color: 'var(--color-white)',
+                    maxWidth: '900px',
+                    lineHeight: '1',
+                    letterSpacing: '0.02em',
                 }}>
                     Une contre-histoire de l'énergie
                 </h1>
                 <p style={{
-                    fontSize: '1.5rem',
-                    color: '#555',
-                    maxWidth: '600px',
+                    fontSize: '1.25rem',
+                    color: 'rgba(255,255,255,0.85)',
+                    maxWidth: '640px',
                     margin: '0 auto 48px auto',
+                    lineHeight: '1.5',
                 }}>
                     Ressusciter les techniques disparues pour réinventer notre futur énergétique.
                 </p>
 
                 {/* CTA buttons */}
-                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', justifyContent: 'center' }}>
                     <Link
                         to="/app"
                         id="cta-explorer-frise"
                         style={{
-                            background: PINK,
-                            color: 'white',
-                            padding: '15px 36px',
-                            borderRadius: '50px',
+                            background: ACCENT,
+                            color: PRIMARY,
+                            padding: '14px 32px',
+                            borderRadius: 'var(--radius-md)',
                             textDecoration: 'none',
-                            fontSize: '1.1rem',
-                            fontWeight: 'bold',
+                            fontSize: '0.95rem',
+                            fontWeight: '700',
+                            fontFamily: 'var(--font-heading)',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.6px',
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '10px',
-                            boxShadow: '0 4px 15px rgba(194, 24, 91, 0.35)',
-                            transition: 'transform 0.2s, box-shadow 0.2s',
+                            border: '2px solid ' + ACCENT,
+                            transition: 'background-color 0.2s, color 0.2s',
                         }}
-                        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                        onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-accent-hover)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = ACCENT; }}
                     >
-                        Explorer la Frise <ArrowRight size={20} />
+                        Explorer la Frise <ArrowRight size={18} />
                     </Link>
 
                     <button
                         id="cta-explorer-thematique"
                         onClick={openCategoryModal}
                         style={{
-                            background: 'white',
-                            color: PINK,
-                            padding: '15px 36px',
-                            borderRadius: '50px',
-                            border: `2px solid ${PINK}`,
-                            fontSize: '1.1rem',
-                            fontWeight: 'bold',
+                            background: 'transparent',
+                            color: 'var(--color-white)',
+                            padding: '14px 32px',
+                            borderRadius: 'var(--radius-md)',
+                            border: '2px solid var(--color-white)',
+                            fontSize: '0.95rem',
+                            fontWeight: '700',
+                            fontFamily: 'var(--font-heading)',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.6px',
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '10px',
                             cursor: 'pointer',
-                            boxShadow: '0 4px 15px rgba(194, 24, 91, 0.12)',
-                            transition: 'transform 0.2s, box-shadow 0.2s',
+                            transition: 'background-color 0.2s, color 0.2s, border-color 0.2s',
                         }}
-                        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                        onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                        onMouseEnter={e => { e.currentTarget.style.background = ACCENT; e.currentTarget.style.color = PRIMARY; e.currentTarget.style.borderColor = ACCENT; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-white)'; e.currentTarget.style.borderColor = 'var(--color-white)'; }}
                     >
-                        <Layers size={20} /> Explorer une thématique
+                        <Layers size={18} /> Explorer une thématique
                     </button>
                 </div>
             </section>
@@ -145,40 +159,42 @@ const LandingPage = () => {
             {/* ── Quick Access Grid ────────────────────────────────── */}
             <section style={{ padding: '80px 20px', maxWidth: '1200px', margin: '0 auto' }}>
                 <h2 style={{ textAlign: 'center', marginBottom: '50px', fontSize: '2.5rem' }}>Découvrir le projet</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
 
-                    <div className="landing-card" style={{ padding: '30px', background: 'white', borderRadius: '15px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: '1px solid #eee' }}>
-                        <div style={{ background: '#e3f2fd', width: '50px', height: '50px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
-                            <BookOpen color="#1565c0" />
-                        </div>
-                        <h3 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>La Démarche</h3>
-                        <p style={{ color: '#666', lineHeight: '1.6', marginBottom: '20px' }}>
-                            Comprendre notre mission d'exhumation des inventions oubliées et notre vision citoyenne.
-                        </p>
-                        <Link to="/presentation" style={{ color: '#1565c0', textDecoration: 'none', fontWeight: 'bold' }}>En savoir plus →</Link>
-                    </div>
-
-                    <div className="landing-card" style={{ padding: '30px', background: 'white', borderRadius: '15px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: '1px solid #eee' }}>
-                        <div style={{ background: '#fff3e0', width: '50px', height: '50px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
-                            <Map color="#ef6c00" />
-                        </div>
-                        <h3 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>Rétrofutur Museum</h3>
-                        <p style={{ color: '#666', lineHeight: '1.6', marginBottom: '20px' }}>
-                            Visitez le premier musée des énergies alternatives où l'énergie est produite par les visiteurs.
-                        </p>
-                        <Link to="/museum" style={{ color: '#ef6c00', textDecoration: 'none', fontWeight: 'bold' }}>Découvrir →</Link>
-                    </div>
-
-                    <div className="landing-card" style={{ padding: '30px', background: 'white', borderRadius: '15px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: '1px solid #eee' }}>
-                        <div style={{ background: '#e8f5e9', width: '50px', height: '50px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
-                            <PenTool color="#2e7d32" />
-                        </div>
-                        <h3 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>Nos Prestations</h3>
-                        <p style={{ color: '#666', lineHeight: '1.6', marginBottom: '20px' }}>
-                            Challenges, ateliers, et conférences pour inspirer l'innovation dans votre organisation.
-                        </p>
-                        <Link to="/prestations" style={{ color: '#2e7d32', textDecoration: 'none', fontWeight: 'bold' }}>Voir les offres →</Link>
-                    </div>
+                    {[
+                        { Icon: BookOpen, title: 'La Démarche',       desc: "Comprendre notre mission d'exhumation des inventions oubliées et notre vision citoyenne.", link: '/presentation', cta: 'En savoir plus' },
+                        { Icon: Map,      title: 'Rétrofutur Museum', desc: "Visitez le premier musée des énergies alternatives où l'énergie est produite par les visiteurs.", link: '/museum',      cta: 'Découvrir' },
+                        { Icon: PenTool,  title: 'Nos Prestations',   desc: "Challenges, ateliers, et conférences pour inspirer l'innovation dans votre organisation.",      link: '/prestations', cta: 'Voir les offres' },
+                    ].map(({ Icon, title, desc, link, cta }) => (
+                        <Link
+                            key={link}
+                            to={link}
+                            className="landing-card"
+                            style={{
+                                display: 'block',
+                                padding: '28px',
+                                background: 'var(--color-surface)',
+                                borderRadius: 'var(--radius-md)',
+                                boxShadow: 'var(--shadow-sm)',
+                                border: '1px solid var(--color-border)',
+                                borderTop: `4px solid ${PRIMARY}`,
+                                textDecoration: 'none',
+                                color: 'var(--color-text)',
+                                transition: 'border-top-color 0.18s, box-shadow 0.18s',
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.borderTopColor = ACCENT; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.borderTopColor = PRIMARY; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}
+                        >
+                            <div style={{ background: PRIMARY, width: '44px', height: '44px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+                                <Icon color={ACCENT} size={22} />
+                            </div>
+                            <h3 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>{title}</h3>
+                            <p style={{ color: 'var(--color-text-muted)', lineHeight: '1.6', marginBottom: '20px' }}>{desc}</p>
+                            <span style={{ color: PRIMARY, fontFamily: 'var(--font-heading)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', fontSize: '0.85rem' }}>
+                                {cta} →
+                            </span>
+                        </Link>
+                    ))}
 
                 </div>
             </section>
@@ -201,53 +217,56 @@ const LandingPage = () => {
                     }}
                 >
                     <div style={{
-                        background: 'white',
-                        borderRadius: '20px',
+                        background: 'var(--color-surface)',
+                        borderRadius: 'var(--radius-lg)',
                         padding: '40px',
                         maxWidth: '560px',
                         width: '100%',
                         maxHeight: '80vh',
                         overflowY: 'auto',
-                        boxShadow: '0 24px 80px rgba(0,0,0,0.2)',
+                        boxShadow: 'var(--shadow-lg)',
+                        border: '1px solid var(--color-border)',
                         position: 'relative',
                     }}>
                         {/* Close */}
                         <button
                             onClick={closeCategoryModal}
+                            aria-label="Fermer"
                             style={{
                                 position: 'absolute', top: '16px', right: '16px',
-                                background: '#f5f5f5', border: 'none', borderRadius: '50%',
+                                background: 'var(--color-primary-soft)', border: 'none', borderRadius: 'var(--radius-md)',
                                 width: '36px', height: '36px', cursor: 'pointer',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 transition: 'background 0.2s',
                             }}
                             title="Fermer"
                         >
-                            <X size={18} color="#555" />
+                            <X size={18} color="var(--color-text-muted)" />
                         </button>
 
-                        <h2 style={{ margin: '0 0 8px 0', fontSize: '1.8rem', color: '#1a1a1a' }}>Explorer une thématique</h2>
-                        <p style={{ margin: '0 0 28px 0', color: '#777', fontSize: '0.95rem' }}>
+                        <h2 style={{ margin: '0 0 8px 0', fontSize: '1.6rem' }}>Explorer une thématique</h2>
+                        <p style={{ margin: '0 0 28px 0', color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>
                             {explorerMode === 'subsites'
                                 ? 'Choisissez un sous-site pour accéder à son espace dédié.'
                                 : 'Choisissez une catégorie pour voir uniquement les cartels associés.'}
                         </p>
 
                         {loadingCats && (
-                            <div style={{ textAlign: 'center', padding: '40px 0', color: '#aaa' }}>Chargement…</div>
+                            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--color-text-subtle)' }}>Chargement…</div>
                         )}
 
                         {!loadingCats && explorerMode === 'categories' && cats.length === 0 && (
-                            <div style={{ textAlign: 'center', padding: '40px 0', color: '#aaa' }}>Aucune thématique disponible pour le moment.</div>
+                            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--color-text-subtle)' }}>Aucune thématique disponible pour le moment.</div>
                         )}
 
                         {!loadingCats && explorerMode === 'subsites' && subsites.length === 0 && (
-                            <div style={{ textAlign: 'center', padding: '40px 0', color: '#aaa' }}>Aucun sous-site disponible pour le moment.</div>
+                            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--color-text-subtle)' }}>Aucun sous-site disponible pour le moment.</div>
                         )}
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {(explorerMode === 'subsites' ? subsites : cats).map(item => {
                                 const isSubsite = explorerMode === 'subsites';
+                                const itemColor = isSubsite ? (item.primary_color || PRIMARY) : (item.color || PRIMARY);
                                 return (
                                 <button
                                     key={item.id || item.slug}
@@ -257,33 +276,30 @@ const LandingPage = () => {
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'space-between',
-                                        padding: '16px 20px',
-                                        borderRadius: '12px',
-                                        border: isSubsite ? '2px solid #f0f0f0' : '2px solid #f0f0f0',
-                                        background: 'white',
+                                        padding: '14px 18px',
+                                        borderRadius: 'var(--radius-md)',
+                                        border: '1px solid var(--color-border)',
+                                        borderLeft: `4px solid ${itemColor}`,
+                                        background: 'var(--color-surface)',
                                         cursor: 'pointer',
                                         textAlign: 'left',
-                                        transition: 'all 0.2s',
-                                        fontSize: '1rem',
-                                        fontWeight: '600',
-                                        color: '#1a1a1a',
+                                        transition: 'background-color 0.15s, border-color 0.15s',
+                                        fontSize: '0.95rem',
+                                        fontWeight: '700',
+                                        fontFamily: 'var(--font-heading)',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.4px',
+                                        color: 'var(--color-text)',
                                     }}
                                     onMouseEnter={e => {
-                                        e.currentTarget.style.borderColor = isSubsite ? '#aaa' : (item.color || PINK);
-                                        e.currentTarget.style.background = '#fafafa';
-                                        e.currentTarget.style.transform = 'translateX(4px)';
+                                        e.currentTarget.style.background = 'var(--color-primary-soft)';
                                     }}
                                     onMouseLeave={e => {
-                                        e.currentTarget.style.borderColor = '#f0f0f0';
-                                        e.currentTarget.style.background = 'white';
-                                        e.currentTarget.style.transform = 'translateX(0)';
+                                        e.currentTarget.style.background = 'var(--color-surface)';
                                     }}
                                 >
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                                        <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: isSubsite ? (item.primary_color || PINK) : (item.color || PINK), flexShrink: 0 }} />
-                                        <span>{item.name}</span>
-                                    </div>
-                                    <ChevronRight size={18} color="#ccc" />
+                                    <span>{item.name}</span>
+                                    <ChevronRight size={18} color="var(--color-text-subtle)" />
                                 </button>
                                 );
                             })}
@@ -294,7 +310,7 @@ const LandingPage = () => {
                             <Link
                                 to="/app"
                                 onClick={closeCategoryModal}
-                                style={{ color: '#999', fontSize: '0.9rem', textDecoration: 'underline' }}
+                                style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', textDecoration: 'underline' }}
                             >
                                 Voir tous les cartels sans filtre →
                             </Link>

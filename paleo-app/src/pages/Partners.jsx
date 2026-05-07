@@ -39,42 +39,45 @@ const Partners = () => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '12px',
-                minHeight: '190px',
-                background: 'white',
-                borderRadius: '14px',
-                border: accent ? '2px solid var(--color-pink-darker, #C2185B)' : '1px solid #eee',
-                boxShadow: accent ? '0 4px 20px rgba(194,24,91,0.15)' : '0 2px 12px rgba(0,0,0,0.05)',
+                minHeight: accent ? '190px' : '150px',
+                background: 'transparent',
+                border: 'none',
+                boxShadow: 'none',
                 textDecoration: 'none',
-                color: '#1a1a1a',
-                padding: '20px',
-                transition: 'transform 0.15s',
+                color: 'var(--color-text)',
+                padding: '12px',
+                transition: 'opacity 0.15s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}
+            onMouseEnter={e => { e.currentTarget.style.opacity = '0.75'; }}
+            onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
         >
             {p.logo_path ? (
-                <img src={p.logo_path} alt={p.name} style={{ height: '68px', objectFit: 'contain', maxWidth: '180px' }} />
+                <img src={p.logo_path} alt={p.name} style={{ height: accent ? '78px' : '60px', objectFit: 'contain', maxWidth: '180px' }} />
             ) : (
                 <div style={{
-                    width: '66px', height: '66px', borderRadius: '50%',
-                    background: '#fce4ec', color: 'var(--color-pink-darker, #C2185B)',
+                    width: accent ? '72px' : '56px',
+                    height: accent ? '72px' : '56px',
+                    background: 'var(--color-primary)',
+                    color: 'var(--color-accent)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '1.6rem', fontWeight: '800',
+                    fontFamily: 'var(--font-display)',
+                    fontSize: accent ? '1.8rem' : '1.4rem',
+                    letterSpacing: '0.04em',
                 }}>
                     {p.name?.charAt(0) || '?'}
                 </div>
             )}
-            <div style={{ textAlign: 'center', fontWeight: '700', fontSize: '0.96rem' }}>{p.name}</div>
-            {p.url && <ExternalLink size={14} color="#bbb" />}
+            <div style={{ textAlign: 'center', fontFamily: 'var(--font-heading)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.4px', fontSize: accent ? '0.95rem' : '0.85rem', color: 'var(--color-text)' }}>{p.name}</div>
+            {p.url && <ExternalLink size={14} color="var(--color-text-subtle)" />}
         </a>
     );
 
     return (
         <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '60px 24px' }}>
-            <h1 style={{ fontSize: '2.5rem', marginBottom: '10px', color: 'var(--color-pink-darker, #C2185B)' }}>
+            <h1 style={{ fontSize: '2.75rem', marginBottom: '10px' }}>
                 {t('pages.partners.title', 'Partenaires')}
             </h1>
-            <p style={{ color: '#666', marginBottom: '36px', maxWidth: '720px' }}>
+            <p style={{ color: 'var(--color-text-muted)', marginBottom: '36px', maxWidth: '720px' }}>
                 {t('pages.partners.subtitle', 'Les organisations qui soutiennent et accompagnent le projet.')}
             </p>
 
@@ -86,10 +89,10 @@ const Partners = () => {
                 <>
                     {primaryPartners.length > 0 && (
                         <section style={{ marginBottom: '42px' }}>
-                            <h2 style={{ margin: '0 0 16px', fontSize: '1.45rem', color: '#1a1a1a' }}>
+                            <h2 style={{ margin: '0 0 20px', fontSize: '1.5rem' }}>
                                 {t('pages.partners.primaryTitle', 'Partenaires principaux')}
                             </h2>
-                            <div style={{ display: 'grid', gap: '22px', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}>
+                            <div style={{ display: 'grid', gap: '20px', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
                                 {primaryPartners.map(p => renderCard(p, true))}
                             </div>
                         </section>
@@ -97,17 +100,17 @@ const Partners = () => {
 
                     {partners.length > 0 && (
                         <section>
-                            <h2 style={{ margin: '0 0 16px', fontSize: '1.2rem', color: '#666' }}>
+                            <h2 style={{ margin: '0 0 20px', fontSize: '1.25rem', color: 'var(--color-text-muted)' }}>
                                 {t('pages.partners.secondaryTitle', 'Partenaires')}
                             </h2>
-                            <div style={{ display: 'grid', gap: '22px', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
+                            <div style={{ display: 'grid', gap: '20px', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}>
                                 {partners.map(p => renderCard(p, false))}
                             </div>
                         </section>
                     )}
 
                     {primaryPartners.length === 0 && partners.length === 0 && (
-                        <div style={{ color: '#999', textAlign: 'center', padding: '60px 0' }}>
+                        <div style={{ color: 'var(--color-text-subtle)', textAlign: 'center', padding: '60px 0' }}>
                             {t('pages.partners.empty', 'Aucun partenaire affiché pour le moment.')}
                         </div>
                     )}

@@ -327,44 +327,58 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
         <div style={{
             height: 'calc(100vh - 180px)',
             minHeight: '600px',
-            backgroundColor: '#f8f8f8',
             display: 'flex',
             flexDirection: 'column',
             marginTop: '20px',
-            borderRadius: '12px',
-            border: '1px solid #e0e0e0',
-            overflow: 'hidden'
+            gap: '20px',
+            padding: '0 4px',
         }}>
-            {/* MAIN CONTENT AREA */}
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+            {/* ════════════════════════════════════════════════════════
+                ZONE CARTEL — pas de cadre : le cartel sert lui-même
+                de "carte" pour éviter les rectangles imbriqués
+               ════════════════════════════════════════════════════════ */}
+            <div style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                overflow: 'hidden',
+            }}>
                 {/* Prev Button */}
                 <button
                     onClick={() => setSelectedIndex(prev => Math.max(0, prev - 1))}
                     disabled={selectedIndex === 0}
+                    aria-label="Cartel précédent"
                     style={{
-                        position: 'fixed', left: '40px', top: '40%', transform: 'translateY(-50%)',
-                        zIndex: 50, background: 'white', borderRadius: '50%', padding: '15px',
-                        border: '1px solid #eee', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                        opacity: selectedIndex === 0 ? 0.5 : 1
+                        position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)',
+                        zIndex: 50, background: 'var(--color-surface)',
+                        borderRadius: 'var(--radius-md)', padding: '12px',
+                        border: '1px solid var(--color-border)',
+                        cursor: selectedIndex === 0 ? 'not-allowed' : 'pointer',
+                        boxShadow: 'var(--shadow-sm)',
+                        opacity: selectedIndex === 0 ? 0.4 : 1,
+                        color: 'var(--color-primary)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}
                 >
-                    <ChevronLeft size={30} />
+                    <ChevronLeft size={26} />
                 </button>
 
                 {/* Card Display - Constrained Container */}
                 {currentCartel && (
                     <div style={{
-                        transform: 'scale(1)', // Removed scale to simplify sizing
-                        boxShadow: '0 20px 50px rgba(0,0,0,0.1)',
-                        borderRadius: '2px',
+                        boxShadow: 'var(--shadow-md)',
+                        borderRadius: 'var(--radius-md)',
                         position: 'relative',
-                        background: 'white',
-                        height: '100%', // Fill parent
-                        maxHeight: 'calc(100vh - 250px)', // Explicit max height to prevent overflow
-                        width: '80%', // Constrain width
+                        background: 'var(--color-surface)',
+                        height: '100%',
+                        maxHeight: 'calc(100vh - 290px)',
+                        width: '80%',
                         maxWidth: '1200px',
                         display: 'flex',
-                        flexDirection: 'column'
+                        flexDirection: 'column',
+                        margin: '24px 0',
                     }}>
                         <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
                             <CartelPreview key={currentCartel.id} data={currentCartel} />
@@ -372,8 +386,8 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
 
                         {/* Admin Actions */}
                         <div style={{
-                            position: 'absolute', top: '20px', right: '-60px',
-                            display: 'flex', flexDirection: 'column', gap: '15px', zIndex: 40
+                            position: 'absolute', top: '12px', right: '-56px',
+                            display: 'flex', flexDirection: 'column', gap: '8px', zIndex: 40
                         }}>
                             {isAdmin && (
                                 <>
@@ -383,9 +397,10 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                                             navigate(`${createBasePath}?edit=${currentCartel.id}`, { state: { returnTo } });
                                         }}
                                         title={t('cartel.edit')}
-                                        style={{ border: 'none', background: 'white', cursor: 'pointer', padding: '12px', borderRadius: '50%', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}
+                                        aria-label={t('cartel.edit')}
+                                        style={{ border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', padding: '10px', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', display: 'flex' }}
                                     >
-                                        <Edit size={24} color="#333" />
+                                        <Edit size={18} color="var(--color-primary)" />
                                     </button>
                                     <button
                                         onClick={() => setConfirmState({
@@ -393,9 +408,10 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                                             onConfirm: () => { onDelete(currentCartel.id); setConfirmState(null); },
                                         })}
                                         title={t('cartel.delete')}
-                                        style={{ border: 'none', background: 'white', cursor: 'pointer', padding: '12px', borderRadius: '50%', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}
+                                        aria-label={t('cartel.delete')}
+                                        style={{ border: '1px solid var(--color-error)', background: 'var(--color-surface)', cursor: 'pointer', padding: '10px', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', display: 'flex' }}
                                     >
-                                        <Trash2 size={24} color="red" />
+                                        <Trash2 size={18} color="var(--color-error)" />
                                     </button>
                                 </>
                             )}
@@ -407,32 +423,64 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                 <button
                     onClick={() => setSelectedIndex(prev => Math.min(validCartels.length - 1, prev + 1))}
                     disabled={selectedIndex === validCartels.length - 1}
+                    aria-label="Cartel suivant"
                     style={{
-                        position: 'fixed', right: '40px', top: '40%', transform: 'translateY(-50%)',
-                        zIndex: 50, background: 'white', borderRadius: '50%', padding: '15px',
-                        border: '1px solid #eee', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                        opacity: selectedIndex === validCartels.length - 1 ? 0.5 : 1
+                        position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)',
+                        zIndex: 50, background: 'var(--color-surface)',
+                        borderRadius: 'var(--radius-md)', padding: '12px',
+                        border: '1px solid var(--color-border)',
+                        cursor: selectedIndex === validCartels.length - 1 ? 'not-allowed' : 'pointer',
+                        boxShadow: 'var(--shadow-sm)',
+                        opacity: selectedIndex === validCartels.length - 1 ? 0.4 : 1,
+                        color: 'var(--color-primary)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}
                 >
-                    <ChevronRight size={30} />
+                    <ChevronRight size={26} />
                 </button>
             </div>
 
-            {/* D3 TIMELINE NAVIGATOR */}
-            <div
-                ref={containerRef}
-                style={{
-                    height: '200px', // Updated Height
-                    background: 'white',
-                    borderTop: '1px solid #eee',
-                    position: 'relative',
-                    width: '100%'
-                }}
-            >
-                <div style={{ position: 'absolute', top: '5px', left: '10px', fontSize: '0.8em', color: '#888', pointerEvents: 'none' }}>
-                    {t('timeline.scroll_instruction', "Zoomez avec la molette et déplacez-vous pour explorer le temps. (Flèches ← → pour naviguer)")}
+            {/* ════════════════════════════════════════════════════════
+                FRISE — panel séparé, libellé en haut + zone scrollable
+               ════════════════════════════════════════════════════════ */}
+            <div style={{
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-md)',
+                overflow: 'hidden',
+                flexShrink: 0,
+            }}>
+                {/* En-tête de la frise : signe le rôle de cette zone */}
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '8px 16px',
+                    background: 'var(--color-primary)',
+                    color: 'var(--color-white)',
+                    borderBottom: `3px solid var(--color-accent)`,
+                    fontFamily: 'var(--font-heading)',
+                    fontSize: '0.78rem',
+                    fontWeight: '700',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                }}>
+                    <span>Frise chronologique</span>
+                    <span style={{ color: 'rgba(255,255,255,0.65)', fontWeight: '400', textTransform: 'none', letterSpacing: 'normal', fontSize: '0.78rem' }}>
+                        {t('timeline.scroll_instruction', "Zoomez avec la molette et déplacez-vous pour explorer le temps. (Flèches ← → pour naviguer)")}
+                    </span>
                 </div>
-                <svg ref={svgRef} style={{ width: '100%', height: '100%', cursor: 'grab' }}></svg>
+                <div
+                    ref={containerRef}
+                    style={{
+                        height: '180px',
+                        background: 'var(--color-surface)',
+                        position: 'relative',
+                        width: '100%',
+                    }}
+                >
+                    <svg ref={svgRef} style={{ width: '100%', height: '100%', cursor: 'grab' }}></svg>
+                </div>
             </div>
 
             {/* Modale de confirmation (remplace window.confirm) */}

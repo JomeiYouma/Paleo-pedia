@@ -579,28 +579,29 @@ const ArborescenceMode = ({ cartels = [] }) => {
                 .arb-slider::-webkit-slider-thumb {
                     -webkit-appearance: none;
                     appearance: none;
-                    width: 14px;
-                    height: 14px;
+                    width: 16px;
+                    height: 16px;
                     border-radius: 50%;
-                    background: #C2185B;
-                    border: 2px solid #fff;
+                    background: var(--color-accent);
+                    border: 2px solid var(--color-primary);
                     box-shadow: 0 1px 3px rgba(0,0,0,0.25);
-                    margin-top: -5px;
+                    margin-top: -6px;
                     transition: transform 0.1s, background 0.15s;
                 }
                 .arb-slider::-moz-range-thumb {
-                    width: 14px;
-                    height: 14px;
+                    width: 16px;
+                    height: 16px;
                     border-radius: 50%;
-                    background: #C2185B;
-                    border: 2px solid #fff;
+                    background: var(--color-accent);
+                    border: 2px solid var(--color-primary);
                     box-shadow: 0 1px 3px rgba(0,0,0,0.25);
                     transition: transform 0.1s, background 0.15s;
                 }
-                .arb-slider:hover::-webkit-slider-thumb { transform: scale(1.15); background: #AD1457; }
-                .arb-slider:hover::-moz-range-thumb     { transform: scale(1.15); background: #AD1457; }
+                .arb-slider:hover::-webkit-slider-thumb { transform: scale(1.15); background: var(--color-accent-hover); }
+                .arb-slider:hover::-moz-range-thumb     { transform: scale(1.15); background: var(--color-accent-hover); }
                 .arb-slider:active::-webkit-slider-thumb { transform: scale(1.25); }
                 .arb-slider:active::-moz-range-thumb     { transform: scale(1.25); }
+                .arb-slider:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring-color); outline-offset: 4px; }
 
                 /* Image en bannière dans le panneau latéral de l'arborescence */
                 .arb-cartel-preview .cartel-container {
