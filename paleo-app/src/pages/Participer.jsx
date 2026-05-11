@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Download, Send, Search, FileText } from 'lucide-react';
 
 // Page "Appel à participation" — contenu repris de
@@ -7,16 +8,20 @@ import { Download, Send, Search, FileText } from 'lucide-react';
 // Les emplacements [À REMPLACER] doivent être complétés (PDF du kit,
 // affiche haute définition, exemples concrets d'inventions).
 const Participer = () => {
+    const { t } = useTranslation();
+    const cards = [
+        { title: t('participer.cards.techTitle'),         desc: t('participer.cards.techDesc') },
+        { title: t('participer.cards.socialTitle'),       desc: t('participer.cards.socialDesc') },
+        { title: t('participer.cards.imaginariesTitle'),  desc: t('participer.cards.imaginariesDesc') },
+    ];
     return (
         <div style={{ maxWidth: '900px', margin: '60px auto', padding: '0 20px', lineHeight: '1.7', color: '#333' }}>
             <h1 style={{ fontSize: '2.5rem', marginBottom: '20px', color: 'var(--color-pink-darker, #C2185B)' }}>
-                Appel à participation
+                {t('participer.title')}
             </h1>
 
             <p style={{ fontSize: '1.2rem', marginBottom: '30px' }}>
-                Dans le cadre de notre projet de recherche participatif et citoyen dans le domaine de l'énergie,
-                vous pouvez télécharger notre kit « appel à participation » pour nous aider à trouver d'anciennes
-                inventions, d'anciennes innovations sociales et des imaginaires collectifs.
+                {t('participer.intro')}
             </p>
 
             {/* ── Affiche + bouton de téléchargement ───────────────────── */}
@@ -32,7 +37,7 @@ const Participer = () => {
             }}>
                 <img
                     src="/downloads/kit-appel-participation.jpg"
-                    alt="Affiche Appel à participation Paléo-Énergétique"
+                    alt={t('participer.posterAlt')}
                     style={{
                         width: '100%',
                         aspectRatio: '700 / 989',
@@ -42,30 +47,27 @@ const Participer = () => {
                     }}
                 />
                 <noscript>
-                    <a href="/downloads/kit-appel-participation.jpg">Affiche Appel à participation (JPG)</a>
+                    <a href="/downloads/kit-appel-participation.jpg">{t('participer.posterNoscript')}</a>
                 </noscript>
 
                 <div>
-                    <h2 style={{ marginTop: 0, fontSize: '1.5rem' }}>Téléchargez le kit</h2>
-                    <p>
-                        Affichez-le, partagez-le, faites circuler l'information autour de vous : chaque innovation
-                        oubliée retrouvée enrichit la frise chronologique du projet.
-                    </p>
+                    <h2 style={{ marginTop: 0, fontSize: '1.5rem' }}>{t('participer.downloadTitle')}</h2>
+                    <p>{t('participer.downloadBody')}</p>
                     <a
                         href="#"
                         /* [À REMPLACER : href vers le PDF du kit affiche, ex: /downloads/kit-appel-participation.pdf ] */
                         className="paleo-btn"
                     >
-                        <Download size={18} /> Télécharger le kit (PDF)
+                        <Download size={18} /> {t('participer.downloadBtn')}
                     </a>
                     <p style={{ fontSize: '0.85rem', color: '#888', marginTop: '14px' }}>
-                        Une version image (JPG) est aussi disponible{' '}
+                        {t('participer.jpgAvailable')}{' '}
                         <a
                             href="/downloads/kit-appel-participation.jpg"
                             download
                             style={{ color: '#666' }}
                         >
-                            ici
+                            {t('participer.jpgLink')}
                         </a>.
                     </p>
                 </div>
@@ -80,24 +82,17 @@ const Participer = () => {
                 marginBottom: '50px',
                 textAlign: 'center',
             }}>
-                <h2 style={{ marginTop: 0 }}>Vous avez déjà une invention en tête ?</h2>
-                <p style={{ marginBottom: '24px' }}>
-                    Proposez-la directement en ligne. Notre équipe la relira avant intégration à la frise
-                    chronologique.
-                </p>
+                <h2 style={{ marginTop: 0 }}>{t('participer.alreadyIdeaTitle')}</h2>
+                <p style={{ marginBottom: '24px' }}>{t('participer.alreadyIdeaBody')}</p>
                 <Link to="/app/create" className="paleo-btn">
-                    <Send size={18} /> Proposer une invention
+                    <Send size={18} /> {t('participer.proposeBtn')}
                 </Link>
             </div>
 
             {/* ── Que recherche-t-on ? ─────────────────────────────────── */}
-            <h2 style={{ fontSize: '1.8rem', marginTop: '50px' }}>Que recherchons-nous ?</h2>
+            <h2 style={{ fontSize: '1.8rem', marginTop: '50px' }}>{t('participer.lookingForTitle')}</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginTop: '20px' }}>
-                {[
-                    { title: 'Inventions techniques oubliées', desc: "Machines, prototypes, brevets, dispositifs liés à l'énergie qui n'ont pas été généralisés." },
-                    { title: 'Innovations sociales',           desc: "Pratiques collectives, coopératives, autopartage, mutualisation… avant l'heure." },
-                    { title: 'Imaginaires collectifs',         desc: "Récits, fictions, projections d'époque qui anticipaient des transitions énergétiques." },
-                ].map((card, i) => (
+                {cards.map((card, i) => (
                     <div
                         key={i}
                         style={{
@@ -118,20 +113,12 @@ const Participer = () => {
             </div>
 
             {/* ── Comment ça marche ────────────────────────────────────── */}
-            <h2 style={{ fontSize: '1.8rem', marginTop: '50px' }}>Comment ça marche ?</h2>
+            <h2 style={{ fontSize: '1.8rem', marginTop: '50px' }}>{t('participer.howTitle')}</h2>
             <ol style={{ paddingLeft: '20px', marginTop: '20px', fontSize: '1.05rem' }}>
-                <li style={{ marginBottom: '12px' }}>
-                    <strong>Vous nous signalez</strong> une invention via le formulaire ou par email.
-                </li>
-                <li style={{ marginBottom: '12px' }}>
-                    <strong>Notre équipe vérifie</strong> les sources et complète si besoin (date, lieu, brevet, archives).
-                </li>
-                <li style={{ marginBottom: '12px' }}>
-                    <strong>L'invention rejoint la frise</strong> chronologique avec mention de la personne qui l'a exhumée.
-                </li>
-                <li>
-                    <strong>Vous êtes crédité·e</strong> comme paléo-héro·ïne du projet.
-                </li>
+                <li style={{ marginBottom: '12px' }} dangerouslySetInnerHTML={{ __html: t('participer.step1Html') }} />
+                <li style={{ marginBottom: '12px' }} dangerouslySetInnerHTML={{ __html: t('participer.step2Html') }} />
+                <li style={{ marginBottom: '12px' }} dangerouslySetInnerHTML={{ __html: t('participer.step3Html') }} />
+                <li dangerouslySetInnerHTML={{ __html: t('participer.step4Html') }} />
             </ol>
 
             {/* ── Pour aller plus loin ─────────────────────────────────── */}
@@ -147,11 +134,11 @@ const Participer = () => {
             }}>
                 <FileText size={22} color="var(--color-primary)" style={{ flexShrink: 0, marginTop: '2px' }} />
                 <div>
-                    <strong>Une question, un doute ?</strong><br />
+                    <strong>{t('participer.questionTitle')}</strong><br />
                     <span style={{ fontSize: '0.95rem' }}>
-                        Écrivez-nous à{' '}
+                        {t('participer.questionWriteTo')}{' '}
                         <a href="mailto:hello@paleo-energetique.org">hello@paleo-energetique.org</a>{' '}
-                        ou via la <Link to="/contact">page contact</Link>.
+                        {t('participer.questionOrVia')} <Link to="/contact">{t('participer.questionContactPage')}</Link>.
                     </span>
                 </div>
             </div>

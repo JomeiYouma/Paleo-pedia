@@ -17,7 +17,7 @@ function parseCalameoBookCode(url) {
 // via /app/admin/prestations.
 
 // ── Card individuelle ────────────────────────────────────────
-const PrestationCard = ({ prestation, lang }) => {
+const PrestationCard = ({ prestation, lang, t }) => {
     const Icon = getPrestationIcon(prestation.icon_name);
     const title       = pickLang(prestation, 'title',       lang) || prestation.title;
     const intro       = pickLang(prestation, 'intro',       lang) || prestation.intro;
@@ -137,7 +137,7 @@ const PrestationCard = ({ prestation, lang }) => {
                                         rel="noopener noreferrer"
                                         style={{ color: 'var(--color-text-muted)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                     >
-                                        Ouvrir en plein écran <ExternalLink size={11} />
+                                        {t('pages.prestations.openFull')} <ExternalLink size={11} />
                                     </a>
                                 </p>
                             </div>
@@ -153,7 +153,7 @@ const PrestationCard = ({ prestation, lang }) => {
                                 className="paleo-btn paleo-btn--ghost"
                                 style={{ padding: '10px 18px', fontSize: '0.82rem' }}
                             >
-                                {pdfLabel || 'Consulter la plaquette'} <ExternalLink size={14} />
+                                {pdfLabel || t('pages.prestations.viewBrochure')} <ExternalLink size={14} />
                             </a>
                         </p>
                     );
@@ -186,20 +186,20 @@ const Prestations = () => {
             </p>
 
             <p style={{ textAlign: 'center', fontSize: '0.95rem', color: 'var(--color-text-subtle)', marginBottom: '40px' }}>
-                Chaque prestation dispose de sa propre plaquette détaillée — consultable en ligne via les boutons ci-dessous.
+                {t('pages.prestations.intro')}
             </p>
 
             {loading ? (
                 <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', fontStyle: 'italic' }}>
-                    Chargement des prestations…
+                    {t('pages.prestations.loading')}
                 </p>
             ) : items.length === 0 ? (
                 <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', fontStyle: 'italic' }}>
-                    Aucune prestation publiée pour le moment.
+                    {t('pages.prestations.empty')}
                 </p>
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
-                    {items.map(p => <PrestationCard key={p.id} prestation={p} lang={lang} />)}
+                    {items.map(p => <PrestationCard key={p.id} prestation={p} lang={lang} t={t} />)}
                 </div>
             )}
         </div>

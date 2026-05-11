@@ -7,14 +7,8 @@ import { pickLang } from '../utils/i18nHelpers';
 // Page publique « Ouvrages » — vitrine de liens vers le PrestaShop externe.
 // Items rendus depuis /api/shop-items, groupés par catégorie (book / game / other).
 
-const CATEGORY_LABELS = {
-    book:  'Livres',
-    game:  'Jeux de cartes',
-    other: 'Autres',
-};
-
 // ── Card individuelle ────────────────────────────────────────
-const ItemCard = ({ item, lang }) => {
+const ItemCard = ({ item, lang, t }) => {
     const title       = pickLang(item, 'title',       lang) || item.title;
     const subtitle    = pickLang(item, 'subtitle',    lang) || item.subtitle;
     const description = pickLang(item, 'description', lang) || item.description;
@@ -89,7 +83,7 @@ const ItemCard = ({ item, lang }) => {
                     className="paleo-btn"
                     style={{ padding: '10px 18px', fontSize: '0.82rem', marginLeft: 'auto' }}
                 >
-                    {lang === 'en' ? 'Buy' : 'Acheter'} <ExternalLink size={14} />
+                    {t('pages.ouvrages.buy')} <ExternalLink size={14} />
                 </a>
             )}
         </div>
@@ -98,8 +92,13 @@ const ItemCard = ({ item, lang }) => {
 };
 
 const Ouvrages = () => {
-    const { i18n } = useTranslation();
+    const { t, i18n } = useTranslation();
     const lang = i18n.language;
+    const CATEGORY_LABELS = {
+        book:  t('pages.ouvrages.categoryBook'),
+        game:  t('pages.ouvrages.categoryGame'),
+        other: t('pages.ouvrages.categoryOther'),
+    };
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -123,19 +122,17 @@ const Ouvrages = () => {
 
     return (
         <div style={{ maxWidth: '1100px', margin: '60px auto', padding: '0 20px', lineHeight: '1.8', color: 'var(--color-text)' }}>
-            <h1 style={{ fontSize: '2.5rem', marginBottom: '20px', color: 'var(--color-primary)' }}>Nos Ouvrages</h1>
+            <h1 style={{ fontSize: '2.5rem', marginBottom: '20px', color: 'var(--color-primary)' }}>{t('pages.ouvrages.title')}</h1>
 
             <p style={{ fontSize: '1.15rem', marginBottom: '40px', color: 'var(--color-text-muted)' }}>
-                Découvrez nos livres et nos jeux qui compilent des centaines d'inventions oubliées
-                et proposent une autre lecture de l'histoire technique.
-                Les achats se font sur notre boutique externe.
+                {t('pages.ouvrages.intro')}
             </p>
 
             {loading ? (
-                <p style={{ color: 'var(--color-text-subtle)', fontStyle: 'italic' }}>Chargement…</p>
+                <p style={{ color: 'var(--color-text-subtle)', fontStyle: 'italic' }}>{t('pages.ouvrages.loading')}</p>
             ) : !hasAny ? (
                 <p style={{ color: 'var(--color-text-subtle)', fontStyle: 'italic' }}>
-                    Aucun produit publié pour le moment.
+                    {t('pages.ouvrages.empty')}
                 </p>
             ) : (
                 ['book', 'game', 'other'].map(cat => {
@@ -151,7 +148,7 @@ const Ouvrages = () => {
                                 gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
                                 gap: '24px',
                             }}>
-                                {list.map(it => <ItemCard key={it.id} item={it} lang={lang} />)}
+                                {list.map(it => <ItemCard key={it.id} item={it} lang={lang} t={t} />)}
                             </div>
                         </section>
                     );

@@ -13,10 +13,11 @@ import { pickLang } from '../utils/i18nHelpers';
 
 // ── Liens sociaux d'un membre ─────────────────────────────────
 const SocialLinks = ({ member }) => {
+    const { t } = useTranslation();
     const links = [
-        { url: member.url_linkedin, Icon: Linkedin, label: 'LinkedIn' },
-        { url: member.url_website,  Icon: Globe,    label: 'Site web' },
-        { url: member.url_other,    Icon: Link2,    label: 'Autre lien' },
+        { url: member.url_linkedin, Icon: Linkedin, label: t('pages.presentation.socialLinkedin') },
+        { url: member.url_website,  Icon: Globe,    label: t('pages.presentation.socialWebsite') },
+        { url: member.url_other,    Icon: Link2,    label: t('pages.presentation.socialOther') },
     ].filter(l => l.url);
     if (!links.length) return null;
     return (
@@ -167,18 +168,9 @@ const Presentation = () => {
             </p>
 
             {/* ── Notre histoire ───────────────────────────────────────── */}
-            <h2 style={{ fontSize: '1.8rem', marginTop: '40px', marginBottom: '20px' }}>Notre histoire</h2>
-            <p>
-                Le programme de recherche <strong>Paléo-Énergétique</strong> a été lancé en <strong>2015</strong>
-                {' '}par <a href="https://atelier21.org" target="_blank" rel="noopener noreferrer">Atelier 21</a>,
-                association de design et de recherche sur la transition écologique. Depuis, il rassemble
-                designers, chercheur·euses, ingénieur·es et citoyen·nes autour d'une même conviction : l'histoire
-                de l'énergie regorge d'inventions oubliées dont les solutions méritent d'être réactivées.
-            </p>
-            <p>
-                En <strong>2025</strong>, le projet ouvre une nouvelle étape avec l'extension du Rétrofutur Museum,
-                qui met en dialogue savoirs historiques et créations contemporaines.
-            </p>
+            <h2 style={{ fontSize: '1.8rem', marginTop: '40px', marginBottom: '20px' }}>{t('pages.presentation.historyTitle')}</h2>
+            <p dangerouslySetInnerHTML={{ __html: t('pages.presentation.history1Html') }} />
+            <p dangerouslySetInnerHTML={{ __html: t('pages.presentation.history2Html') }} />
 
             {/* ── Vidéos de présentation ───────────────────────────────── */}
             <div style={{
@@ -188,8 +180,8 @@ const Presentation = () => {
                 margin: '30px 0',
             }}>
                 {[
-                    { id: 'PUdb3Z739rk', title: 'Paléo-Énergétique — présentation' },
-                    { id: '_cJts9dZzGM', title: 'Paléo-Énergétique — vidéo complémentaire' },
+                    { id: 'PUdb3Z739rk', title: t('pages.presentation.video1Title') },
+                    { id: '_cJts9dZzGM', title: t('pages.presentation.video2Title') },
                 ].map(v => (
                     <div key={v.id} style={{
                         position: 'relative',
@@ -218,10 +210,7 @@ const Presentation = () => {
             </div>
 
             <h2 style={{ fontSize: '1.8rem', marginTop: '40px', marginBottom: '20px' }}>{t('pages.presentation.mission')}</h2>
-            <p>
-                Vous êtes une innovation sociale ou technique en lien avec l'énergie, quelqu'un qui a créé une innovation qui fournit une solution mais qui serait méconnu ou tombé dans l'oubli ?
-                Sur la frise chronologique des inventions, vous pouvez découvrir une sélection de paléo-héros nominés ainsi que les personnes qui les ont retrouvé / identifié / exhumé.
-            </p>
+            <p>{t('pages.presentation.missionBody')}</p>
 
             <p>
                 {t('pages.presentation.examples_intro')}
@@ -229,10 +218,10 @@ const Presentation = () => {
 
             <h3 style={{ fontSize: '1.5rem', marginTop: '30px', marginBottom: '15px' }}>{t('pages.presentation.examples')}</h3>
             <ul style={{ paddingLeft: '20px', marginBottom: '20px' }}>
-                <li>En Hollande où les voitures électriques en autopartage ont été expérimentées dès 1974.</li>
-                <li>Les « Vélibs » existaient à la Rochelle à la même époque.</li>
-                <li>Jean-Luc Perrier, enseignant à l'université catholique d'Angers, a construit sa voiture qui fonctionnait à l'hydrogène produit à l'énergie solaire et qui ne rejetait que de la vapeur d'eau en 1979.</li>
-                <li>Les premiers concentrateurs solaires thermiques, conçus à Tours par le professeur Augustin Mouchot, étaient déjà présentés lors de l'exposition universelle de 1878.</li>
+                <li>{t('pages.presentation.exampleNL')}</li>
+                <li>{t('pages.presentation.exampleVelibs')}</li>
+                <li>{t('pages.presentation.examplePerrier')}</li>
+                <li>{t('pages.presentation.exampleMouchot')}</li>
             </ul>
 
             {/* ── Galerie illustrant les exemples ──────────────────────── */}
@@ -243,10 +232,10 @@ const Presentation = () => {
                 margin: '0 0 30px',
             }}>
                 {[
-                    { src: '/photos/about-1.png', alt: 'Voitures électriques en autopartage, Hollande 1974' },
-                    { src: '/photos/about-2.jpg', alt: 'Vélos en libre-service, La Rochelle 1974' },
-                    { src: '/photos/about-3.jpg', alt: "Voiture à hydrogène solaire de Jean-Luc Perrier, 1979" },
-                    { src: '/photos/about-4.jpg', alt: 'Concentrateur solaire Mouchot–Pifre, 1878' },
+                    { src: '/photos/about-1.png', alt: t('pages.presentation.img1Alt') },
+                    { src: '/photos/about-2.jpg', alt: t('pages.presentation.img2Alt') },
+                    { src: '/photos/about-3.jpg', alt: t('pages.presentation.img3Alt') },
+                    { src: '/photos/about-4.jpg', alt: t('pages.presentation.img4Alt') },
                 ].map((img, i) => (
                     <figure key={i} style={{ margin: 0 }}>
                         <img
@@ -274,28 +263,22 @@ const Presentation = () => {
             </div>
 
             <div style={{ background: 'var(--color-surface-2)', padding: '30px', borderRadius: 'var(--radius-md)', borderLeft: '4px solid var(--color-accent)' }}>
-                <em>
-                    Alors que tramways, dirigeables et trains magnétiques reviennent au goût du jour, cette recherche propose une plongée dans les oubliés de l'histoire de l'énergie.
-                    Quels sont les contextes propices à l'émergence de ces inventions, les crises seraient-elles des opportunités de créativité ?
-                </em>
+                <em>{t('pages.presentation.quote')}</em>
             </div>
 
             {/* ── L'équipe (rendue depuis la base) ──────────────────────── */}
-            <h2 style={{ fontSize: '1.8rem', marginTop: '50px', marginBottom: '8px' }}>L'équipe</h2>
-            <p style={{ marginTop: 0 }}>
-                Le projet est porté par une équipe core entourée d'une communauté de chercheur·euses associé·es :
-                académiques, expert·es de la transition énergétique, designers, journalistes et entrepreneur·es.
-            </p>
+            <h2 style={{ fontSize: '1.8rem', marginTop: '50px', marginBottom: '8px' }}>{t('pages.presentation.teamTitle')}</h2>
+            <p style={{ marginTop: 0 }}>{t('pages.presentation.teamIntro')}</p>
 
             {loading ? (
-                <p style={{ color: 'var(--color-text-subtle)', fontStyle: 'italic' }}>Chargement de l'équipe…</p>
+                <p style={{ color: 'var(--color-text-subtle)', fontStyle: 'italic' }}>{t('pages.presentation.teamLoading')}</p>
             ) : (
                 <>
                     {/* Équipe principale — cards pleines */}
                     {mainMembers.length > 0 && (
                         <>
                             <h3 style={{ fontSize: '1.2rem', marginTop: '30px', marginBottom: '16px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                Équipe principale
+                                {t('pages.presentation.teamMain')}
                             </h3>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '40px' }}>
                                 {mainMembers.map(m => <MainCard key={m.id} member={m} lang={lang} />)}
@@ -307,7 +290,7 @@ const Presentation = () => {
                     {secondaryMembers.length > 0 && (
                         <>
                             <h3 style={{ fontSize: '1.2rem', marginTop: '30px', marginBottom: '16px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                Contributeur·ices
+                                {t('pages.presentation.teamSecondary')}
                             </h3>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px', marginBottom: '40px' }}>
                                 {secondaryMembers.map(m => <SecondaryCard key={m.id} member={m} lang={lang} />)}
@@ -319,7 +302,7 @@ const Presentation = () => {
                     {communityMembers.length > 0 && (
                         <>
                             <h3 style={{ fontSize: '1.2rem', marginTop: '30px', marginBottom: '12px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                Communauté de chercheur·euses associé·es
+                                {t('pages.presentation.teamCommunity')}
                             </h3>
                             <p style={{ fontSize: '0.95rem', color: 'var(--color-text-muted)', lineHeight: '1.7' }}>
                                 {communityMembers.map((m, i) => {
@@ -338,23 +321,23 @@ const Presentation = () => {
 
                     {!mainMembers.length && !secondaryMembers.length && !communityMembers.length && (
                         <p style={{ color: 'var(--color-text-subtle)', fontStyle: 'italic' }}>
-                            La liste des membres sera bientôt disponible.
+                            {t('pages.presentation.teamEmpty')}
                         </p>
                     )}
                 </>
             )}
 
             {/* ── Liens utiles ─────────────────────────────────────────── */}
-            <h2 style={{ fontSize: '1.8rem', marginTop: '50px', marginBottom: '20px' }}>Pour aller plus loin</h2>
+            <h2 style={{ fontSize: '1.8rem', marginTop: '50px', marginBottom: '20px' }}>{t('pages.presentation.moreLinks')}</h2>
             <ul style={{ paddingLeft: '20px' }}>
-                <li><Link to="/partenaires">Nos partenaires</Link> — institutions et soutiens du projet.</li>
-                <li><Link to="/participer">Appel à participation</Link> — comment contribuer.</li>
-                <li><Link to="/prestations">Nos prestations</Link> — challenges, ateliers, expo itinérante.</li>
-                <li><Link to="/contact">Contact</Link> — pour toute question, partenariat ou interview.</li>
+                <li><Link to="/partenaires">{t('pages.presentation.linkPartners')}</Link> {t('pages.presentation.linkPartnersHint')}</li>
+                <li><Link to="/participer">{t('pages.presentation.linkParticipate')}</Link> {t('pages.presentation.linkParticipateHint')}</li>
+                <li><Link to="/prestations">{t('pages.presentation.linkPrestations')}</Link> {t('pages.presentation.linkPrestationsHint')}</li>
+                <li><Link to="/contact">{t('pages.presentation.linkContact')}</Link> {t('pages.presentation.linkContactHint')}</li>
             </ul>
 
             <p style={{ marginTop: '30px', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
-                Ce programme de recherche citoyen est soutenu par la fondation Schneider Electric.
+                {t('pages.presentation.supportNote')}
             </p>
         </div>
     );

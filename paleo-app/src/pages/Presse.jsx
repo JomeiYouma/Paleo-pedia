@@ -23,7 +23,7 @@ const formatDate = (iso) => {
 };
 
 const Presse = () => {
-    const { i18n } = useTranslation();
+    const { t, i18n } = useTranslation();
     const lang = i18n.language;
     const [articles, setArticles] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -38,10 +38,10 @@ const Presse = () => {
     return (
         <div style={{ maxWidth: '1000px', margin: '60px auto', padding: '0 20px', lineHeight: '1.7', color: 'var(--color-text)' }}>
             <h1 style={{ fontSize: '2.5rem', marginBottom: '20px', color: 'var(--color-primary)' }}>
-                Presse
+                {t('pages.presse.title')}
             </h1>
             <p style={{ fontSize: '1.15rem', marginBottom: '40px', color: 'var(--color-text-muted)' }}>
-                Articles, reportages et interviews consacrés au programme de recherche Paléo-Énergétique.
+                {t('pages.presse.intro')}
             </p>
 
             {/* ── Bandeau ressources presse ────────────────────────────── */}
@@ -59,9 +59,9 @@ const Presse = () => {
                 >
                     <Download size={22} />
                     <span style={{ textAlign: 'left' }}>
-                        Dossier de presse
+                        {t('pages.presse.pressKit')}
                         <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: '500', opacity: 0.75, textTransform: 'none', letterSpacing: 0 }}>
-                            PDF — [à uploader]
+                            {t('pages.presse.pressKitNote')}
                         </span>
                     </span>
                 </a>
@@ -73,9 +73,9 @@ const Presse = () => {
                 >
                     <ImageIcon size={22} />
                     <span style={{ textAlign: 'left' }}>
-                        Kit média
+                        {t('pages.presse.mediaKit')}
                         <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: '500', opacity: 0.75, textTransform: 'none', letterSpacing: 0 }}>
-                            Logos + photos HD
+                            {t('pages.presse.mediaKitNote')}
                         </span>
                     </span>
                 </a>
@@ -86,7 +86,7 @@ const Presse = () => {
                 >
                     <Mail size={22} />
                     <span style={{ textAlign: 'left' }}>
-                        Contact presse
+                        {t('pages.presse.pressContact')}
                         <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: '500', opacity: 0.75, textTransform: 'none', letterSpacing: 0 }}>
                             hello@paleo-energetique.org
                         </span>
@@ -95,12 +95,12 @@ const Presse = () => {
             </div>
 
             {/* ── Liste des articles ───────────────────────────────────── */}
-            <h2 style={{ fontSize: '1.6rem', marginBottom: '20px' }}>Ils parlent de nous</h2>
+            <h2 style={{ fontSize: '1.6rem', marginBottom: '20px' }}>{t('pages.presse.theyTalkAboutUs')}</h2>
             {loading ? (
-                <p style={{ color: 'var(--color-text-subtle)', fontStyle: 'italic' }}>Chargement des articles…</p>
+                <p style={{ color: 'var(--color-text-subtle)', fontStyle: 'italic' }}>{t('pages.presse.loading')}</p>
             ) : articles.length === 0 ? (
                 <p style={{ color: 'var(--color-text-subtle)', fontStyle: 'italic' }}>
-                    Aucun article publié pour le moment.
+                    {t('pages.presse.empty')}
                 </p>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -164,7 +164,7 @@ const Presse = () => {
                                     )}
                                     {hasUrl && (
                                         <span style={{ fontSize: '0.85rem', color: 'var(--color-primary)', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: '700' }}>
-                                            Lire l'article <ExternalLink size={13} />
+                                            {t('pages.presse.readArticle')} <ExternalLink size={13} />
                                         </span>
                                     )}
                                 </div>
@@ -182,11 +182,11 @@ const Presse = () => {
                 borderRadius: 'var(--radius-md)',
                 borderLeft: '4px solid var(--color-accent)',
             }}>
-                <strong>Vous êtes journaliste ?</strong><br />
+                <strong>{t('pages.presse.journalistTitle')}</strong><br />
                 <span style={{ fontSize: '0.95rem' }}>
-                    Écrivez-nous à <a href="mailto:hello@paleo-energetique.org">hello@paleo-energetique.org</a>
-                    {' '}pour toute demande d'interview, visite du musée ou accès au kit média complet.
-                    Vous pouvez aussi passer par la <Link to="/contact">page contact</Link>.
+                    {t('pages.presse.journalistBody1')} <a href="mailto:hello@paleo-energetique.org">hello@paleo-energetique.org</a>
+                    {' '}{t('pages.presse.journalistBody2')}
+                    {' '}{t('pages.presse.journalistBody3')} <Link to="/contact">{t('pages.presse.contactPageLink')}</Link>.
                 </span>
             </div>
         </div>

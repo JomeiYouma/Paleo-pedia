@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowRight, BookOpen, Map, PenTool, Layers, X, ChevronRight, ExternalLink } from 'lucide-react';
 import { categories as categoriesApi, subsites as subsitesApi } from '../services/apiClient';
 
@@ -7,6 +8,7 @@ const PRIMARY = 'var(--color-primary)';
 const ACCENT  = 'var(--color-accent)';
 
 const LandingPage = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [showCategoryModal, setShowCategoryModal] = useState(false);
     const [cats, setCats] = useState([]);
@@ -88,7 +90,7 @@ const LandingPage = () => {
                     lineHeight: '1',
                     letterSpacing: '0.02em',
                 }}>
-                    Une contre-histoire de l'énergie
+                    {t('landing.hero.title')}
                 </h1>
                 <p style={{
                     fontSize: '1.25rem',
@@ -97,7 +99,7 @@ const LandingPage = () => {
                     margin: '0 auto 48px auto',
                     lineHeight: '1.5',
                 }}>
-                    Ressusciter les techniques disparues pour réinventer notre futur énergétique.
+                    {t('landing.hero.subtitle')}
                 </p>
 
                 {/* CTA buttons */}
@@ -108,7 +110,7 @@ const LandingPage = () => {
                         className="paleo-btn paleo-btn--yellow"
                         style={{ padding: '14px 32px', fontSize: '0.95rem', letterSpacing: '0.6px' }}
                     >
-                        Explorer la Frise <ArrowRight size={18} />
+                        {t('landing.hero.exploreTimeline')} <ArrowRight size={18} />
                     </Link>
 
                     <button
@@ -117,20 +119,20 @@ const LandingPage = () => {
                         className="paleo-btn paleo-btn--inverse"
                         style={{ padding: '14px 32px', fontSize: '0.95rem', letterSpacing: '0.6px' }}
                     >
-                        <Layers size={18} /> Explorer une thématique
+                        <Layers size={18} /> {t('landing.hero.exploreTheme')}
                     </button>
                 </div>
             </section>
 
             {/* ── Quick Access Grid ────────────────────────────────── */}
             <section style={{ padding: '80px 20px', maxWidth: '1200px', margin: '0 auto' }}>
-                <h2 style={{ textAlign: 'center', marginBottom: '50px', fontSize: '2.5rem' }}>Découvrir le projet</h2>
+                <h2 style={{ textAlign: 'center', marginBottom: '50px', fontSize: '2.5rem' }}>{t('landing.discoverTitle')}</h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
 
                     {[
-                        { Icon: BookOpen, title: 'La Démarche',       desc: "Comprendre notre mission d'exhumation des inventions oubliées et notre vision citoyenne.", link: '/presentation', cta: 'En savoir plus' },
-                        { Icon: Map,      title: 'Rétrofutur Museum', desc: "Visitez le premier musée des énergies alternatives où l'énergie est produite par les visiteurs.", link: '/museum',      cta: 'Découvrir' },
-                        { Icon: PenTool,  title: 'Nos Prestations',   desc: "Challenges, ateliers, et conférences pour inspirer l'innovation dans votre organisation.",      link: '/prestations', cta: 'Voir les offres' },
+                        { Icon: BookOpen, title: t('landing.cards.approach.title'),    desc: t('landing.cards.approach.desc'),    link: '/presentation', cta: t('landing.cards.approach.cta') },
+                        { Icon: Map,      title: t('landing.cards.museum.title'),      desc: t('landing.cards.museum.desc'),      link: '/museum',       cta: t('landing.cards.museum.cta') },
+                        { Icon: PenTool,  title: t('landing.cards.prestations.title'), desc: t('landing.cards.prestations.desc'), link: '/prestations',  cta: t('landing.cards.prestations.cta') },
                     ].map(({ Icon, title, desc, link, cta }) => (
                         <Link
                             key={link}
@@ -197,7 +199,7 @@ const LandingPage = () => {
                         {/* Close */}
                         <button
                             onClick={closeCategoryModal}
-                            aria-label="Fermer"
+                            aria-label={t('common.close')}
                             style={{
                                 position: 'absolute', top: '16px', right: '16px',
                                 background: 'var(--color-primary-soft)', border: 'none', borderRadius: 'var(--radius-md)',
@@ -205,28 +207,28 @@ const LandingPage = () => {
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 transition: 'background 0.2s',
                             }}
-                            title="Fermer"
+                            title={t('common.close')}
                         >
                             <X size={18} color="var(--color-text-muted)" />
                         </button>
 
-                        <h2 style={{ margin: '0 0 8px 0', fontSize: '1.6rem' }}>Explorer une thématique</h2>
+                        <h2 style={{ margin: '0 0 8px 0', fontSize: '1.6rem' }}>{t('landing.modal.title')}</h2>
                         <p style={{ margin: '0 0 28px 0', color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>
                             {explorerMode === 'subsites'
-                                ? 'Choisissez un sous-site pour accéder à son espace dédié.'
-                                : 'Choisissez une catégorie pour voir uniquement les cartels associés.'}
+                                ? t('landing.modal.subsiteHint')
+                                : t('landing.modal.categoryHint')}
                         </p>
 
                         {loadingCats && (
-                            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--color-text-subtle)' }}>Chargement…</div>
+                            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--color-text-subtle)' }}>{t('common.loadingEllipsis')}</div>
                         )}
 
                         {!loadingCats && explorerMode === 'categories' && cats.length === 0 && (
-                            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--color-text-subtle)' }}>Aucune thématique disponible pour le moment.</div>
+                            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--color-text-subtle)' }}>{t('landing.modal.emptyCategories')}</div>
                         )}
 
                         {!loadingCats && explorerMode === 'subsites' && subsites.length === 0 && (
-                            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--color-text-subtle)' }}>Aucun sous-site disponible pour le moment.</div>
+                            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--color-text-subtle)' }}>{t('landing.modal.emptySubsites')}</div>
                         )}
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -278,7 +280,7 @@ const LandingPage = () => {
                                 onClick={closeCategoryModal}
                                 style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', textDecoration: 'underline' }}
                             >
-                                Voir tous les cartels sans filtre →
+                                {t('landing.modal.allCartels')} →
                             </Link>
                         </div>
                     </div>
