@@ -767,6 +767,32 @@ const AdminSettings = () => {
                             </p>
                         </Section>
 
+                        {/* ── Prestations (page publique /prestations) ──────────── */}
+                        <Section icon={FolderOpen} title="Prestations"
+                            color="var(--color-theme-content)" bg="var(--color-theme-content-bg)">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/app/admin/prestations')}
+                                style={{
+                                    width: '100%',
+                                    display: 'flex', alignItems: 'center', gap: '12px',
+                                    padding: '14px 18px',
+                                    background: 'var(--color-theme-content-bg)', border: '1px solid var(--color-theme-content)',
+                                    borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-content)',
+                                    fontSize: '0.85rem', fontWeight: '700',
+                                    textTransform: 'uppercase', letterSpacing: '0.5px',
+                                }}
+                            >
+                                <ExternalLink size={16} />
+                                <span style={{ flex: 1, textAlign: 'left' }}>Gérer les cards de la page publique « Prestations »</span>
+                                <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
+                            </button>
+                            <p style={{ margin: '10px 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                                Challenges, ateliers, expo itinérante, conseil… Titre + icône + intro + description + bullets + plaquette PDF.
+                            </p>
+                        </Section>
+
                         {/* ── Gestion d'équipe (comptes utilisateurs) ──────────── */}
                         <Section icon={Users} title="Gestion d'équipe (comptes)"
                             color="var(--color-theme-people)" bg="var(--color-theme-people-bg)">

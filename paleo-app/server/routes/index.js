@@ -18,6 +18,7 @@ import { PartnerController }  from '../controllers/partnerController.js';
 import { TeamController }     from '../controllers/teamController.js';
 import { TeamMemberController } from '../controllers/teamMemberController.js';
 import { PressArticleController } from '../controllers/pressArticleController.js';
+import { PrestationController } from '../controllers/prestationController.js';
 import { EventLogController } from '../controllers/eventLogController.js';
 
 const router = Router();
@@ -146,6 +147,12 @@ router.get   ('/press-articles',     optionalAuth,                PressArticleCo
 router.post  ('/press-articles',     authenticate, requireAdmin,  PressArticleController.create);
 router.patch ('/press-articles/:id', authenticate, requireAdmin,  PressArticleController.update);
 router.delete('/press-articles/:id', authenticate, requireAdmin,  PressArticleController.remove);
+
+// ── Prestations (page publique /prestations) ──────────────────
+router.get   ('/prestations',     optionalAuth,                PrestationController.getAll);
+router.post  ('/prestations',     authenticate, requireAdmin,  PrestationController.create);
+router.patch ('/prestations/:id', authenticate, requireAdmin,  PrestationController.update);
+router.delete('/prestations/:id', authenticate, requireAdmin,  PrestationController.remove);
 
 // ── Event logs + config emails (superadmin only) ─────────────
 router.get   ('/logs',                       authenticate, requireAdmin, EventLogController.list);
