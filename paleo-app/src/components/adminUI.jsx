@@ -6,7 +6,8 @@
  */
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, AlertCircle, CheckCircle2, Languages } from 'lucide-react';
+import api from '../services/apiClient';
 
 // ── Styles partagés ──────────────────────────────────────────
 export const labelStyle = {
@@ -221,3 +222,67 @@ export const AdminTabDescription = ({ children }) => (
         {children}
     </p>
 );
+
+/**
+ * Bouton « Auto-traduire FR→EN » utilisable dans les formulaires admin.
+ * @param {object} props
+ * @param {() => Record<string, string>} props.getFrFields - retourne la map FR.
+ * @param {(out: Record<string, string>) => void} props.onTranslated - callback avec
+ *   la map traduite ; même clés, valeurs en anglais.
+ * @param {string} [props.target='en'] - 'en' (défaut) ou 'fr' pour traduire l'inverse.
+ * @param {string} [props.label] - libellé personnalisé.
+ * @param {boolean} [props.disabled]
+ */
+export const TranslateButton = ({ getFrFields, onTranslated, target = 'en', label, disabled }) => {
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState('');
+
+    const handle = async () => {
+        const raw = getFrFields() || {};
+        const cleanFields = Object.fromEntries(
+            Object.entries(raw).filter(([, v]) => typeof v === 'string' && v.trim().length > 0)
+        );
+        if (Object.keys(cleanFields).length === 0) {
+            setError('Aucun champ source à traduire.');
+            setTimeout(() => setError(''), 3000);
+            return;
+        }
+        setBusy(true); setError('');
+        try {
+            const out = await api.translate.fields(cleanFields, { target });
+            onTranslated(out);
+        } catch (e) {
+            setError(e.message || 'Erreur de traduction.');
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const defaultLabel = target === 'en' ? 'Auto-traduire FR → EN' : 'Auto-traduire EN → FR';
+
+    return (
+        <div style={{ display: 'inline-flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
+            <button
+                type="button"
+                onClick={handle}
+                disabled={disabled || busy}
+                style={{
+                    ...ghostBtnStyle,
+                    background: busy ? 'var(--color-primary-soft)' : 'var(--color-accent-soft)',
+                    borderColor: 'var(--color-accent)',
+                    color: 'var(--color-primary)',
+                    opacity: (disabled || busy) ? 0.6 : 1,
+                    cursor: (disabled || busy) ? 'not-allowed' : 'pointer',
+                }}
+                title="Utilise DeepL/OpenAI selon la clé configurée"
+            >
+                <Languages size={14} /> {busy ? 'Traduction…' : (label || defaultLabel)}
+            </button>
+            {error && (
+                <span style={{ fontSize: '0.78rem', color: 'var(--color-error)' }}>
+                    {error}
+                </span>
+            )}
+        </div>
+    );
+};

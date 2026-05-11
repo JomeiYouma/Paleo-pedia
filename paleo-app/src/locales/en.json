@@ -335,6 +335,37 @@
             "empty": "No partner is currently displayed."
         }
     },
+    "legal": {
+        "title": "Legal notices",
+        "backHome": "Back to home",
+        "lastUpdate": "Last updated",
+        "editor": {
+            "title": "1. Publisher",
+            "body": "The Paléo-Énergétique website is published by the non-profit association Atelier 21. For any question, please contact"
+        },
+        "publication": {
+            "title": "2. Publication director",
+            "body": "Cédric Carles, founder of the Paléo-Énergétique research programme and president of Atelier 21."
+        },
+        "hosting": {
+            "title": "3. Hosting",
+            "body": "The website is hosted by o2switch, SAS with €100,000 capital, RCS Clermont-Ferrand 510 909 80, Chemin des Pardiaux, 63000 Clermont-Ferrand, France."
+        },
+        "ip": {
+            "title": "4. Intellectual property",
+            "body": "All content (texts, images, videos, logos) on the site is the property of Atelier 21 or of its respective authors and is protected by intellectual property law. Any reproduction, in whole or in part, without prior authorisation, is prohibited."
+        },
+        "contact": {
+            "title": "5. Contact",
+            "body": "For any remark, report or question related to the site, write to",
+            "formLink": "or use the contact form"
+        },
+        "privacy": {
+            "title": "6. Personal data",
+            "body": "Personal data processing is detailed on a dedicated page:",
+            "linkLabel": "privacy policy"
+        }
+    },
     "admin": {
         "title": "Cartel Management",
         "propose": "Send proposal",

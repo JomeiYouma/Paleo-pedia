@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ExternalLink, Download, Mail, Image as ImageIcon } from 'lucide-react';
 import api from '../services/apiClient';
+import { pickLang } from '../utils/i18nHelpers';
 
 // Page publique « Presse » — articles rendus depuis /api/press-articles.
 // Le contenu était auparavant codé en dur dans ce fichier ; il est désormais
@@ -21,6 +23,8 @@ const formatDate = (iso) => {
 };
 
 const Presse = () => {
+    const { i18n } = useTranslation();
+    const lang = i18n.language;
     const [articles, setArticles] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -101,6 +105,8 @@ const Presse = () => {
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {articles.map((a) => {
+                        const title = pickLang(a, 'title', lang) || a.title;
+                        const excerpt = pickLang(a, 'excerpt', lang) || a.excerpt;
                         const hasUrl = !!a.url;
                         const Tag = hasUrl ? 'a' : 'div';
                         const interactiveProps = hasUrl
@@ -150,10 +156,10 @@ const Presse = () => {
                                     }}>
                                         {a.source || '—'}{a.published_date && ` · ${formatDate(a.published_date)}`}
                                     </div>
-                                    <h3 style={{ margin: '0 0 8px', fontSize: '1.1rem' }}>{a.title}</h3>
-                                    {a.excerpt && (
+                                    <h3 style={{ margin: '0 0 8px', fontSize: '1.1rem' }}>{title}</h3>
+                                    {excerpt && (
                                         <p style={{ margin: '0 0 8px', color: 'var(--color-text-muted)', fontSize: '0.92rem', lineHeight: '1.55' }}>
-                                            {a.excerpt}
+                                            {excerpt}
                                         </p>
                                     )}
                                     {hasUrl && (

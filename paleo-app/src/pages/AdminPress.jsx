@@ -6,7 +6,7 @@ import {
 import api from '../services/apiClient';
 import ExplainerBox from '../components/ExplainerBox';
 import {
-    AdminPageHeader, AdminSection, AdminToast, useAdminToast,
+    AdminPageHeader, AdminSection, AdminToast, useAdminToast, TranslateButton,
     primaryBtnStyle, ghostBtnStyle, dangerBtnStyle, inputStyle, labelStyle,
 } from '../components/adminUI';
 
@@ -27,10 +27,12 @@ const toDateInputValue = (v) => {
 // ── Formulaire (création + édition) ───────────────────────────
 const ArticleForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregistrer' }) => {
     const [title, setTitle]   = useState(initial?.title || '');
+    const [titleEn, setTitleEn] = useState(initial?.title_en || '');
     const [source, setSource] = useState(initial?.source || '');
     const [date, setDate]     = useState(toDateInputValue(initial?.published_date));
     const [url, setUrl]       = useState(initial?.url || '');
     const [excerpt, setExcerpt] = useState(initial?.excerpt || '');
+    const [excerptEn, setExcerptEn] = useState(initial?.excerpt_en || '');
     const [thumbnailPath, setThumbnailPath] = useState(initial?.thumbnail_path || '');
     const [isPublished, setIsPublished] = useState(initial ? initial.is_published !== 0 : true);
     const [uploading, setUploading] = useState(false);
@@ -55,10 +57,12 @@ const ArticleForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregis
         if (!title.trim()) return;
         onSubmit({
             title: title.trim(),
+            title_en: titleEn.trim() || null,
             source: source.trim() || null,
             published_date: date || null,
             url: url.trim() || null,
             excerpt: excerpt.trim() || null,
+            excerpt_en: excerptEn.trim() || null,
             thumbnail_path: thumbnailPath || null,
             is_published: isPublished,
         });
@@ -123,6 +127,35 @@ const ArticleForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregis
                     <p style={{ margin: '6px 0 0', fontSize: '0.82rem', color: 'var(--color-error)' }}>{uploadError}</p>
                 )}
             </div>
+
+            {/* ── Version anglaise ─────────────────────────────────────── */}
+            <fieldset style={{
+                border: '1px dashed var(--color-border-strong)',
+                borderRadius: 'var(--radius-md)',
+                padding: '14px',
+                margin: '8px 0 4px',
+            }}>
+                <legend style={{ fontFamily: 'var(--font-heading)', fontSize: '0.78rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text-muted)', padding: '0 8px' }}>
+                    Version anglaise
+                </legend>
+                <div style={{ marginBottom: '10px' }}>
+                    <TranslateButton
+                        getFrFields={() => ({ title, excerpt })}
+                        onTranslated={(out) => {
+                            if ('title'   in out) setTitleEn(out.title);
+                            if ('excerpt' in out) setExcerptEn(out.excerpt);
+                        }}
+                    />
+                </div>
+                <div>
+                    <label style={labelStyle}>Title (EN)</label>
+                    <input value={titleEn} onChange={e => setTitleEn(e.target.value)} style={inputStyle} />
+                </div>
+                <div style={{ marginTop: '10px' }}>
+                    <label style={labelStyle}>Excerpt (EN)</label>
+                    <textarea value={excerptEn} onChange={e => setExcerptEn(e.target.value)} rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
+                </div>
+            </fieldset>
 
             {/* Visibilité */}
             <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'var(--color-text-muted)', marginTop: '4px' }}>

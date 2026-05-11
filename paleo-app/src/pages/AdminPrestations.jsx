@@ -7,7 +7,7 @@ import {
 import api from '../services/apiClient';
 import ExplainerBox from '../components/ExplainerBox';
 import {
-    AdminPageHeader, AdminSection, AdminToast, useAdminToast,
+    AdminPageHeader, AdminSection, AdminToast, useAdminToast, TranslateButton,
     primaryBtnStyle, ghostBtnStyle, dangerBtnStyle, inputStyle, labelStyle,
 } from '../components/adminUI';
 import { PRESTATION_ICON_OPTIONS, getPrestationIcon } from '../utils/prestationIcons';
@@ -15,27 +15,33 @@ import { PRESTATION_ICON_OPTIONS, getPrestationIcon } from '../utils/prestationI
 // ── Formulaire ───────────────────────────────────────────────
 const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregistrer' }) => {
     const [title, setTitle]           = useState(initial?.title || '');
+    const [titleEn, setTitleEn]       = useState(initial?.title_en || '');
     const [intro, setIntro]           = useState(initial?.intro || '');
+    const [introEn, setIntroEn]       = useState(initial?.intro_en || '');
     const [description, setDescription] = useState(initial?.description || '');
+    const [descriptionEn, setDescriptionEn] = useState(initial?.description_en || '');
     const [bullets, setBullets]       = useState(initial?.bullet_points || '');
+    const [bulletsEn, setBulletsEn]   = useState(initial?.bullet_points_en || '');
+    const [imagePath, setImagePath]   = useState(initial?.image_path || '');
     const [iconName, setIconName]     = useState(initial?.icon_name || 'Sparkles');
-    const [pdfPath, setPdfPath]       = useState(initial?.pdf_path || '');
+    const [pdfUrl, setPdfUrl]         = useState(initial?.pdf_path || '');
     const [pdfLabel, setPdfLabel]     = useState(initial?.pdf_label || '');
+    const [pdfLabelEn, setPdfLabelEn] = useState(initial?.pdf_label_en || '');
     const [isPublished, setIsPublished] = useState(initial ? initial.is_published !== 0 : true);
-    const [uploading, setUploading]   = useState(false);
+    const [uploadingImage, setUploadingImage] = useState(false);
     const [uploadError, setUploadError] = useState('');
 
-    const handlePdf = async (file) => {
+    const handleImage = async (file) => {
         if (!file) return;
-        setUploading(true);
+        setUploadingImage(true);
         setUploadError('');
         try {
             const up = await api.media.upload(file);
-            setPdfPath(up?.url || '');
+            setImagePath(up?.url || '');
         } catch (e) {
             setUploadError(e.message || "Échec de l'upload");
         } finally {
-            setUploading(false);
+            setUploadingImage(false);
         }
     };
 
@@ -44,12 +50,18 @@ const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enre
         if (!title.trim()) return;
         onSubmit({
             title: title.trim(),
+            title_en: titleEn.trim() || null,
             intro: intro.trim() || null,
+            intro_en: introEn.trim() || null,
             description: description.trim() || null,
+            description_en: descriptionEn.trim() || null,
             bullet_points: bullets.trim() || null,
+            bullet_points_en: bulletsEn.trim() || null,
+            image_path: imagePath || null,
             icon_name: iconName || null,
-            pdf_path: pdfPath || null,
+            pdf_path: pdfUrl.trim() || null,
             pdf_label: pdfLabel.trim() || null,
+            pdf_label_en: pdfLabelEn.trim() || null,
             is_published: isPublished,
         });
     };
@@ -106,24 +118,24 @@ const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enre
                     placeholder={"Sensibilisation à l'écologie\nDécouverte de la recherche par l'exhumation d'archives\nÉtude des brevets anciens"} />
             </div>
 
-            {/* Plaquette PDF */}
+            {/* Image / photo illustrative */}
             <div>
-                <label style={labelStyle}>Plaquette PDF (optionnel)</label>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '6px' }}>
-                    {pdfPath ? (
-                        <a href={pdfPath} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.85rem', color: 'var(--color-primary)', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                            ✓ Fichier uploadé · ouvrir
-                        </a>
+                <label style={labelStyle}>Image illustrative (optionnelle)</label>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    {imagePath ? (
+                        <img src={imagePath} alt="" style={{ width: '120px', height: '80px', objectFit: 'cover', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }} />
                     ) : (
-                        <span style={{ fontSize: '0.85rem', color: 'var(--color-text-subtle)' }}>Aucun PDF pour le moment.</span>
+                        <div style={{ width: '120px', height: '80px', background: 'var(--color-primary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-subtle)', fontSize: '0.75rem', borderRadius: 'var(--radius-md)' }}>
+                            (vide)
+                        </div>
                     )}
-                    <label style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', border: '1px dashed var(--color-border-strong)', borderRadius: 'var(--radius-md)', cursor: uploading ? 'wait' : 'pointer', fontSize: '0.85rem', color: 'var(--color-text-muted)', background: 'var(--color-surface-2)' }}>
+                    <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 12px', border: '1px dashed var(--color-border-strong)', borderRadius: 'var(--radius-md)', cursor: uploadingImage ? 'wait' : 'pointer', fontSize: '0.85rem', color: 'var(--color-text-muted)', background: 'var(--color-surface-2)' }}>
                         <Upload size={14} />
-                        {uploading ? 'Upload…' : (pdfPath ? 'Remplacer le PDF' : 'Choisir un PDF…')}
-                        <input type="file" accept="application/pdf,image/*" disabled={uploading} style={{ display: 'none' }} onChange={e => handlePdf(e.target.files?.[0])} />
+                        {uploadingImage ? 'Upload en cours…' : (imagePath ? "Remplacer l'image" : 'Choisir une image…')}
+                        <input type="file" accept="image/*" disabled={uploadingImage} style={{ display: 'none' }} onChange={e => handleImage(e.target.files?.[0])} />
                     </label>
-                    {pdfPath && (
-                        <button type="button" onClick={() => setPdfPath('')} style={ghostBtnStyle} title="Retirer le PDF">
+                    {imagePath && (
+                        <button type="button" onClick={() => setImagePath('')} style={ghostBtnStyle} title="Retirer l'image">
                             <X size={14} />
                         </button>
                     )}
@@ -131,9 +143,62 @@ const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enre
                 {uploadError && (
                     <p style={{ margin: '6px 0 0', fontSize: '0.82rem', color: 'var(--color-error)' }}>{uploadError}</p>
                 )}
-                <input value={pdfLabel} onChange={e => setPdfLabel(e.target.value)} style={inputStyle}
-                    placeholder="Libellé du bouton — défaut : « Télécharger la plaquette »" />
             </div>
+
+            {/* Plaquette (URL externe ou PDF uploadé) */}
+            <div>
+                <label style={labelStyle}>Plaquette — URL (Calaméo, PDF…) optionnelle</label>
+                <input value={pdfUrl} onChange={e => setPdfUrl(e.target.value)} style={inputStyle}
+                    placeholder="https://www.calameo.com/books/… ou /downloads/plaquette.pdf" />
+                <input value={pdfLabel} onChange={e => setPdfLabel(e.target.value)} style={{ ...inputStyle, marginTop: '6px' }}
+                    placeholder="Libellé du bouton — défaut : « Consulter la plaquette »" />
+            </div>
+
+            {/* ── Version anglaise ─────────────────────────────────────── */}
+            <fieldset style={{
+                border: '1px dashed var(--color-border-strong)',
+                borderRadius: 'var(--radius-md)',
+                padding: '14px',
+                margin: '8px 0 4px',
+            }}>
+                <legend style={{ fontFamily: 'var(--font-heading)', fontSize: '0.78rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text-muted)', padding: '0 8px' }}>
+                    Version anglaise
+                </legend>
+                <div style={{ marginBottom: '10px' }}>
+                    <TranslateButton
+                        getFrFields={() => ({
+                            title, intro, description, bullet_points: bullets, pdf_label: pdfLabel,
+                        })}
+                        onTranslated={(out) => {
+                            if ('title'         in out) setTitleEn(out.title);
+                            if ('intro'         in out) setIntroEn(out.intro);
+                            if ('description'   in out) setDescriptionEn(out.description);
+                            if ('bullet_points' in out) setBulletsEn(out.bullet_points);
+                            if ('pdf_label'     in out) setPdfLabelEn(out.pdf_label);
+                        }}
+                    />
+                </div>
+                <div>
+                    <label style={labelStyle}>Title (EN)</label>
+                    <input value={titleEn} onChange={e => setTitleEn(e.target.value)} style={inputStyle} />
+                </div>
+                <div style={{ marginTop: '10px' }}>
+                    <label style={labelStyle}>Intro (EN)</label>
+                    <textarea value={introEn} onChange={e => setIntroEn(e.target.value)} rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
+                </div>
+                <div style={{ marginTop: '10px' }}>
+                    <label style={labelStyle}>Description (EN)</label>
+                    <textarea value={descriptionEn} onChange={e => setDescriptionEn(e.target.value)} rows={4} style={{ ...inputStyle, resize: 'vertical' }} />
+                </div>
+                <div style={{ marginTop: '10px' }}>
+                    <label style={labelStyle}>Bullets (EN) — one per line</label>
+                    <textarea value={bulletsEn} onChange={e => setBulletsEn(e.target.value)} rows={4} style={{ ...inputStyle, resize: 'vertical', fontFamily: 'monospace' }} />
+                </div>
+                <div style={{ marginTop: '10px' }}>
+                    <label style={labelStyle}>PDF button label (EN)</label>
+                    <input value={pdfLabelEn} onChange={e => setPdfLabelEn(e.target.value)} style={inputStyle} placeholder="View brochure" />
+                </div>
+            </fieldset>
 
             <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'var(--color-text-muted)', marginTop: '4px' }}>
                 <input type="checkbox" checked={isPublished} onChange={e => setIsPublished(e.target.checked)} />

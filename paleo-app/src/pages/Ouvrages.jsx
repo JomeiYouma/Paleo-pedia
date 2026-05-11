@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ExternalLink, ShoppingBag } from 'lucide-react';
 import api from '../services/apiClient';
+import { pickLang } from '../utils/i18nHelpers';
 
 // Page publique « Ouvrages » — vitrine de liens vers le PrestaShop externe.
 // Items rendus depuis /api/shop-items, groupés par catégorie (book / game / other).
@@ -12,7 +14,11 @@ const CATEGORY_LABELS = {
 };
 
 // ── Card individuelle ────────────────────────────────────────
-const ItemCard = ({ item }) => (
+const ItemCard = ({ item, lang }) => {
+    const title       = pickLang(item, 'title',       lang) || item.title;
+    const subtitle    = pickLang(item, 'subtitle',    lang) || item.subtitle;
+    const description = pickLang(item, 'description', lang) || item.description;
+    return (
     <article style={{
         background: 'var(--color-surface)',
         border: '1px solid var(--color-border)',
@@ -26,7 +32,7 @@ const ItemCard = ({ item }) => (
         {item.image_path ? (
             <img
                 src={item.image_path}
-                alt={item.title}
+                alt={title}
                 style={{
                     width: '100%',
                     aspectRatio: '3 / 4',
@@ -51,16 +57,16 @@ const ItemCard = ({ item }) => (
         )}
         <div style={{ flex: 1 }}>
             <h3 style={{ margin: '0 0 6px', fontSize: '1.05rem', lineHeight: '1.25' }}>
-                {item.title}
+                {title}
             </h3>
-            {item.subtitle && (
+            {subtitle && (
                 <p style={{ margin: '0 0 8px', fontSize: '0.85rem', color: 'var(--color-text-muted)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
-                    {item.subtitle}
+                    {subtitle}
                 </p>
             )}
-            {item.description && (
+            {description && (
                 <p style={{ margin: '8px 0 0', fontSize: '0.92rem', color: 'var(--color-text-muted)', lineHeight: '1.55' }}>
-                    {item.description}
+                    {description}
                 </p>
             )}
         </div>
@@ -83,14 +89,17 @@ const ItemCard = ({ item }) => (
                     className="paleo-btn"
                     style={{ padding: '10px 18px', fontSize: '0.82rem', marginLeft: 'auto' }}
                 >
-                    Acheter <ExternalLink size={14} />
+                    {lang === 'en' ? 'Buy' : 'Acheter'} <ExternalLink size={14} />
                 </a>
             )}
         </div>
     </article>
-);
+    );
+};
 
 const Ouvrages = () => {
+    const { i18n } = useTranslation();
+    const lang = i18n.language;
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -142,7 +151,7 @@ const Ouvrages = () => {
                                 gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
                                 gap: '24px',
                             }}>
-                                {list.map(it => <ItemCard key={it.id} item={it} />)}
+                                {list.map(it => <ItemCard key={it.id} item={it} lang={lang} />)}
                             </div>
                         </section>
                     );

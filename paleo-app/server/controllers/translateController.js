@@ -6,10 +6,32 @@
  * Routes admin (token requis).
  */
 
-import { translateCartel, translateCartelToLanguage, translateLabelsAndCategories } from '../services/translationService.js';
+import { translateCartel, translateCartelToLanguage, translateLabelsAndCategories, translateFields } from '../services/translationService.js';
 import { CartelModel } from '../models/Cartel.js';
 
 export const TranslateController = {
+  /**
+   * POST /api/translate/fields
+   * Endpoint générique pour traduire un set de champs FR↔EN, utilisé par le
+   * gestionnaire de contenu (team, press, prestations, shop).
+   * Body : { fields: { key: text, ... }, target: 'en' | 'fr' }
+   * Renvoie : { key: translated, ... }
+   */
+  async translateFields(req, res) {
+    try {
+      const { fields, target } = req.body || {};
+      if (!fields || typeof fields !== 'object') {
+        return res.status(400).json({ error: 'Champ `fields` requis (objet clé/valeur).' });
+      }
+      const normalizedTarget = target === 'fr' ? 'fr' : 'en';
+      const out = await translateFields(fields, { target: normalizedTarget });
+      res.json(out);
+    } catch (err) {
+      const status = err.message.includes('Clé API non configurée') ? 503 : 500;
+      res.status(status).json({ error: err.message });
+    }
+  },
+
   async translate(req, res) {
     try {
       const { titre, description, location, target } = req.body;

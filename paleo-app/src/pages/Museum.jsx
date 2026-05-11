@@ -8,7 +8,27 @@ import { MapPin, Mail, Users } from 'lucide-react';
 
 const Museum = () => {
     return (
-        <div style={{ maxWidth: '900px', margin: '60px auto', padding: '0 20px', lineHeight: '1.8', color: '#333' }}>
+        <>
+            {/* ── Bannière pleine largeur ─────────────────────────────── */}
+            <div style={{
+                width: '100%',
+                height: 'clamp(240px, 38vw, 460px)',
+                overflow: 'hidden',
+                background: 'var(--color-primary-soft)',
+            }}>
+                <img
+                    src="/photos/museum-banner.png"
+                    alt="Le 1er musée des énergies alternatives à Paris"
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block',
+                    }}
+                />
+            </div>
+
+        <div style={{ maxWidth: '900px', margin: '40px auto 60px', padding: '0 20px', lineHeight: '1.8', color: '#333' }}>
             <h1 style={{ fontSize: '2.5rem', marginBottom: '12px', color: 'var(--color-pink-darker, #C2185B)' }}>
                 Rétrofutur Museum
             </h1>
@@ -45,8 +65,9 @@ const Museum = () => {
             </p>
 
             <img
-                src="https://paleo-energetique.org/wp-content/uploads/2021/04/MUSEE-RETROFUTUR-PANO-1024x454.jpg"
-                alt="Vue panoramique du musée"
+                src="/photos/museum-1.jpg"
+                alt="Vue intérieure du Rétrofutur Museum"
+                loading="lazy"
                 style={{ width: '100%', borderRadius: '8px', margin: '30px 0' }}
             />
 
@@ -91,32 +112,55 @@ const Museum = () => {
                 Pédaler, tourner des manivelles, actionner des leviers… : chaque cartel s'éclaire grâce à votre effort !
             </p>
 
-            {/* ── Photos additionnelles (placeholders) ─────────────────── */}
+            {/* ── Photos intérieures du musée ──────────────────────────── */}
             <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
                 gap: '14px',
                 margin: '30px 0',
             }}>
-                {/* [À REMPLACER : 2-3 photos intérieures du musée en haute résolution] */}
                 {[1, 2, 3].map(i => (
-                    <div
+                    <img
                         key={i}
+                        src={`/photos/museum-${i}.jpg`}
+                        alt={`Vue intérieure du musée #${i}`}
+                        loading="lazy"
                         style={{
+                            width: '100%',
                             aspectRatio: '4 / 3',
-                            background: '#eee',
+                            objectFit: 'cover',
                             borderRadius: '8px',
-                            border: '2px dashed #bbb',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#888',
-                            fontSize: '0.85rem',
+                            background: '#eee',
                         }}
-                    >
-                        [photo musée {i}]
-                    </div>
+                    />
                 ))}
+            </div>
+
+            {/* ── Vidéo de présentation ────────────────────────────────── */}
+            <div style={{ margin: '30px 0' }}>
+                <div style={{
+                    position: 'relative',
+                    width: '100%',
+                    paddingBottom: '56.25%',
+                    background: 'var(--color-primary-soft)',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                }}>
+                    <iframe
+                        src="https://www.youtube.com/embed/9pG61-I47EA"
+                        title="Présentation vidéo du Rétrofutur Museum"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
+                        style={{
+                            position: 'absolute',
+                            top: 0, left: 0,
+                            width: '100%',
+                            height: '100%',
+                            border: 0,
+                        }}
+                    />
+                </div>
             </div>
 
             {/* ── Expo itinérante ──────────────────────────────────────── */}
@@ -165,6 +209,7 @@ const Museum = () => {
                 </div>
             </div>
         </div>
+        </>
     );
 };
 

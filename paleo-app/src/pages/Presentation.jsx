@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Linkedin, Globe, Link2 } from 'lucide-react';
 import api from '../services/apiClient';
+import { pickLang } from '../utils/i18nHelpers';
 
 // Page "À propos" — équipe rendue depuis la base via /api/team-members.
 // Trois rendus selon la catégorie :
@@ -47,7 +48,10 @@ const SocialLinks = ({ member }) => {
 };
 
 // ── Card pleine (équipe principale) ───────────────────────────
-const MainCard = ({ member }) => (
+const MainCard = ({ member, lang }) => {
+    const role = pickLang(member, 'role', lang) || member.role;
+    const bio  = pickLang(member, 'bio',  lang) || member.bio;
+    return (
     <article style={{
         background: 'var(--color-surface)',
         border: '1px solid var(--color-border)',
@@ -76,23 +80,27 @@ const MainCard = ({ member }) => (
             </div>
         )}
         <h3 style={{ margin: '0 0 4px', fontSize: '1.15rem' }}>{member.name}</h3>
-        {member.role && (
+        {role && (
             <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--color-text-muted)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
-                {member.role}
+                {role}
             </p>
         )}
-        {member.bio && (
+        {bio && (
             <p style={{ margin: '14px 0 0', fontSize: '0.92rem', color: 'var(--color-text-muted)', lineHeight: '1.55' }}>
-                {member.bio}
+                {bio}
             </p>
         )}
         <SocialLinks member={member} />
     </article>
-);
+    );
+};
 
 // ── Card compacte (équipe secondaire) — layout horizontal pour distinguer
 //    visuellement des Principaux, mais inclut bio détaillée et liens sociaux.
-const SecondaryCard = ({ member }) => (
+const SecondaryCard = ({ member, lang }) => {
+    const role = pickLang(member, 'role', lang) || member.role;
+    const bio  = pickLang(member, 'bio',  lang) || member.bio;
+    return (
     <article style={{
         background: 'var(--color-surface)',
         border: '1px solid var(--color-border)',
@@ -111,23 +119,25 @@ const SecondaryCard = ({ member }) => (
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: '700', fontSize: '1.05rem' }}>{member.name}</div>
-            {member.role && (
+            {role && (
                 <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.4px', marginTop: '2px' }}>
-                    {member.role}
+                    {role}
                 </div>
             )}
-            {member.bio && (
+            {bio && (
                 <p style={{ margin: '10px 0 0', fontSize: '0.9rem', color: 'var(--color-text-muted)', lineHeight: '1.55' }}>
-                    {member.bio}
+                    {bio}
                 </p>
             )}
             <SocialLinks member={member} />
         </div>
     </article>
-);
+    );
+};
 
 const Presentation = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const lang = i18n.language;
     const [members, setMembers] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -170,6 +180,43 @@ const Presentation = () => {
                 qui met en dialogue savoirs historiques et créations contemporaines.
             </p>
 
+            {/* ── Vidéos de présentation ───────────────────────────────── */}
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '16px',
+                margin: '30px 0',
+            }}>
+                {[
+                    { id: 'PUdb3Z739rk', title: 'Paléo-Énergétique — présentation' },
+                    { id: '_cJts9dZzGM', title: 'Paléo-Énergétique — vidéo complémentaire' },
+                ].map(v => (
+                    <div key={v.id} style={{
+                        position: 'relative',
+                        width: '100%',
+                        paddingBottom: '56.25%',
+                        background: 'var(--color-primary-soft)',
+                        borderRadius: 'var(--radius-md)',
+                        overflow: 'hidden',
+                    }}>
+                        <iframe
+                            src={`https://www.youtube.com/embed/${v.id}`}
+                            title={v.title}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            referrerPolicy="strict-origin-when-cross-origin"
+                            allowFullScreen
+                            style={{
+                                position: 'absolute',
+                                top: 0, left: 0,
+                                width: '100%',
+                                height: '100%',
+                                border: 0,
+                            }}
+                        />
+                    </div>
+                ))}
+            </div>
+
             <h2 style={{ fontSize: '1.8rem', marginTop: '40px', marginBottom: '20px' }}>{t('pages.presentation.mission')}</h2>
             <p>
                 Vous êtes une innovation sociale ou technique en lien avec l'énergie, quelqu'un qui a créé une innovation qui fournit une solution mais qui serait méconnu ou tombé dans l'oubli ?
@@ -181,12 +228,50 @@ const Presentation = () => {
             </p>
 
             <h3 style={{ fontSize: '1.5rem', marginTop: '30px', marginBottom: '15px' }}>{t('pages.presentation.examples')}</h3>
-            <ul style={{ paddingLeft: '20px', marginBottom: '30px' }}>
+            <ul style={{ paddingLeft: '20px', marginBottom: '20px' }}>
                 <li>En Hollande où les voitures électriques en autopartage ont été expérimentées dès 1974.</li>
                 <li>Les « Vélibs » existaient à la Rochelle à la même époque.</li>
                 <li>Jean-Luc Perrier, enseignant à l'université catholique d'Angers, a construit sa voiture qui fonctionnait à l'hydrogène produit à l'énergie solaire et qui ne rejetait que de la vapeur d'eau en 1979.</li>
                 <li>Les premiers concentrateurs solaires thermiques, conçus à Tours par le professeur Augustin Mouchot, étaient déjà présentés lors de l'exposition universelle de 1878.</li>
             </ul>
+
+            {/* ── Galerie illustrant les exemples ──────────────────────── */}
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                gap: '12px',
+                margin: '0 0 30px',
+            }}>
+                {[
+                    { src: '/photos/about-1.png', alt: 'Voitures électriques en autopartage, Hollande 1974' },
+                    { src: '/photos/about-2.jpg', alt: 'Vélos en libre-service, La Rochelle 1974' },
+                    { src: '/photos/about-3.jpg', alt: "Voiture à hydrogène solaire de Jean-Luc Perrier, 1979" },
+                    { src: '/photos/about-4.jpg', alt: 'Concentrateur solaire Mouchot–Pifre, 1878' },
+                ].map((img, i) => (
+                    <figure key={i} style={{ margin: 0 }}>
+                        <img
+                            src={img.src}
+                            alt={img.alt}
+                            loading="lazy"
+                            style={{
+                                width: '100%',
+                                aspectRatio: '4 / 3',
+                                objectFit: 'cover',
+                                borderRadius: 'var(--radius-md)',
+                                background: 'var(--color-primary-soft)',
+                            }}
+                        />
+                        <figcaption style={{
+                            fontSize: '0.78rem',
+                            color: 'var(--color-text-subtle)',
+                            marginTop: '6px',
+                            lineHeight: '1.4',
+                        }}>
+                            {img.alt}
+                        </figcaption>
+                    </figure>
+                ))}
+            </div>
 
             <div style={{ background: 'var(--color-surface-2)', padding: '30px', borderRadius: 'var(--radius-md)', borderLeft: '4px solid var(--color-accent)' }}>
                 <em>
@@ -213,7 +298,7 @@ const Presentation = () => {
                                 Équipe principale
                             </h3>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '40px' }}>
-                                {mainMembers.map(m => <MainCard key={m.id} member={m} />)}
+                                {mainMembers.map(m => <MainCard key={m.id} member={m} lang={lang} />)}
                             </div>
                         </>
                     )}
@@ -225,7 +310,7 @@ const Presentation = () => {
                                 Contributeur·ices
                             </h3>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px', marginBottom: '40px' }}>
-                                {secondaryMembers.map(m => <SecondaryCard key={m.id} member={m} />)}
+                                {secondaryMembers.map(m => <SecondaryCard key={m.id} member={m} lang={lang} />)}
                             </div>
                         </>
                     )}
@@ -237,13 +322,16 @@ const Presentation = () => {
                                 Communauté de chercheur·euses associé·es
                             </h3>
                             <p style={{ fontSize: '0.95rem', color: 'var(--color-text-muted)', lineHeight: '1.7' }}>
-                                {communityMembers.map((m, i) => (
-                                    <React.Fragment key={m.id}>
-                                        <strong>{m.name}</strong>
-                                        {m.role && <span style={{ color: 'var(--color-text-subtle)' }}> ({m.role})</span>}
-                                        {i < communityMembers.length - 1 ? ', ' : '.'}
-                                    </React.Fragment>
-                                ))}
+                                {communityMembers.map((m, i) => {
+                                    const role = pickLang(m, 'role', lang) || m.role;
+                                    return (
+                                        <React.Fragment key={m.id}>
+                                            <strong>{m.name}</strong>
+                                            {role && <span style={{ color: 'var(--color-text-subtle)' }}> ({role})</span>}
+                                            {i < communityMembers.length - 1 ? ', ' : '.'}
+                                        </React.Fragment>
+                                    );
+                                })}
                             </p>
                         </>
                     )}

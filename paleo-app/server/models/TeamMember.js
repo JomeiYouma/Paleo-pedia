@@ -11,7 +11,9 @@ const ALLOWED_FIELDS = [
   'category',
   'name',
   'role',
+  'role_en',
   'bio',
+  'bio_en',
   'photo_path',
   'url_linkedin',
   'url_website',
@@ -53,7 +55,9 @@ export const TeamMemberModel = {
       category:      normalizeCategory(data.category),
       name:          (data.name || '').trim(),
       role:          data.role          ?? null,
+      role_en:       data.role_en       ?? null,
       bio:           data.bio           ?? null,
+      bio_en:        data.bio_en        ?? null,
       photo_path:    data.photo_path    ?? null,
       url_linkedin:  data.url_linkedin  ?? null,
       url_website:   data.url_website   ?? null,
@@ -67,14 +71,16 @@ export const TeamMemberModel = {
     }
     await pool.query(
       `INSERT INTO team_members
-        (id, category, name, role, bio, photo_path, url_linkedin, url_website, url_other, display_order)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, category, name, role, role_en, bio, bio_en, photo_path, url_linkedin, url_website, url_other, display_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         payload.category,
         payload.name,
         payload.role,
+        payload.role_en,
         payload.bio,
+        payload.bio_en,
         payload.photo_path,
         payload.url_linkedin,
         payload.url_website,

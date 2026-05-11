@@ -34,6 +34,7 @@ import Participer from './pages/Participer';
 import Presse from './pages/Presse';
 import LandingPage from './pages/LandingPage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import LegalNotices from './pages/LegalNotices';
 import SiteLayout from './components/SiteLayout';
 import SubsiteLayout from './layouts/SubsiteLayout';
 import SubsiteHome from './pages/SubsiteHome';
@@ -107,6 +108,7 @@ const router = createHashRouter(
         <Route path="partenaires"  element={<Partners />} />
         <Route path="contact"      element={<Contact />} />
         <Route path="politique-confidentialite" element={<PrivacyPolicy />} />
+        <Route path="mentions-legales" element={<LegalNotices />} />
       </Route>
 
       {/* ── Sous-sites (/site/:slug/*) ────────────────── */}

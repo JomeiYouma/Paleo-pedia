@@ -10,8 +10,11 @@ const ALLOWED_CATEGORIES = new Set(['book', 'game', 'other']);
 const ALLOWED_FIELDS = [
   'category',
   'title',
+  'title_en',
   'subtitle',
+  'subtitle_en',
   'description',
+  'description_en',
   'image_path',
   'external_url',
   'price_text',
@@ -51,26 +54,32 @@ export const ShopItemModel = {
       throw err;
     }
     const payload = {
-      category:      normalizeCategory(data.category),
+      category:       normalizeCategory(data.category),
       title,
-      subtitle:      data.subtitle      ?? null,
-      description:   data.description   ?? null,
-      image_path:    data.image_path    ?? null,
-      external_url:  data.external_url  ?? null,
-      price_text:    data.price_text    ?? null,
-      display_order: Number.isFinite(+data.display_order) ? +data.display_order : 0,
-      is_published:  data.is_published === false ? 0 : 1,
+      title_en:       data.title_en       ?? null,
+      subtitle:       data.subtitle       ?? null,
+      subtitle_en:    data.subtitle_en    ?? null,
+      description:    data.description    ?? null,
+      description_en: data.description_en ?? null,
+      image_path:     data.image_path     ?? null,
+      external_url:   data.external_url   ?? null,
+      price_text:     data.price_text     ?? null,
+      display_order:  Number.isFinite(+data.display_order) ? +data.display_order : 0,
+      is_published:   data.is_published === false ? 0 : 1,
     };
     await pool.query(
       `INSERT INTO shop_items
-        (id, category, title, subtitle, description, image_path, external_url, price_text, display_order, is_published)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, category, title, title_en, subtitle, subtitle_en, description, description_en, image_path, external_url, price_text, display_order, is_published)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         payload.category,
         payload.title,
+        payload.title_en,
         payload.subtitle,
+        payload.subtitle_en,
         payload.description,
+        payload.description_en,
         payload.image_path,
         payload.external_url,
         payload.price_text,

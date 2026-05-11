@@ -341,6 +341,37 @@
             "empty": "Aucun partenaire affiché pour le moment."
         }
     },
+    "legal": {
+        "title": "Mentions légales",
+        "backHome": "Retour à l'accueil",
+        "lastUpdate": "Dernière mise à jour",
+        "editor": {
+            "title": "1. Éditeur du site",
+            "body": "Le site Paléo-Énergétique est édité par l'association Atelier 21. Pour toute question, contactez"
+        },
+        "publication": {
+            "title": "2. Directeur de la publication",
+            "body": "Cédric Carles, fondateur du programme de recherche Paléo-Énergétique et président d'Atelier 21."
+        },
+        "hosting": {
+            "title": "3. Hébergement",
+            "body": "Le site est hébergé par o2switch, SAS au capital de 100 000 €, RCS Clermont-Ferrand 510 909 80, Chemin des Pardiaux, 63000 Clermont-Ferrand."
+        },
+        "ip": {
+            "title": "4. Propriété intellectuelle",
+            "body": "L'ensemble des contenus (textes, images, vidéos, logos) du site sont la propriété d'Atelier 21 ou de leurs auteurs respectifs et sont protégés par les lois sur la propriété intellectuelle. Toute reproduction, totale ou partielle, sans autorisation préalable est interdite."
+        },
+        "contact": {
+            "title": "5. Contact",
+            "body": "Pour toute remarque, signalement ou demande relative au site, écrivez à",
+            "formLink": "ou utilisez le formulaire de contact"
+        },
+        "privacy": {
+            "title": "6. Données personnelles",
+            "body": "Les traitements de données personnelles font l'objet d'une page dédiée :",
+            "linkLabel": "politique de confidentialité"
+        }
+    },
     "admin": {
         "title": "Gestion des cartels",
         "propose": "Envoyer la proposition",

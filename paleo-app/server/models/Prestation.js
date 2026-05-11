@@ -6,12 +6,18 @@ import pool from '../lib/db.js';
 
 const ALLOWED_FIELDS = [
   'title',
+  'title_en',
   'intro',
+  'intro_en',
   'description',
+  'description_en',
   'bullet_points',
+  'bullet_points_en',
+  'image_path',
   'icon_name',
   'pdf_path',
   'pdf_label',
+  'pdf_label_en',
   'display_order',
   'is_published',
 ];
@@ -46,28 +52,40 @@ export const PrestationModel = {
     }
     const payload = {
       title,
-      intro:         data.intro         ?? null,
-      description:   data.description   ?? null,
-      bullet_points: data.bullet_points ?? null,
-      icon_name:     data.icon_name     ?? null,
-      pdf_path:      data.pdf_path      ?? null,
-      pdf_label:     data.pdf_label     ?? null,
+      title_en:         data.title_en         ?? null,
+      intro:            data.intro            ?? null,
+      intro_en:         data.intro_en         ?? null,
+      description:      data.description      ?? null,
+      description_en:   data.description_en   ?? null,
+      bullet_points:    data.bullet_points    ?? null,
+      bullet_points_en: data.bullet_points_en ?? null,
+      image_path:       data.image_path       ?? null,
+      icon_name:        data.icon_name        ?? null,
+      pdf_path:         data.pdf_path         ?? null,
+      pdf_label:        data.pdf_label        ?? null,
+      pdf_label_en:     data.pdf_label_en     ?? null,
       display_order: Number.isFinite(+data.display_order) ? +data.display_order : 0,
       is_published:  data.is_published === false ? 0 : 1,
     };
     await pool.query(
       `INSERT INTO prestations
-        (id, title, intro, description, bullet_points, icon_name, pdf_path, pdf_label, display_order, is_published)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, title, title_en, intro, intro_en, description, description_en, bullet_points, bullet_points_en, image_path, icon_name, pdf_path, pdf_label, pdf_label_en, display_order, is_published)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         payload.title,
+        payload.title_en,
         payload.intro,
+        payload.intro_en,
         payload.description,
+        payload.description_en,
         payload.bullet_points,
+        payload.bullet_points_en,
+        payload.image_path,
         payload.icon_name,
         payload.pdf_path,
         payload.pdf_label,
+        payload.pdf_label_en,
         payload.display_order,
         payload.is_published,
       ]

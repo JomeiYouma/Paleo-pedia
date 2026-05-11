@@ -251,6 +251,16 @@ export const translate = {
    */
   bulk: ({ ids, sourceLang, targetLanguage }) =>
     post('/translate/bulk', { ids, sourceLang, targetLanguage }),
+
+  /**
+   * Traduit un set arbitraire de champs FR↔EN (générique).
+   * @param {object} fields - { key1: text1, ... } dans la langue source.
+   * @param {object} [opts]
+   * @param {'en'|'fr'} [opts.target='en']
+   * Retourne { key1: translated1, ... } (mêmes clés).
+   */
+  fields: (fields, { target = 'en' } = {}) =>
+    post('/translate/fields', { fields, target }),
 };
 
 // ── Import / Export ───────────────────────────────────────────

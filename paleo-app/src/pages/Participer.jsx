@@ -30,24 +30,20 @@ const Participer = () => {
                 borderRadius: '12px',
                 marginBottom: '50px',
             }}>
-                <div style={{
-                    background: '#eee',
-                    aspectRatio: '700 / 989',
-                    borderRadius: '8px',
-                    border: '2px dashed #bbb',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#888',
-                    textAlign: 'center',
-                    padding: '20px',
-                    fontSize: '0.9rem',
-                }}>
-                    {/* [À REMPLACER : affiche du kit appel à participation
-                        — équivalent de https://paleo-energetique.org/wp-content/uploads/.../kif-affiche.jpg ] */}
-                    Affiche « Appel à participation »<br/>
-                    <span style={{ fontSize: '0.8rem' }}>(à remplacer par le visuel du kit)</span>
-                </div>
+                <img
+                    src="/downloads/kit-appel-participation.jpg"
+                    alt="Affiche Appel à participation Paléo-Énergétique"
+                    style={{
+                        width: '100%',
+                        aspectRatio: '700 / 989',
+                        objectFit: 'cover',
+                        borderRadius: '8px',
+                        background: '#eee',
+                    }}
+                />
+                <noscript>
+                    <a href="/downloads/kit-appel-participation.jpg">Affiche Appel à participation (JPG)</a>
+                </noscript>
 
                 <div>
                     <h2 style={{ marginTop: 0, fontSize: '1.5rem' }}>Téléchargez le kit</h2>
@@ -65,8 +61,8 @@ const Participer = () => {
                     <p style={{ fontSize: '0.85rem', color: '#888', marginTop: '14px' }}>
                         Une version image (JPG) est aussi disponible{' '}
                         <a
-                            href="#"
-                            /* [À REMPLACER : href vers l'image JPG du kit, ex: /downloads/kit-appel-participation.jpg ] */
+                            href="/downloads/kit-appel-participation.jpg"
+                            download
                             style={{ color: '#666' }}
                         >
                             ici

@@ -1,17 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import api from '../services/apiClient';
 import { getPrestationIcon } from '../utils/prestationIcons';
+import { pickLang } from '../utils/i18nHelpers';
 
 // Page publique « Nos prestations » — cards rendues depuis /api/prestations.
 // Le contenu était auparavant codé en dur ; il est désormais administrable
 // via /app/admin/prestations.
 
 // ── Card individuelle ────────────────────────────────────────
-const PrestationCard = ({ prestation }) => {
+const PrestationCard = ({ prestation, lang }) => {
     const Icon = getPrestationIcon(prestation.icon_name);
-    const bulletLines = (prestation.bullet_points || '')
+    const title       = pickLang(prestation, 'title',       lang) || prestation.title;
+    const intro       = pickLang(prestation, 'intro',       lang) || prestation.intro;
+    const description = pickLang(prestation, 'description', lang) || prestation.description;
+    const bullets     = pickLang(prestation, 'bullet_points', lang) || prestation.bullet_points;
+    const pdfLabel    = pickLang(prestation, 'pdf_label',   lang) || prestation.pdf_label;
+    const bulletLines = (bullets || '')
         .split('\n')
         .map(l => l.trim())
         .filter(Boolean);
@@ -42,18 +48,32 @@ const PrestationCard = ({ prestation }) => {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
                 <h2 style={{ marginTop: 0, color: 'var(--color-primary)' }}>
-                    {prestation.title}
+                    {title}
                 </h2>
-                {prestation.intro && (
-                    <p style={{ fontSize: '1.1rem' }}>{prestation.intro}</p>
+                {intro && (
+                    <p style={{ fontSize: '1.1rem' }}>{intro}</p>
                 )}
-                {prestation.description && (
-                    <p style={{ whiteSpace: 'pre-line' }}>{prestation.description}</p>
+                {description && (
+                    <p style={{ whiteSpace: 'pre-line' }}>{description}</p>
                 )}
                 {bulletLines.length > 0 && (
                     <ul style={{ marginTop: '10px' }}>
                         {bulletLines.map((line, i) => <li key={i}>{line}</li>)}
                     </ul>
+                )}
+                {prestation.image_path && (
+                    <img
+                        src={prestation.image_path}
+                        alt=""
+                        loading="lazy"
+                        style={{
+                            width: '100%',
+                            maxHeight: '300px',
+                            objectFit: 'cover',
+                            borderRadius: 'var(--radius-md)',
+                            marginTop: '18px',
+                        }}
+                    />
                 )}
                 {prestation.pdf_path && (
                     <p style={{ marginTop: '14px' }}>
@@ -64,7 +84,7 @@ const PrestationCard = ({ prestation }) => {
                             className="paleo-btn paleo-btn--ghost"
                             style={{ padding: '10px 18px', fontSize: '0.82rem' }}
                         >
-                            <Download size={15} /> {prestation.pdf_label || 'Télécharger la plaquette'}
+                            {pdfLabel || 'Consulter la plaquette'} <ExternalLink size={14} />
                         </a>
                     </p>
                 )}
@@ -74,7 +94,8 @@ const PrestationCard = ({ prestation }) => {
 };
 
 const Prestations = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const lang = i18n.language;
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -94,17 +115,9 @@ const Prestations = () => {
                 {t('pages.prestations.subtitle')}
             </p>
 
-            {/* Bouton plaquette globale */}
-            <div style={{ textAlign: 'center', marginBottom: '50px' }}>
-                <a
-                    href="#"
-                    /* [À REMPLACER : href vers la plaquette PDF globale des prestations,
-                        ex: /downloads/plaquette-prestations.pdf ] */
-                    className="paleo-btn"
-                >
-                    <Download size={18} /> Télécharger la plaquette
-                </a>
-            </div>
+            <p style={{ textAlign: 'center', fontSize: '0.95rem', color: 'var(--color-text-subtle)', marginBottom: '40px' }}>
+                Chaque prestation dispose de sa propre plaquette détaillée — consultable en ligne via les boutons ci-dessous.
+            </p>
 
             {loading ? (
                 <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', fontStyle: 'italic' }}>
@@ -116,7 +129,7 @@ const Prestations = () => {
                 </p>
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
-                    {items.map(p => <PrestationCard key={p.id} prestation={p} />)}
+                    {items.map(p => <PrestationCard key={p.id} prestation={p} lang={lang} />)}
                 </div>
             )}
         </div>

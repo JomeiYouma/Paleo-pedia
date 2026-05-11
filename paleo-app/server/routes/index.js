@@ -80,8 +80,9 @@ router.delete('/users/:id',          authenticate, requireAdmin, UserController.
 router.post('/upload', optionalAuth, uploadGuard, upload.single('image'), UploadController.uploadImage);
 
 // ── Traduction (admin) ───────────────────────────────────────
-router.post('/translate',      authenticate, requireAdmin, TranslateController.translate);
-router.post('/translate/bulk', authenticate, requireAdmin, TranslateController.bulkTranslate);
+router.post('/translate',        authenticate, requireAdmin, TranslateController.translate);
+router.post('/translate/bulk',   authenticate, requireAdmin, TranslateController.bulkTranslate);
+router.post('/translate/fields', authenticate, requireAdmin, TranslateController.translateFields);
 
 // ── Import ZIP (admin) ───────────────────────────────────────
 router.post('/import', authenticate, requireAdmin, ImportController.middleware, ImportController.importZip);

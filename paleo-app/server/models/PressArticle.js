@@ -6,11 +6,13 @@ import pool from '../lib/db.js';
 
 const ALLOWED_FIELDS = [
   'title',
+  'title_en',
   'source',
   'published_date',
   'url',
   'thumbnail_path',
   'excerpt',
+  'excerpt_en',
   'display_order',
   'is_published',
 ];
@@ -46,26 +48,30 @@ export const PressArticleModel = {
     }
     const payload = {
       title,
+      title_en:       data.title_en       ?? null,
       source:         data.source         ?? null,
       published_date: data.published_date || null,
       url:            data.url            ?? null,
       thumbnail_path: data.thumbnail_path ?? null,
       excerpt:        data.excerpt        ?? null,
+      excerpt_en:     data.excerpt_en     ?? null,
       display_order:  Number.isFinite(+data.display_order) ? +data.display_order : 0,
       is_published:   data.is_published === false ? 0 : 1,
     };
     await pool.query(
       `INSERT INTO press_articles
-        (id, title, source, published_date, url, thumbnail_path, excerpt, display_order, is_published)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, title, title_en, source, published_date, url, thumbnail_path, excerpt, excerpt_en, display_order, is_published)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         payload.title,
+        payload.title_en,
         payload.source,
         payload.published_date,
         payload.url,
         payload.thumbnail_path,
         payload.excerpt,
+        payload.excerpt_en,
         payload.display_order,
         payload.is_published,
       ]

@@ -8,7 +8,7 @@ import api from '../services/apiClient';
 import ExplainerBox from '../components/ExplainerBox';
 import {
     AdminPageHeader, AdminSection, AdminToast, AdminTabs, AdminTabDescription,
-    useAdminToast,
+    useAdminToast, TranslateButton,
     primaryBtnStyle, ghostBtnStyle, dangerBtnStyle, inputStyle, labelStyle,
 } from '../components/adminUI';
 
@@ -22,8 +22,11 @@ const TABS = [
 // ── Formulaire ───────────────────────────────────────────────
 const ShopItemForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregistrer' }) => {
     const [title, setTitle]         = useState(initial?.title || '');
+    const [titleEn, setTitleEn]     = useState(initial?.title_en || '');
     const [subtitle, setSubtitle]   = useState(initial?.subtitle || '');
+    const [subtitleEn, setSubtitleEn] = useState(initial?.subtitle_en || '');
     const [description, setDescription] = useState(initial?.description || '');
+    const [descriptionEn, setDescriptionEn] = useState(initial?.description_en || '');
     const [imagePath, setImagePath] = useState(initial?.image_path || '');
     const [externalUrl, setExternalUrl] = useState(initial?.external_url || '');
     const [priceText, setPriceText] = useState(initial?.price_text || '');
@@ -50,8 +53,11 @@ const ShopItemForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregi
         if (!title.trim()) return;
         onSubmit({
             title: title.trim(),
+            title_en: titleEn.trim() || null,
             subtitle: subtitle.trim() || null,
+            subtitle_en: subtitleEn.trim() || null,
             description: description.trim() || null,
+            description_en: descriptionEn.trim() || null,
             image_path: imagePath || null,
             external_url: externalUrl.trim() || null,
             price_text: priceText.trim() || null,
@@ -123,6 +129,40 @@ const ShopItemForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregi
                     <p style={{ margin: '6px 0 0', fontSize: '0.82rem', color: 'var(--color-error)' }}>{uploadError}</p>
                 )}
             </div>
+
+            {/* ── Version anglaise ─────────────────────────────────────── */}
+            <fieldset style={{
+                border: '1px dashed var(--color-border-strong)',
+                borderRadius: 'var(--radius-md)',
+                padding: '14px',
+                margin: '8px 0 4px',
+            }}>
+                <legend style={{ fontFamily: 'var(--font-heading)', fontSize: '0.78rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text-muted)', padding: '0 8px' }}>
+                    Version anglaise
+                </legend>
+                <div style={{ marginBottom: '10px' }}>
+                    <TranslateButton
+                        getFrFields={() => ({ title, subtitle, description })}
+                        onTranslated={(out) => {
+                            if ('title'       in out) setTitleEn(out.title);
+                            if ('subtitle'    in out) setSubtitleEn(out.subtitle);
+                            if ('description' in out) setDescriptionEn(out.description);
+                        }}
+                    />
+                </div>
+                <div>
+                    <label style={labelStyle}>Title (EN)</label>
+                    <input value={titleEn} onChange={e => setTitleEn(e.target.value)} style={inputStyle} />
+                </div>
+                <div style={{ marginTop: '10px' }}>
+                    <label style={labelStyle}>Subtitle / publisher (EN)</label>
+                    <input value={subtitleEn} onChange={e => setSubtitleEn(e.target.value)} style={inputStyle} />
+                </div>
+                <div style={{ marginTop: '10px' }}>
+                    <label style={labelStyle}>Description (EN)</label>
+                    <textarea value={descriptionEn} onChange={e => setDescriptionEn(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
+                </div>
+            </fieldset>
 
             <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'var(--color-text-muted)', marginTop: '4px' }}>
                 <input type="checkbox" checked={isPublished} onChange={e => setIsPublished(e.target.checked)} />

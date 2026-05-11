@@ -299,3 +299,90 @@ ${JSON.stringify(payload, null, 2)}`;
 
   return { labels: outLabels, categories: normalizedCats };
 }
+
+/**
+ * Traduit un set arbitraire de champs FR↔EN (générique — pour le gestionnaire
+ * de contenu : team_members, press_articles, prestations, shop_items…).
+ * Préfère DeepL si configurée. Conserve les clés ; les valeurs vides restent vides.
+ *
+ * @param {object} fields - { key1: text1, key2: text2, ... } dans la langue SOURCE.
+ * @param {object} opts
+ * @param {'en'|'fr'} [opts.target='en'] - Langue cible.
+ * @returns {Promise<object>} - { key1: translated1, ... } (mêmes clés).
+ */
+export async function translateFields(fields, { target = 'en' } = {}) {
+  if (target !== 'en' && target !== 'fr') {
+    throw new Error(`Langue cible non supportée : ${target}`);
+  }
+  if (!fields || typeof fields !== 'object') {
+    throw new Error('fields doit être un objet { key: text }');
+  }
+
+  // Ne traduire que les entrées non vides ; on garde les autres telles quelles.
+  const entries = Object.entries(fields).filter(([, v]) => typeof v === 'string' && v.trim().length > 0);
+  if (entries.length === 0) {
+    return Object.fromEntries(Object.keys(fields).map(k => [k, fields[k] || '']));
+  }
+
+  const deeplKey  = await SettingModel.get('deepl_key');
+  const openaiKey = await SettingModel.get('openai_key');
+
+  let apiKey, useDeepL;
+  if (deeplKey) {
+    apiKey = deeplKey;
+    useDeepL = true;
+  } else if (openaiKey) {
+    apiKey = openaiKey;
+    useDeepL = isDeepLKey(openaiKey);
+  } else {
+    throw new Error('Clé API non configurée dans les réglages.');
+  }
+
+  const sourceLangName = target === 'en' ? 'French' : 'English';
+  const targetLangName = target === 'en' ? 'English' : 'French';
+
+  if (useDeepL) {
+    const texts = entries.map(([, v]) => v);
+    const translated = await translateWithDeepL({ apiKey, target, fields: texts });
+    const result = {};
+    for (const k of Object.keys(fields)) result[k] = fields[k] || '';
+    entries.forEach(([k], i) => { result[k] = translated[i] ?? fields[k] ?? ''; });
+    return result;
+  }
+
+  // Fallback OpenAI
+  const client = new OpenAI({ apiKey });
+  const payload = Object.fromEntries(entries);
+
+  const prompt = `You are a professional translator for a scientific programme on historical energy ("Paléo-Énergétique").
+Translate the values of this JSON object from ${sourceLangName} to ${targetLangName}.
+Keep the SAME keys. Preserve formatting (line breaks, punctuation). Output ONLY a valid JSON object.
+
+Input:
+${JSON.stringify(payload, null, 2)}`;
+
+  const chat = await client.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      { role: 'system', content: `You translate JSON values from ${sourceLangName} to ${targetLangName}. Output only valid JSON with the same keys.` },
+      { role: 'user',   content: prompt },
+    ],
+    temperature: 0.2,
+    max_tokens: 1500,
+  });
+
+  const raw = chat.choices[0]?.message?.content?.trim() ?? '';
+  const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const jsonStr = jsonMatch ? jsonMatch[1] : raw;
+
+  let parsed;
+  try { parsed = JSON.parse(jsonStr); }
+  catch { throw new Error(`Réponse OpenAI non-JSON : ${raw.slice(0, 200)}`); }
+
+  const result = {};
+  for (const k of Object.keys(fields)) {
+    const v = parsed?.[k];
+    result[k] = (typeof v === 'string' ? v : fields[k] || '').trim();
+  }
+  return result;
+}

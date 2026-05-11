@@ -47,6 +47,7 @@ const SiteLayout = () => {
                             <a href="#/presse" style={{ color: '#666', textDecoration: 'none' }}>Presse</a>
                             <a href="#/partenaires" style={{ color: '#666', textDecoration: 'none' }}>Partenaires</a>
                             <a href="#/contact" style={{ color: '#666', textDecoration: 'none' }}>Nous contacter</a>
+                            <a href="#/mentions-legales" style={{ color: '#666', textDecoration: 'none' }}>Mentions légales</a>
                             <a href="#/politique-confidentialite" style={{ color: '#666', textDecoration: 'none' }}>Politique de confidentialité</a>
                         </div>
                     </div>

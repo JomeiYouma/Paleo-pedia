@@ -8,7 +8,7 @@ import api from '../services/apiClient';
 import ExplainerBox from '../components/ExplainerBox';
 import {
     AdminPageHeader, AdminSection, AdminToast, AdminTabs, AdminTabDescription,
-    useAdminToast,
+    useAdminToast, TranslateButton,
     primaryBtnStyle, ghostBtnStyle, dangerBtnStyle, inputStyle, labelStyle,
 } from '../components/adminUI';
 
@@ -35,7 +35,9 @@ const TABS = [
 const MemberForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregistrer' }) => {
     const [name, setName] = useState(initial?.name || '');
     const [role, setRole] = useState(initial?.role || '');
+    const [roleEn, setRoleEn] = useState(initial?.role_en || '');
     const [bio, setBio]   = useState(initial?.bio || '');
+    const [bioEn, setBioEn] = useState(initial?.bio_en || '');
     const [photoPath, setPhotoPath] = useState(initial?.photo_path || '');
     const [urlLinkedin, setUrlLinkedin] = useState(initial?.url_linkedin || '');
     const [urlWebsite,  setUrlWebsite]  = useState(initial?.url_website  || '');
@@ -63,7 +65,9 @@ const MemberForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregist
         onSubmit({
             name: name.trim(),
             role: role.trim() || null,
+            role_en: roleEn.trim() || null,
             bio: bio.trim() || null,
+            bio_en: bioEn.trim() || null,
             photo_path: photoPath || null,
             url_linkedin: urlLinkedin.trim() || null,
             url_website: urlWebsite.trim() || null,
@@ -131,6 +135,35 @@ const MemberForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregist
                     <input value={urlOther} onChange={e => setUrlOther(e.target.value)} style={inputStyle} placeholder="https://…" />
                 </div>
             </div>
+
+            {/* ── Version anglaise ─────────────────────────────────────── */}
+            <fieldset style={{
+                border: '1px dashed var(--color-border-strong)',
+                borderRadius: 'var(--radius-md)',
+                padding: '14px',
+                margin: '8px 0 4px',
+            }}>
+                <legend style={{ fontFamily: 'var(--font-heading)', fontSize: '0.78rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text-muted)', padding: '0 8px' }}>
+                    Version anglaise
+                </legend>
+                <div style={{ marginBottom: '10px' }}>
+                    <TranslateButton
+                        getFrFields={() => ({ role, bio })}
+                        onTranslated={(out) => {
+                            if ('role' in out) setRoleEn(out.role);
+                            if ('bio'  in out) setBioEn(out.bio);
+                        }}
+                    />
+                </div>
+                <div>
+                    <label style={labelStyle}>Role (EN)</label>
+                    <input value={roleEn} onChange={e => setRoleEn(e.target.value)} style={inputStyle} placeholder="Designer / researcher" />
+                </div>
+                <div style={{ marginTop: '10px' }}>
+                    <label style={labelStyle}>Bio (EN)</label>
+                    <textarea value={bioEn} onChange={e => setBioEn(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' }} placeholder="A few sentences describing their background and missions…" />
+                </div>
+            </fieldset>
 
             {/* Boutons */}
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
