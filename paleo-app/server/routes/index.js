@@ -17,6 +17,7 @@ import { SubsiteController }  from '../controllers/subsiteController.js';
 import { PartnerController }  from '../controllers/partnerController.js';
 import { TeamController }     from '../controllers/teamController.js';
 import { TeamMemberController } from '../controllers/teamMemberController.js';
+import { PressArticleController } from '../controllers/pressArticleController.js';
 import { EventLogController } from '../controllers/eventLogController.js';
 
 const router = Router();
@@ -138,6 +139,13 @@ router.get   ('/team-members',     TeamMemberController.getAll);
 router.post  ('/team-members',     authenticate, requireAdmin, TeamMemberController.create);
 router.patch ('/team-members/:id', authenticate, requireAdmin, TeamMemberController.update);
 router.delete('/team-members/:id', authenticate, requireAdmin, TeamMemberController.remove);
+
+// ── Articles de presse (page publique /presse) ────────────────
+// optionalAuth pour que les admins puissent voir les articles non publiés.
+router.get   ('/press-articles',     optionalAuth,                PressArticleController.getAll);
+router.post  ('/press-articles',     authenticate, requireAdmin,  PressArticleController.create);
+router.patch ('/press-articles/:id', authenticate, requireAdmin,  PressArticleController.update);
+router.delete('/press-articles/:id', authenticate, requireAdmin,  PressArticleController.remove);
 
 // ── Event logs + config emails (superadmin only) ─────────────
 router.get   ('/logs',                       authenticate, requireAdmin, EventLogController.list);

@@ -221,8 +221,7 @@ button {
   cursor: pointer;
   overflow: hidden;
   isolation: isolate;
-  transition: transform 0.25s cubic-bezier(.2,.7,.3,1),
-              box-shadow 0.25s ease,
+  transition: box-shadow 0.25s ease,
               color 0.25s ease,
               border-color 0.25s ease;
 }
@@ -238,34 +237,20 @@ button {
 .paleo-btn:hover,
 .paleo-btn:focus-visible {
   color: var(--color-primary);
-  transform: translateY(-3px);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.18);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.15);
 }
 .paleo-btn:hover::before,
 .paleo-btn:focus-visible::before {
   transform: translateY(0);
 }
 .paleo-btn:active {
-  transform: translateY(-1px);
   box-shadow: 0 4px 10px rgba(0,0,0,0.18);
-}
-.paleo-btn > svg:last-child {
-  transition: transform 0.25s cubic-bezier(.2,.7,.3,1);
-}
-.paleo-btn:hover > svg:last-child {
-  transform: translateX(4px);
 }
 
 /* Variante "outline" — fond transparent qui se remplit en jaune */
 .paleo-btn--outline {
   background: transparent;
   color: var(--color-primary);
-}
-.paleo-btn--outline > svg:first-child {
-  transition: transform 0.25s cubic-bezier(.2,.7,.3,1);
-}
-.paleo-btn--outline:hover > svg:first-child {
-  transform: scale(1.1);
 }
 
 /* Variante "ghost" — bordure simple, hover plus discret */
@@ -313,13 +298,9 @@ button {
   border-color: var(--color-accent);
 }
 
-/* Petit chevron animé (icône optionnelle) */
+/* Petit chevron statique (icône optionnelle inline) */
 .paleo-btn-arrow {
   display: inline-flex;
-  transition: transform 0.25s cubic-bezier(.2,.7,.3,1);
-}
-.paleo-btn:hover .paleo-btn-arrow {
-  transform: translateX(4px);
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -350,16 +331,14 @@ button {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   CARTES INTERACTIVES — lift + ombre prononcée au hover
+   CARTES INTERACTIVES — ombre + bordure foncée au hover (sans déplacement)
    ════════════════════════════════════════════════════════════════ */
 .paleo-card-link {
-  transition: transform 0.25s cubic-bezier(.2,.7,.3,1),
-              box-shadow 0.25s ease,
+  transition: box-shadow 0.25s ease,
               border-color 0.25s ease;
 }
 .paleo-card-link:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 30px rgba(0,0,0,0.10);
+  box-shadow: 0 12px 26px rgba(0,0,0,0.10);
   border-color: var(--color-primary) !important;
 }
 
@@ -369,8 +348,6 @@ button {
 @media (prefers-reduced-motion: reduce) {
   .paleo-btn,
   .paleo-btn::before,
-  .paleo-btn > svg:last-child,
-  .paleo-btn-arrow,
   .paleo-card-link,
   .paleo-nav-link::after {
     transition: none !important;

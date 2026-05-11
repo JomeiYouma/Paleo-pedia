@@ -176,6 +176,16 @@ export const teamMembers = {
   delete:  (id)         => del(`/team-members/${id}`),
 };
 
+// ── Articles de presse (page publique /presse) ────────────────
+// Lecture publique (filtrée à publié pour les non-admins, tout pour les
+// admins). Écriture réservée au superadmin.
+export const pressArticles = {
+  getAll:  ()           => get('/press-articles'),
+  create:  (data)       => post('/press-articles', data),
+  update:  (id, data)   => patch(`/press-articles/${id}`, data),
+  delete:  (id)         => del(`/press-articles/${id}`),
+};
+
 // ── Upload image ──────────────────────────────────────────────
 export const media = {
   /** Envoie un fichier image au serveur, retourne { url } */
@@ -315,5 +325,5 @@ export const logs = {
   bulkSetRecipient: (recipient) => patch('/logs/email-config', { recipient }),
 };
 
-const api = { auth, cartels, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners, teamMembers, logs };
+const api = { auth, cartels, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners, teamMembers, pressArticles, logs };
 export default api;
