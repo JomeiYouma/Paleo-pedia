@@ -5,6 +5,13 @@ import api from '../services/apiClient';
 import { getPrestationIcon } from '../utils/prestationIcons';
 import { pickLang } from '../utils/i18nHelpers';
 
+/** Extrait le book code Calaméo d'une URL `calameo.com/books/<code>` ou `read/<code>`. */
+function parseCalameoBookCode(url) {
+    if (!url || typeof url !== 'string') return null;
+    const m = url.match(/calameo\.com\/(?:books|read)\/([a-z0-9]+)/i);
+    return m ? m[1] : null;
+}
+
 // Page publique « Nos prestations » — cards rendues depuis /api/prestations.
 // Le contenu était auparavant codé en dur ; il est désormais administrable
 // via /app/admin/prestations.
@@ -75,19 +82,82 @@ const PrestationCard = ({ prestation, lang }) => {
                         }}
                     />
                 )}
-                {prestation.pdf_path && (
-                    <p style={{ marginTop: '14px' }}>
-                        <a
-                            href={prestation.pdf_path}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="paleo-btn paleo-btn--ghost"
-                            style={{ padding: '10px 18px', fontSize: '0.82rem' }}
-                        >
-                            {pdfLabel || 'Consulter la plaquette'} <ExternalLink size={14} />
-                        </a>
-                    </p>
-                )}
+                {(() => {
+                    if (!prestation.pdf_path) return null;
+                    const calameoCode = parseCalameoBookCode(prestation.pdf_path);
+                    if (calameoCode) {
+                        return (
+                            <div style={{ marginTop: '20px' }}>
+                                {pdfLabel && (
+                                    <p style={{
+                                        margin: '0 0 8px',
+                                        fontSize: '0.82rem',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.5px',
+                                        fontFamily: 'var(--font-heading)',
+                                        fontWeight: '700',
+                                        color: 'var(--color-text-muted)',
+                                    }}>
+                                        {pdfLabel}
+                                    </p>
+                                )}
+                                {/* Ratio large pour reproduire la vue "double page" du
+                                    plugin Calaméo WordPress : sans la place pour les
+                                    deux pages côte à côte, Calaméo bascule sur le
+                                    viewer compact avec barre d'outils. */}
+                                <div style={{
+                                    position: 'relative',
+                                    width: '100%',
+                                    aspectRatio: '21 / 9',
+                                    background: 'var(--color-primary-soft)',
+                                    borderRadius: 'var(--radius-md)',
+                                    overflow: 'hidden',
+                                }}>
+                                    <iframe
+                                        src={`//v.calameo.com/?bkcode=${calameoCode}`}
+                                        title={pdfLabel || 'Plaquette'}
+                                        frameBorder="0"
+                                        scrolling="no"
+                                        allowTransparency="true"
+                                        allowFullScreen
+                                        style={{
+                                            position: 'absolute',
+                                            top: 0, left: 0,
+                                            width: '100%',
+                                            height: '100%',
+                                            border: 0,
+                                            background: 'transparent',
+                                        }}
+                                    />
+                                </div>
+                                <p style={{ margin: '8px 0 0', fontSize: '0.82rem' }}>
+                                    <a
+                                        href={prestation.pdf_path}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ color: 'var(--color-text-muted)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                    >
+                                        Ouvrir en plein écran <ExternalLink size={11} />
+                                    </a>
+                                </p>
+                            </div>
+                        );
+                    }
+                    // URL non-Calaméo (PDF direct, autre viewer) → bouton classique
+                    return (
+                        <p style={{ marginTop: '14px' }}>
+                            <a
+                                href={prestation.pdf_path}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="paleo-btn paleo-btn--ghost"
+                                style={{ padding: '10px 18px', fontSize: '0.82rem' }}
+                            >
+                                {pdfLabel || 'Consulter la plaquette'} <ExternalLink size={14} />
+                            </a>
+                        </p>
+                    );
+                })()}
             </div>
         </article>
     );
