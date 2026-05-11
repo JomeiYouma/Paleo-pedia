@@ -196,6 +196,15 @@ export const prestations = {
   delete:  (id)         => del(`/prestations/${id}`),
 };
 
+// ── Shop items (liens vers le PrestaShop externe) ─────────────
+// Lecture publique (filtrée à publié), écriture réservée au superadmin.
+export const shopItems = {
+  getAll:  ()           => get('/shop-items'),
+  create:  (data)       => post('/shop-items', data),
+  update:  (id, data)   => patch(`/shop-items/${id}`, data),
+  delete:  (id)         => del(`/shop-items/${id}`),
+};
+
 // ── Upload image ──────────────────────────────────────────────
 export const media = {
   /** Envoie un fichier image au serveur, retourne { url } */
@@ -335,5 +344,5 @@ export const logs = {
   bulkSetRecipient: (recipient) => patch('/logs/email-config', { recipient }),
 };
 
-const api = { auth, cartels, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners, teamMembers, pressArticles, prestations, logs };
+const api = { auth, cartels, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners, teamMembers, pressArticles, prestations, shopItems, logs };
 export default api;

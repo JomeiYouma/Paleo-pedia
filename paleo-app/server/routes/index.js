@@ -19,6 +19,7 @@ import { TeamController }     from '../controllers/teamController.js';
 import { TeamMemberController } from '../controllers/teamMemberController.js';
 import { PressArticleController } from '../controllers/pressArticleController.js';
 import { PrestationController } from '../controllers/prestationController.js';
+import { ShopItemController } from '../controllers/shopItemController.js';
 import { EventLogController } from '../controllers/eventLogController.js';
 
 const router = Router();
@@ -153,6 +154,12 @@ router.get   ('/prestations',     optionalAuth,                PrestationControl
 router.post  ('/prestations',     authenticate, requireAdmin,  PrestationController.create);
 router.patch ('/prestations/:id', authenticate, requireAdmin,  PrestationController.update);
 router.delete('/prestations/:id', authenticate, requireAdmin,  PrestationController.remove);
+
+// ── Shop items (page publique /ouvrages, liens vers PrestaShop) ───
+router.get   ('/shop-items',     optionalAuth,                ShopItemController.getAll);
+router.post  ('/shop-items',     authenticate, requireAdmin,  ShopItemController.create);
+router.patch ('/shop-items/:id', authenticate, requireAdmin,  ShopItemController.update);
+router.delete('/shop-items/:id', authenticate, requireAdmin,  ShopItemController.remove);
 
 // ── Event logs + config emails (superadmin only) ─────────────
 router.get   ('/logs',                       authenticate, requireAdmin, EventLogController.list);

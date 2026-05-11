@@ -21,6 +21,7 @@ import AdminTeam from './pages/AdminTeam';
 import AdminTeamContent from './pages/AdminTeamContent';
 import AdminPress from './pages/AdminPress';
 import AdminPrestations from './pages/AdminPrestations';
+import AdminShop from './pages/AdminShop';
 import AdminCategoriesWorkshops from './pages/AdminCategoriesWorkshops';
 import AdminLogs from './pages/AdminLogs';
 import Presentation from './pages/Presentation';
@@ -138,6 +139,7 @@ const router = createHashRouter(
         <Route path="admin/team-content" element={<AdminTeamContent />} />
         <Route path="admin/press"        element={<AdminPress />} />
         <Route path="admin/prestations"  element={<AdminPrestations />} />
+        <Route path="admin/shop"         element={<AdminShop />} />
         <Route path="admin/taxonomies"  element={<AdminCategoriesWorkshops />} />
         <Route path="admin/logs"        element={<AdminLogs />} />
         <Route path="admin/workshop/:workshopId" element={<ManageCartels />} />
