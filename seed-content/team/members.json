@@ -1,0 +1,86 @@
+[
+  {
+    "category": "main",
+    "name": "Cédric Carles",
+    "role": "Designer / chercheur — fondateur",
+    "bio": null,
+    "photo_file": "cedric-carles.jpg",
+    "url_linkedin": null,
+    "url_website": null,
+    "url_other": null,
+    "is_published": true,
+    "display_order": 10
+  },
+  {
+    "category": "main",
+    "name": "Loïc Rogard",
+    "role": "Chercheur et animateur",
+    "bio": "Master en histoire de l'énergie (Paris Diderot), travaille sur les études interdisciplinaires de l'énergie.",
+    "photo_file": "loic-rogard.jpg",
+    "url_linkedin": null,
+    "url_website": null,
+    "url_other": null,
+    "is_published": true,
+    "display_order": 20
+  },
+  {
+    "category": "main",
+    "name": "Simona Iliycheva",
+    "role": "Coordinatrice",
+    "bio": null,
+    "photo_file": "simona-iliycheva.jpg",
+    "url_linkedin": null,
+    "url_website": null,
+    "url_other": null,
+    "is_published": true,
+    "display_order": 30
+  },
+  {
+    "category": "main",
+    "name": "Simon Bouchaudy",
+    "role": "Designer pédagogique",
+    "bio": "Master de création industrielle à l'ENSCI-les Ateliers. La plupart de ses projets questionnent notre rapport à la production d'énergie et propose de nouveaux imaginaires autour des énergies renouvelables.",
+    "photo_file": "simon-bouchaudy.jpg",
+    "url_linkedin": null,
+    "url_website": null,
+    "url_other": null,
+    "is_published": true,
+    "display_order": 40
+  },
+  {
+    "category": "main",
+    "name": "Anaïs Chazel",
+    "role": "Chercheuse et animatrice",
+    "bio": null,
+    "photo_file": "anais-chazel.jpg",
+    "url_linkedin": null,
+    "url_website": null,
+    "url_other": null,
+    "is_published": true,
+    "display_order": 50
+  },
+  {
+    "category": "main",
+    "name": "Eric Dussert",
+    "role": "Numérisation / BNF / écrivain",
+    "bio": null,
+    "photo_file": "eric-dussert.jpg",
+    "url_linkedin": null,
+    "url_website": null,
+    "url_other": null,
+    "is_published": true,
+    "display_order": 60
+  },
+  {
+    "category": "main",
+    "name": "Thomas Ortiz",
+    "role": "Artiste / ingénieur",
+    "bio": null,
+    "photo_file": "thomas-ortiz.jpg",
+    "url_linkedin": null,
+    "url_website": null,
+    "url_other": null,
+    "is_published": true,
+    "display_order": 70
+  }
+]

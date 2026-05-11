@@ -1,0 +1,62 @@
+[
+  {
+    "category": "book",
+    "title": "Rétrofutur : une autre histoire des innovations énergétiques",
+    "subtitle": "Éditions Buchet/Chastel",
+    "description": "L'ouvrage de référence du projet — une encyclopédie visuelle des inventions énergétiques oubliées.",
+    "external_url": "https://paleo-energetique.org/produit/retrofutur-une-autre-histoire-des-innovations-energetiques/",
+    "price_text": "28 €",
+    "image_url": "https://paleo-energetique.org/wp-content/uploads/2024/05/Capture-decran-2024-06-06-a-17.37.42-400x600.png",
+    "image_file": null,
+    "is_published": true,
+    "display_order": 10
+  },
+  {
+    "category": "book",
+    "title": "Rétrofutur : une autre histoire des machines à vent",
+    "subtitle": "Focus thématique",
+    "description": "Une plongée spécifique dans l'histoire des éoliennes et des machines utilisant la force du vent.",
+    "external_url": "https://paleo-energetique.org/produit/retrofutur-une-autre-histoire-des-machines-a-vent/",
+    "price_text": "5,99 € – 28 €",
+    "image_url": "https://paleo-energetique.org/wp-content/uploads/2022/11/retrofutur-vent-couv-2-copie-400x600.png",
+    "image_file": null,
+    "is_published": true,
+    "display_order": 20
+  },
+  {
+    "category": "book",
+    "title": "Rétrofutur (épuisé)",
+    "subtitle": "Édition française originale",
+    "description": "L'édition française originale, désormais épuisée. Note : 5/5.",
+    "external_url": "https://paleo-energetique.org/retrofutur/",
+    "price_text": "24 €",
+    "image_url": "https://paleo-energetique.org/wp-content/uploads/2018/10/couverture-détouré-1-400x600.png",
+    "image_file": null,
+    "is_published": true,
+    "display_order": 30
+  },
+  {
+    "category": "book",
+    "title": "Retrotech and Lowtech",
+    "subtitle": "International edition (English)",
+    "description": "The English version of our research, focusing on low-tech and forgotten innovations.",
+    "external_url": "https://paleo-energetique.org/retrotech-and-lowtech/",
+    "price_text": "5,99 € – 30 €",
+    "image_url": "https://paleo-energetique.org/wp-content/uploads/2020/09/Couverture-anglaise-2-e1654682135107-400x600.png",
+    "image_file": null,
+    "is_published": true,
+    "display_order": 40
+  },
+  {
+    "category": "book",
+    "title": "レトロフューチャー / Rétrofutur",
+    "subtitle": "Japanese edition",
+    "description": "Édition japonaise de Rétrofutur.",
+    "external_url": "https://paleo-energetique.org/retrofutur-japonais/",
+    "price_text": "19,99 €",
+    "image_url": "https://paleo-energetique.org/wp-content/uploads/2020/09/retrofutur_japanese_cover-400x600.jpg",
+    "image_file": null,
+    "is_published": true,
+    "display_order": 50
+  }
+]

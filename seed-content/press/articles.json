@@ -1,0 +1,102 @@
+[
+  {
+    "title": "Retro Tech: When the past inspires innovation for a sustainable future",
+    "source": "Paris&Co",
+    "published_date": "2021-03-01",
+    "url": "https://www.parisandco.com/News/Monitoring-Innovation/Retro-Tech-When-the-past-inspires-innovation-for-a-sustainable-future",
+    "thumbnail_file": "paris-and-co-retro-tech.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 10
+  },
+  {
+    "title": "Léonard : Paléo-inspiration — réussir la transition énergétique grâce aux innovations d'hier",
+    "source": "Léonard / Vinci",
+    "published_date": "2020-09-11",
+    "url": "https://leonard.vinci.com/paleo-inspiration-reussir-la-transition-energetique-grace-aux-innovations-dhier/",
+    "thumbnail_file": "leonard-vinci.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 20
+  },
+  {
+    "title": "Drôles de machines",
+    "source": "Le Monde diplomatique",
+    "published_date": "2019-08-01",
+    "url": "https://www.monde-diplomatique.fr/2019/08/MONTJOYE/60140",
+    "thumbnail_file": "le-monde-diplomatique-droles-de-machines.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 30
+  },
+  {
+    "title": "Cédric Carles, le designer fédérateur d'énergies",
+    "source": "Le Monde",
+    "published_date": "2019-06-29",
+    "url": "https://www.lemonde.fr/sciences/article/2019/06/29/cedric-carles-le-designer-federateur-d-energies_5483243_1650684.html",
+    "thumbnail_file": "le-monde-cedric-carles.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 40
+  },
+  {
+    "title": "Cédric Carles de retour à l'école",
+    "source": "La Nouvelle République",
+    "published_date": "2020-03-26",
+    "url": "https://www.lanouvellerepublique.fr/indre-et-loire/commune/cinq-mars-la-pile/cedric-carles-de-retour-a-l-ecole",
+    "thumbnail_file": "nouvelle-republique-retour-ecole.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 50
+  },
+  {
+    "title": "Cédric Carles : « Transition P2 Retrofutur »",
+    "source": "RTBF — La Première",
+    "published_date": "2020-02-15",
+    "url": "https://www.rtbf.be/auvio/detail_tendances-premiere?id=2460708",
+    "thumbnail_file": "rtbf-la-premiere.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 60
+  },
+  {
+    "title": "Comment répondre à la crise énergétique ?",
+    "source": "RTS — Radio Suisse Romande",
+    "published_date": "2020-02-04",
+    "url": "https://www.rts.ch/play/radio/versus-lire-et-penser/audio/comment-repondre-a-la-crise-energetique?id=10154548",
+    "thumbnail_file": "rts-crise-energetique.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 70
+  },
+  {
+    "title": "Paleo-energy, a counter-history of energy",
+    "source": "We Make Money Not Art",
+    "published_date": "2020-01-02",
+    "url": null,
+    "thumbnail_file": "we-make-money-not-art.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 80
+  },
+  {
+    "title": "Le passé révèle son lot d'innovations inspirantes",
+    "source": "24 heures (Suisse)",
+    "published_date": "2019-12-29",
+    "url": "https://www.24heures.ch/culture/livres/revele-lot-innovations-inspirantes/story/14174454",
+    "thumbnail_file": "24-heures-suisse.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 90
+  },
+  {
+    "title": "Huit inventions d'hier incroyablement modernes",
+    "source": "Ouest France",
+    "published_date": "2019-12-28",
+    "url": "https://www.ouest-france.fr/leditiondusoir/data/39977/reader/reader.html",
+    "thumbnail_file": "ouest-france-huit-inventions.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 100
+  }
+]

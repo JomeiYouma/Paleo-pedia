@@ -1,0 +1,53 @@
+{
+  "_doc": "Mapping fichier-source (dans upload-dev/) → destination (dans paleo-app/public/downloads/ ou /photos/). Le script de seed copie chaque fichier listé ici et met à jour le placeholder [À REMPLACER] correspondant dans le code JSX.",
+  "items": [
+    {
+      "source": "plaquette-prestations.pdf",
+      "target": "downloads/plaquette-prestations.pdf",
+      "used_in": "paleo-app/src/pages/Prestations.jsx — bouton « Télécharger la plaquette » hero",
+      "required": false
+    },
+    {
+      "source": "dossier-presse.pdf",
+      "target": "downloads/dossier-presse.pdf",
+      "used_in": "paleo-app/src/pages/Presse.jsx — bouton « Dossier de presse »",
+      "required": false
+    },
+    {
+      "source": "kit-media.zip",
+      "target": "downloads/kit-media.zip",
+      "used_in": "paleo-app/src/pages/Presse.jsx — bouton « Kit média »",
+      "required": false
+    },
+    {
+      "source": "kit-appel-participation.pdf",
+      "target": "downloads/kit-appel-participation.pdf",
+      "used_in": "paleo-app/src/pages/Participer.jsx — bouton « Télécharger le kit (PDF) »",
+      "required": false
+    },
+    {
+      "source": "kit-appel-participation.jpg",
+      "target": "downloads/kit-appel-participation.jpg",
+      "used_in": "paleo-app/src/pages/Participer.jsx — visuel affiche + lien JPG alternatif",
+      "required": false
+    },
+    {
+      "source": "museum-photo-1.jpg",
+      "target": "photos/museum-1.jpg",
+      "used_in": "paleo-app/src/pages/Museum.jsx — galerie placeholder #1",
+      "required": false
+    },
+    {
+      "source": "museum-photo-2.jpg",
+      "target": "photos/museum-2.jpg",
+      "used_in": "paleo-app/src/pages/Museum.jsx — galerie placeholder #2",
+      "required": false
+    },
+    {
+      "source": "museum-photo-3.jpg",
+      "target": "photos/museum-3.jpg",
+      "used_in": "paleo-app/src/pages/Museum.jsx — galerie placeholder #3",
+      "required": false
+    }
+  ]
+}
