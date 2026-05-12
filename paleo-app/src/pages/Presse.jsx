@@ -52,8 +52,9 @@ const Presse = () => {
                 marginBottom: '50px',
             }}>
                 <a
-                    href="#"
-                    /* [À REMPLACER : href vers le dossier de presse PDF, ex: /downloads/dossier-presse.pdf ] */
+                    href="/downloads/revue-presse-2026.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="paleo-btn"
                     style={{ padding: '20px', justifyContent: 'flex-start' }}
                 >
@@ -66,8 +67,8 @@ const Presse = () => {
                     </span>
                 </a>
                 <a
-                    href="#"
-                    /* [À REMPLACER : href vers l'archive ZIP du kit média (logos + photos HD) ] */
+                    href="/downloads/kit-media-paleo-energetique.zip"
+                    download
                     className="paleo-btn paleo-btn--outline"
                     style={{ padding: '20px', justifyContent: 'flex-start' }}
                 >
