@@ -1,5 +1,9 @@
 -- ============================================================
--- paleo-energetique — schéma MySQL (PhpMyAdmin)
+-- paleo-energetique — schéma MySQL canonique (PhpMyAdmin)
+-- ------------------------------------------------------------
+-- Source de vérité unique du schéma BDD (toutes migrations
+-- v2 → v15 fusionnées, déjà appliquées en prod). Utilisable
+-- tel quel pour bootstrapper une nouvelle base.
 -- ============================================================
 
 SET NAMES utf8mb4;
@@ -17,6 +21,8 @@ CREATE TABLE IF NOT EXISTS `users` (
   `can_publish_cartel`  TINYINT(1)    NOT NULL DEFAULT 0,
   `can_manage_admin`    TINYINT(1)    NOT NULL DEFAULT 0,
   `can_create_subsite`  TINYINT(1)    NOT NULL DEFAULT 0,
+  `can_manage_team`     TINYINT(1)    NOT NULL DEFAULT 0,
+  `home_subsite_id`     CHAR(36)      NULL DEFAULT NULL,
   `created_at`          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -49,55 +55,91 @@ INSERT IGNORE INTO `categories` (`id`, `name`, `name_en`, `description`, `color`
   ('thermique',   'Thermique',           'Thermal energy',   'Chaleur et combustion',          '#FF6347', 'Flame2');
 
 -- ============================================================
+-- SUBSITES (multi-tenant)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `subsites` (
+  `id`             CHAR(36)      NOT NULL DEFAULT (UUID()),
+  `slug`           VARCHAR(64)   NOT NULL,
+  `name`           VARCHAR(255)  NOT NULL,
+  `category_id`    VARCHAR(64)   NOT NULL,
+  `primary_color`  VARCHAR(16)   NOT NULL DEFAULT '#D65A5A',
+  `logo_path`      VARCHAR(512)  NULL DEFAULT NULL,
+  `content_blocks` LONGTEXT      NULL DEFAULT NULL,      -- JSON array de blocs
+  `created_at`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_subsites_slug` (`slug`),
+  CONSTRAINT `fk_subsite_category`
+    FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- FK users.home_subsite_id → subsites.id (déclarée ici car subsites doit exister)
+ALTER TABLE `users`
+  ADD CONSTRAINT `fk_users_subsite`
+    FOREIGN KEY (`home_subsite_id`) REFERENCES `subsites` (`id`) ON DELETE SET NULL;
+
+-- ============================================================
 -- CARTELS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS `cartels` (
-  `id`             CHAR(36)      NOT NULL DEFAULT (UUID()),
-  `created_by`     CHAR(36)      NULL DEFAULT NULL,
+  `id`                   CHAR(36)      NOT NULL DEFAULT (UUID()),
+  `subsite_id`           CHAR(36)      NULL DEFAULT NULL,        -- NULL = site principal
+  `created_by`           CHAR(36)      NULL DEFAULT NULL,
 
   -- Contenu bilingue
-  `titre`          VARCHAR(512)  NOT NULL,
-  `titre_en`       VARCHAR(512)  NOT NULL DEFAULT '',
-  `annee`          VARCHAR(64)   NOT NULL DEFAULT '',
-  `description`    LONGTEXT      NOT NULL,
-  `description_en` LONGTEXT      NOT NULL,
-  `exhume_par`     VARCHAR(255)  NOT NULL DEFAULT '',
+  `titre`                VARCHAR(512)  NOT NULL,
+  `titre_en`             VARCHAR(512)  NOT NULL DEFAULT '',
+  `annee`                VARCHAR(64)   NOT NULL DEFAULT '',
+  `description`          LONGTEXT      NOT NULL,
+  `description_en`       LONGTEXT      NOT NULL,
+  `exhume_par`           VARCHAR(255)  NOT NULL DEFAULT '',
 
   -- Localisation
-  `location`       VARCHAR(255)  NOT NULL DEFAULT '',
-  `location_en`    VARCHAR(255)  NOT NULL DEFAULT '',
-  `lat`            DOUBLE        NULL DEFAULT NULL,
-  `lng`            DOUBLE        NULL DEFAULT NULL,
+  `location`             VARCHAR(255)  NOT NULL DEFAULT '',
+  `location_en`          VARCHAR(255)  NOT NULL DEFAULT '',
+  `lat`                  DOUBLE        NULL DEFAULT NULL,
+  `lng`                  DOUBLE        NULL DEFAULT NULL,
 
   -- Médias
-  `image_path`     VARCHAR(512)  NOT NULL DEFAULT '',
-  `image_credit`   TEXT          NULL,
-  `url_qr`         VARCHAR(512)  NOT NULL DEFAULT '',
+  `image_path`           VARCHAR(512)  NOT NULL DEFAULT '',
+  `image_credit`         TEXT          NULL,
+  `url_qr`               VARCHAR(512)  NOT NULL DEFAULT '',
 
   -- Dates
-  `date`           DATE          NULL DEFAULT NULL,
+  `date`                 DATE          NULL DEFAULT NULL,
 
   -- Publication
-  `status`         ENUM('draft','pending_review','published','archived') NOT NULL DEFAULT 'draft',
-  `visible`        TINYINT(1)    NOT NULL DEFAULT 0,
-  `published_at`   DATETIME      NULL DEFAULT NULL,
+  `status`               ENUM('draft','pending_review','published','archived') NOT NULL DEFAULT 'draft',
+  `visible`              TINYINT(1)    NOT NULL DEFAULT 0,
+  `visible_on_main`      TINYINT(1)    NOT NULL DEFAULT 0,       -- validé par superadmin
+  `submitted_to_main_at` DATETIME      NULL DEFAULT NULL,        -- file d'attente sous-site → principal
+  `published_at`         DATETIME      NULL DEFAULT NULL,
 
-  `created_at`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  -- Soumissions anonymes
+  `submitter_ip`         VARCHAR(45)   NULL DEFAULT NULL,
+  `submitter_contact`    VARCHAR(255)  NULL DEFAULT NULL,        -- email/tel laissé par visiteur
+
+  `created_at`           DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`           DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
   PRIMARY KEY (`id`),
   KEY `idx_cartels_status`     (`status`),
   KEY `idx_cartels_created_by` (`created_by`),
   KEY `idx_cartels_visible`    (`visible`),
+  KEY `idx_cartels_subsite`    (`subsite_id`),
+  KEY `idx_cartels_main_feed`  (`visible_on_main`, `status`, `submitted_to_main_at`),
   FULLTEXT KEY `ft_cartels_search` (`titre`, `description`),
 
   CONSTRAINT `fk_cartels_user`
     FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)
+    ON DELETE SET NULL,
+  CONSTRAINT `fk_cartels_subsite`
+    FOREIGN KEY (`subsite_id`) REFERENCES `subsites` (`id`)
     ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
--- TABLE DE JOINTURE cartel <-> categories (N-N)
+-- JOINTURE cartel <-> categories (N-N)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS `cartel_categories` (
   `cartel_id`   CHAR(36)    NOT NULL,
@@ -110,7 +152,7 @@ CREATE TABLE IF NOT EXISTS `cartel_categories` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
--- WORKSHOPS
+-- WORKSHOPS (regroupement de cartels)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS `workshops` (
   `id`           CHAR(36)      NOT NULL DEFAULT (UUID()),
@@ -120,19 +162,20 @@ CREATE TABLE IF NOT EXISTS `workshops` (
   `created_at`   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_workshops_name` (`name`),
+  KEY `idx_workshops_created_by` (`created_by`),
   CONSTRAINT `fk_workshops_user`
     FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)
     ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================================
--- TABLE DE JOINTURE workshop <-> cartels (N-N)
--- ============================================================
 CREATE TABLE IF NOT EXISTS `workshop_cartels` (
   `workshop_id` CHAR(36) NOT NULL,
   `cartel_id`   CHAR(36) NOT NULL,
   `added_at`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`workshop_id`, `cartel_id`),
+  KEY `idx_wc_cartel`            (`cartel_id`),
+  KEY `idx_workshop_cartels_workshop` (`workshop_id`),
   CONSTRAINT `fk_wc_workshop`
     FOREIGN KEY (`workshop_id`) REFERENCES `workshops` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_wc_cartel`
@@ -140,7 +183,66 @@ CREATE TABLE IF NOT EXISTS `workshop_cartels` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
--- EVENT_LOGS (v8) — journal d'audit + déclencheur d'emails
+-- PARTNERS (bibliothèque globale)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `partners` (
+  `id`               CHAR(36)     NOT NULL DEFAULT (UUID()),
+  `name`             VARCHAR(255) NOT NULL,
+  `logo_path`        VARCHAR(512) NULL DEFAULT NULL,
+  `url`              VARCHAR(512) NULL DEFAULT NULL,
+  `is_mandatory`     TINYINT(1)   NOT NULL DEFAULT 0,        -- imposé sur tous les sous-sites
+  `owner_subsite_id` CHAR(36)     NULL DEFAULT NULL,         -- exclusif à un sous-site
+  `created_at`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_partners_owner` (`owner_subsite_id`, `is_mandatory`),
+  CONSTRAINT `fk_partners_owner_subsite`
+    FOREIGN KEY (`owner_subsite_id`) REFERENCES `subsites` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Affichage des partenaires sur les sous-sites
+CREATE TABLE IF NOT EXISTS `subsite_partners` (
+  `subsite_id`   CHAR(36) NOT NULL,
+  `partner_id`   CHAR(36) NOT NULL,
+  `partner_tier` ENUM('primary','regular') NOT NULL DEFAULT 'regular',
+  `sort_order`   INT      NOT NULL DEFAULT 0,
+  PRIMARY KEY (`subsite_id`, `partner_id`),
+  KEY `idx_subsite_partner_tier` (`subsite_id`, `partner_tier`, `sort_order`),
+  CONSTRAINT `fk_sp_subsite` FOREIGN KEY (`subsite_id`) REFERENCES `subsites` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_sp_partner` FOREIGN KEY (`partner_id`) REFERENCES `partners` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Affichage des partenaires sur le site principal
+CREATE TABLE IF NOT EXISTS `site_partners` (
+  `partner_id`   CHAR(36) NOT NULL,
+  `partner_tier` ENUM('primary','regular') NOT NULL DEFAULT 'regular',
+  `sort_order`   INT      NOT NULL DEFAULT 0,
+  `created_at`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`partner_id`),
+  KEY `idx_site_partners_tier` (`partner_tier`, `sort_order`),
+  CONSTRAINT `fk_site_partners_partner`
+    FOREIGN KEY (`partner_id`) REFERENCES `partners` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- SETTINGS (paramètres admin globaux)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `settings` (
+  `key_name`   VARCHAR(64)  NOT NULL,
+  `value`      TEXT         NOT NULL,
+  `updated_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`key_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO `settings` (`key_name`, `value`) VALUES
+  ('allow_anonymous_submit',        'true'),
+  ('max_submissions_per_ip_total',  '10'),
+  ('max_submissions_per_ip_window', '3'),
+  ('submission_window_minutes',     '60'),
+  ('openai_key',                    ''),
+  ('deepl_key',                     '');
+
+-- ============================================================
+-- EVENT_LOGS — journal d'audit + déclencheur d'emails
 -- ============================================================
 CREATE TABLE IF NOT EXISTS `event_logs` (
   `id`           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -179,5 +281,97 @@ INSERT IGNORE INTO `event_email_config` (`type`) VALUES
   ('partner.created'), ('partner.updated'),('partner.deleted'),
   ('category.created'),('category.updated'),('category.deleted'),
   ('workshop.created'),('workshop.updated'),('workshop.deleted');
+
+-- ============================================================
+-- TEAM_MEMBERS (page À propos)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `team_members` (
+  `id`            CHAR(36)      NOT NULL DEFAULT (UUID()),
+  `category`      VARCHAR(20)   NOT NULL DEFAULT 'main',     -- 'main' | 'secondary' | 'community'
+  `name`          VARCHAR(255)  NOT NULL,
+  `role`          VARCHAR(255)  NULL DEFAULT NULL,
+  `role_en`       VARCHAR(255)  NULL DEFAULT NULL,
+  `bio`           TEXT          NULL DEFAULT NULL,
+  `bio_en`        TEXT          NULL DEFAULT NULL,
+  `photo_path`    VARCHAR(500)  NULL DEFAULT NULL,
+  `url_linkedin`  VARCHAR(500)  NULL DEFAULT NULL,
+  `url_website`   VARCHAR(500)  NULL DEFAULT NULL,
+  `url_other`     VARCHAR(500)  NULL DEFAULT NULL,
+  `display_order` INT           NOT NULL DEFAULT 0,
+  `created_at`    DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`    DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_team_category` (`category`, `display_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- PRESS_ARTICLES (page /presse)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `press_articles` (
+  `id`             CHAR(36)      NOT NULL DEFAULT (UUID()),
+  `title`          VARCHAR(500)  NOT NULL,
+  `title_en`       VARCHAR(500)  NULL DEFAULT NULL,
+  `source`         VARCHAR(255)  NULL DEFAULT NULL,            -- nom propre, non traduit
+  `published_date` DATE          NULL DEFAULT NULL,
+  `url`            VARCHAR(500)  NULL DEFAULT NULL,
+  `thumbnail_path` VARCHAR(500)  NULL DEFAULT NULL,
+  `excerpt`        TEXT          NULL DEFAULT NULL,
+  `excerpt_en`     TEXT          NULL DEFAULT NULL,
+  `display_order`  INT           NOT NULL DEFAULT 0,
+  `is_published`   TINYINT(1)    NOT NULL DEFAULT 1,
+  `created_at`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_press_publish` (`is_published`, `published_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- PRESTATIONS (page /prestations)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `prestations` (
+  `id`               CHAR(36)      NOT NULL DEFAULT (UUID()),
+  `title`            VARCHAR(255)  NOT NULL,
+  `title_en`         VARCHAR(255)  NULL DEFAULT NULL,
+  `intro`            TEXT          NULL DEFAULT NULL,
+  `intro_en`         TEXT          NULL DEFAULT NULL,
+  `description`      TEXT          NULL DEFAULT NULL,
+  `description_en`   TEXT          NULL DEFAULT NULL,
+  `bullet_points`    TEXT          NULL DEFAULT NULL,
+  `bullet_points_en` TEXT          NULL DEFAULT NULL,
+  `image_path`       VARCHAR(500)  NULL DEFAULT NULL,
+  `icon_name`        VARCHAR(50)   NULL DEFAULT NULL,            -- clé Lucide
+  `pdf_path`         VARCHAR(500)  NULL DEFAULT NULL,
+  `pdf_label`        VARCHAR(255)  NULL DEFAULT NULL,
+  `pdf_label_en`     VARCHAR(255)  NULL DEFAULT NULL,
+  `display_order`    INT           NOT NULL DEFAULT 0,
+  `is_published`     TINYINT(1)    NOT NULL DEFAULT 1,
+  `created_at`       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_prestations_publish` (`is_published`, `display_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- SHOP_ITEMS (liens vers PrestaShop externe — page /ouvrages)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `shop_items` (
+  `id`             CHAR(36)      NOT NULL DEFAULT (UUID()),
+  `category`       VARCHAR(20)   NOT NULL DEFAULT 'book',
+  `title`          VARCHAR(255)  NOT NULL,
+  `title_en`       VARCHAR(255)  NULL DEFAULT NULL,
+  `subtitle`       VARCHAR(255)  NULL DEFAULT NULL,
+  `subtitle_en`    VARCHAR(255)  NULL DEFAULT NULL,
+  `description`    TEXT          NULL DEFAULT NULL,
+  `description_en` TEXT          NULL DEFAULT NULL,
+  `image_path`     VARCHAR(500)  NULL DEFAULT NULL,
+  `external_url`   VARCHAR(500)  NULL DEFAULT NULL,
+  `price_text`     VARCHAR(50)   NULL DEFAULT NULL,
+  `display_order`  INT           NOT NULL DEFAULT 0,
+  `is_published`   TINYINT(1)    NOT NULL DEFAULT 1,
+  `created_at`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_shop_category_order` (`category`, `display_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
