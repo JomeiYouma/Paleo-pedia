@@ -91,6 +91,12 @@ const renderCartelToCanvas = async (cartel, container, lang, overrides) => {
   const cats  = oCategoryMap ? rawCats.map(c => oCategoryMap[c] || c) : rawCats;
   const imageCredit = (cartel.imageCredit || cartel.image_credit || '').trim();
 
+  // En mode frise traduite (overrides présents), `cartel.annee` a déjà été
+  // traduit par OpenAI vers la langue cible — on l'affiche tel quel.
+  // Sinon, `formatYear` gère la conversion FR↔EN à partir de la source.
+  const isTranslatedFrise = !!overrides?.labels;
+  const yearLabel = isTranslatedFrise ? (cartel.annee || '') : formatYear(cartel.annee, lang);
+
   // QR Code
   let qrDataUrl = '';
   if (cartel.url_qr) {
@@ -176,7 +182,7 @@ const renderCartelToCanvas = async (cartel, container, lang, overrides) => {
         ${imageCredit ? `<div class="sl">${creditText}: ${imageCredit}</div>` : ''}
       </div>
       <div class="tc">
-        <div class="yl psb">${formatYear(cartel.annee, lang)}</div>
+        <div class="yl psb">${yearLabel}</div>
         ${loc ? `<div class="ll">${loc}</div>` : ''}
         <div class="tl psb">${title}</div>
         <div class="dc psr">${descHtml}</div>

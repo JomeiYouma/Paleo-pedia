@@ -78,15 +78,19 @@ export const TranslateController = {
       for (let i = 0; i < cartels.length; i += concurrency) {
         const slice = cartels.slice(i, i + concurrency);
         const results = await Promise.all(slice.map(async (c) => {
-          // Si la langue source est EN, on lit les champs _en, sinon les champs FR
+          // Si la langue source est EN, on lit les champs _en, sinon les champs FR.
+          // `annee` n'a pas de variante _en (un seul champ DB) — OpenAI gère
+          // la conversion roman/arabe + "siècle/century" → langue cible.
           const fields = normalizedSource === 'en'
             ? {
                 titre:       c.titre_en       || c.titre       || '',
+                annee:       c.annee          || '',
                 description: c.description_en || c.description || '',
                 location:    c.location_en    || c.location    || '',
               }
             : {
                 titre:       c.titre       || '',
+                annee:       c.annee       || '',
                 description: c.description || '',
                 location:    c.location    || '',
               };

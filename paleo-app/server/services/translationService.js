@@ -160,7 +160,7 @@ ${JSON.stringify(payload, null, 2)}`;
  * Utilise OpenAI uniquement (DeepL n'est pas adapté à un nom de langue libre).
  * Retourne { titre, description, location } dans la langue cible (clés non suffixées).
  *
- * @param {object} cartelData - { titre, description, location } dans la langue source
+ * @param {object} cartelData - { titre, annee, description, location } dans la langue source
  * @param {object} opts
  * @param {'fr'|'en'} opts.sourceLang - Code de langue source (déterminé par l'UI)
  * @param {string}    opts.targetLanguageName - Nom libre de la langue cible (ex: "Spanish", "Espagnol", "日本語")
@@ -180,14 +180,16 @@ export async function translateCartelToLanguage(cartelData, { sourceLang = 'fr',
 
   const payload = {
     titre:       cartelData.titre       || '',
+    annee:       cartelData.annee       || '',
     description: cartelData.description || '',
     location:    cartelData.location    || '',
   };
 
   const prompt = `You are a professional translator for a scientific exhibition about historical energy called "Paléo-Énergétique".
 Translate the following JSON fields from ${sourceLangName} to ${targetLanguageName}.
+The "annee" field is a date label that may contain a year, a date range or a century (in French or English, e.g. "XXIe siècle", "21st century", "fin du XIXe siècle", "vers 1850"). Translate the literary words ("siècle", "century", "fin/late", "milieu/mid-", "début/early", "vers/circa", "av. J.-C./BC", "ap. J.-C./AD") into ${targetLanguageName}, but KEEP roman numerals (XX, XIX, XVIII…) and arabic digits unchanged. Adapt ordinal suffixes to ${targetLanguageName} conventions if applicable.
 If "${targetLanguageName}" is ambiguous or not a recognised language, infer the most likely language and translate accordingly.
-Return ONLY a valid JSON object with the same keys (titre, description, location).
+Return ONLY a valid JSON object with the same keys (titre, annee, description, location).
 Keep empty strings empty. Do not add explanations or markdown fences.
 
 Input:
@@ -216,6 +218,7 @@ ${JSON.stringify(payload, null, 2)}`;
 
   return {
     titre:       (parsed.titre       || '').trim(),
+    annee:       (parsed.annee       || '').trim(),
     description: (parsed.description || '').trim(),
     location:    (parsed.location    || '').trim(),
   };

@@ -244,7 +244,7 @@ export const translate = {
    * @param {'fr'|'en'} args.sourceLang
    * @param {string}   args.targetLanguage  - Nom libre saisi par l'admin.
    * Réponse : {
-   *   translations: [{ id, titre, description, location }],
+   *   translations: [{ id, titre, annee, description, location }],
    *   labels:       { moreText, exhumeText, catText, creditText, unknownText }, // libellés UI traduits
    *   categoryMap:  { [catSrc]: catTraduit }                                    // map nom-catégorie source → traduite
    * }

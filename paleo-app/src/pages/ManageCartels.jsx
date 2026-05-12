@@ -586,9 +586,11 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                         if (!tr) return c;
                         // On remplace les champs de la langue source : generatePdf
                         // affichera ces champs traduits puisqu'on garde la même langue.
+                        // `annee` est commun (pas de variante _en en BDD) : on l'écrase
+                        // toujours par la version traduite par OpenAI.
                         return sourceLang === 'en'
-                            ? { ...c, titre_en: tr.titre, description_en: tr.description, location_en: tr.location }
-                            : { ...c, titre: tr.titre, description: tr.description, location: tr.location };
+                            ? { ...c, titre_en: tr.titre, description_en: tr.description, location_en: tr.location, annee: tr.annee || c.annee }
+                            : { ...c, titre: tr.titre, description: tr.description, location: tr.location, annee: tr.annee || c.annee };
                     });
 
                 setBusyLabel(t('translateFrise.busyGenerating', { defaultValue: 'Génération du PDF traduit…' }));
