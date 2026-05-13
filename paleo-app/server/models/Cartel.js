@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 const TEXT_FIELDS = [
   'titre', 'titre_en', 'annee', 'description', 'description_en',
   'exhume_par', 'location', 'location_en', 'image_path', 'url_qr',
-  'date', 'visible', 'lat', 'lng',
+  'date', 'visible', 'lat', 'lng', 'submitter_contact',
 ];
 
 function buildSelectFull({ includeWorkshops = false } = {}) {
@@ -130,14 +130,14 @@ export const CartelModel = {
       const cartelStatus = data.status ?? 'draft';
       const visible = cartelStatus === 'published' ? 1 : (data.visible ? 1 : 0);
 
-      // submitter_contact : email/tél laissé par un visiteur non-authentifié
-      // pour qu'on puisse le recontacter. Toujours null pour les utilisateurs
-      // connectés (on a déjà leur email via created_by).
-      const submitterContact = userId
-        ? null
-        : (typeof data.submitter_contact === 'string'
-            ? data.submitter_contact.trim().slice(0, 255) || null
-            : null);
+      // submitter_contact : email/tél du contact à recontacter au sujet du cartel.
+      // - Visiteur anonyme : son propre contact (champ obligatoire côté UI).
+      // - Admin connecté : contact d'un tiers s'il saisit le cartel pour quelqu'un
+      //   d'autre (cf. Create.jsx label "Contact de l'auteur"). Si vide, on stocke
+      //   null et on retombera sur l'email du compte au moment du recontact.
+      const submitterContact = typeof data.submitter_contact === 'string'
+        ? data.submitter_contact.trim().slice(0, 255) || null
+        : null;
 
       await client.query(
         `INSERT INTO cartels (
