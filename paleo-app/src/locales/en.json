@@ -357,6 +357,7 @@
             "intro": "Each service has its own detailed brochure — browse it online via the buttons below.",
             "openFull": "Open full screen",
             "viewBrochure": "View the brochure",
+            "partnersLabel": "They trusted us",
             "loading": "Loading services…",
             "empty": "No service published yet."
         },

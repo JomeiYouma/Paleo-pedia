@@ -23,12 +23,14 @@ const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enre
     const [bullets, setBullets]       = useState(initial?.bullet_points || '');
     const [bulletsEn, setBulletsEn]   = useState(initial?.bullet_points_en || '');
     const [imagePath, setImagePath]   = useState(initial?.image_path || '');
+    const [partnersImagePath, setPartnersImagePath] = useState(initial?.partners_image_path || '');
     const [iconName, setIconName]     = useState(initial?.icon_name || 'Sparkles');
     const [pdfUrl, setPdfUrl]         = useState(initial?.pdf_path || '');
     const [pdfLabel, setPdfLabel]     = useState(initial?.pdf_label || '');
     const [pdfLabelEn, setPdfLabelEn] = useState(initial?.pdf_label_en || '');
     const [isPublished, setIsPublished] = useState(initial ? initial.is_published !== 0 : true);
     const [uploadingImage, setUploadingImage] = useState(false);
+    const [uploadingPartners, setUploadingPartners] = useState(false);
     const [uploadError, setUploadError] = useState('');
 
     const handleImage = async (file) => {
@@ -45,6 +47,20 @@ const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enre
         }
     };
 
+    const handlePartnersImage = async (file) => {
+        if (!file) return;
+        setUploadingPartners(true);
+        setUploadError('');
+        try {
+            const up = await api.media.upload(file);
+            setPartnersImagePath(up?.url || '');
+        } catch (e) {
+            setUploadError(e.message || "Échec de l'upload");
+        } finally {
+            setUploadingPartners(false);
+        }
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!title.trim()) return;
@@ -58,6 +74,7 @@ const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enre
             bullet_points: bullets.trim() || null,
             bullet_points_en: bulletsEn.trim() || null,
             image_path: imagePath || null,
+            partners_image_path: partnersImagePath || null,
             icon_name: iconName || null,
             pdf_path: pdfUrl.trim() || null,
             pdf_label: pdfLabel.trim() || null,
@@ -143,6 +160,30 @@ const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enre
                 {uploadError && (
                     <p style={{ margin: '6px 0 0', fontSize: '0.82rem', color: 'var(--color-error)' }}>{uploadError}</p>
                 )}
+            </div>
+
+            {/* Bandeau logos partenaires — affiché à droite du texte sur grand écran */}
+            <div>
+                <label style={labelStyle}>Bandeau logos partenaires (optionnel — « Ils nous ont fait confiance »)</label>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    {partnersImagePath ? (
+                        <img src={partnersImagePath} alt="" style={{ width: '120px', height: '80px', objectFit: 'contain', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }} />
+                    ) : (
+                        <div style={{ width: '120px', height: '80px', background: 'var(--color-primary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-subtle)', fontSize: '0.75rem', borderRadius: 'var(--radius-md)' }}>
+                            (vide)
+                        </div>
+                    )}
+                    <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 12px', border: '1px dashed var(--color-border-strong)', borderRadius: 'var(--radius-md)', cursor: uploadingPartners ? 'wait' : 'pointer', fontSize: '0.85rem', color: 'var(--color-text-muted)', background: 'var(--color-surface-2)' }}>
+                        <Upload size={14} />
+                        {uploadingPartners ? 'Upload en cours…' : (partnersImagePath ? 'Remplacer le bandeau' : 'Choisir un bandeau de logos…')}
+                        <input type="file" accept="image/*" disabled={uploadingPartners} style={{ display: 'none' }} onChange={e => handlePartnersImage(e.target.files?.[0])} />
+                    </label>
+                    {partnersImagePath && (
+                        <button type="button" onClick={() => setPartnersImagePath('')} style={ghostBtnStyle} title="Retirer le bandeau">
+                            <X size={14} />
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Plaquette (URL externe ou PDF uploadé) */}

@@ -14,6 +14,7 @@ const ALLOWED_FIELDS = [
   'bullet_points',
   'bullet_points_en',
   'image_path',
+  'partners_image_path',
   'icon_name',
   'pdf_path',
   'pdf_label',
@@ -60,6 +61,7 @@ export const PrestationModel = {
       bullet_points:    data.bullet_points    ?? null,
       bullet_points_en: data.bullet_points_en ?? null,
       image_path:       data.image_path       ?? null,
+      partners_image_path: data.partners_image_path ?? null,
       icon_name:        data.icon_name        ?? null,
       pdf_path:         data.pdf_path         ?? null,
       pdf_label:        data.pdf_label        ?? null,
@@ -69,8 +71,8 @@ export const PrestationModel = {
     };
     await pool.query(
       `INSERT INTO prestations
-        (id, title, title_en, intro, intro_en, description, description_en, bullet_points, bullet_points_en, image_path, icon_name, pdf_path, pdf_label, pdf_label_en, display_order, is_published)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, title, title_en, intro, intro_en, description, description_en, bullet_points, bullet_points_en, image_path, partners_image_path, icon_name, pdf_path, pdf_label, pdf_label_en, display_order, is_published)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         payload.title,
@@ -82,6 +84,7 @@ export const PrestationModel = {
         payload.bullet_points,
         payload.bullet_points_en,
         payload.image_path,
+        payload.partners_image_path,
         payload.icon_name,
         payload.pdf_path,
         payload.pdf_label,

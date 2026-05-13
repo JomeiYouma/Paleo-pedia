@@ -339,6 +339,7 @@ CREATE TABLE IF NOT EXISTS `prestations` (
   `bullet_points`    TEXT          NULL DEFAULT NULL,
   `bullet_points_en` TEXT          NULL DEFAULT NULL,
   `image_path`       VARCHAR(500)  NULL DEFAULT NULL,
+  `partners_image_path` VARCHAR(500) NULL DEFAULT NULL,          -- bandeau logos partenaires (optionnel)
   `icon_name`        VARCHAR(50)   NULL DEFAULT NULL,            -- clé Lucide
   `pdf_path`         VARCHAR(500)  NULL DEFAULT NULL,
   `pdf_label`        VARCHAR(255)  NULL DEFAULT NULL,
