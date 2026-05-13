@@ -368,10 +368,7 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                 {/* Card Display - Constrained Container */}
                 {currentCartel && (
                     <div style={{
-                        boxShadow: 'var(--shadow-md)',
-                        borderRadius: 'var(--radius-md)',
                         position: 'relative',
-                        background: 'var(--color-surface)',
                         height: '100%',
                         maxHeight: 'calc(100vh - 290px)',
                         width: '80%',
@@ -380,7 +377,7 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                         flexDirection: 'column',
                         margin: '24px 0',
                     }}>
-                        <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+                        <div style={{ flex: 1, overflowY: 'auto' }}>
                             <CartelPreview key={currentCartel.id} data={currentCartel} />
                         </div>
 
