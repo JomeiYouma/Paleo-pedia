@@ -19,6 +19,18 @@ const PORT = process.env.PORT || 3001;
 // TRUST_PROXY (défaut "1" = un seul proxy connu devant Node).
 app.set('trust proxy', process.env.TRUST_PROXY ?? 1);
 
+// ── Redirect HTTP → HTTPS (prod uniquement) ──────────────────
+// Apache/Passenger transmet le protocole réel client via X-Forwarded-Proto.
+// On redirige en amont de tout autre middleware pour ne pas gaspiller de CPU
+// sur des requêtes qu'on va de toute façon rediriger. En dev (NODE_ENV
+// ≠ production), aucune redirection : le header peut être absent.
+app.use((req, res, next) => {
+  if (isProd && req.headers['x-forwarded-proto'] === 'http') {
+    return res.redirect(301, `https://${req.headers.host}${req.url}`);
+  }
+  next();
+});
+
 // ── Middleware ───────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
 app.use((req, res, next) => {
