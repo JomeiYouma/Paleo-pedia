@@ -9,6 +9,7 @@
         "submissions": "Submissions",
         "admin": "Management",
         "management": "Management",
+        "stats": "Stats",
         "deleteAll": "Delete All"
     },
     "library": {

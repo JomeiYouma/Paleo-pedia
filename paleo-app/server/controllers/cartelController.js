@@ -324,6 +324,55 @@ export const CartelController = {
     }
   },
 
+  /**
+   * Agrégations pour la page Stats admin.
+   *
+   * Accessible aux admins (superadmin ou rattachés à un sous-site). Le
+   * superadmin peut filtrer librement par sous-site (?subsiteId=...) ou voir
+   * l'ensemble. Un admin de sous-site est cloué à son propre périmètre peu
+   * importe ce qu'il envoie dans la query, comme dans le reste de l'app.
+   */
+  async getStats(req, res) {
+    try {
+      const isSuperadmin = !!req.user?.can_manage_admin;
+      const isTenantAdmin = !!req.user?.home_subsite_id;
+      if (!isSuperadmin && !isTenantAdmin) {
+        return res.status(403).json({ error: 'Non autorisé' });
+      }
+
+      let subsiteFilter;
+      if (isSuperadmin) {
+        const sub = req.query.subsiteId;
+        if (sub === 'main') subsiteFilter = 'main';
+        else if (sub && sub !== 'all') subsiteFilter = { id: sub };
+        else subsiteFilter = 'none';
+      } else {
+        subsiteFilter = { id: req.user.home_subsite_id };
+      }
+
+      const csv = (v) => (typeof v === 'string' && v.length ? v.split(',').filter(Boolean) : undefined);
+
+      const filters = {
+        subsiteFilter,
+        categoryIds: csv(req.query.categoryIds),
+        statuses:    csv(req.query.statuses),
+        createdFrom: req.query.createdFrom || undefined,
+        createdTo:   req.query.createdTo   || undefined,
+        yearMin:     req.query.yearMin     || undefined,
+        yearMax:     req.query.yearMax     || undefined,
+        exhumePar:   req.query.exhumePar   || undefined,
+        visible:     req.query.visible === 'true' ? true
+                   : req.query.visible === 'false' ? false
+                   : undefined,
+      };
+
+      const stats = await CartelModel.getStats(filters);
+      res.json(stats);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
   // ── Workflow soumission au site principal ──────────────────
 
   /** Owner d'un sous-site soumet un cartel publié pour affichage sur le site principal */

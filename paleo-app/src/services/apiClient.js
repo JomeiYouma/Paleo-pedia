@@ -91,6 +91,22 @@ export const cartels = {
   withdrawFromMain: (slug, id)       => post(`/s/${slug}/cartels/${id}/withdraw-from-main`),
 };
 
+// ── Statistiques (admin) ──────────────────────────────────────
+// Agrégations pour la page /app/admin/stats. Tous les filtres sont optionnels.
+// Les multi-valeurs (categoryIds, statuses) sont sérialisées en CSV.
+export const stats = {
+  cartels: (filters = {}) => {
+    const params = new URLSearchParams();
+    for (const [k, v] of Object.entries(filters)) {
+      if (v === undefined || v === null || v === '') continue;
+      if (Array.isArray(v)) { if (v.length) params.set(k, v.join(',')); }
+      else params.set(k, String(v));
+    }
+    const qs = params.toString();
+    return get(`/cartels/stats${qs ? '?' + qs : ''}`);
+  },
+};
+
 // ── File de validation (superadmin) ───────────────────────────
 export const submissions = {
   list:    ()    => get('/submissions'),
@@ -354,5 +370,5 @@ export const logs = {
   bulkSetRecipient: (recipient) => patch('/logs/email-config', { recipient }),
 };
 
-const api = { auth, cartels, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners, teamMembers, pressArticles, prestations, shopItems, logs };
+const api = { auth, cartels, stats, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners, teamMembers, pressArticles, prestations, shopItems, logs };
 export default api;

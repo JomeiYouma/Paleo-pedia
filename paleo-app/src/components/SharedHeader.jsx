@@ -3,7 +3,7 @@ import { Link, useLocation, NavLink } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import {
     Menu, X, Lock, LogIn, LogOut,
-    Library, PlusCircle, ClipboardList, Settings2,
+    Library, PlusCircle, ClipboardList, Settings2, BarChart3,
 } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useNavigate } from 'react-router-dom';
@@ -35,10 +35,23 @@ const APP_NAV_VISITOR = [
 // la peine de les redoubler dans la nav. La pastille rouge reste sur les cartels
 // en attente, c'est l'info dont l'admin a besoin d'un coup d'œil.
 const APP_NAV_ADMIN = [
-    { path: '/app',         labelKey: 'nav.library', icon: Library,         end: true },
-    { path: '/app/manage',  labelKey: 'nav.cartels', icon: ClipboardList,   countKey: 'pending' },
-    { path: '/app/admin',   labelKey: 'nav.admin',   icon: Settings2 },
+    { path: '/app',             labelKey: 'nav.library', icon: Library,         end: true },
+    { path: '/app/manage',      labelKey: 'nav.cartels', icon: ClipboardList,   countKey: 'pending' },
+    { path: '/app/admin',       labelKey: 'nav.admin',   icon: Settings2 },
+    { path: '/app/admin/stats', labelKey: 'nav.stats',   icon: BarChart3 },
 ];
+
+/**
+ * Détermine quel lien d'une nav est actif. Quand plusieurs préfixes matchent
+ * (ex: /app/admin/stats startsWith /app/admin), on prend le plus spécifique
+ * — sinon GESTION et STATS s'allumeraient ensemble.
+ */
+function pickActiveLink(links, pathname) {
+    const matches = links.filter(link =>
+        link.end ? pathname === link.path : pathname.startsWith(link.path)
+    );
+    return matches.sort((a, b) => b.path.length - a.path.length)[0] || null;
+}
 
 // Pastille de notification à côté du libellé "Cartels" : jaune vif sur fond noir,
 // fort contraste pour qu'on la repère immédiatement (Opquast — visibilité de l'info).
@@ -248,11 +261,11 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                             <div style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--color-text-subtle)', padding: '4px 14px 6px', textTransform: 'uppercase', letterSpacing: '0.6px', fontFamily: 'var(--font-heading)' }}>
                                                 {t('header.navigation', 'Navigation')}
                                             </div>
-                                            {appLinks.map(link => {
+                                            {(() => {
+                                                const activeLink = pickActiveLink(appLinks, location.pathname);
+                                                return appLinks.map(link => {
                                                 const Icon = link.icon;
-                                                const isActive = link.end
-                                                    ? location.pathname === link.path
-                                                    : location.pathname.startsWith(link.path);
+                                                const isActive = activeLink?.path === link.path;
                                                 return (
                                                     <Link
                                                         key={link.path}
@@ -282,7 +295,8 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                                         )}
                                                     </Link>
                                                 );
-                                            })}
+                                                });
+                                            })()}
                                             <div style={{ borderTop: '1px solid #f0f0f0', margin: '6px 0' }} />
                                             <Link
                                                 to="/"
@@ -520,34 +534,39 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                                 minWidth: '220px',
                                                 padding: '6px',
                                             }}>
-                                                {isAdmin && (
-                                                    <button
-                                                        onClick={() => { setIsUserMenuOpen(false); navigate('/app/admin'); }}
-                                                        style={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: '8px',
-                                                            width: '100%',
-                                                            background: 'none',
-                                                            border: 'none',
-                                                            borderRadius: 'var(--radius-md)',
-                                                            padding: '8px 12px',
-                                                            cursor: 'pointer',
-                                                            fontSize: '0.82rem',
-                                                            color: 'var(--color-text)',
-                                                            textAlign: 'left',
-                                                            fontFamily: 'var(--font-heading)',
-                                                            fontWeight: '700',
-                                                            textTransform: 'uppercase',
-                                                            letterSpacing: '0.3px',
-                                                        }}
-                                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-soft)'}
-                                                        onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                                                    >
-                                                        <Settings2 size={14} />
-                                                        {t('nav.admin')}
-                                                    </button>
-                                                )}
+                                                {isAdmin && ['admin', 'stats'].map(key => {
+                                                    const Icon = key === 'admin' ? Settings2 : BarChart3;
+                                                    const target = key === 'admin' ? '/app/admin' : '/app/admin/stats';
+                                                    return (
+                                                        <button
+                                                            key={key}
+                                                            onClick={() => { setIsUserMenuOpen(false); navigate(target); }}
+                                                            style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '8px',
+                                                                width: '100%',
+                                                                background: 'none',
+                                                                border: 'none',
+                                                                borderRadius: 'var(--radius-md)',
+                                                                padding: '8px 12px',
+                                                                cursor: 'pointer',
+                                                                fontSize: '0.82rem',
+                                                                color: 'var(--color-text)',
+                                                                textAlign: 'left',
+                                                                fontFamily: 'var(--font-heading)',
+                                                                fontWeight: '700',
+                                                                textTransform: 'uppercase',
+                                                                letterSpacing: '0.3px',
+                                                            }}
+                                                            onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-soft)'}
+                                                            onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                                                        >
+                                                            <Icon size={14} />
+                                                            {t(`nav.${key}`)}
+                                                        </button>
+                                                    );
+                                                })}
                                                 <button
                                                     onClick={() => {
                                                         setIsUserMenuOpen(false);
@@ -625,12 +644,11 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                             gap: '0',
                             height: '46px',
                         }}>
-                            {appLinks.map(link => {
+                            {(() => {
+                                const activeLink = pickActiveLink(appLinks, location.pathname);
+                                return appLinks.map(link => {
                                 const Icon = link.icon;
-                                // Détection active manuelle pour éviter le conflit /app vs /app/...
-                                const isActive = link.end
-                                    ? location.pathname === link.path
-                                    : location.pathname.startsWith(link.path);
+                                const isActive = activeLink?.path === link.path;
 
                                 return (
                                     <Link
@@ -676,7 +694,8 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                         )}
                                     </Link>
                                 );
-                            })}
+                                });
+                            })()}
 
                             {/* Lien "Créer" pour les admins aussi */}
                             {isAdmin && (

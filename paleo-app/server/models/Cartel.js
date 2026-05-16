@@ -294,6 +294,179 @@ export const CartelModel = {
     await query('DELETE FROM cartels WHERE id = ?', [id]);
   },
 
+  /**
+   * Agrégations pour la page de statistiques admin.
+   *
+   * Tous les filtres s'appliquent à la sous-population de cartels comptée par
+   * chaque agrégation. On enchaîne plusieurs requêtes en parallèle plutôt
+   * qu'une grosse requête agrégée : plus simple à lire, chaque GROUP BY a sa
+   * propre logique.
+   *
+   * `subsiteFilter` suit le même contrat que findAll() : 'none' = aucun filtre
+   * (superadmin global), 'main' = site principal uniquement, { id } = un sous-site.
+   * Le contrôleur est responsable de ne jamais passer 'none' à un non-superadmin.
+   */
+  async getStats({
+    subsiteFilter,
+    categoryIds,
+    statuses,
+    createdFrom,
+    createdTo,
+    yearMin,
+    yearMax,
+    exhumePar,
+    visible,
+  } = {}) {
+    const conditions = [];
+    const values = [];
+
+    if (subsiteFilter === 'main') {
+      conditions.push('c.subsite_id IS NULL');
+    } else if (subsiteFilter && typeof subsiteFilter === 'object' && subsiteFilter.id) {
+      conditions.push('c.subsite_id = ?');
+      values.push(subsiteFilter.id);
+    }
+
+    if (Array.isArray(statuses) && statuses.length) {
+      conditions.push(`c.status IN (${statuses.map(() => '?').join(',')})`);
+      values.push(...statuses);
+    }
+    if (createdFrom) { conditions.push('c.created_at >= ?'); values.push(createdFrom); }
+    if (createdTo)   { conditions.push('c.created_at <= ?'); values.push(createdTo); }
+    if (exhumePar)   { conditions.push('c.exhume_par LIKE ?'); values.push(`%${exhumePar}%`); }
+    if (visible !== undefined) { conditions.push('c.visible = ?'); values.push(visible ? 1 : 0); }
+
+    // Bornes sur `annee` : la colonne est VARCHAR (peut contenir "Antiquité",
+    // "vers 1750"…). On n'applique le filtre numérique qu'aux valeurs
+    // entièrement composées d'un entier (signe optionnel).
+    if (yearMin !== undefined && yearMin !== null && yearMin !== '') {
+      conditions.push(`c.annee REGEXP '^-?[0-9]+$' AND CAST(c.annee AS SIGNED) >= ?`);
+      values.push(parseInt(yearMin, 10));
+    }
+    if (yearMax !== undefined && yearMax !== null && yearMax !== '') {
+      conditions.push(`c.annee REGEXP '^-?[0-9]+$' AND CAST(c.annee AS SIGNED) <= ?`);
+      values.push(parseInt(yearMax, 10));
+    }
+
+    if (Array.isArray(categoryIds) && categoryIds.length) {
+      conditions.push(
+        `c.id IN (SELECT cartel_id FROM cartel_categories WHERE category_id IN (${categoryIds.map(() => '?').join(',')}))`
+      );
+      values.push(...categoryIds);
+    }
+
+    const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
+    const andOrWhere = where ? 'AND' : 'WHERE';
+
+    const [
+      totalRes,
+      byCategoryRes,
+      bySubsiteRes,
+      byStatusRes,
+      byMonthRes,
+      byYearRes,
+      topExhumeRes,
+    ] = await Promise.all([
+      query(`SELECT COUNT(*) AS total FROM cartels c ${where}`, values),
+
+      query(
+        `SELECT cat.id, cat.name, cat.name_en, cat.color, COUNT(DISTINCT c.id) AS count
+           FROM cartels c
+           JOIN cartel_categories cc ON cc.cartel_id = c.id
+           JOIN categories cat ON cat.id = cc.category_id
+           ${where}
+           GROUP BY cat.id, cat.name, cat.name_en, cat.color
+           ORDER BY count DESC`,
+        values
+      ),
+
+      query(
+        `SELECT s.id, s.name, s.slug, s.primary_color, COUNT(*) AS count
+           FROM cartels c
+           LEFT JOIN subsites s ON s.id = c.subsite_id
+           ${where}
+           GROUP BY s.id, s.name, s.slug, s.primary_color
+           ORDER BY count DESC`,
+        values
+      ),
+
+      query(
+        `SELECT c.status, COUNT(*) AS count
+           FROM cartels c
+           ${where}
+           GROUP BY c.status`,
+        values
+      ),
+
+      query(
+        `SELECT DATE_FORMAT(c.created_at, '%Y-%m') AS month, COUNT(*) AS count
+           FROM cartels c
+           ${where}
+           GROUP BY month
+           ORDER BY month ASC`,
+        values
+      ),
+
+      // Distribution par époque : on ne garde que les `annee` numériques pour
+      // que le client puisse bucketiser proprement (50 ou 100 ans selon plage).
+      query(
+        `SELECT CAST(c.annee AS SIGNED) AS year, COUNT(*) AS count
+           FROM cartels c
+           ${where} ${andOrWhere} c.annee REGEXP '^-?[0-9]+$'
+           GROUP BY year
+           ORDER BY year ASC`,
+        values
+      ),
+
+      // `exhume_par` est saisi librement et contient souvent plusieurs noms
+      // séparés par virgules, "et" ou "&" (« Jean Dupont, Marie Curie et Paul X »).
+      // On récupère donc les chaînes brutes et on splitte côté JS pour compter
+      // chaque contributeur individuellement, sinon "Alice, Bob" et "Alice"
+      // seraient comptés comme deux contributeurs distincts.
+      query(
+        `SELECT c.exhume_par AS raw
+           FROM cartels c
+           ${where} ${andOrWhere} TRIM(c.exhume_par) <> ''`,
+        values
+      ),
+    ]);
+
+    // Agrégation des contributeurs : split sur "," "&" et "et" (avec frontières
+    // de mot pour ne pas casser des noms comme "Etienne"), trim, dédup par
+    // forme normalisée (lower + collapse spaces) pour fusionner "Jean DUPONT"
+    // et "jean dupont". Garde la première graphie rencontrée pour l'affichage.
+    const SPLIT_RE = /\s*(?:,|&|\bet\b|\bET\b)\s*/g;
+    const exhumeCounts = new Map(); // key normalisée → { name, count }
+    for (const row of topExhumeRes.rows) {
+      const raw = (row.raw || '').trim();
+      if (!raw) continue;
+      const parts = raw.split(SPLIT_RE).map(s => s.trim()).filter(Boolean);
+      for (const part of parts) {
+        const key = part.toLowerCase().replace(/\s+/g, ' ');
+        const existing = exhumeCounts.get(key);
+        if (existing) existing.count += 1;
+        else exhumeCounts.set(key, { name: part, count: 1 });
+      }
+    }
+    const topExhumePar = [...exhumeCounts.values()]
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 20);
+
+    return {
+      total: totalRes.rows[0]?.total ?? 0,
+      byCategory: byCategoryRes.rows.map(r => ({
+        id: r.id, name: r.name, name_en: r.name_en, color: r.color, count: Number(r.count),
+      })),
+      bySubsite: bySubsiteRes.rows.map(r => ({
+        id: r.id, name: r.name || 'Site principal', slug: r.slug, color: r.primary_color, count: Number(r.count),
+      })),
+      byStatus: byStatusRes.rows.map(r => ({ status: r.status, count: Number(r.count) })),
+      byMonth: byMonthRes.rows.map(r => ({ month: r.month, count: Number(r.count) })),
+      byYear: byYearRes.rows.map(r => ({ year: Number(r.year), count: Number(r.count) })),
+      topExhumePar,
+    };
+  },
+
   async _syncCategories(client, cartelId, categoryIds) {
     await client.query('DELETE FROM cartel_categories WHERE cartel_id = ?', [cartelId]);
     for (const catId of categoryIds) {

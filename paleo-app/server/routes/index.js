@@ -34,6 +34,8 @@ router.get ('/auth/me',       authenticate, AuthController.me);
 // GET admin  : avec token → voit tout (géré dans le contrôleur)
 // Auth optionnelle : admin voit tout, visiteur ne voit que published
 router.get   ('/cartels', optionalAuth, CartelController.getAll);
+// /cartels/stats DOIT précéder /cartels/:id sinon "stats" serait matché comme un id
+router.get   ('/cartels/stats',      authenticate, CartelController.getStats);
 router.get   ('/cartels/:id',        optionalAuth, CartelController.getOne);
 
 // POST : auth optionnelle + guard de soumission anonyme

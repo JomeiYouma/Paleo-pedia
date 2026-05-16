@@ -24,6 +24,7 @@ import AdminPrestations from './pages/AdminPrestations';
 import AdminShop from './pages/AdminShop';
 import AdminCategoriesWorkshops from './pages/AdminCategoriesWorkshops';
 import AdminLogs from './pages/AdminLogs';
+import AdminStats from './pages/AdminStats';
 import Presentation from './pages/Presentation';
 import Prestations from './pages/Prestations';
 import Ouvrages from './pages/Ouvrages';
@@ -144,6 +145,7 @@ const router = createHashRouter(
         <Route path="admin/shop"         element={<AdminShop />} />
         <Route path="admin/taxonomies"  element={<AdminCategoriesWorkshops />} />
         <Route path="admin/logs"        element={<AdminLogs />} />
+        <Route path="admin/stats"       element={<AdminStats />} />
         <Route path="admin/workshop/:workshopId" element={<ManageCartels />} />
         <Route path="drafts" element={<Navigate to="/app/manage/pending" replace />} />
       </Route>
