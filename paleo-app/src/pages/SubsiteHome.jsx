@@ -37,16 +37,8 @@ const SubsiteHome = () => {
                 </p>
                 <Link
                     to={friseHref}
-                    style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '10px',
-                        background: color, color: 'white',
-                        padding: '14px 32px', borderRadius: '50px',
-                        textDecoration: 'none', fontWeight: '700', fontSize: '1rem',
-                        boxShadow: `0 4px 20px ${color}55`,
-                        transition: 'transform 0.2s',
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                    onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+                    className="paleo-btn paleo-btn--yellow"
+                    style={{ padding: '14px 32px', fontSize: '0.95rem', letterSpacing: '0.6px' }}
                 >
                     Explorer la frise <ArrowRight size={18} />
                 </Link>

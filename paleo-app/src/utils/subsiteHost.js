@@ -1,3 +1,8 @@
+// URL canonique du site principal (utilisée pour les liens de retour depuis
+// les sous-sites sur leur host dédié, qui ne peuvent pas pointer vers `/`).
+// À mettre à jour si on change le domaine principal.
+export const MAIN_SITE_URL = 'https://paleo-pedia.org';
+
 // Map host → subsite slug. Un domaine dédié comme paleo-h2o.org affiche
 // le sous-site h2o à la racine (`/`, `/frise`, `/admin/...`) au lieu de
 // passer par `/site/h2o/...`. Quand le host ne correspond à aucun sous-site,
@@ -21,4 +26,16 @@ export function getHostSubsiteSlug() {
 export function subsiteBasePath(slug) {
     if (!slug) return '';
     return getHostSubsiteSlug() === slug ? '' : `/site/${slug}`;
+}
+
+// Inverse de getHostSubsiteSlug : pour un slug donné, renvoie l'URL absolue
+// du host dédié s'il y en a un (ex: 'paleo-h2o' → 'https://paleo-h2o.org'),
+// sinon null. Utilisé pour rediriger les utilisateurs du site principal vers
+// le domaine canonique d'un sous-site quand il en a un.
+export function getSubsiteHostUrl(slug) {
+    if (!slug) return null;
+    // On préfère l'entrée sans préfixe 'www.' pour le lien canonique.
+    const apexHost = Object.entries(HOST_TO_SUBSITE_SLUG)
+        .find(([host, s]) => s === slug && !host.startsWith('www.'));
+    return apexHost ? `https://${apexHost[0]}` : null;
 }

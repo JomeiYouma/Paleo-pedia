@@ -12,7 +12,7 @@ import { useApp } from '../context/AppContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import api from '../services/apiClient';
 import { rememberReturn } from '../utils/navigation';
-import { getHostSubsiteSlug, subsiteBasePath } from '../utils/subsiteHost';
+import { getHostSubsiteSlug, subsiteBasePath, MAIN_SITE_URL } from '../utils/subsiteHost';
 
 // ── Contexte interne sous-site ────────────────────────────────
 export const SubsiteContext = createContext(null);
@@ -290,9 +290,9 @@ const SubsiteLayout = () => {
                             <Link to={`${base}/mentions`} style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', textDecoration: 'none' }}>Mentions légales</Link>
                             <Link to="/politique-confidentialite" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', textDecoration: 'none' }}>Politique de confidentialité</Link>
                             <Link to="/contact" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', textDecoration: 'none' }}>Contact</Link>
-                            <Link to="/" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem', textDecoration: 'none', marginTop: '8px' }}>
-                                ← Retour au site Paléo-Énergétique
-                            </Link>
+                            <a href={MAIN_SITE_URL} style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem', textDecoration: 'none', marginTop: '8px' }}>
+                                Accéder au site Paléo-Énergétique →
+                            </a>
                         </nav>
                     </div>
                 </footer>

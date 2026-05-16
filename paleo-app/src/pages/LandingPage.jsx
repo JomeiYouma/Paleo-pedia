@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, BookOpen, Map, PenTool, Layers, X, ChevronRight, ExternalLink } from 'lucide-react';
 import { categories as categoriesApi, subsites as subsitesApi } from '../services/apiClient';
+import { getSubsiteHostUrl } from '../utils/subsiteHost';
 
 const PRIMARY = 'var(--color-primary)';
 const ACCENT  = 'var(--color-accent)';
@@ -50,7 +51,14 @@ const LandingPage = () => {
     const handleThemeClick = (item) => {
         setShowCategoryModal(false);
         if (explorerMode === 'subsites') {
-            navigate(`/site/${item.slug}`);
+            // Si le sous-site a un domaine dédié, on y envoie l'utilisateur
+            // (URL canonique, telle qu'on la communique en externe).
+            const hostUrl = getSubsiteHostUrl(item.slug);
+            if (hostUrl) {
+                window.location.href = hostUrl;
+            } else {
+                navigate(`/site/${item.slug}`);
+            }
         } else {
             navigate(`/app?category=${encodeURIComponent(item.name)}`);
         }

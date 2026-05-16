@@ -8,6 +8,7 @@ import {
 import LanguageSwitcher from './LanguageSwitcher';
 import { useNavigate } from 'react-router-dom';
 import { subsites as subsitesApi } from '../services/apiClient';
+import { getSubsiteHostUrl } from '../utils/subsiteHost';
 import { useTranslation } from 'react-i18next';
 
 // ── Liens du site public (inclut la frise) ──────────────────
@@ -351,17 +352,29 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                             {subsites.length > 0 && (
                                                 <div style={{ borderTop: '1px solid var(--color-border)', margin: '6px 0', paddingTop: '6px' }}>
                                                     <div style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--color-text-subtle)', padding: '2px 14px 6px', textTransform: 'uppercase', letterSpacing: '0.6px', fontFamily: 'var(--font-heading)' }}>{t('header.themes')}</div>
-                                                    {subsites.map(s => (
-                                                        <Link key={s.slug} to={`/site/${s.slug}`}
-                                                            onClick={() => setIsMenuOpen(false)}
-                                                            style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 14px', borderRadius: 'var(--radius-md)', textDecoration: 'none', color: 'var(--color-text)', fontSize: '0.9rem', fontWeight: '700', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.3px', transition: 'background-color 0.12s' }}
-                                                            onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-soft)'}
-                                                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                                                        >
-                                                            <div style={{ width: '4px', height: '18px', background: s.primary_color, flexShrink: 0 }} />
-                                                            {s.name}
-                                                        </Link>
-                                                    ))}
+                                                    {subsites.map(s => {
+                                                        // Si le sous-site a un domaine dédié (paleo-h2o.org, etc.),
+                                                        // on génère un <a> vers son URL canonique. Sinon Link interne.
+                                                        const hostUrl = getSubsiteHostUrl(s.slug);
+                                                        const itemStyle = { display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 14px', borderRadius: 'var(--radius-md)', textDecoration: 'none', color: 'var(--color-text)', fontSize: '0.9rem', fontWeight: '700', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.3px', transition: 'background-color 0.12s' };
+                                                        const hoverIn  = e => e.currentTarget.style.background = 'var(--color-primary-soft)';
+                                                        const hoverOut = e => e.currentTarget.style.background = 'transparent';
+                                                        const inner = (
+                                                            <>
+                                                                <div style={{ width: '4px', height: '18px', background: s.primary_color, flexShrink: 0 }} />
+                                                                {s.name}
+                                                            </>
+                                                        );
+                                                        return hostUrl ? (
+                                                            <a key={s.slug} href={hostUrl} onClick={() => setIsMenuOpen(false)} style={itemStyle} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+                                                                {inner}
+                                                            </a>
+                                                        ) : (
+                                                            <Link key={s.slug} to={`/site/${s.slug}`} onClick={() => setIsMenuOpen(false)} style={itemStyle} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+                                                                {inner}
+                                                            </Link>
+                                                        );
+                                                    })}
                                                 </div>
                                             )}
 
