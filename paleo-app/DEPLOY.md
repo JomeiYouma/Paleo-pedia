@@ -19,6 +19,7 @@ Guide complet de redéploiement et points critiques à vérifier. Mis à jour ap
 - **Runtime** : Phusion Passenger (lancé par cPanel → Setup Node.js App)
 - **Process visible** via : `ps -fu madore | grep -i node` → "Passenger NodeApp: /home/madore/public_html/paleo"
 - **BDD** : MariaDB/MySQL `madore_paleo` (localhost, user `madore_paleoadmin`)
+- **Domaines** : un domaine principal (`paleo.madore.projetsmmichamps.fr`) + N domaines dédiés à des sous-sites (ex. `paleo-h2o.org`). Tous partagent le même docroot et la même app Node. Voir la section "Sous-sites sur domaines dédiés" plus bas pour la procédure d'ajout.
 
 ## Variables d'environnement obligatoires
 
@@ -291,6 +292,134 @@ Côté UI (en superadmin) :
 | Frise traduite renvoie 500 | Clé DeepL configurée au lieu d'OpenAI | Admin → Réglages, mettre une clé `sk-...` |
 | Email pas envoyé même si type activé | Vars `MAIL_*` absentes ou pas restart après ajout | Étape 4 + Stop/Start |
 
+## Sous-sites sur domaines dédiés (paleo-h2o.org, …)
+
+Depuis 2026-05-16, l'app supporte plusieurs **domaines dédiés** qui pointent chacun vers un sous-site spécifique avec **URLs propres** (`paleo-h2o.org/frise` au lieu de `paleo-energetique.org/#/site/paleo-h2o/frise`).
+
+### Comment ça marche
+
+- **Côté infra** : tous les domaines dédiés partagent la même app Node/Passenger (même docroot `/home/madore/public_html/paleo`). Le serveur Express ne fait **aucune** différence entre les hosts — il sert le même `index.html` SPA et la même API.
+- **Côté React** : au boot, `src/utils/subsiteHost.js` lit `window.location.hostname` et, si le host est dans la map `HOST_TO_SUBSITE_SLUG`, instancie un `createBrowserRouter` avec des routes plates (`/`, `/frise`, `/admin/...`) qui rendent le sous-site à la racine. Sinon, l'app utilise le `createHashRouter` historique avec les routes `/site/:slug/*`.
+- **Conséquence** : aucun changement serveur n'est nécessaire pour ajouter un nouveau domaine dédié. Tout se passe au niveau DNS + cPanel + 2 lignes dans `subsiteHost.js`.
+
+### Ajouter un nouveau domaine dédié (procédure complète)
+
+Exemple : on veut faire pointer `solidarite-energetique.org` vers le sous-site de slug `solidarite`.
+
+**1. DNS chez le registrar (Namecheap, Gandi, etc.)**
+
+Méthode A — déléguer les NS à o2switch (recommandé) :
+- Dans le dashboard du registrar → Manage → Nameservers → "Custom DNS"
+- `ns1.o2switch.net` / `ns2.o2switch.net`
+- Valider (chez Namecheap : coche verte à droite)
+
+Méthode B — garder le DNS chez le registrar, créer un A record :
+- Récupérer l'IP serveur o2switch (cPanel → Informations générales → IP partagée)
+- A record `@` + A record `www` pointant sur cette IP
+
+Vérifier la propagation (15 min à 2 h en général) :
+```bash
+nslookup -type=NS solidarite-energetique.org 8.8.8.8
+# ou via https://dnschecker.org/#NS/solidarite-energetique.org
+```
+
+> ⚠️ **DNS hijacking Numericable/SFR** : certains FAI français interceptent transparentement le port 53 vers 8.8.8.8/1.1.1.1 et répondent avec leur propre redirection. Si `nslookup` montre un `*.numericable.fr` / `*.sdv.fr`, ce n'est PAS un échec de propagation — c'est ton FAI qui ment. Tester via VPN, DoH, ou téléphone en 4G.
+
+**2. cPanel — ajouter le domaine**
+
+cPanel → **Domains** → "Create A New Domain" :
+
+| Champ | Valeur |
+|---|---|
+| Nom du nouveau domaine | `solidarite-energetique.org` |
+| Sous-domaine système (auto) | (laisser la valeur générée) |
+| **Racine du document** | **`public_html/paleo`** ⚠️ écraser la valeur par défaut, c'est le docroot de l'app Node |
+| Compte FTP associé | décoché |
+
+Si cPanel refuse "le répertoire est déjà utilisé", passer par **Aliases** (= Alias de domaine / Parked Domain) à la place — le résultat pour Passenger est identique.
+
+**3. SSL — AutoSSL**
+
+cPanel → **SSL/TLS Status** → cocher `solidarite-energetique.org` + `www.solidarite-energetique.org` → "Run AutoSSL". Attendre 5-10 min, puis vérifier :
+
+```bash
+curl -I https://solidarite-energetique.org
+# attendu : HTTP/2 200, certificat Let's Encrypt valide
+```
+
+**4. Code — ajouter le mapping**
+
+Éditer `paleo-app/src/utils/subsiteHost.js` :
+
+```js
+export const HOST_TO_SUBSITE_SLUG = {
+    'paleo-h2o.org':              'paleo-h2o',
+    'www.paleo-h2o.org':          'paleo-h2o',
+    'solidarite-energetique.org': 'solidarite',          // ← nouvelle ligne
+    'www.solidarite-energetique.org': 'solidarite',      // ← nouvelle ligne
+};
+```
+
+⚠️ Le slug à droite doit correspondre **exactement** à la colonne `slug` dans la table `subsites` :
+
+```bash
+mysql -u madore_paleoadmin -p madore_paleo -e "SELECT slug, name FROM subsites"
+```
+
+**5. Build + déploiement**
+
+```bash
+# Upload du fichier modifié sur prod (ou fichier complet si plus de changements)
+cd ~/public_html/paleo
+source ~/nodevenv/public_html/paleo/*/bin/activate
+npm run build
+# cPanel → Setup Node.js App → Stop puis Start (PAS Restart, cf. piège #4)
+```
+
+**6. Vérifications**
+
+Sur le nouveau domaine :
+- [ ] `https://solidarite-energetique.org` → page d'accueil du sous-site (couleur primaire, header au nom du sous-site)
+- [ ] `https://solidarite-energetique.org/frise` → URL **propre** (pas de `/#/site/...`), frise filtrée sur la catégorie du sous-site
+- [ ] `https://solidarite-energetique.org/site/solidarite/frise` → **redirection automatique** vers `/frise` (canonicalisation)
+- [ ] Refresh sur n'importe quelle sous-page → recharge sans 404 (testé le fallback SPA Express)
+- [ ] (admin) Login → bouton "Gérer" → URL `/admin/published` propre
+
+Sur le site principal (paleo-energetique.org / paleo.madore.projetsmmichamps.fr) :
+- [ ] **Tout** continue de marcher comme avant (HashRouter intact)
+- [ ] Liens existants `#/site/solidarite/frise` fonctionnent toujours
+
+### Fichiers touchés par cette feature
+
+Pour mémoire, ce sont les fichiers à connaître si on doit débugger le routing multi-host :
+
+| Fichier | Rôle |
+|---|---|
+| `src/utils/subsiteHost.js` | Map host→slug, helpers `getHostSubsiteSlug()` et `subsiteBasePath()` |
+| `src/App.jsx` | Sélection du routeur (BrowserRouter si host dédié, sinon HashRouter) + catch-all canonicalisation `/site/:slug/*` → `/*` |
+| `src/layouts/SubsiteLayout.jsx` | Lit le slug via `useParams().slug ?? getHostSubsiteSlug()`. NavLinks via `subsiteBasePath()` |
+| `src/pages/SubsiteHome.jsx`, `SubsiteAdmin.jsx` | Slug via `useSubsite()` (depuis le contexte), liens via helper |
+| `src/pages/Create.jsx` | Fallback slug via host pour `/create` sur subsite host |
+| `src/components/TimelineMode.jsx`, `src/pages/ManageCartels.jsx` | basePath de navigation via `subsiteBasePath()` |
+
+### Pièges spécifiques au routing multi-host
+
+**P1. Le slug map doit matcher la BDD à la lettre près**
+
+Si tu mets `'h2o'` dans la map mais que le sous-site est `'paleo-h2o'` en BDD, l'API `/api/subsites/h2o` renvoie 404 → page "Sous-site introuvable" sur le domaine dédié. Toujours vérifier avec un `SELECT slug FROM subsites` avant d'ajouter une entrée.
+
+**P2. BrowserRouter exige le fallback SPA serveur**
+
+Sur paleo-h2o.org/frise, le navigateur fait un GET `/frise` au serveur. Express doit retourner `index.html` pour que le SPA prenne le relais. C'est déjà géré par [server.js](server/server.js) (catch-all `app.get('*')` après `express.static`). **Ne pas supprimer ce fallback**, sinon refresh sur `/frise` → 404 Apache.
+
+**P3. Liens cross-domain depuis le site principal**
+
+Sur la landing page paleo-energetique, [`LandingPage.jsx`](src/pages/LandingPage.jsx) et [`SharedHeader.jsx`](src/components/SharedHeader.jsx) génèrent des liens vers `/site/<slug>` (URL interne HashRouter). Ces liens ouvrent le subsite **dans le même domaine** (`paleo-energetique.org/#/site/paleo-h2o`), pas sur le domaine dédié. C'est un choix UX volontaire (rester dans l'onglet courant), mais ce n'est pas canonique. Pour ouvrir le domaine dédié, il faudrait détecter si le slug a une entrée inverse dans `HOST_TO_SUBSITE_SLUG` et générer un `<a href="https://...">` plutôt qu'un `<Link to>`. À faire plus tard si besoin.
+
+**P4. Pas de cookie/localStorage cross-domain**
+
+`paleo-h2o.org` et `paleo-energetique.org` sont des origines différentes pour le navigateur → leurs localStorage/cookies sont isolés. Conséquence pratique : un admin loggé sur `paleo-energetique.org` n'est PAS automatiquement loggé sur `paleo-h2o.org` (et inversement). Si tu veux le login partagé, il faudra mettre en place du SSO ou un domaine racine partagé (pas prévu actuellement).
+
 ## Restauration après incident
 
 Backup BDD avant toute migration SQL :
@@ -351,6 +480,36 @@ cat /proc/$PID/environ 2>/dev/null | tr '\0' '\n' | grep -E "^MAIL_"
 ```
 
 Voir aussi `server/EMAILS.md` pour le détail du système (configuration SMTP, types d'événements, troubleshooting mailer).
+
+Domaine dédié sous-site qui ne marche pas (ex: `paleo-h2o.org` affiche une 404, une page blanche, ou le mauvais sous-site) :
+
+```bash
+# 1. DNS propagé ? Vérifier hors FAI (cf. DNS hijacking)
+nslookup -type=NS paleo-h2o.org 8.8.8.8
+# → doit afficher ns1.o2switch.net / ns2.o2switch.net
+# OU via https://dnschecker.org/#NS/paleo-h2o.org
+
+# 2. Apache route bien vers Passenger sur ce domaine ?
+curl -I https://paleo-h2o.org
+# → HTTP/2 200, Server: Apache + headers Passenger (X-Powered-By, etc.)
+
+curl -s https://paleo-h2o.org/api/cartels | head -c 200
+# → JSON de cartels. Si HTML / 404 : Apache ne route pas vers Node → vérifier
+#   cPanel → Domains : le docroot du domaine doit être public_html/paleo
+
+# 3. Le slug est-il correctement mappé côté JS ?
+grep -A 4 HOST_TO_SUBSITE_SLUG paleo-app/src/utils/subsiteHost.js
+# → la valeur à droite doit exister en BDD :
+mysql -u madore_paleoadmin -p madore_paleo -e "SELECT slug FROM subsites"
+
+# 4. Le fallback SPA fonctionne (refresh sur /frise ne donne pas 404) ?
+curl -I https://paleo-h2o.org/frise
+# → doit retourner 200 + Content-Type: text/html (pas 404)
+
+# 5. Le build de prod contient bien la nouvelle map ?
+grep -c "paleo-h2o" /home/madore/public_html/paleo/dist/assets/index-*.js
+# → doit retourner > 0. Si 0 : npm run build pas refait après ajout au map.
+```
 
 ## Contacts
 

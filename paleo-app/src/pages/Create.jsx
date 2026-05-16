@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { compressImage } from '../utils/imageProcessor';
 import { detectWrongLanguage } from '../utils/detectLang';
 import { readStoredReturnTo, clearReturnTo } from '../utils/navigation';
+import { getHostSubsiteSlug, subsiteBasePath } from '../utils/subsiteHost';
 import api from '../services/apiClient';
 
 const RequiredMark = () => (
@@ -38,7 +39,8 @@ const Create = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const routeParams = useParams();
-    const subsiteSlug = routeParams.slug || null; // défini uniquement sur /site/:slug/create
+    // Le slug provient de /site/:slug/create, ou du host dédié (paleo-h2o.org/create).
+    const subsiteSlug = routeParams.slug || getHostSubsiteSlug() || null;
     const editId = searchParams.get('edit');
     const workshopIdParam = searchParams.get('workshopId');
     // location.state peut disparaître (reload, entrée via lien direct sans state,
@@ -46,7 +48,7 @@ const Create = () => {
     // les filtres du gestionnaire (ex. ?cat=énergie) au retour.
     const returnTo = location.state?.returnTo
         || readStoredReturnTo()
-        || (subsiteSlug ? `/site/${subsiteSlug}` : '/app');
+        || (subsiteSlug ? (subsiteBasePath(subsiteSlug) || '/') : '/app');
 
     const isEn = i18n.language === 'en';
 
@@ -520,7 +522,7 @@ const Create = () => {
                         {' '}
                         <button
                             type="button"
-                            onClick={() => navigate(`/site/${homeSubsite.slug}/create`)}
+                            onClick={() => navigate(`${subsiteBasePath(homeSubsite.slug)}/create`)}
                             style={{ background: 'none', border: 'none', color: '#c2185b', textDecoration: 'underline', cursor: 'pointer', padding: 0, fontFamily: 'inherit', fontSize: '0.85rem', fontWeight: '600' }}
                         >
                             Passer en vue sous-site →

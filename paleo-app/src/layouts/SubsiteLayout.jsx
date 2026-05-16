@@ -12,22 +12,31 @@ import { useApp } from '../context/AppContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import api from '../services/apiClient';
 import { rememberReturn } from '../utils/navigation';
+import { getHostSubsiteSlug, subsiteBasePath } from '../utils/subsiteHost';
 
 // ── Contexte interne sous-site ────────────────────────────────
 export const SubsiteContext = createContext(null);
 export const useSubsite = () => useContext(SubsiteContext);
 
 // ── Nav links du sous-site (Accueil · Frise · Présentation · Partenaires) ─
-const NAV = (slug) => [
-    { to: `/site/${slug}`,              label: 'Accueil',       end: true },
-    { to: `/site/${slug}/frise`,        label: 'Frise'                    },
-    { to: `/site/${slug}/presentation`, label: 'Présentation'             },
-    { to: `/site/${slug}/partenaires`,  label: 'Partenaires'              },
-];
+// `base` vaut '' sur le host dédié (paleo-h2o.org) → liens propres `/frise`, etc.
+// Sinon vaut `/site/<slug>` (URL classique partout ailleurs).
+const NAV = (slug) => {
+    const base = subsiteBasePath(slug);
+    return [
+        { to: base || '/',           label: 'Accueil',       end: true },
+        { to: `${base}/frise`,        label: 'Frise'                    },
+        { to: `${base}/presentation`, label: 'Présentation'             },
+        { to: `${base}/partenaires`,  label: 'Partenaires'              },
+    ];
+};
 
 
 const SubsiteLayout = () => {
-    const { slug } = useParams();
+    // Sur le host dédié (paleo-h2o.org) la route est `/` sans `:slug` :
+    // on retombe alors sur le slug associé au host.
+    const params = useParams();
+    const slug = params.slug || getHostSubsiteSlug();
     const location = useLocation();
     const { user, isAdmin, login, logout } = useApp();
     const navigate = useNavigate();
@@ -111,6 +120,8 @@ const SubsiteLayout = () => {
 
     const color = subsite.primary_color || '#D65A5A';
     const navLinks = NAV(slug);
+    const base = subsiteBasePath(slug);
+    const homeHref = base || '/';
 
     return (
         <SubsiteContext.Provider value={subsite}>
@@ -121,7 +132,7 @@ const SubsiteLayout = () => {
                     <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', gap: '16px', height: '60px' }}>
 
                         {/* Logo / nom */}
-                        <Link to={`/site/${slug}`} style={{ textDecoration: 'none', color: 'var(--color-white)', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                        <Link to={homeHref} style={{ textDecoration: 'none', color: 'var(--color-white)', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
                             <div style={{ width: '6px', height: '32px', background: color }} />
                             <span style={{ fontSize: '1.25rem', fontFamily: 'var(--font-display)', fontWeight: '400', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                                 {subsite.name}
@@ -173,7 +184,7 @@ const SubsiteLayout = () => {
                             <button
                                 onClick={() => {
                                     const returnTo = rememberReturn(location);
-                                    navigate(`/site/${slug}/create`, { state: { returnTo } });
+                                    navigate(`${base}/create`, { state: { returnTo } });
                                 }}
                                 title="Proposer un cartel pour ce sous-site"
                                 style={{ background: color, border: 'none', borderRadius: 'var(--radius-md)', padding: '7px 14px', color: 'var(--color-white)', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '700', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}
@@ -183,7 +194,7 @@ const SubsiteLayout = () => {
 
                             {isAdmin && (
                                 <button
-                                    onClick={() => navigate(`/site/${slug}/admin/published`)}
+                                    onClick={() => navigate(`${base}/admin/published`)}
                                     title="Gérer les cartels de ce sous-site"
                                     style={{ background: 'var(--color-white)', border: `1px solid ${color}`, borderRadius: 'var(--radius-md)', padding: '7px 14px', color, cursor: 'pointer', fontSize: '0.78rem', fontWeight: '700', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}
                                 >
@@ -191,7 +202,7 @@ const SubsiteLayout = () => {
                                 </button>
                             )}
                             {user ? (
-                                <button onClick={() => { logout(); navigate(`/site/${slug}`); }} title="Se déconnecter" aria-label="Se déconnecter"
+                                <button onClick={() => { logout(); navigate(homeHref); }} title="Se déconnecter" aria-label="Se déconnecter"
                                     style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 'var(--radius-md)', padding: '7px 10px', cursor: 'pointer', color: 'var(--color-white)', display: 'flex', alignItems: 'center' }}>
                                     <LogOut size={14} />
                                 </button>
@@ -276,7 +287,7 @@ const SubsiteLayout = () => {
                             <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem' }}>© {new Date().getFullYear()} Atelier 21</div>
                         </div>
                         <nav aria-label="Liens secondaires" style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
-                            <Link to={`/site/${slug}/mentions`} style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', textDecoration: 'none' }}>Mentions légales</Link>
+                            <Link to={`${base}/mentions`} style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', textDecoration: 'none' }}>Mentions légales</Link>
                             <Link to="/politique-confidentialite" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', textDecoration: 'none' }}>Politique de confidentialité</Link>
                             <Link to="/contact" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', textDecoration: 'none' }}>Contact</Link>
                             <Link to="/" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem', textDecoration: 'none', marginTop: '8px' }}>

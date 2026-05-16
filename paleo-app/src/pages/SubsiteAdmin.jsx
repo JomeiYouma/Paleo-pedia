@@ -4,20 +4,23 @@
  * Le filtre sur le sous-site est verrouillé : impossible de l'enlever depuis
  * l'intérieur de /site/:slug/admin.
  */
-import { useParams, Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import ManageCartels from './ManageCartels';
 import { useApp } from '../context/AppContext';
 import { useSubsite } from '../layouts/SubsiteLayout';
+import { subsiteBasePath } from '../utils/subsiteHost';
 
 const SubsiteAdmin = () => {
-    const { slug } = useParams();
     const location = useLocation();
     const { isAdmin } = useApp();
     const subsite = useSubsite();
+    const slug = subsite?.slug;
+    const base = subsiteBasePath(slug);
 
-    // Redirige /site/:slug/admin → /site/:slug/admin/published pour activer l'onglet par défaut
-    if (location.pathname === `/site/${slug}/admin`) {
-        return <Navigate to={`/site/${slug}/admin/published`} replace />;
+    // Redirige /admin (ou /site/:slug/admin) → /admin/published pour activer l'onglet par défaut.
+    // Le `base` est `''` sur le host dédié (paleo-h2o.org/admin) et `/site/<slug>` ailleurs.
+    if (location.pathname === `${base}/admin`) {
+        return <Navigate to={`${base}/admin/published`} replace />;
     }
 
     if (!isAdmin) {

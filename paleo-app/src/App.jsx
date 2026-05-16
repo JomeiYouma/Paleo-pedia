@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import {
   createHashRouter,
+  createBrowserRouter,
   createRoutesFromElements,
   RouterProvider,
   Outlet,
@@ -9,6 +10,7 @@ import {
   useParams,
   useLocation,
 } from 'react-router-dom';
+import { getHostSubsiteSlug } from './utils/subsiteHost';
 import { AppProvider, useApp } from './context/AppContext';
 import Toast from './components/Toast';
 import Layout from './components/Layout';
@@ -91,10 +93,31 @@ function WorkshopRedirect() {
   return <Navigate to={`/app/workshop/${workshopId}`} replace />;
 }
 
-// On utilise createHashRouter (data router) plutôt que <HashRouter> legacy :
-// c'est ce qui débloque useBlocker pour confirmer la sortie d'un formulaire
-// modifié (Create.jsx). Syntaxe JSX préservée via createRoutesFromElements.
-const router = createHashRouter(
+// Catch-all monté sur les hosts subsite dédiés (paleo-h2o.org, etc.) :
+// si quelqu'un atterrit sur `/site/<slug>/<reste>`, on canonicalise vers
+// `/<reste>`. Tout autre chemin inconnu retombe sur la home du subsite.
+function SubsiteHostCatchAll({ hostSlug }) {
+  const location = useLocation();
+  const m = location.pathname.match(/^\/site\/([^/]+)(\/.*)?$/);
+  if (m && m[1] === hostSlug) {
+    return <Navigate to={m[2] || '/'} replace />;
+  }
+  return <Navigate to="/" replace />;
+}
+
+// Sélection du routeur :
+//   - sur un host de sous-site dédié (cf. utils/subsiteHost) → BrowserRouter
+//     avec routes plates (`/`, `/frise`, `/admin/...`) servies par Express.
+//     L'URL reste propre dans la barre d'adresse (paleo-h2o.org/frise).
+//   - sinon → createHashRouter historique, inchangé. Tous les anciens liens
+//     `#/site/<slug>/...` continuent de marcher comme avant.
+// Note : on utilise createHashRouter (data router) plutôt que <HashRouter>
+// legacy pour débloquer useBlocker (Create.jsx confirme la sortie d'un
+// formulaire modifié).
+
+const hostSubsiteSlug = getHostSubsiteSlug();
+
+const mainRouter = createHashRouter(
   createRoutesFromElements(
     <Route element={<RootLayout />}>
       {/* ── Site public ──────────────────────────────── */}
@@ -158,6 +181,29 @@ const router = createHashRouter(
     </Route>
   )
 );
+
+const subsiteHostRouter = hostSubsiteSlug ? createBrowserRouter(
+  createRoutesFromElements(
+    <Route element={<RootLayout />}>
+      <Route path="/" element={<SubsiteLayout />}>
+        <Route index                   element={<SubsiteHome />} />
+        <Route path="frise"            element={<SubsiteFrise />} />
+        <Route path="presentation"     element={<Presentation />} />
+        <Route path="partenaires"      element={<SubsitePartners />} />
+        <Route path="mentions"         element={<Presentation />} />
+        <Route path="admin"            element={<SubsiteAdmin />} />
+        <Route path="admin/drafts"     element={<SubsiteAdmin />} />
+        <Route path="admin/pending"    element={<SubsiteAdmin />} />
+        <Route path="admin/published"  element={<SubsiteAdmin />} />
+        <Route path="admin/submissions" element={<SubsiteAdmin />} />
+      </Route>
+      <Route path="/create" element={<Create />} />
+      <Route path="*" element={<SubsiteHostCatchAll hostSlug={hostSubsiteSlug} />} />
+    </Route>
+  )
+) : null;
+
+const router = subsiteHostRouter || mainRouter;
 
 function App() {
   return <RouterProvider router={router} />;

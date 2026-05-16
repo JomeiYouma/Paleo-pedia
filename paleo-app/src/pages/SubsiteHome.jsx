@@ -5,16 +5,16 @@
 import React from 'react';
 import { useSubsite } from '../layouts/SubsiteLayout';
 import { Link } from 'react-router-dom';
-import { useParams } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { subsiteBasePath } from '../utils/subsiteHost';
 
 const SubsiteHome = () => {
     const subsite = useSubsite();
-    const { slug } = useParams();
 
     if (!subsite) return null;
 
     const color = subsite.primary_color || '#D65A5A';
+    const friseHref = `${subsiteBasePath(subsite.slug)}/frise`;
 
     return (
         <div>
@@ -36,7 +36,7 @@ const SubsiteHome = () => {
                     {subsite.category_name && `Thématique : ${subsite.category_name}`}
                 </p>
                 <Link
-                    to={`/site/${slug}/frise`}
+                    to={friseHref}
                     style={{
                         display: 'inline-flex', alignItems: 'center', gap: '10px',
                         background: color, color: 'white',

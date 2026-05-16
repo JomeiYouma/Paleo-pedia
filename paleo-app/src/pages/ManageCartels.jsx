@@ -21,6 +21,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import ImageHealthModal from '../components/ImageHealthModal';
 import ExplainerBox from '../components/ExplainerBox';
 import { rememberReturn } from '../utils/navigation';
+import { subsiteBasePath } from '../utils/subsiteHost';
 
 const HEX_COLORS = {
     neutral: '#4b5563',
@@ -173,8 +174,9 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     const [searchParams, setSearchParams] = useSearchParams();
     const { t, i18n } = useTranslation();
 
-    // Base path dépend du contexte : intégré dans un sous-site ou page admin globale
-    const managePrefix = lockedSubsiteSlug ? `/site/${lockedSubsiteSlug}/admin` : '/app/manage';
+    // Base path dépend du contexte : intégré dans un sous-site ou page admin globale.
+    // subsiteBasePath() renvoie '' sur le host dédié (paleo-h2o.org) → URLs propres.
+    const managePrefix = lockedSubsiteSlug ? `${subsiteBasePath(lockedSubsiteSlug)}/admin` : '/app/manage';
     const pathToTab = {
         [`${managePrefix}/drafts`]: 'drafts',
         [`${managePrefix}/pending`]: 'pending',
@@ -199,7 +201,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     const activeTab = pathToTab[location.pathname] || 'published';
     const setActiveTab = (key) => navigate(tabToPath[key] || tabToPath.published);
     const goToCreate = (editId) => {
-        const basePath = lockedSubsiteSlug ? `/site/${lockedSubsiteSlug}/create` : '/app/create';
+        const basePath = lockedSubsiteSlug ? `${subsiteBasePath(lockedSubsiteSlug)}/create` : '/app/create';
         const workshopQuery = filterWorkshop ? `?workshopId=${filterWorkshop}` : '';
         const target = editId ? `${basePath}?edit=${editId}` : `${basePath}${workshopQuery}`;
         // scrollId = editId permet de re-scroller la liste jusqu'à la ligne éditée au retour.
@@ -820,7 +822,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                         {t('manageCartels.removeSubsiteFilter')}
                     </button>
                     <button
-                        onClick={() => navigate(`/site/${filterSubsiteSlug}`)}
+                        onClick={() => navigate(subsiteBasePath(filterSubsiteSlug) || '/')}
                         style={{ background:'#c2185b', border:'none', color:'white', borderRadius:'6px', padding:'4px 10px', fontSize:'0.78rem', fontWeight:'700', cursor:'pointer', fontFamily:'inherit' }}
                     >
                         {t('manageCartels.backToSubsite')}

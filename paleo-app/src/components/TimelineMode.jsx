@@ -8,14 +8,17 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getLocalizedContent } from '../utils/i18nHelpers';
 import { rememberReturn } from '../utils/navigation';
+import { getHostSubsiteSlug, subsiteBasePath } from '../utils/subsiteHost';
 
 const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
-    // `slug` défini uniquement quand la timeline est rendue dans /site/:slug/*
-    const { slug: subsiteSlug } = useParams();
-    const createBasePath = subsiteSlug ? `/site/${subsiteSlug}/create` : '/app/create';
+    // Slug défini soit par la route /site/:slug/*, soit par le host dédié
+    // (paleo-h2o.org → h2o). Sinon, on est côté site principal.
+    const { slug: routeSlug } = useParams();
+    const subsiteSlug = routeSlug || getHostSubsiteSlug() || null;
+    const createBasePath = subsiteSlug ? `${subsiteBasePath(subsiteSlug)}/create` : '/app/create';
     const svgRef = useRef(null);
     const containerRef = useRef(null);
     // Store zoom transform to persist across re-renders
