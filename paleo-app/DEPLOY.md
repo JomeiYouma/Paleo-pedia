@@ -53,21 +53,72 @@ Renseigne ces variables pour activer l'envoi d'emails depuis Admin → Journal d
 
 ⚠️ Toute modif des env vars nécessite un **Stop / Start** complet via cPanel — le bouton "Restart" seul ne purge pas le cache ESM Phusion (cf. § "Cache Phusion ESM" plus bas).
 
-## Redéploiement standard (mise à jour de code)
+## Redéploiement — deux approches selon le type de changement
 
-Depuis `~/public_html/paleo/` en SSH (après avoir uploadé les fichiers source modifiés via File Manager ou scp) :
+Choisir l'une ou l'autre selon ce qui a été modifié :
+
+| Type de changement | Méthode recommandée |
+|---|---|
+| Frontend pur (`src/**/*.jsx`, `src/**/*.js`, locales, styles) | **A. Build local → ship dist** (plus simple, pas de SSH) |
+| Serveur (`server/**`), nouvelle dep npm, env vars, migration SQL | **B. Ship sources → build prod** (procédure historique) |
+| Mixte (frontend + serveur) | **B. Ship sources → build prod** |
+
+### A. Build local → ship dist (frontend uniquement)
+
+Avantages : 1 seul artifact, pas de SSH, pas de risque de build qui foire sur prod. À privilégier dès que possible.
+
+```bash
+# Local
+cd paleo-app
+npm run build
+# → produit paleo-app/dist/ avec tous les assets hashés (index.html + assets/*.js + assets/*.css)
+```
+
+Préparer l'upload (zip = atomique, évite les états intermédiaires où index.html pointe vers des hashes pas encore arrivés) :
+
+```bash
+# Bash
+(cd dist && zip -r ../dist-deploy.zip .)
+# PowerShell
+# Compress-Archive -Path dist\* -DestinationPath dist-deploy.zip -Force
+```
+
+Sur prod, via **cPanel File Manager** (chemin `/home/madore/public_html/paleo/`) :
+1. Renommer le `dist/` existant en `dist.old/` (rollback rapide en cas de souci)
+2. Créer un nouveau dossier `dist/` vide
+3. Uploader `dist-deploy.zip` dedans
+4. Clic droit sur le zip → **Extract**
+5. Supprimer `dist-deploy.zip`
+
+Ou via scp/sftp :
+```bash
+scp -r dist/ madore@<host>:~/public_html/paleo/dist-new/
+ssh madore@<host>
+mv ~/public_html/paleo/dist ~/public_html/paleo/dist.old
+mv ~/public_html/paleo/dist-new ~/public_html/paleo/dist
+```
+
+**Stop/Start cPanel** : facultatif pour un déploiement frontend pur (le cache ESM Phusion ne concerne pas les assets statiques). Mais le faire reste la voie safe — ça purge les workers qui peuvent avoir un `dist/` ouvert en file handle.
+
+Pour revert en cas de pépin : `rm -rf dist && mv dist.old dist` + Stop/Start.
+
+### B. Ship sources → build prod (serveur ou mixte)
+
+Procédure historique, à utiliser dès qu'il y a du code serveur ou une nouvelle dep npm. Depuis `~/public_html/paleo/` en SSH, après avoir uploadé les fichiers source modifiés via File Manager ou scp :
 
 ```bash
 source ~/nodevenv/public_html/paleo/*/bin/activate
-npm install --omit=dev          # si nouvelles deps dans package.json
+npm install --omit=dev          # si nouvelles deps dans package.json (cf. piège #5)
 npm run build                   # régénère dist/
 # cPanel → Setup Node.js App → Stop puis Start (PAS Restart, cf. piège #4)
 ```
 
-Vérifier ensuite :
+### Vérifications post-déploiement (commune aux 2 méthodes)
+
 - Le site répond : `curl -I https://paleo.madore.projetsmmichamps.fr`
 - L'API répond : `curl https://paleo.madore.projetsmmichamps.fr/api/cartels | head -c 200`
 - Une image charge : ouvrir `https://paleo.madore.projetsmmichamps.fr/api/images/IMG_3510.jpg`
+- Pour un changement frontend, vider le cache navigateur (Ctrl+F5) ou tester en navigation privée — les hashes Vite changent à chaque build donc les anciens assets sont invalidés automatiquement, mais l'OS peut servir un index.html cached.
 
 ## Les 3 pièges qui ont déjà causé des incidents
 
