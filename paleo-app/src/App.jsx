@@ -138,7 +138,9 @@ const mainRouter = createHashRouter(
       {/* ── Sous-sites (/site/:slug/*) ────────────────── */}
       <Route path="/site/:slug" element={<SubsiteLayout />}>
         <Route index                   element={<SubsiteHome />} />
-        <Route path="frise"            element={<SubsiteFrise />} />
+        <Route path="frise"            element={<SubsiteFrise viewMode="timeline" />} />
+        <Route path="carte"            element={<SubsiteFrise viewMode="map" />} />
+        <Route path="arborescence"     element={<SubsiteFrise viewMode="arborescence" />} />
         <Route path="presentation"     element={<Presentation />} />
         <Route path="partenaires"      element={<SubsitePartners />} />
         <Route path="mentions"         element={<Presentation />} />
@@ -151,8 +153,10 @@ const mainRouter = createHashRouter(
 
       {/* ── Application (frise + gestion) ────────────── */}
       <Route path="/app" element={<Layout />}>
-        <Route index element={<Library />} />
-        <Route path="workshop/:workshopId" element={<Library />} />
+        <Route index element={<Library viewMode="timeline" />} />
+        <Route path="carte"         element={<Library viewMode="map" />} />
+        <Route path="arborescence"  element={<Library viewMode="arborescence" />} />
+        <Route path="workshop/:workshopId" element={<Library viewMode="timeline" />} />
         <Route path="create" element={<Create />} />
         <Route path="manage"            element={<Navigate to="/app/manage/published" replace />} />
         <Route path="manage/drafts"     element={<ManageCartels />} />
@@ -187,7 +191,9 @@ const subsiteHostRouter = hostSubsiteSlug ? createBrowserRouter(
     <Route element={<RootLayout />}>
       <Route path="/" element={<SubsiteLayout />}>
         <Route index                   element={<SubsiteHome />} />
-        <Route path="frise"            element={<SubsiteFrise />} />
+        <Route path="frise"            element={<SubsiteFrise viewMode="timeline" />} />
+        <Route path="carte"            element={<SubsiteFrise viewMode="map" />} />
+        <Route path="arborescence"     element={<SubsiteFrise viewMode="arborescence" />} />
         <Route path="presentation"     element={<Presentation />} />
         <Route path="partenaires"      element={<SubsitePartners />} />
         <Route path="mentions"         element={<Presentation />} />

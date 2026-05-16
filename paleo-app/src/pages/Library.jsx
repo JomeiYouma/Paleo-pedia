@@ -36,14 +36,30 @@ const StatusBadge = ({ status, t }) => {
     );
 };
 
-const Library = ({ fixedCategory = null, fixedSubsiteId = null }) => {
+// Mapping mode interne ↔ suffixe d'URL public.
+// Le mode 'list' reste admin-only sans URL (toggle interne uniquement).
+const MODE_SUFFIX = { timeline: 'frise', map: 'carte', arborescence: 'arborescence' };
+const SUFFIX_MODE = Object.fromEntries(Object.entries(MODE_SUFFIX).map(([k, v]) => [v, k]));
+
+// Pour une route donnée, calcule l'URL d'un autre mode en conservant le préfixe
+// (`/app`, `/site/<slug>`, ou racine `''` sur subsite host). Cas spécial : sur
+// le site principal, /app sert directement la frise (pas de /app/frise).
+function urlForMode(pathname, mode) {
+    const base = pathname.replace(/\/(frise|carte|arborescence)\/?$/, '');
+    if (base === '/app' && mode === 'timeline') return '/app';
+    return `${base}/${MODE_SUFFIX[mode]}`;
+}
+
+const Library = ({ fixedCategory = null, fixedSubsiteId = null, viewMode: viewModeProp = 'timeline' }) => {
     const { t, i18n } = useTranslation();
     // Source unique : tous les cartels depuis l'API (l'API filtre selon le rôle)
     const { cartels, loading, deleteCartel, deleteCartels, isAdmin, currentWorkshop } = useApp();
 
     const [selectedIds, setSelectedIds]     = useState(new Set());
     const [searchQuery, setSearchQuery]     = useState('');
-    const [viewMode, setViewMode]           = useState('timeline');
+    // 'list' est admin-only sans URL ; les autres modes viennent de la prop.
+    const [adminListMode, setAdminListMode] = useState(false);
+    const viewMode = adminListMode ? 'list' : viewModeProp;
     const [selectedCats, setSelectedCats]   = useState([]);
     const [generatingZip, setGeneratingZip] = useState(false);
     const [progress, setProgress]           = useState({ current: 0, total: 0 });
@@ -54,6 +70,10 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null }) => {
     const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
 
+    // Sortir du mode admin "Liste" dès que l'URL change de mode public (navigation
+    // utilisateur via les boutons Frise/Carte/Arborescence).
+    useEffect(() => { setAdminListMode(false); }, [viewModeProp]);
+
     // Pré-filtrer par catégorie si ?category= est dans l'URL (seulement sans fixedCategory)
     const urlCategoryFilter = !fixedCategory ? searchParams.get('category') : null;
     useEffect(() => {
@@ -62,7 +82,19 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null }) => {
 
     const pageTitle = fixedCategory || (urlCategoryFilter ? decodeURIComponent(urlCategoryFilter) : null);
     const clearCategoryFilter = () => { if (!fixedCategory) { setSelectedCats([]); setSearchParams({}); } };
-    const handleGoToTimeline = (id) => { setTargetCartelId(id); setViewMode('timeline'); };
+    const handleGoToTimeline = (id) => {
+        if (viewMode === 'timeline') {
+            setTargetCartelId(id);
+        } else {
+            // Library remount à la navigation → on passe l'id via le hash
+            // (#cartel-<id>) que hashRestoredRef ré-applique au mount.
+            navigate(`${urlForMode(location.pathname, 'timeline')}#cartel-${id}`);
+        }
+    };
+    const goToMode = (mode) => {
+        setAdminListMode(false);
+        navigate(urlForMode(location.pathname, mode));
+    };
 
     // Dataset de base : cartels visibles selon le rôle, PRÉ-filtrés par la catégorie fixe du sous-site
     const baseCartels = useMemo(() => {
@@ -167,9 +199,13 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null }) => {
         const found = filteredCartels.find(c => String(c.id) === String(id));
         if (!found) return;
         setTargetCartelId(found.id);
-        if (viewMode !== 'timeline' && viewMode !== 'map') setViewMode('timeline');
+        // Sur un retour d'édition vers /carte ou /arborescence on rebascule sur
+        // la frise (seuls timeline et map savent scroller jusqu'à un cartel).
+        if (viewMode !== 'timeline' && viewMode !== 'map') {
+            navigate(urlForMode(location.pathname, 'timeline'));
+        }
         hashRestoredRef.current = h;
-    }, [location.hash, filteredCartels, viewMode]);
+    }, [location.hash, location.pathname, filteredCartels, viewMode, navigate]);
 
     // Sélection
     const toggleSelection = (id) => {
@@ -243,19 +279,21 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null }) => {
                         )}
                     </div>
 
-                    {/* Modes de vue */}
+                    {/* Modes de vue — chaque mode public a son URL dédiée
+                        (cf. urlForMode). Le mode admin "Liste" reste un toggle
+                        local sans URL. */}
                     <div className="view-mode-container">
-                        <button onClick={() => setViewMode('timeline')} className={`view-mode-btn ${viewMode === 'timeline' ? 'active' : ''}`}>
+                        <button onClick={() => goToMode('timeline')} className={`view-mode-btn ${viewMode === 'timeline' ? 'active' : ''}`}>
                             <CalendarDays size={18} /><span>{t('library.viewFrise', 'Frise')}</span>
                         </button>
-                        <button onClick={() => setViewMode('map')} className={`view-mode-btn ${viewMode === 'map' ? 'active' : ''}`}>
+                        <button onClick={() => goToMode('map')} className={`view-mode-btn ${viewMode === 'map' ? 'active' : ''}`}>
                             <MapIcon size={18} /><span>{t('library.viewMap', 'Carte')}</span>
                         </button>
-                        <button onClick={() => setViewMode('arborescence')} className={`view-mode-btn ${viewMode === 'arborescence' ? 'active' : ''}`}>
+                        <button onClick={() => goToMode('arborescence')} className={`view-mode-btn ${viewMode === 'arborescence' ? 'active' : ''}`}>
                             <GitGraph size={18} /><span>{t('library.viewArborescence', 'Arborescence')}</span>
                         </button>
                         {isAdmin && (
-                            <button onClick={() => setViewMode('list')} className={`view-mode-btn ${viewMode === 'list' ? 'active' : ''}`}>
+                            <button onClick={() => setAdminListMode(true)} className={`view-mode-btn ${viewMode === 'list' ? 'active' : ''}`}>
                                 <LayoutList size={18} /><span>{t('library.viewList', 'Liste')}</span>
                             </button>
                         )}
