@@ -188,6 +188,11 @@
         "exit": "Exit",
         "adminAccess": "Admin access"
     },
+    "filters": {
+        "or": "OR",
+        "and": "AND",
+        "clearSelection": "Show all"
+    },
     "manageCartels": {
         "import": "Import",
         "newCartel": "New Cartel",

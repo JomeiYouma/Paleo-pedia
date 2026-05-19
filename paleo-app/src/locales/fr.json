@@ -191,6 +191,11 @@
         "exit": "Quitter",
         "adminAccess": "Accès administrateur"
     },
+    "filters": {
+        "or": "OU",
+        "and": "ET",
+        "clearSelection": "Tout afficher"
+    },
     "manageCartels": {
         "import": "Importer",
         "newCartel": "Nouveau cartel",

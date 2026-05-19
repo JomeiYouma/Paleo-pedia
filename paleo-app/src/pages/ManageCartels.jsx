@@ -24,6 +24,7 @@ import { rememberReturn } from '../utils/navigation';
 import { subsiteBasePath } from '../utils/subsiteHost';
 import Breadcrumb from '../components/Breadcrumb';
 import { DropdownButton, DropItem } from '../components/DropdownButton';
+import { MultiSelectDropdown } from '../components/MultiSelectDropdown';
 
 const HEX_COLORS = {
     neutral: '#4b5563',
@@ -163,7 +164,10 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     const setActiveTab = (key) => navigate(tabToPath[key] || tabToPath.published);
     const goToCreate = (editId) => {
         const basePath = lockedSubsiteSlug ? `${subsiteBasePath(lockedSubsiteSlug)}/create` : '/app/create';
-        const workshopQuery = filterWorkshop ? `?workshopId=${filterWorkshop}` : '';
+        // Si un seul atelier est filtré, on pré-remplit le formulaire. Avec plusieurs
+        // ateliers cochés, on ne sait pas lequel choisir → pas de pré-remplissage.
+        const singleWorkshopId = filterWorkshops.length === 1 ? filterWorkshops[0] : '';
+        const workshopQuery = singleWorkshopId ? `?workshopId=${singleWorkshopId}` : '';
         const target = editId ? `${basePath}?edit=${editId}` : `${basePath}${workshopQuery}`;
         // scrollId = editId permet de re-scroller la liste jusqu'à la ligne éditée au retour.
         const returnTo = rememberReturn(location, { scrollId: editId || null });
@@ -171,8 +175,13 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     };
 
     const [search,         setSearch]         = useState('');
-    const [filterCategory, setFilterCategory] = useState(() => searchParams.get('cat') || '');
-    const [filterWorkshop, setFilterWorkshop] = useState(workshopId || '');
+    // Filtres multi-valeurs. URL legacy ?cat=A → on accepte aussi ?cat=A,B
+    // pour pouvoir partager une URL avec plusieurs catégories cochées.
+    const parseCsvParam = (raw) => (raw ? raw.split(',').map(s => s.trim()).filter(Boolean) : []);
+    const [filterCategories,   setFilterCategories]   = useState(() => parseCsvParam(searchParams.get('cat')));
+    const [filterCategoriesOp, setFilterCategoriesOp] = useState('OR');
+    const [filterWorkshops,    setFilterWorkshops]    = useState(() => (workshopId ? [String(workshopId)] : []));
+    const [filterWorkshopsOp,  setFilterWorkshopsOp]  = useState('OR');
     // Si intégré dans un sous-site, le filtre est verrouillé sur ce sous-site et
     // ignore le query param. Sinon on lit ?subsite= depuis l'URL.
     const filterSubsiteSlug = lockedSubsiteSlug || searchParams.get('subsite') || '';
@@ -246,26 +255,29 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     }, []);
 
     React.useEffect(() => {
-        setFilterWorkshop(workshopId || '');
+        setFilterWorkshops(workshopId ? [String(workshopId)] : []);
     }, [workshopId]);
 
-    // Sync filterCategory avec l'URL (?cat=…) pour survivre aux navigations
-    const handleSetFilterCategory = (cat) => {
-        setFilterCategory(cat);
+    // Sync filterCategories avec l'URL (?cat=A,B) pour survivre aux navigations.
+    // Format CSV : compatible avec l'ancien ?cat=A (un seul nom = tableau de 1).
+    const handleSetFilterCategories = (cats) => {
+        setFilterCategories(cats);
         const next = new URLSearchParams(searchParams);
-        if (cat) next.set('cat', cat);
+        if (cats.length) next.set('cat', cats.join(','));
         else next.delete('cat');
         setSearchParams(next, { replace: true });
     };
 
     React.useEffect(() => {
-        setFilterCategory(searchParams.get('cat') || '');
+        setFilterCategories(parseCsvParam(searchParams.get('cat')));
     }, [location.search]);
 
     const hashScrolledRef = useRef(null);
 
     const currentTabDef = TABS.find(t => t.key === activeTab) || TABS[0];
-    const activeWorkshop = filterWorkshop ? workshops.find(w => String(w.id) === String(filterWorkshop)) : null;
+    const activeWorkshops = filterWorkshops
+        .map(id => workshops.find(w => String(w.id) === String(id)))
+        .filter(Boolean);
 
     // Pool de référence :
     //   - Hors verrouillage : tous les cartels (ou scopés à un ?subsite=).
@@ -299,8 +311,16 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
         let data = issueIdsFilter
             ? scopedCartels.filter(c => issueIdsFilter.has(c.id))
             : scopedCartels.filter(currentTabDef.filter);
-        if (filterWorkshop) {
-            data = data.filter(c => (c.workshopIds || []).map(String).includes(String(filterWorkshop)));
+        // Filtres multi-valeurs. OR : au moins une des valeurs cochées correspond.
+        // AND : toutes les valeurs cochées doivent être présentes sur le cartel.
+        if (filterWorkshops.length) {
+            const wantedWs = filterWorkshops.map(String);
+            data = data.filter(c => {
+                const ws = (c.workshopIds || []).map(String);
+                return filterWorkshopsOp === 'AND'
+                    ? wantedWs.every(id => ws.includes(id))
+                    : wantedWs.some(id => ws.includes(id));
+            });
         }
         if (search) {
             const q = search.toLowerCase();
@@ -310,11 +330,13 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                 (c.location || '').toLowerCase().includes(q)
             );
         }
-        if (filterCategory) {
-            data = data.filter(c =>
-                (c.categories || []).includes(filterCategory) ||
-                (c.categories_en || []).includes(filterCategory)
-            );
+        if (filterCategories.length) {
+            data = data.filter(c => {
+                const cats = [...(c.categories || []), ...(c.categories_en || [])];
+                return filterCategoriesOp === 'AND'
+                    ? filterCategories.every(v => cats.includes(v))
+                    : filterCategories.some(v => cats.includes(v));
+            });
         }
         data.sort((a, b) => {
             let av, bv;
@@ -327,7 +349,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
             return 0;
         });
         return data;
-    }, [cartels, currentTabDef, search, filterCategory, filterWorkshop, filterSubsiteSlug, sortConfig, issueIdsFilter, scopedCartels]);
+    }, [cartels, currentTabDef, search, filterCategories, filterCategoriesOp, filterWorkshops, filterWorkshopsOp, filterSubsiteSlug, sortConfig, issueIdsFilter, scopedCartels]);
 
     // ── Scroll vers la ligne éditée au retour : location.hash = '#cartel-<id>'
     // (posé par rememberReturn(location, { scrollId })). On déclenche quand
@@ -855,22 +877,33 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                     )}
                 </div>
 
-                {/* Filtre catégorie */}
-                <select value={filterCategory} onChange={e => handleSetFilterCategory(e.target.value)}
-                    style={{ padding:'8px 12px', borderRadius:'8px', border:'1px solid #ddd', fontSize:'0.88rem', background:'white' }}>
-                    <option value="">{t('manageCartels.allCategories')}</option>
-                    {categories.map(c => <option key={c.id || c} value={c.name || c}>{c.name || c}</option>)}
-                </select>
+                {/* Filtre catégorie (multi-select avec ET/OU) */}
+                <MultiSelectDropdown
+                    label={t('manageCartels.allCategories')}
+                    options={categories.map(c => ({ value: c.name || c, label: c.name || c }))}
+                    selected={filterCategories}
+                    onChange={handleSetFilterCategories}
+                    op={filterCategoriesOp}
+                    onOpChange={setFilterCategoriesOp}
+                    opLabels={{ or: t('filters.or', 'OU'), and: t('filters.and', 'ET') }}
+                    emptyLabel={t('filters.clearSelection', 'Tout afficher')}
+                />
 
-                <select value={filterWorkshop} onChange={e => setFilterWorkshop(e.target.value)}
-                    style={{ padding:'8px 12px', borderRadius:'8px', border:'1px solid #ddd', fontSize:'0.88rem', background:'white' }}>
-                    <option value="">{t('manageCartels.allWorkshops')}</option>
-                    {workshops.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
-                </select>
+                {/* Filtre atelier (multi-select avec ET/OU) */}
+                <MultiSelectDropdown
+                    label={t('manageCartels.allWorkshops')}
+                    options={workshops.map(w => ({ value: w.id, label: w.name }))}
+                    selected={filterWorkshops}
+                    onChange={setFilterWorkshops}
+                    op={filterWorkshopsOp}
+                    onOpChange={setFilterWorkshopsOp}
+                    opLabels={{ or: t('filters.or', 'OU'), and: t('filters.and', 'ET') }}
+                    emptyLabel={t('filters.clearSelection', 'Tout afficher')}
+                />
 
-                {activeWorkshop && (
+                {activeWorkshops.length === 1 && (
                     <span style={{ background:'#e8f1ff', color:'#1f6feb', padding:'8px 12px', borderRadius:'999px', fontSize:'0.82rem', fontWeight:'700' }}>
-                        {t('manageCartels.workshopFilter', { name: activeWorkshop.name })}
+                        {t('manageCartels.workshopFilter', { name: activeWorkshops[0].name })}
                     </span>
                 )}
 
