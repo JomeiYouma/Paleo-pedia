@@ -39,3 +39,28 @@ export function getSubsiteHostUrl(slug) {
         .find(([host, s]) => s === slug && !host.startsWith('www.'));
     return apexHost ? `https://${apexHost[0]}` : null;
 }
+
+/**
+ * Chemin (relatif, à utiliser dans des <Link>) vers la page détail interne
+ * d'un cartel. Tient compte du contexte hôte : sur le host dédié du sous-site
+ * → `/cartel/:id`, sinon `/site/<slug>/cartel/:id`, sinon `/cartel/:id` pour
+ * un cartel du site principal.
+ */
+export function cartelDetailPath(cartelId, subsiteSlug) {
+    if (!cartelId) return '';
+    const base = subsiteBasePath(subsiteSlug);
+    return `${base}/cartel/${cartelId}`;
+}
+
+/**
+ * URL absolue vers la page détail interne d'un cartel, à encoder dans le QR
+ * code à l'impression. Pour les cartels d'un sous-site avec host dédié, on
+ * utilise ce host ; sinon on retombe sur MAIN_SITE_URL avec le routeur hash.
+ */
+export function cartelDetailAbsoluteUrl(cartelId, subsiteSlug) {
+    if (!cartelId) return '';
+    const hostUrl = subsiteSlug ? getSubsiteHostUrl(subsiteSlug) : null;
+    if (hostUrl) return `${hostUrl}/cartel/${cartelId}`;
+    const path = subsiteSlug ? `/site/${subsiteSlug}/cartel/${cartelId}` : `/cartel/${cartelId}`;
+    return `${MAIN_SITE_URL}/#${path}`;
+}

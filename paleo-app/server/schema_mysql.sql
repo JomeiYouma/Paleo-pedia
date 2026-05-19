@@ -105,6 +105,10 @@ CREATE TABLE IF NOT EXISTS `cartels` (
   `image_credit`         TEXT          NULL,
   `url_qr`               VARCHAR(512)  NOT NULL DEFAULT '',
 
+  -- Page "En savoir plus" éditable par blocs (JSON)
+  `details_blocks`       LONGTEXT      NULL DEFAULT NULL,
+  `use_internal_details` TINYINT(1)    NOT NULL DEFAULT 0,        -- bouton/QR → /cartel/:id
+
   -- Dates
   `date`                 DATE          NULL DEFAULT NULL,
 
@@ -136,6 +140,24 @@ CREATE TABLE IF NOT EXISTS `cartels` (
   CONSTRAINT `fk_cartels_subsite`
     FOREIGN KEY (`subsite_id`) REFERENCES `subsites` (`id`)
     ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- CARTEL_NOTES — notes admin internes (datées, signées)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `cartel_notes` (
+  `id`            CHAR(36)     NOT NULL DEFAULT (UUID()),
+  `cartel_id`     CHAR(36)     NOT NULL,
+  `author_id`     CHAR(36)     NULL DEFAULT NULL,
+  `author_email`  VARCHAR(255) NOT NULL DEFAULT '',
+  `body`          LONGTEXT     NOT NULL,
+  `created_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_cartel_notes_cartel` (`cartel_id`, `created_at`),
+  CONSTRAINT `fk_cartel_notes_cartel`
+    FOREIGN KEY (`cartel_id`) REFERENCES `cartels` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_cartel_notes_author`
+    FOREIGN KEY (`author_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================

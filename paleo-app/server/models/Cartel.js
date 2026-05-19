@@ -7,6 +7,13 @@ const TEXT_FIELDS = [
   'date', 'visible', 'lat', 'lng', 'submitter_contact',
 ];
 
+// `details_blocks` est un JSON.stringify d'un tableau de blocs en BDD.
+// `use_internal_details` est un TINYINT(1) qu'on expose en boolean côté API.
+const parseDetailsBlocks = (raw) => {
+  if (!raw) return [];
+  try { return JSON.parse(raw); } catch { return []; }
+};
+
 function buildSelectFull({ includeWorkshops = false } = {}) {
   return `
   SELECT
@@ -66,6 +73,8 @@ function parseCartel(row) {
   delete row.image_credit;
   // Convertir TINYINT(1) en boolean
   row.visible = !!row.visible;
+  row.use_internal_details = !!row.use_internal_details;
+  row.details_blocks = parseDetailsBlocks(row.details_blocks);
   return row;
 }
 
@@ -139,12 +148,18 @@ export const CartelModel = {
         ? data.submitter_contact.trim().slice(0, 255) || null
         : null;
 
+      const detailsBlocksJson = Array.isArray(data.details_blocks)
+        ? JSON.stringify(data.details_blocks)
+        : null;
+      const useInternalDetails = data.use_internal_details ? 1 : 0;
+
       await client.query(
         `INSERT INTO cartels (
            id, created_by, subsite_id, titre, titre_en, annee, description, description_en,
            exhume_par, location, location_en, lat, lng,
-           image_path, image_credit, url_qr, date, status, visible, submitter_ip, submitter_contact
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           image_path, image_credit, url_qr, details_blocks, use_internal_details,
+           date, status, visible, submitter_ip, submitter_contact
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id, userId ?? null, subsiteId,
           data.titre,            data.titre_en      ?? '',
@@ -159,6 +174,8 @@ export const CartelModel = {
           data.image_path        ?? '',
           data.imageCredit       ?? data.image_credit ?? '',
           data.url_qr            ?? '',
+          detailsBlocksJson,
+          useInternalDetails,
           data.date              ?? null,
           cartelStatus,
           visible,
@@ -200,6 +217,14 @@ export const CartelModel = {
       } else if ('image_credit' in data) {
         sets.push('image_credit = ?');
         values.push(data.image_credit ?? '');
+      }
+      if ('details_blocks' in data) {
+        sets.push('details_blocks = ?');
+        values.push(Array.isArray(data.details_blocks) ? JSON.stringify(data.details_blocks) : null);
+      }
+      if ('use_internal_details' in data) {
+        sets.push('use_internal_details = ?');
+        values.push(data.use_internal_details ? 1 : 0);
       }
       if (sets.length) {
         values.push(id);

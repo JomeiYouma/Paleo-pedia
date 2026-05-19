@@ -7,6 +7,7 @@ import { useSubsite } from '../layouts/SubsiteLayout';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { subsiteBasePath } from '../utils/subsiteHost';
+import { BlockList } from '../components/blocks/BlockRenderer';
 
 const SubsiteHome = () => {
     const subsite = useSubsite();
@@ -19,7 +20,7 @@ const SubsiteHome = () => {
     return (
         <div>
             {/* ── Hero ──────────────────────────────────────── */}
-            <section style={{
+            <section className="subsite-hero" style={{
                 background: `linear-gradient(135deg, ${color}22 0%, #ffffff 100%)`,
                 padding: '80px 24px',
                 textAlign: 'center',
@@ -28,80 +29,154 @@ const SubsiteHome = () => {
                 flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',
+                position: 'relative',
+                overflow: 'visible',
+                zIndex: 1,
             }}>
-                <h1 style={{ fontSize: '3.5rem', color, marginBottom: '16px', lineHeight: 1.1 }}>
-                    {subsite.name}
-                </h1>
-                <p style={{ color: '#666', fontSize: '1.2rem', maxWidth: '560px', marginBottom: '40px', lineHeight: 1.5 }}>
-                    {subsite.category_name && `Thématique : ${subsite.category_name}`}
-                </p>
-                <Link
-                    to={friseHref}
-                    className="paleo-btn paleo-btn--yellow"
-                    style={{ padding: '14px 32px', fontSize: '0.95rem', letterSpacing: '0.6px' }}
-                >
-                    Explorer la frise <ArrowRight size={18} />
-                </Link>
+                {/* ── Décor : Mouchot + son invention (gauche) ─────── */}
+                <img
+                    src="/photos/mouchot_inov.png"
+                    alt=""
+                    aria-hidden="true"
+                    className="subsite-hero__decor subsite-hero__decor--mouchot-inov"
+                />
+                <img
+                    src="/photos/mouchot.png"
+                    alt=""
+                    aria-hidden="true"
+                    className="subsite-hero__decor subsite-hero__decor--mouchot"
+                />
+
+                {/* ── Décor : Maria + son invention (droite) ───────── */}
+                <img
+                    src="/photos/maria_inov.png"
+                    alt=""
+                    aria-hidden="true"
+                    className="subsite-hero__decor subsite-hero__decor--maria-inov"
+                />
+                <img
+                    src="/photos/maria.png"
+                    alt=""
+                    aria-hidden="true"
+                    className="subsite-hero__decor subsite-hero__decor--maria"
+                />
+
+                <div style={{ position: 'relative', zIndex: 3, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <h1 style={{ fontSize: '3.5rem', color, marginBottom: '16px', lineHeight: 1.1 }}>
+                        {subsite.name}
+                    </h1>
+                    <p style={{ color: '#666', fontSize: '1.2rem', maxWidth: '560px', marginBottom: '40px', lineHeight: 1.5 }}>
+                        {subsite.category_name && `Thématique : ${subsite.category_name}`}
+                    </p>
+                    <Link
+                        to={friseHref}
+                        className="paleo-btn paleo-btn--yellow"
+                        style={{ padding: '14px 32px', fontSize: '0.95rem', letterSpacing: '0.6px' }}
+                    >
+                        Explorer la frise <ArrowRight size={18} />
+                    </Link>
+                </div>
             </section>
 
             {/* ── Blocs de contenu ───────────────────────── */}
-            {subsite.content_blocks?.length > 0 && (
-                <section style={{ maxWidth: '860px', margin: '0 auto', padding: '60px 24px' }}>
-                    {subsite.content_blocks.map((block, i) => (
-                        <Block key={i} block={block} color={color} />
-                    ))}
-                </section>
-            )}
+            {/* Wrapper pleine largeur en blanc : recouvre les pieds des personnages
+               (cf. landing-hero, qui utilise le même artifice avec --color-bg) */}
+            <section style={{
+                position: 'relative',
+                zIndex: 2,
+                background: 'var(--color-bg)',
+                paddingTop: subsite.content_blocks?.length > 0 ? '60px' : '120px',
+                paddingBottom: subsite.content_blocks?.length > 0 ? '60px' : '0',
+            }}>
+                {subsite.content_blocks?.length > 0 && (
+                    <div style={{ maxWidth: '860px', margin: '0 auto', padding: '0 24px' }}>
+                        <BlockList blocks={subsite.content_blocks} color={color} />
+                    </div>
+                )}
+            </section>
+
+            {/* ── Styles décor hero ───────────────────────── */}
+            <style>{`
+                /* bottom négatif : les pieds dépassent du hero et se font recouvrir
+                   par la section suivante (z-index plus élevé) */
+                .subsite-hero__decor {
+                    position: absolute;
+                    bottom: -50px;
+                    pointer-events: none;
+                    user-select: none;
+                    width: auto;
+                }
+
+                /* Inventions (arrière-plan, débordent vers les bords) */
+                .subsite-hero__decor--mouchot-inov {
+                    left: -2%;
+                    height: 240px;
+                    z-index: 1;
+                }
+                .subsite-hero__decor--maria-inov {
+                    right: -2%;
+                    height: 240px;
+                    z-index: 1;
+                }
+
+                /* Personnages (premier plan, devant leur invention) */
+                .subsite-hero__decor--mouchot {
+                    left: 8%;
+                    height: 380px;
+                    z-index: 2;
+                }
+                .subsite-hero__decor--maria {
+                    right: 8%;
+                    height: 380px;
+                    z-index: 2;
+                }
+
+                @media (min-width: 1600px) {
+                    .subsite-hero__decor--mouchot { left: 10%; height: 420px; }
+                    .subsite-hero__decor--maria   { right: 10%; height: 420px; }
+                }
+
+                /* Largeur moyenne : on rapproche personnages des bords et
+                   on détache les inventions vers le centre */
+                @media (max-width: 1280px) {
+                    .subsite-hero__decor--mouchot { left: 0; height: 400px; }
+                    .subsite-hero__decor--maria   { right: 0; height: 400px; }
+                    .subsite-hero__decor--mouchot-inov {
+                        left: 14%;
+                        right: auto;
+                        height: 170px;
+                        bottom: -38px;
+                    }
+                    .subsite-hero__decor--maria-inov {
+                        right: 14%;
+                        left: auto;
+                        height: 165px;
+                        bottom: -40px;
+                    }
+                }
+
+                @media (max-width: 1024px) {
+                    .subsite-hero__decor--mouchot { height: 350px; }
+                    .subsite-hero__decor--maria   { height: 350px; }
+                    .subsite-hero__decor--mouchot-inov {
+                        left: 11%;
+                        height: 150px;
+                        bottom: -30px;
+                    }
+                    .subsite-hero__decor--maria-inov {
+                        right: 11%;
+                        height: 145px;
+                        bottom: -32px;
+                    }
+                }
+
+                /* Fenêtre étroite : on masque tout pour ne pas écraser le contenu */
+                @media (max-width: 820px) {
+                    .subsite-hero__decor { display: none; }
+                }
+            `}</style>
         </div>
     );
-};
-
-const Block = ({ block, color }) => {
-    switch (block.type) {
-        case 'title':
-            return (
-                <h2 style={{
-                    fontSize: block.level === 3 ? '1.6rem' : '2.2rem',
-                    fontWeight: '800',
-                    color: '#1a1a1a',
-                    marginBottom: '16px',
-                    marginTop: '48px',
-                    borderLeft: `4px solid ${color}`,
-                    paddingLeft: '16px',
-                }}>
-                    {block.content}
-                </h2>
-            );
-        case 'text':
-            return (
-                <p style={{
-                    color: '#444', lineHeight: '1.75', fontSize: '1.05rem',
-                    marginBottom: '20px', whiteSpace: 'pre-wrap',
-                }}>
-                    {block.content}
-                </p>
-            );
-        case 'image':
-            return (
-                <figure style={{ margin: '32px 0', textAlign: 'center' }}>
-                    <img
-                        src={block.url}
-                        alt={block.caption || ''}
-                        style={{
-                            maxWidth: '100%', borderRadius: '14px',
-                            boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-                        }}
-                    />
-                    {block.caption && (
-                        <figcaption style={{ color: '#999', fontSize: '0.85rem', marginTop: '10px' }}>
-                            {block.caption}
-                        </figcaption>
-                    )}
-                </figure>
-            );
-        default:
-            return null;
-    }
 };
 
 export default SubsiteHome;

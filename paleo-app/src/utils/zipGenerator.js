@@ -12,6 +12,7 @@ import html2canvas from 'html2canvas';
 import QRCode     from 'qrcode';
 import jsPDF      from 'jspdf';
 import { formatYear } from './helpers';
+import { cartelDetailAbsoluteUrl } from './subsiteHost';
 
 // ── Configuration du rendu ────────────────────────────────────
 const A4_WIDTH_PX  = 3508;
@@ -97,10 +98,15 @@ const renderCartelToCanvas = async (cartel, container, lang, overrides) => {
   const isTranslatedFrise = !!overrides?.labels;
   const yearLabel = isTranslatedFrise ? (cartel.annee || '') : formatYear(cartel.annee, lang);
 
-  // QR Code
+  // QR Code : si `use_internal_details` est activé, on pointe vers la page
+  // détail interne (URL absolue côté host dédié si dispo, sinon hash router
+  // sur le site principal). Sinon comportement historique : on encode `url_qr`.
+  const qrTarget = cartel.use_internal_details
+    ? cartelDetailAbsoluteUrl(cartel.id, cartel.subsite_slug)
+    : cartel.url_qr;
   let qrDataUrl = '';
-  if (cartel.url_qr) {
-    qrDataUrl = await QRCode.toDataURL(cartel.url_qr, {
+  if (qrTarget) {
+    qrDataUrl = await QRCode.toDataURL(qrTarget, {
       width: Math.round(30 * MM_TO_PX), margin: 0,
       color: { dark: '#000000', light: '#00000000' },
     });

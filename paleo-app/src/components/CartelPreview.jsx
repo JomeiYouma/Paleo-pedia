@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import './CartelPreview.css';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { getLocalizedContent } from '../utils/i18nHelpers';
 import { formatYear } from '../utils/helpers';
 import { generateImage, generatePdf } from '../utils/zipGenerator';
 import { Download, Image as ImageIcon, FileText } from 'lucide-react';
 import LongOperationOverlay from './LongOperationOverlay';
+import { cartelDetailPath } from '../utils/subsiteHost';
 
 /** Transforme **gras** et *italique* en éléments React. */
 const parseMdLine = (text, key) => {
@@ -105,7 +107,6 @@ const CartelPreview = ({ data, isDraft = false, showExports = false }) => {
                 ) : (
                     <div className="cartel-no-image">{i18n.language === 'fr' ? 'Aucune image' : 'No image'}</div>
                 )}
-                <div className="cartel-credit">{t('cartel.exhumeBy')} {data.exhume_par}</div>
             </div>
 
             <div className="cartel-content-column">
@@ -148,17 +149,41 @@ const CartelPreview = ({ data, isDraft = false, showExports = false }) => {
                     <div className="cartel-year">{formatYear(data.annee, i18n.language)}</div>
                     <div className="cartel-title">{title}</div>
 
-                    {(data.location || data.location_en) && (
-                        <div style={{ textAlign: 'right', marginBottom: '10px', fontSize: '0.9rem', color: '#666', fontStyle: 'italic' }}>
-                            {i18n.language === 'en' ? (data.location_en || data.location) : (data.location || data.location_en)}
+                    {(data.exhume_par || data.location || data.location_en) && (
+                        <div className="cartel-meta-row">
+                            {data.exhume_par ? (
+                                <div className="cartel-credit">
+                                    <span className="cartel-credit-label">{t('cartel.exhumeBy')}</span>
+                                    <span className="cartel-credit-name">{data.exhume_par}</span>
+                                </div>
+                            ) : <span />}
+                            {(data.location || data.location_en) && (
+                                <div className="cartel-location">
+                                    {i18n.language === 'en' ? (data.location_en || data.location) : (data.location || data.location_en)}
+                                </div>
+                            )}
                         </div>
                     )}
 
-                    {data.url_qr && (
-                        <div className="cartel-qr-link" style={{ marginBottom: '15px', marginTop: '5px' }}>
-                            <a href={data.url_qr} target="_blank" rel="noreferrer">🔗 {i18n.language === 'fr' ? 'LIEN' : 'LINK'}</a>
-                        </div>
-                    )}
+                    {(data.use_internal_details || data.url_qr) && (() => {
+                        const label = i18n.language === 'fr' ? 'En savoir plus' : 'Learn more';
+                        if (data.use_internal_details) {
+                            // Le backend expose `subsite_slug` quand le cartel est rattaché à
+                            // un sous-site (cf. Cartel.js, jointure sur subsites). Link gère
+                            // le préfixe hash/browser router selon le contexte.
+                            const href = cartelDetailPath(data.id, data.subsite_slug);
+                            return (
+                                <div className="cartel-qr-link">
+                                    <Link to={href}>🔗 {label}</Link>
+                                </div>
+                            );
+                        }
+                        return (
+                            <div className="cartel-qr-link">
+                                <a href={data.url_qr} target="_blank" rel="noreferrer">🔗 {label}</a>
+                            </div>
+                        );
+                    })()}
 
                     <div className="cartel-description">
                         {description && description.split('\n').map((line, i) => (

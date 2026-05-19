@@ -83,12 +83,18 @@ export const cartels = {
     const qs = params.toString();
     return get(`/s/${slug}/cartels${qs ? '?' + qs : ''}`);
   },
+  getOneForSubsite: (slug, id)       => get(`/s/${slug}/cartels/${id}`),
   createForSubsite: (slug, data)     => post(`/s/${slug}/cartels`, data),
   updateInSubsite:  (slug, id, data) => patch(`/s/${slug}/cartels/${id}`, data),
   setStatusInSubsite: (slug, id, s)  => patch(`/s/${slug}/cartels/${id}/status`, { status: s }),
   deleteInSubsite:  (slug, id)       => del(`/s/${slug}/cartels/${id}`),
   submitToMain:     (slug, id)       => post(`/s/${slug}/cartels/${id}/submit-to-main`),
   withdrawFromMain: (slug, id)       => post(`/s/${slug}/cartels/${id}/withdraw-from-main`),
+
+  // Notes admin internes (auth requise, scope = admin du cartel)
+  listNotes:   (id, slug)            => get(slug ? `/s/${slug}/cartels/${id}/notes` : `/cartels/${id}/notes`),
+  addNote:     (id, body, slug)      => post(slug ? `/s/${slug}/cartels/${id}/notes` : `/cartels/${id}/notes`, { body }),
+  deleteNote:  (id, noteId, slug)    => del(slug ? `/s/${slug}/cartels/${id}/notes/${noteId}` : `/cartels/${id}/notes/${noteId}`),
 };
 
 // ── Statistiques (admin) ──────────────────────────────────────

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { AuthController }      from '../controllers/authController.js';
 import { CartelController }    from '../controllers/cartelController.js';
+import { CartelNoteController } from '../controllers/cartelNoteController.js';
 import { CategoryController }  from '../controllers/CategoryController.js';
 import { UserController }      from '../controllers/userController.js';
 import { WorkshopController }  from '../controllers/workshopController.js';
@@ -44,6 +45,11 @@ router.post  ('/cartels', optionalAuth, submissionGuard, CartelController.create
 router.patch ('/cartels/:id',        authenticate, CartelController.update);
 router.patch ('/cartels/:id/status', authenticate, CartelController.setStatus);
 router.delete('/cartels/:id',        authenticate, CartelController.delete);
+
+// Notes admin internes (auth requise, scope = admin du cartel)
+router.get   ('/cartels/:id/notes',           authenticate, CartelNoteController.list);
+router.post  ('/cartels/:id/notes',           authenticate, CartelNoteController.create);
+router.delete('/cartels/:id/notes/:noteId',   authenticate, CartelNoteController.remove);
 
 // ── Categories ───────────────────────────────────────────────
 router.get   ('/categories',         CategoryController.getAll);
@@ -109,6 +115,10 @@ router.post  ('/s/:slug/cartels',              optionalAuth, resolveTenant, subm
 router.patch ('/s/:slug/cartels/:id',          authenticate, resolveTenant, requireTenantAccess, CartelController.update);
 router.patch ('/s/:slug/cartels/:id/status',   authenticate, resolveTenant, requireTenantAccess, CartelController.setStatus);
 router.delete('/s/:slug/cartels/:id',          authenticate, resolveTenant, requireTenantAccess, CartelController.delete);
+
+router.get   ('/s/:slug/cartels/:id/notes',         authenticate, resolveTenant, requireTenantAccess, CartelNoteController.list);
+router.post  ('/s/:slug/cartels/:id/notes',         authenticate, resolveTenant, requireTenantAccess, CartelNoteController.create);
+router.delete('/s/:slug/cartels/:id/notes/:noteId', authenticate, resolveTenant, requireTenantAccess, CartelNoteController.remove);
 
 // Workflow de soumission au site principal (owner du sous-site)
 router.post  ('/s/:slug/cartels/:id/submit-to-main',  authenticate, resolveTenant, requireTenantAccess, CartelController.submitToMain);

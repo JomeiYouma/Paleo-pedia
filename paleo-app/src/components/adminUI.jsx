@@ -5,9 +5,9 @@
  * pour les labels/boutons, arêtes vives.
  */
 import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, AlertCircle, CheckCircle2, Languages } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Languages } from 'lucide-react';
 import api from '../services/apiClient';
+import Breadcrumb from './Breadcrumb';
 
 // ── Styles partagés ──────────────────────────────────────────
 export const labelStyle = {
@@ -93,27 +93,41 @@ export const AdminSection = ({ children, style }) => (
 );
 
 /**
- * Header standard d'une page admin : bouton « Retour », pastille d'icône
- * jaune avec icône primaire, et titre. Tous les sous-pages utilisent
- * exactement la même barre, ce qui rend la navigation prévisible.
+ * Header standard d'une page admin : fil d'Ariane (Accueil > Admin > <titre>),
+ * pastille d'icône jaune et titre. Convention : breadcrumb plutôt que bouton
+ * retour seul (cf. feedback_breadcrumb_over_back_button).
+ *
+ * `backTo` / `backLabel` (legacy) restent supportés : par défaut le fil
+ * remonte vers `/app/admin` (page Admin), mais une page peut surcharger
+ * `crumbs` pour un parcours plus profond.
  */
-export const AdminPageHeader = ({ icon: Icon, title, backTo = '/app/admin', backLabel = 'Retour' }) => {
-    const navigate = useNavigate();
+export const AdminPageHeader = ({
+    icon: Icon, title,
+    backTo = '/app/admin',
+    backLabel = 'Admin',
+    crumbs,
+}) => {
+    // Crumbs par défaut : Accueil > Admin (ou ce que `backTo`/`backLabel`
+    // pointe). Une page peut passer `crumbs` complet pour un parcours custom.
+    const effectiveCrumbs = crumbs ?? [
+        { label: 'Accueil', href: '/app' },
+        { label: backLabel, href: backTo },
+    ];
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-            <button onClick={() => navigate(backTo)} style={ghostBtnStyle}>
-                <ArrowLeft size={14} /> {backLabel}
-            </button>
-            <div style={{
-                width: '40px', height: '40px',
-                background: 'var(--color-accent)',
-                borderRadius: 'var(--radius-md)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-            }}>
-                {Icon && <Icon size={20} color="var(--color-primary)" />}
+        <div style={{ marginBottom: '20px' }}>
+            <Breadcrumb crumbs={effectiveCrumbs} current={title} style={{ marginBottom: '12px' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                    width: '40px', height: '40px',
+                    background: 'var(--color-accent)',
+                    borderRadius: 'var(--radius-md)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                }}>
+                    {Icon && <Icon size={20} color="var(--color-primary)" />}
+                </div>
+                <h1 style={{ margin: 0, fontSize: '1.6rem' }}>{title}</h1>
             </div>
-            <h1 style={{ margin: 0, fontSize: '1.6rem' }}>{title}</h1>
         </div>
     );
 };

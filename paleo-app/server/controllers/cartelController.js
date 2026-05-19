@@ -40,6 +40,22 @@ function validateFieldLengths(data) {
       return `Le champ "${field}" dépasse la longueur maximale (${max} caractères).`;
     }
   }
+  // details_blocks : tableau JSON sérialisé en BDD. Borne à ~500 Ko de JSON
+  // pour éviter qu'un client envoie un payload géant. Largement suffisant
+  // pour des dizaines de blocs (texte, image, vidéo embed, etc.).
+  if ('details_blocks' in data && data.details_blocks != null) {
+    if (!Array.isArray(data.details_blocks)) {
+      return 'details_blocks doit être un tableau';
+    }
+    try {
+      const serialized = JSON.stringify(data.details_blocks);
+      if (serialized.length > 500_000) {
+        return 'details_blocks dépasse la taille maximale (500 Ko)';
+      }
+    } catch {
+      return 'details_blocks contient des données non sérialisables';
+    }
+  }
   return null;
 }
 

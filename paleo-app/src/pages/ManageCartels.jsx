@@ -22,6 +22,7 @@ import ImageHealthModal from '../components/ImageHealthModal';
 import ExplainerBox from '../components/ExplainerBox';
 import { rememberReturn } from '../utils/navigation';
 import { subsiteBasePath } from '../utils/subsiteHost';
+import Breadcrumb from '../components/Breadcrumb';
 
 const HEX_COLORS = {
     neutral: '#4b5563',
@@ -733,7 +734,16 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
             )}
 
             {/* ── En-tête ────────────────────────────────────── */}
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'28px 0 20px', flexWrap:'wrap', gap:'12px' }}>
+            <div style={{ padding: '28px 0 0' }}>
+                <Breadcrumb
+                    crumbs={[
+                        { label: t('nav.library', 'Bibliothèque'), href: '/app' },
+                        { label: t('nav.management', 'Gestion'),   href: '/app/admin' },
+                    ]}
+                    current={t(currentTabDef.labelKey)}
+                />
+            </div>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0 0 20px', flexWrap:'wrap', gap:'12px' }}>
                 <div>
                     <h1 style={{ margin:0, fontSize:'1.6rem', fontWeight:'800', color:'#1a1a1a' }}>{t('admin.title')}</h1>
                     <p style={{ margin:'4px 0 0', color:'#999', fontSize:'0.88rem' }}>{t('manageCartels.totalCount', { count: scopedCartels.length })}</p>

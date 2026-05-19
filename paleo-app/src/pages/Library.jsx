@@ -12,6 +12,7 @@ import { generateZip } from '../utils/zipGenerator';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { rememberReturn } from '../utils/navigation';
+import Breadcrumb from '../components/Breadcrumb';
 import './Library.css';
 
 /** Badge de statut pour les cartels hors "published" (visible admin only) */
@@ -248,8 +249,17 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, viewMode: viewMo
 
     if (loading && !cartels.length) return <div className="container">{t('library.loading')}</div>;
 
+    // Libellé du mode de vue actif, utilisé comme dernier crumb. Pour un workshop
+    // on remplace par le nom de l'atelier pour situer l'utilisateur.
+    const viewModeLabel = currentWorkshop
+        ? currentWorkshop.name
+        : viewMode === 'map'          ? t('library.viewMap',         'Carte')
+        : viewMode === 'arborescence' ? t('library.viewArborescence','Arborescence')
+        : viewMode === 'list'         ? t('library.viewList',        'Liste')
+        :                                t('library.viewFrise',       'Frise');
+
     return (
-        <div style={{ padding: '0 20px' }}>
+        <div style={{ padding: '20px 20px 0' }}>
 
             {/* Progress overlay export ZIP */}
             <LongOperationOverlay
@@ -257,6 +267,11 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, viewMode: viewMo
                 label={t('library.generating')}
                 current={progress.current}
                 total={progress.total}
+            />
+
+            <Breadcrumb
+                crumbs={[{ label: t('nav.library', 'Bibliothèque'), href: '/app' }]}
+                current={viewModeLabel}
             />
 
             <div style={{ marginBottom: '20px' }}>

@@ -5,20 +5,15 @@
  */
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Plus, Trash2, GripVertical, Type, AlignLeft, Image as ImgIcon, Upload } from 'lucide-react';
+import { X } from 'lucide-react';
 import api from '../services/apiClient';
+import { BlockEditor } from './blocks/BlockEditor';
 
 const slugify = (str) =>
     str.toLowerCase()
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
-
-const BLOCK_TYPES = [
-    { type: 'title',  label: 'Titre',  icon: Type       },
-    { type: 'text',   label: 'Texte',  icon: AlignLeft  },
-    { type: 'image',  label: 'Image',  icon: ImgIcon    },
-];
 
 const SubsiteEditor = ({ subsite = null, onClose, onSaved }) => {
     const isEdit = !!subsite;
@@ -46,17 +41,6 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved }) => {
     useEffect(() => {
         if (!slugManual && name) setSlug(slugify(name));
     }, [name, slugManual]);
-
-    // ── Blocs ──────────────────────────────────────────────────
-    const addBlock = (type) => setBlocks(prev => [...prev, { type, content: '', level: 2 }]);
-    const removeBlock = (i) => setBlocks(prev => prev.filter((_, idx) => idx !== i));
-    const updateBlock = (i, upd) => setBlocks(prev => prev.map((b, idx) => idx === i ? { ...b, ...upd } : b));
-    const moveBlock = (from, to) => {
-        const next = [...blocks];
-        const [el] = next.splice(from, 1);
-        next.splice(to, 0, el);
-        setBlocks(next);
-    };
 
     // ── Partenaires ────────────────────────────────────────────
     const togglePrimaryPartner = (id) => {
@@ -152,46 +136,7 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved }) => {
                     {/* Blocs de contenu */}
                     <section>
                         <h3 style={{ margin: '0 0 14px', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', color: '#aaa', letterSpacing: '0.5px' }}>Contenu de la page d'accueil</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
-                            {blocks.map((block, i) => (
-                                <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', background: '#fafafa', borderRadius: '10px', padding: '10px 12px', border: '1px solid #eee' }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingTop: '4px' }}>
-                                        <button onClick={() => i > 0 && moveBlock(i, i-1)} style={iconBtn} disabled={i === 0}>▲</button>
-                                        <button onClick={() => i < blocks.length-1 && moveBlock(i, i+1)} style={iconBtn} disabled={i === blocks.length-1}>▼</button>
-                                    </div>
-                                    <div style={{ flex: 1 }}>
-                                        {block.type === 'title' && (
-                                            <div style={{ display: 'flex', gap: '8px' }}>
-                                                <select value={block.level ?? 2} onChange={e => updateBlock(i, { level: parseInt(e.target.value) })} style={{ ...inputStyle, width: '80px' }}>
-                                                    <option value={1}>H1</option>
-                                                    <option value={2}>H2</option>
-                                                    <option value={3}>H3</option>
-                                                </select>
-                                                <input value={block.content} onChange={e => updateBlock(i, { content: e.target.value })} placeholder="Titre…" style={{ ...inputStyle, flex: 1, fontWeight: '700' }} />
-                                            </div>
-                                        )}
-                                        {block.type === 'text' && (
-                                            <textarea value={block.content} onChange={e => updateBlock(i, { content: e.target.value })} placeholder="Texte…" rows={3} style={{ ...inputStyle, resize: 'vertical', width: '100%', boxSizing: 'border-box' }} />
-                                        )}
-                                        {block.type === 'image' && (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                                <input value={block.url ?? ''} onChange={e => updateBlock(i, { url: e.target.value })} placeholder="URL de l'image (ou /api/images/…)" style={inputStyle} />
-                                                <input value={block.caption ?? ''} onChange={e => updateBlock(i, { caption: e.target.value })} placeholder="Légende (optionnel)" style={{ ...inputStyle, fontSize: '0.85rem', color: '#666' }} />
-                                            </div>
-                                        )}
-                                    </div>
-                                    <button onClick={() => removeBlock(i)} style={{ ...iconBtn, color: '#d32f2f' }}><Trash2 size={14} /></button>
-                                </div>
-                            ))}
-                        </div>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            {BLOCK_TYPES.map(({ type, label, icon: Icon }) => (
-                                <button key={type} onClick={() => addBlock(type)}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 12px', borderRadius: '8px', border: '1px dashed #ddd', background: 'white', cursor: 'pointer', fontSize: '0.83rem', color: '#555', fontFamily: 'inherit' }}>
-                                    <Icon size={14} /> {label}
-                                </button>
-                            ))}
-                        </div>
+                        <BlockEditor blocks={blocks} onChange={setBlocks} />
                     </section>
 
                     {/* Partenaires */}
@@ -258,6 +203,5 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved }) => {
 
 const labelStyle = { display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#555', marginBottom: '5px' };
 const inputStyle = { width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.9rem', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' };
-const iconBtn = { background: 'none', border: 'none', cursor: 'pointer', padding: '3px', color: '#aaa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px' };
 
 export default SubsiteEditor;

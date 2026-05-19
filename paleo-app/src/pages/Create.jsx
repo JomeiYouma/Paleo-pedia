@@ -2,13 +2,16 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useSearchParams, useNavigate, useLocation, useParams, useBlocker } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { geocodingService } from '../services/geocoding';
-import { Save, ArrowLeft, MapPin, Check, X, Bold, Italic, AlertTriangle, Info } from 'lucide-react';
+import { Save, MapPin, Check, X, Bold, Italic, AlertTriangle, Info } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { compressImage } from '../utils/imageProcessor';
 import { detectWrongLanguage } from '../utils/detectLang';
 import { readStoredReturnTo, clearReturnTo } from '../utils/navigation';
 import { getHostSubsiteSlug, subsiteBasePath } from '../utils/subsiteHost';
 import api from '../services/apiClient';
+import { BlockEditor } from '../components/blocks/BlockEditor';
+import CartelNotesPanel from '../components/CartelNotesPanel';
+import Breadcrumb from '../components/Breadcrumb';
 
 const RequiredMark = () => (
     <span aria-hidden="true" style={{ color: '#d32f2f', marginLeft: '3px', fontWeight: 700 }}>*</span>
@@ -62,6 +65,11 @@ const Create = () => {
         categories: [],
         categories_en: [],
         url_qr: '',
+        // Page détail "En savoir plus" éditable par blocs. Quand
+        // use_internal_details=true, le bouton + le QR pointent vers /cartel/:id
+        // au lieu de url_qr (cf. CartelPreview + zipGenerator).
+        details_blocks: [],
+        use_internal_details: false,
         location: '',
         location_en: '',
         lat: null,
@@ -91,6 +99,7 @@ const Create = () => {
     const descRef = useRef(null);
 
     // beforeunload : bloque les refreshs / fermetures d'onglet si modifs en cours.
+    // (Le garde-fou des navs internes est dans useBlocker plus bas.)
     // Le message lui-même est imposé par le navigateur (on ne peut pas le customiser
     // depuis ~2017), mais le simple fait de set returnValue déclenche la confirmation.
     useEffect(() => {
@@ -303,13 +312,6 @@ const Create = () => {
         }
     };
 
-    const handleBack = () => {
-        // Le garde-fou anti-perte est centralisé via useBlocker plus haut, qui
-        // intercepte ce navigate() au besoin. Pas de confirm ici, sinon double prompt.
-        clearReturnTo();
-        navigate(returnTo);
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitError('');
@@ -474,11 +476,26 @@ const Create = () => {
                 </div>
             )}
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <button onClick={handleBack} style={{ background: 'none', border: 'none', display: 'flex', alignItems: 'center' }}>
-                    <ArrowLeft size={16} style={{ marginRight: 5 }} /> {t('common.back')}
-                </button>
-            </div>
+            {/* Fil d'Ariane : libellé du parent inféré du contexte (sous-site vs
+                site principal, gestion vs frise). onClick conserve l'appel à
+                clearReturnTo pour ne pas laisser un sessionStorage périmé. */}
+            {(() => {
+                const inSubsiteAdmin  = subsiteSlug && returnTo.includes('/admin');
+                const inMainManage    = !subsiteSlug && returnTo.includes('/manage');
+                const parentLabel = subsiteSlug
+                    ? (inSubsiteAdmin ? t('manageCartels.title', 'Gestion') : t('subsiteFrise.title', 'Frise'))
+                    : (inMainManage   ? t('manageCartels.title', 'Gestion') : t('library.title', 'Bibliothèque'));
+                const crumbs = subsiteSlug
+                    ? [{ label: parentLabel, href: returnTo, onClick: clearReturnTo }]
+                    : [
+                        { label: t('siteLayout.home', 'Accueil'), href: '/' },
+                        { label: parentLabel, href: returnTo, onClick: clearReturnTo },
+                      ];
+                const current = editId
+                    ? t('messages.editCartel', 'Modifier le cartel')
+                    : t('create.pageTitle', 'Nouveau cartel');
+                return <Breadcrumb crumbs={crumbs} current={current} />;
+            })()}
 
             <h2>{editId ? t('messages.editCartel', 'Modifier le cartel') : t('create.pageTitle', 'Nouveau cartel')}</h2>
 
@@ -769,7 +786,41 @@ const Create = () => {
                 <div>
                     <label>{t('create.fieldUrlQR')}</label>
                     <input name="url_qr" value={form.url_qr} onChange={handleInputChange} style={{ width: '100%', padding: '8px' }} />
+                    <small style={{ color: '#777', display: 'block', marginTop: '4px', fontSize: '0.82rem' }}>
+                        Lien externe affiché par le bouton « En savoir plus » et encodé dans le QR code à l'impression.
+                    </small>
                 </div>
+
+                {/* Page détail "En savoir plus" éditable (admin uniquement) */}
+                {isAdmin && (
+                    <div style={{ border: '1px solid #e8e8e8', borderRadius: '12px', padding: '16px', background: '#fafafa' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 600 }}>
+                            <input
+                                type="checkbox"
+                                checked={!!form.use_internal_details}
+                                onChange={e => { setForm(prev => ({ ...prev, use_internal_details: e.target.checked })); setIsDirty(true); }}
+                            />
+                            Utiliser une page « En savoir plus » interne
+                        </label>
+                        <small style={{ color: '#777', display: 'block', margin: '4px 0 12px 24px', fontSize: '0.82rem' }}>
+                            Si coché, le bouton et le QR pointent vers une page éditable hébergée sur le site
+                            au lieu du lien externe ci-dessus.
+                        </small>
+                        {form.use_internal_details && (
+                            <div style={{ marginTop: '8px' }}>
+                                <BlockEditor
+                                    blocks={Array.isArray(form.details_blocks) ? form.details_blocks : []}
+                                    onChange={(next) => { setForm(prev => ({ ...prev, details_blocks: next })); setIsDirty(true); }}
+                                />
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Notes admin internes (uniquement en édition) */}
+                {isAdmin && editId && (
+                    <CartelNotesPanel cartelId={editId} subsiteSlug={subsiteSlug} />
+                )}
 
                 {/* Contact :
                     - Visiteur non connecté : obligatoire (seul moyen de le recontacter).

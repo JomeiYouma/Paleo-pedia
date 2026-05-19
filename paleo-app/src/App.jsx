@@ -44,6 +44,7 @@ import SubsiteHome from './pages/SubsiteHome';
 import SubsiteFrise from './pages/SubsiteFrise';
 import SubsitePartners from './pages/SubsitePartners';
 import SubsiteAdmin from './pages/SubsiteAdmin';
+import CartelDetail from './pages/CartelDetail';
 
 // Reset du scroll sur changement de route. React Router en SPA conserve la
 // position Y de la page précédente, ce qui faisait apparaître les pages
@@ -133,6 +134,7 @@ const mainRouter = createHashRouter(
         <Route path="contact"      element={<Contact />} />
         <Route path="politique-confidentialite" element={<PrivacyPolicy />} />
         <Route path="mentions-legales" element={<LegalNotices />} />
+        <Route path="cartel/:id" element={<CartelDetail />} />
       </Route>
 
       {/* ── Sous-sites (/site/:slug/*) ────────────────── */}
@@ -149,6 +151,7 @@ const mainRouter = createHashRouter(
         <Route path="admin/pending"    element={<SubsiteAdmin />} />
         <Route path="admin/published"  element={<SubsiteAdmin />} />
         <Route path="admin/submissions" element={<SubsiteAdmin />} />
+        <Route path="cartel/:id" element={<CartelDetail />} />
       </Route>
 
       {/* ── Application (frise + gestion) ────────────── */}
@@ -202,6 +205,7 @@ const subsiteHostRouter = hostSubsiteSlug ? createBrowserRouter(
         <Route path="admin/pending"    element={<SubsiteAdmin />} />
         <Route path="admin/published"  element={<SubsiteAdmin />} />
         <Route path="admin/submissions" element={<SubsiteAdmin />} />
+        <Route path="cartel/:id" element={<CartelDetail />} />
       </Route>
       <Route path="/create" element={<Create />} />
       <Route path="*" element={<SubsiteHostCatchAll hostSlug={hostSubsiteSlug} />} />
