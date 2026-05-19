@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useTranslation, Trans } from 'react-i18next';
 import { generateZip, generatePdf, generateArchive } from '../utils/zipGenerator';
-import CartelPreview from '../components/CartelPreview';
+import PrintPreview from '../components/PrintPreview';
 import LongOperationOverlay from '../components/LongOperationOverlay';
 import TranslateFriseModal from '../components/TranslateFriseModal';
 import Toast from '../components/Toast';
@@ -1309,12 +1309,14 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
             {/* ── Modal aperçu ──────────────────────────────── */}
             {previewCartel && (
                 <div onClick={() => setPreviewCartel(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', zIndex:1100, display:'flex', alignItems:'center', justifyContent:'center', padding:'20px' }}>
-                    <div onClick={e => e.stopPropagation()} style={{ background:'white', borderRadius:'16px', padding:'24px', maxWidth:'700px', width:'100%', maxHeight:'90vh', overflowY:'auto', position:'relative' }}>
-                        <button onClick={() => setPreviewCartel(null)} style={{ position:'absolute', top:'16px', right:'16px', background:'#f5f5f5', border:'none', borderRadius:'50%', width:'32px', height:'32px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={16} /></button>
+                    <div onClick={e => e.stopPropagation()} style={{ background:'white', borderRadius:'16px', padding:'24px', maxWidth:'960px', width:'100%', maxHeight:'90vh', overflowY:'auto', position:'relative' }}>
+                        <button onClick={() => setPreviewCartel(null)} style={{ position:'absolute', top:'16px', right:'16px', background:'#f5f5f5', border:'none', borderRadius:'50%', width:'32px', height:'32px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', zIndex: 10 }}><X size={16} /></button>
                         <h3 style={{ margin:'0 0 16px', fontSize:'1rem', fontWeight:'700' }}>{t('manageCartels.preview')}</h3>
-                        <div style={{ border:'1px solid #eee', borderRadius:'10px', padding:'12px', height:'400px', overflow:'hidden' }}>
-                            <CartelPreview data={previewCartel} showExports />
-                        </div>
+                        {/* Aperçu fidèle du rendu imprimé : on rend le canvas via la
+                            même fonction qui produit les exports PNG/PDF, à ratio A4
+                            paysage exact. Les deux boutons PNG/PDF sont en overlay
+                            pour ne pas modifier la composition imprimée. */}
+                        <PrintPreview data={previewCartel} />
                         <div style={{ display:'flex', gap:'10px', marginTop:'16px', justifyContent:'flex-end' }}>
                             <button onClick={() => { setPreviewCartel(null); goToCreate(previewCartel.id); }}
                                 style={{ display:'flex', alignItems:'center', gap:'6px', background:'#3b5bdb', color:'white', border:'none', padding:'10px 18px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', fontFamily:'inherit' }}>

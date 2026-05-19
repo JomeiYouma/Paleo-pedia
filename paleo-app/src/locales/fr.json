@@ -191,6 +191,11 @@
         "exit": "Quitter",
         "adminAccess": "Accès administrateur"
     },
+    "preview": {
+        "rendering": "Génération de l'aperçu…",
+        "exportPng": "Télécharger en PNG",
+        "exportPdf": "Télécharger en PDF"
+    },
     "filters": {
         "or": "OU",
         "and": "ET",

@@ -188,6 +188,11 @@
         "exit": "Exit",
         "adminAccess": "Admin access"
     },
+    "preview": {
+        "rendering": "Rendering preview…",
+        "exportPng": "Download as PNG",
+        "exportPdf": "Download as PDF"
+    },
     "filters": {
         "or": "OR",
         "and": "AND",

@@ -70,8 +70,11 @@ const loadAndEncodeImage = (src) =>
     img.src = src;
   });
 
+// Dimensions du cartel imprimé exposées pour l'aperçu (ratio A4 paysage).
+export const PRINT_CARTEL_DIMS = { width: A4_WIDTH_PX, height: A4_HEIGHT_PX };
+
 /** Crée un conteneur hors-écran pour renderer les cartels. */
-const setupContainer = () => {
+export const setupContainer = () => {
   const div = document.createElement('div');
   div.style.cssText = `position:fixed;top:-10000px;left:-10000px;width:${A4_WIDTH_PX}px;height:${A4_HEIGHT_PX}px;`;
   document.body.appendChild(div);
@@ -80,7 +83,7 @@ const setupContainer = () => {
 
 // ── Rendu d'un cartel → Canvas ────────────────────────────────
 
-const renderCartelToCanvas = async (cartel, container, lang, overrides) => {
+export const renderCartelToCanvas = async (cartel, container, lang, overrides) => {
   const isEn  = lang && lang.startsWith('en');
   const title = (isEn && cartel.titre_en)       ? cartel.titre_en       : cartel.titre;
   const desc  = (isEn && cartel.description_en) ? cartel.description_en : (cartel.description || '');
