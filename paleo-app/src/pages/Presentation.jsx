@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Linkedin, Globe, Link2 } from 'lucide-react';
 import api from '../services/apiClient';
 import { pickLang } from '../utils/i18nHelpers';
+import PartnersList from '../components/PartnersList';
 
 // Page "À propos" — équipe rendue depuis la base via /api/team-members.
 // Trois rendus selon la catégorie :
@@ -327,10 +328,18 @@ const Presentation = () => {
                 </>
             )}
 
+            {/* ── Partenaires ─────────────────────────────────────────── */}
+            <h2 style={{ fontSize: '1.8rem', marginTop: '50px', marginBottom: '8px' }}>
+                {t('pages.partners.title', 'Partenaires')}
+            </h2>
+            <p style={{ marginTop: 0, marginBottom: '24px' }}>
+                {t('pages.partners.subtitle', 'Les organisations qui soutiennent et accompagnent le projet.')}
+            </p>
+            <PartnersList />
+
             {/* ── Liens utiles ─────────────────────────────────────────── */}
             <h2 style={{ fontSize: '1.8rem', marginTop: '50px', marginBottom: '20px' }}>{t('pages.presentation.moreLinks')}</h2>
             <ul style={{ paddingLeft: '20px' }}>
-                <li><Link to="/partenaires">{t('pages.presentation.linkPartners')}</Link> {t('pages.presentation.linkPartnersHint')}</li>
                 <li><Link to="/participer">{t('pages.presentation.linkParticipate')}</Link> {t('pages.presentation.linkParticipateHint')}</li>
                 <li><Link to="/prestations">{t('pages.presentation.linkPrestations')}</Link> {t('pages.presentation.linkPrestationsHint')}</li>
                 <li><Link to="/contact">{t('pages.presentation.linkContact')}</Link> {t('pages.presentation.linkContactHint')}</li>
