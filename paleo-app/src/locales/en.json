@@ -41,6 +41,7 @@
         "fieldYear": "Year (e.g. 2024, 2024-01-15...)",
         "fieldLocation": "Location (City, Country)",
         "fieldLocationPlaceholder": "Ex: London, UK",
+        "fieldLocationHelp": "Enter the precise location first (e.g. « Avenue Foch, Paris »). If the pin (green ✓) lands on the right spot, keep it. Otherwise, use « City, Country » or just « , Country »: the pin will fall on the country instead of a wrong place.",
         "fieldDesc": "Description",
         "fieldDescEn": "Description (English)",
         "fieldImage": "Image URL",

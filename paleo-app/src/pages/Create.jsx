@@ -598,7 +598,17 @@ const Create = () => {
 
                 {/* Location */}
                 <div>
-                    <label>{t('create.fieldLocation')}</label>
+                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        {t('create.fieldLocation')}
+                        <span
+                            tabIndex={0}
+                            title={t('create.fieldLocationHelp')}
+                            aria-label={t('create.fieldLocationHelp')}
+                            style={{ display: 'inline-flex', cursor: 'help', color: '#c2185b' }}
+                        >
+                            <Info size={14} aria-hidden="true" />
+                        </span>
+                    </label>
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                         <div style={{ position: 'relative', flex: 1 }}>
                             <input

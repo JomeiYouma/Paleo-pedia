@@ -458,19 +458,34 @@ export const CartelModel = {
 
     // Agrégation des contributeurs : split sur "," "&" et "et" (avec frontières
     // de mot pour ne pas casser des noms comme "Etienne"), trim, dédup par
-    // forme normalisée (lower + collapse spaces) pour fusionner "Jean DUPONT"
-    // et "jean dupont". Garde la première graphie rencontrée pour l'affichage.
+    // forme normalisée (lower + sans diacritiques + collapse spaces) pour
+    // fusionner "Cédric Carles", "Cedric Carles" et "cedric  carles". Pour
+    // l'affichage, on garde la graphie la plus accentuée rencontrée (Cédric
+    // l'emporte sur Cedric), à comptage de diacritiques égal la première.
     const SPLIT_RE = /\s*(?:,|&|\bet\b|\bET\b)\s*/g;
+    const normalizeKey = (s) =>
+      s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().replace(/\s+/g, ' ');
+    const diacriticCount = (s) => {
+      const decomposed = s.normalize('NFD');
+      const stripped = decomposed.replace(/\p{Diacritic}/gu, '');
+      return decomposed.length - stripped.length;
+    };
     const exhumeCounts = new Map(); // key normalisée → { name, count }
     for (const row of topExhumeRes.rows) {
       const raw = (row.raw || '').trim();
       if (!raw) continue;
       const parts = raw.split(SPLIT_RE).map(s => s.trim()).filter(Boolean);
       for (const part of parts) {
-        const key = part.toLowerCase().replace(/\s+/g, ' ');
+        const key = normalizeKey(part);
         const existing = exhumeCounts.get(key);
-        if (existing) existing.count += 1;
-        else exhumeCounts.set(key, { name: part, count: 1 });
+        if (existing) {
+          existing.count += 1;
+          if (diacriticCount(part) > diacriticCount(existing.name)) {
+            existing.name = part;
+          }
+        } else {
+          exhumeCounts.set(key, { name: part, count: 1 });
+        }
       }
     }
     const topExhumePar = [...exhumeCounts.values()]
