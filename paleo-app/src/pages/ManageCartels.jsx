@@ -6,7 +6,7 @@ import {
     Download, Square, CheckSquare, Search,
     ArrowUpDown, ArrowUp, ArrowDown,
     FileText, Inbox, Globe, Plus, ScanEye, MapPin, Image as ImageIcon,
-    Languages, Upload, Package, FileJson, ImageIcon as ImgIcon,
+    Languages, Upload, Package, FileJson, ImageIcon as ImgIcon, Columns,
     FolderPlus, AlertTriangle, Loader2,
 } from 'lucide-react';
 import { useTranslation, Trans } from 'react-i18next';
@@ -53,13 +53,6 @@ const TABS = [
     { key: 'pending',   labelKey: 'nav.pending',   icon: Inbox,    color: '#e67e00', bg: '#fff4e0', descriptionKey: 'manageCartels.pendingDescription',     filter: c => c.status === 'pending_review' },
     { key: 'submissions', labelKey: 'nav.submissions', icon: Inbox, color: '#C2185B', bg: '#fce4ec', descriptionKey: 'manageCartels.submissionsDescription', filter: c => !!c.submitted_to_main_at && !c.visible_on_main && !!c.subsite_id, superadminOnly: true },
 ];
-
-const STATUS_BADGE = {
-    draft:          { labelKey: 'status.draft',          bg: '#f0f4ff', color: '#3b5bdb' },
-    pending_review: { labelKey: 'status.pending_review', bg: '#fff4e0', color: '#e67e00' },
-    published:      { labelKey: 'status.published',      bg: '#e8f5e9', color: '#2e7d32' },
-    archived:       { labelKey: 'status.archived',       bg: '#f5f5f5', color: '#888'   },
-};
 
 // ── Modal Import ZIP ─────────────────────────────────────────
 const ImportModal = ({ onClose, onDone, t }) => {
@@ -202,6 +195,26 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     }, [selectedIds, selectionStorageKey]);
     const [processingId,   setProcessingId]    = useState(null);
     const [previewCartel,  setPreviewCartel]   = useState(null);
+
+    // Masquage de colonnes optionnelles (Catégories / Ateliers / Lieu). Persisté
+    // en localStorage pour survivre aux rechargements. Les clés stockées
+    // correspondent à la colonne masquée.
+    const HIDDEN_COLS_KEY = 'paleo:manage:hiddenColumns';
+    const [hiddenColumns, setHiddenColumns] = useState(() => {
+        try {
+            const raw = localStorage.getItem(HIDDEN_COLS_KEY);
+            return new Set(raw ? JSON.parse(raw) : []);
+        } catch { return new Set(); }
+    });
+    const isColHidden = (key) => hiddenColumns.has(key);
+    const toggleCol = (key) => {
+        setHiddenColumns(prev => {
+            const next = new Set(prev);
+            next.has(key) ? next.delete(key) : next.add(key);
+            try { localStorage.setItem(HIDDEN_COLS_KEY, JSON.stringify(Array.from(next))); } catch { /* noop */ }
+            return next;
+        });
+    };
     const [busy,           setBusy]            = useState(false);
     const [busyLabel,      setBusyLabel]       = useState('Traitement…');
     const [progress,       setProgress]        = useState({ current: 0, total: 0 });
@@ -869,6 +882,33 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                     {selectedIds.size > 0 ? `${selectedIds.size} ${t('manageCartels.selected')}${selectedIds.size > 1 ? 's' : ''}` : t('manageCartels.selectAll')}
                 </button>
 
+                {/* Colonnes affichées : permet de masquer Catégories / Ateliers / Lieu
+                    quand on n'en a pas besoin (préférence persistée en localStorage). */}
+                <DropdownButton label={t('manageCartels.columnsMenu', 'Colonnes')} icon={Columns} color="#555" variant="outline">
+                    {() => (
+                        <div style={{ padding:'6px 0' }}>
+                            {[
+                                { key: 'categories', label: t('manageCartels.categories') },
+                                { key: 'workshops',  label: t('manageCartels.workshops')  },
+                                { key: 'location',   label: t('manageCartels.location')   },
+                            ].map(({ key, label }) => (
+                                <button
+                                    key={key}
+                                    onClick={() => toggleCol(key)}
+                                    style={{ display:'flex', alignItems:'center', gap:'10px', width:'100%', padding:'9px 14px', border:'none', background:'none', textAlign:'left', cursor:'pointer', fontSize:'0.88rem', color:'#333', fontFamily:'inherit' }}
+                                    onMouseEnter={e => e.currentTarget.style.background = '#f8f8f8'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                                >
+                                    {isColHidden(key)
+                                        ? <Square size={16} color="#aaa" />
+                                        : <CheckSquare size={16} color="#3b5bdb" />}
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </DropdownButton>
+
                 {/* Actions batch */}
                 {selectedIds.size > 0 && (
                     <div style={{ display:'flex', gap:'6px', flexWrap:'wrap', alignItems:'center' }}>
@@ -948,12 +988,11 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                         <th style={{ padding:'12px', width:'50px', textAlign:'left', ...thSticky }}>Img</th>
                                         <th onClick={() => handleSort('date')}  style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none', whiteSpace:'nowrap', ...thSticky }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.year')} <SortIcon k="date" /></div></th>
                                         <th onClick={() => handleSort('titre')} style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none', ...thSticky }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.title')} <SortIcon k="titre" /></div></th>
-                                        <th style={{ padding:'12px', textAlign:'left', ...thSticky }}>{t('manageCartels.categories')}</th>
-                                        <th style={{ padding:'12px', textAlign:'left', ...thSticky }}>{t('manageCartels.workshops')}</th>
-                                        <th onClick={() => handleSort('loc')}   style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none', ...thSticky }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.location')} <SortIcon k="loc" /></div></th>
+                                        {!isColHidden('categories') && <th style={{ padding:'12px', textAlign:'left', ...thSticky }}>{t('manageCartels.categories')}</th>}
+                                        {!isColHidden('workshops')  && <th style={{ padding:'12px', textAlign:'left', ...thSticky }}>{t('manageCartels.workshops')}</th>}
+                                        {!isColHidden('location')   && <th onClick={() => handleSort('loc')}   style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none', ...thSticky }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.location')} <SortIcon k="loc" /></div></th>}
                                         {activeTab === 'pending' && <th style={{ padding:'12px', textAlign:'left', ...thSticky }}>IP</th>}
                                         {activeTab === 'submissions' && <th style={{ padding:'12px', textAlign:'left', ...thSticky }}>{t('manageCartels.subsite')}</th>}
-                                        <th style={{ padding:'12px', textAlign:'center', ...thSticky }}>{t('manageCartels.state')}</th>
                                         <th style={{ padding:'12px', textAlign:'center', ...thSticky }}>{t('manageCartels.statusActions')}</th>
                                         <th style={{ padding:'12px', textAlign:'center', ...thSticky }}>{t('manageCartels.actions')}</th>
                                     </>;
@@ -962,13 +1001,15 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                         </thead>
                         <tbody>
                             {filteredCartels.map(cartel => {
-                                const badge   = STATUS_BADGE[cartel.status] || {};
                                 const isProc  = processingId === cartel.id;
                                 const isTrans = translating.has(cartel.id);
                                 const readOnly = isReadOnlyMainCartel(cartel);
+                                // Archivé : le badge "État" a été retiré ; on garde la distinction
+                                // visuelle via une opacité plus faible sur la ligne entière.
+                                const rowOpacity = isProc ? 0.7 : cartel.status === 'archived' ? 0.55 : 1;
 
                                 return (
-                                    <tr key={cartel.id} id={`cartel-${cartel.id}`} style={{ borderBottom:'1px solid #f0f0f0', background: isProc ? '#fffbf0' : 'white', opacity: isProc ? 0.7 : 1 }}>
+                                    <tr key={cartel.id} id={`cartel-${cartel.id}`} style={{ borderBottom:'1px solid #f0f0f0', background: isProc ? '#fffbf0' : 'white', opacity: rowOpacity }}>
 
                                         {/* Checkbox */}
                                         <td style={{ padding:'10px', textAlign:'center' }}>
@@ -1017,30 +1058,36 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                         </td>
 
                                         {/* Catégories */}
-                                        <td style={{ padding:'10px' }}>
-                                            <div style={{ display:'flex', flexWrap:'wrap', gap:'3px' }}>
-                                                {(cartel.categories || []).slice(0, 3).map(c => (
-                                                    <span key={c} style={{ background:'#f0f0f0', padding:'2px 7px', borderRadius:'10px', fontSize:'0.75rem', color:'#555' }}>{c}</span>
-                                                ))}
-                                                {(cartel.categories || []).length > 3 && <span style={{ color:'#bbb', fontSize:'0.75rem' }}>+{cartel.categories.length - 3}</span>}
-                                            </div>
-                                        </td>
+                                        {!isColHidden('categories') && (
+                                            <td style={{ padding:'10px' }}>
+                                                <div style={{ display:'flex', flexWrap:'wrap', gap:'3px' }}>
+                                                    {(cartel.categories || []).slice(0, 3).map(c => (
+                                                        <span key={c} style={{ background:'#f0f0f0', padding:'2px 7px', borderRadius:'10px', fontSize:'0.75rem', color:'#555' }}>{c}</span>
+                                                    ))}
+                                                    {(cartel.categories || []).length > 3 && <span style={{ color:'#bbb', fontSize:'0.75rem' }}>+{cartel.categories.length - 3}</span>}
+                                                </div>
+                                            </td>
+                                        )}
 
                                         {/* Workshops */}
-                                        <td style={{ padding:'10px' }}>
-                                            <div style={{ display:'flex', flexWrap:'wrap', gap:'4px' }}>
-                                                {((cartel.workshopIds || []).map(id => workshops.find(w => String(w.id) === String(id))).filter(Boolean).slice(0, 2)).map(w => (
-                                                    <span key={w.id} style={{ background:'#e8f1ff', padding:'2px 7px', borderRadius:'10px', fontSize:'0.75rem', color:'#1f6feb' }}>{w.name}</span>
-                                                ))}
-                                                {((cartel.workshopIds || []).length > 2) && <span style={{ color:'#bbb', fontSize:'0.75rem' }}>+{cartel.workshopIds.length - 2}</span>}
-                                                {(cartel.workshopIds || []).length === 0 && <span style={{ color:'#bbb', fontSize:'0.8rem' }}>—</span>}
-                                            </div>
-                                        </td>
+                                        {!isColHidden('workshops') && (
+                                            <td style={{ padding:'10px' }}>
+                                                <div style={{ display:'flex', flexWrap:'wrap', gap:'4px' }}>
+                                                    {((cartel.workshopIds || []).map(id => workshops.find(w => String(w.id) === String(id))).filter(Boolean).slice(0, 2)).map(w => (
+                                                        <span key={w.id} style={{ background:'#e8f1ff', padding:'2px 7px', borderRadius:'10px', fontSize:'0.75rem', color:'#1f6feb' }}>{w.name}</span>
+                                                    ))}
+                                                    {((cartel.workshopIds || []).length > 2) && <span style={{ color:'#bbb', fontSize:'0.75rem' }}>+{cartel.workshopIds.length - 2}</span>}
+                                                    {(cartel.workshopIds || []).length === 0 && <span style={{ color:'#bbb', fontSize:'0.8rem' }}>—</span>}
+                                                </div>
+                                            </td>
+                                        )}
 
                                         {/* Lieu */}
-                                        <td style={{ padding:'10px', color:'#777', fontSize:'0.85rem' }}>
-                                            {cartel.location && <div style={{ display:'flex', alignItems:'center', gap:'4px' }}><MapPin size={12} color="#bbb" />{cartel.location}</div>}
-                                        </td>
+                                        {!isColHidden('location') && (
+                                            <td style={{ padding:'10px', color:'#777', fontSize:'0.85rem' }}>
+                                                {cartel.location && <div style={{ display:'flex', alignItems:'center', gap:'4px' }}><MapPin size={12} color="#bbb" />{cartel.location}</div>}
+                                            </td>
+                                        )}
 
                                         {/* IP */}
                                         {activeTab === 'pending' && (
@@ -1063,13 +1110,6 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                                 )}
                                             </td>
                                         )}
-
-                                        {/* Statut */}
-                                        <td style={{ padding:'10px', textAlign:'center' }}>
-                                            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px' }}>
-                                                <span style={{ background:badge.bg, color:badge.color, borderRadius:'20px', padding:'2px 8px', fontSize:'0.75rem', fontWeight:'700' }}>{badge.labelKey ? t(badge.labelKey) : ''}</span>
-                                            </div>
-                                        </td>
 
                                         {/* Actions de statut : changement de cycle de vie (publier, brouillon,
                                             archiver, supprimer) et workflow de soumission au site principal. */}
