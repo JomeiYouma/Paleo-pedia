@@ -106,7 +106,11 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, viewMode: viewMo
             const allowedIds = new Set((currentWorkshop.cartelIds || []).map(String));
             data = data.filter(c => allowedIds.has(String(c.id)));
         } else if (!isAdmin) {
-            data = data.filter(c => c.status === 'published' && c.visible);
+            // Le serveur filtre déjà sur status='published' pour les non-admins ;
+            // on ne re-filtre pas sur la colonne legacy `visible` qui dérive du
+            // statut mais n'est plus synchronisée par update() (bug historique :
+            // certains cartels publiés via PUT ont visible=0).
+            data = data.filter(c => c.status === 'published');
         }
 
         // Si un sous-site impose une catégorie ou son subsite_id : on filtre en dur ici.
