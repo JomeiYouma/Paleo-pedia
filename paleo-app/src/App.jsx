@@ -126,7 +126,9 @@ const mainRouter = createHashRouter(
         <Route index element={<LandingPage />} />
         <Route path="presentation" element={<Presentation />} />
         <Route path="prestations"  element={<Prestations />} />
-        <Route path="ouvrages"     element={<Ouvrages />} />
+        <Route path="boutique"     element={<Ouvrages />} />
+        {/* Ancienne URL conservée pour ne pas casser les liens externes */}
+        <Route path="ouvrages"     element={<Navigate to="/boutique" replace />} />
         <Route path="museum"       element={<Museum />} />
         <Route path="participer"   element={<Participer />} />
         <Route path="presse"       element={<Presse />} />

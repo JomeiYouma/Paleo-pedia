@@ -166,7 +166,7 @@ const ShopItemForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregi
 
             <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'var(--color-text-muted)', marginTop: '4px' }}>
                 <input type="checkbox" checked={isPublished} onChange={e => setIsPublished(e.target.checked)} />
-                Item publié (visible sur la page /ouvrages)
+                Item publié (visible sur la page /boutique)
             </label>
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
@@ -339,7 +339,7 @@ const AdminShop = () => {
 
             <ExplainerBox title="À quoi sert cette page ?">
                 Gérer les liens vers le <strong>PrestaShop externe</strong> affichés sur la page publique
-                /ouvrages. Le site ne gère pas de panier ni de paiement : chaque card est un lien enrichi
+                /boutique. Le site ne gère pas de panier ni de paiement : chaque card est un lien enrichi
                 (visuel, titre, prix indicatif) qui renvoie vers la fiche produit hébergée chez PrestaShop.
                 <ul style={{ margin: '8px 0 0', paddingLeft: '18px', lineHeight: '1.7' }}>
                     <li><strong>Livres</strong> — ouvrages Rétrofutur (FR/EN/JP…)</li>

@@ -19,7 +19,7 @@ const SITE_NAV = [
     { path: '/presentation', labelKey: 'header.presentation' },
     { path: '/prestations',  labelKey: 'header.prestations' },
     { path: '/participer',   labelKey: 'header.participer' },
-    { path: '/ouvrages',     labelKey: 'header.ouvrages' },
+    { path: '/boutique',     labelKey: 'header.ouvrages' },
     { path: '/presse',       labelKey: 'header.presse' },
     { path: '/partenaires',  labelKey: 'header.partners' },
     { path: '/contact',      labelKey: 'header.contact' },

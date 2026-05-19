@@ -175,7 +175,7 @@
         "presentation": "About",
         "prestations": "Services",
         "participer": "Participate",
-        "ouvrages": "Books",
+        "ouvrages": "Shop",
         "museum": "Museum",
         "presse": "Press",
         "partners": "Partners",
@@ -364,7 +364,7 @@
             "empty": "No service published yet."
         },
         "ouvrages": {
-            "title": "Our Books",
+            "title": "Our shop",
             "intro": "Discover our books and games compiling hundreds of forgotten inventions and offering an alternative reading of technical history. Purchases are made on our external shop.",
             "categoryBook": "Books",
             "categoryGame": "Card games",

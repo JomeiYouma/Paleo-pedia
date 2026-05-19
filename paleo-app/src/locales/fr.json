@@ -178,7 +178,7 @@
         "presentation": "À propos",
         "prestations": "Prestations",
         "participer": "Participer",
-        "ouvrages": "Ouvrages",
+        "ouvrages": "Boutique",
         "museum": "Museum",
         "presse": "Presse",
         "partners": "Partenaires",
@@ -370,7 +370,7 @@
             "empty": "Aucune prestation publiée pour le moment."
         },
         "ouvrages": {
-            "title": "Nos Ouvrages",
+            "title": "Notre boutique",
             "intro": "Découvrez nos livres et nos jeux qui compilent des centaines d'inventions oubliées et proposent une autre lecture de l'histoire technique. Les achats se font sur notre boutique externe.",
             "categoryBook": "Livres",
             "categoryGame": "Jeux de cartes",
