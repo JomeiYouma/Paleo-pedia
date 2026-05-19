@@ -864,8 +864,8 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                 {/* Tout sélectionner */}
                 <button onClick={selectAll} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'8px 12px', borderRadius:'8px', border:'1px solid #ddd', background:'white', cursor:'pointer', fontSize:'0.85rem', color:'#555', fontFamily:'inherit' }}>
                     {selectedIds.size > 0 && selectedIds.size === filteredCartels.length
-                        ? <CheckSquare size={15} color="#3b5bdb" />
-                        : <Square size={15} color="#aaa" />}
+                        ? <CheckSquare size={22} color="#3b5bdb" />
+                        : <Square size={22} color="#aaa" />}
                     {selectedIds.size > 0 ? `${selectedIds.size} ${t('manageCartels.selected')}${selectedIds.size > 1 ? 's' : ''}` : t('manageCartels.selectAll')}
                 </button>
 
@@ -973,7 +973,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                         {/* Checkbox */}
                                         <td style={{ padding:'10px', textAlign:'center' }}>
                                             <div onClick={() => toggleSelect(cartel.id)} style={{ cursor:'pointer' }}>
-                                                {selectedIds.has(cartel.id) ? <CheckSquare size={16} color="#3b5bdb" /> : <Square size={16} color="#ccc" />}
+                                                {selectedIds.has(cartel.id) ? <CheckSquare size={22} color="#3b5bdb" /> : <Square size={22} color="#ccc" />}
                                             </div>
                                         </td>
 

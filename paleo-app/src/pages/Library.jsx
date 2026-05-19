@@ -462,7 +462,7 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, viewMode: viewMo
                         }}>
                             {isAdmin && (
                                 <div onClick={() => toggleSelection(cartel.id)} style={{ cursor: 'pointer', marginTop: '10px', flexShrink: 0 }}>
-                                    {selectedIds.has(cartel.id) ? <CheckSquare size={18} /> : <Square size={18} color="#ccc" />}
+                                    {selectedIds.has(cartel.id) ? <CheckSquare size={24} /> : <Square size={24} color="#ccc" />}
                                 </div>
                             )}
                             <div style={{ flex: 1 }}>
