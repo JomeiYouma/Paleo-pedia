@@ -1114,8 +1114,8 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                         {!isColHidden('location')   && <th onClick={() => handleSort('loc')}   style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none', ...thSticky }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.location')} <SortIcon k="loc" /></div></th>}
                                         {activeTab === 'pending' && <th style={{ padding:'12px', textAlign:'left', ...thSticky }}>IP</th>}
                                         {activeTab === 'submissions' && <th style={{ padding:'12px', textAlign:'left', ...thSticky }}>{t('manageCartels.subsite')}</th>}
-                                        <th style={{ padding:'12px', textAlign:'center', ...thSticky }}>{t('manageCartels.statusActions')}</th>
                                         <th style={{ padding:'12px', textAlign:'center', ...thSticky }}>{t('manageCartels.actions')}</th>
+                                        <th style={{ padding:'12px', textAlign:'center', ...thSticky }}>{t('manageCartels.statusActions')}</th>
                                     </>;
                                 })()}
                             </tr>
@@ -1232,6 +1232,33 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                             </td>
                                         )}
 
+                                        {/* Actions de modification : aperçu, édition du contenu, retraduction. */}
+                                        <td style={{ padding:'10px' }}>
+                                            <div style={{ display:'flex', gap:'4px', justifyContent:'center', flexWrap:'wrap' }}>
+                                                <ActionBtn onClick={() => setPreviewCartel(cartel)} title={t('manageCartels.preview')} color={HEX_COLORS.neutral}><ScanEye size={15} /></ActionBtn>
+                                                {!readOnly && <ActionBtn onClick={() => goToCreate(cartel.id)} title={t('manageCartels.edit')} color="#3b5bdb"><Edit size={15} /></ActionBtn>}
+
+                                                {/* Retraduction automatique : on n'affiche que la direction
+                                                    qui part de la langue active. En FR on lance EN→ depuis FR,
+                                                    en EN on lance FR→ depuis EN. L'autre bouton (Ajouter une
+                                                    note) prend la place de l'option redondante. */}
+                                                {!readOnly && (i18n.language === 'en' ? (
+                                                    <ActionBtn onClick={() => handleRetranslate(cartel, 'fr')} title={t('manageCartels.retranslateFr', 'Lancer une traduction automatique en français à partir de la version anglaise.')} color="#3b82c4" disabled={isTrans}>
+                                                        {isTrans ? <Clock size={15} /> : <Languages size={15} />}
+                                                    </ActionBtn>
+                                                ) : (
+                                                    <ActionBtn onClick={() => handleRetranslate(cartel, 'en')} title={t('manageCartels.retranslateEn', 'Lancer une traduction automatique en anglais à partir de la version française.')} color="#6741d9" disabled={isTrans}>
+                                                        {isTrans ? <Clock size={15} /> : <Languages size={15} />}
+                                                    </ActionBtn>
+                                                ))}
+                                                {!readOnly && (
+                                                    <ActionBtn onClick={() => setNoteCartel(cartel)} title={t('manageCartels.addNote', 'Ajouter une note')} color="#e67e00">
+                                                        <StickyNote size={15} />
+                                                    </ActionBtn>
+                                                )}
+                                            </div>
+                                        </td>
+
                                         {/* Actions de statut : changement de cycle de vie (publier, brouillon,
                                             archiver, supprimer) et workflow de soumission au site principal. */}
                                         <td style={{ padding:'10px' }}>
@@ -1268,33 +1295,6 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
 
                                                 {!readOnly && activeTab !== 'submissions' && (
                                                     <ActionBtn onClick={() => handleDelete(cartel.id)} title={t('manageCartels.delete')} color="#d32f2f" disabled={isProc}><Trash2 size={15} /></ActionBtn>
-                                                )}
-                                            </div>
-                                        </td>
-
-                                        {/* Actions de modification : aperçu, édition du contenu, retraduction. */}
-                                        <td style={{ padding:'10px' }}>
-                                            <div style={{ display:'flex', gap:'4px', justifyContent:'center', flexWrap:'wrap' }}>
-                                                <ActionBtn onClick={() => setPreviewCartel(cartel)} title={t('manageCartels.preview')} color={HEX_COLORS.neutral}><ScanEye size={15} /></ActionBtn>
-                                                {!readOnly && <ActionBtn onClick={() => goToCreate(cartel.id)} title={t('manageCartels.edit')} color="#3b5bdb"><Edit size={15} /></ActionBtn>}
-
-                                                {/* Retraduction automatique : on n'affiche que la direction
-                                                    qui part de la langue active. En FR on lance EN→ depuis FR,
-                                                    en EN on lance FR→ depuis EN. L'autre bouton (Ajouter une
-                                                    note) prend la place de l'option redondante. */}
-                                                {!readOnly && (i18n.language === 'en' ? (
-                                                    <ActionBtn onClick={() => handleRetranslate(cartel, 'fr')} title={t('manageCartels.retranslateFr', 'Lancer une traduction automatique en français à partir de la version anglaise.')} color="#3b82c4" disabled={isTrans}>
-                                                        {isTrans ? <Clock size={15} /> : <Languages size={15} />}
-                                                    </ActionBtn>
-                                                ) : (
-                                                    <ActionBtn onClick={() => handleRetranslate(cartel, 'en')} title={t('manageCartels.retranslateEn', 'Lancer une traduction automatique en anglais à partir de la version française.')} color="#6741d9" disabled={isTrans}>
-                                                        {isTrans ? <Clock size={15} /> : <Languages size={15} />}
-                                                    </ActionBtn>
-                                                ))}
-                                                {!readOnly && (
-                                                    <ActionBtn onClick={() => setNoteCartel(cartel)} title={t('manageCartels.addNote', 'Ajouter une note')} color="#e67e00">
-                                                        <StickyNote size={15} />
-                                                    </ActionBtn>
                                                 )}
                                             </div>
                                         </td>
