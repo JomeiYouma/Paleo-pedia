@@ -6,7 +6,7 @@ import {
     Download, Square, CheckSquare, Search,
     ArrowUpDown, ArrowUp, ArrowDown,
     FileText, Inbox, Globe, Plus, ScanEye, MapPin, Image as ImageIcon,
-    Languages, Upload, Package, FileJson, ImageIcon as ImgIcon, Columns,
+    Languages, Upload, Package, FileJson, ImageIcon as ImgIcon, Columns, SlidersHorizontal,
     FolderPlus, AlertTriangle, Loader2,
 } from 'lucide-react';
 import { useTranslation, Trans } from 'react-i18next';
@@ -205,6 +205,18 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     const [processingId,   setProcessingId]    = useState(null);
     const [previewCartel,  setPreviewCartel]   = useState(null);
 
+    // ── Filtres complexes ────────────────────────────────────────
+    // Quand actif, on ignore les filtres inline (categories/workshops) et on
+    // applique une combinaison ET/OU de conditions, chaque condition étant
+    // un type (catégorie ou atelier) + une liste de valeurs (OU entre elles).
+    // Couvre les cas type « (cat A ou B) et (ws 1 ou 2) ».
+    const [complexFilter, setComplexFilter] = useState({
+        enabled: false,
+        combinator: 'AND', // entre conditions
+        conditions: [],
+    });
+    const [showComplexModal, setShowComplexModal] = useState(false);
+
     // Masquage de colonnes optionnelles (Catégories / Ateliers / Lieu). Persisté
     // en localStorage pour survivre aux rechargements. Les clés stockées
     // correspondent à la colonne masquée.
@@ -311,17 +323,49 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
         let data = issueIdsFilter
             ? scopedCartels.filter(c => issueIdsFilter.has(c.id))
             : scopedCartels.filter(currentTabDef.filter);
-        // Filtres multi-valeurs. OR : au moins une des valeurs cochées correspond.
-        // AND : toutes les valeurs cochées doivent être présentes sur le cartel.
-        if (filterWorkshops.length) {
-            const wantedWs = filterWorkshops.map(String);
-            data = data.filter(c => {
-                const ws = (c.workshopIds || []).map(String);
-                return filterWorkshopsOp === 'AND'
-                    ? wantedWs.every(id => ws.includes(id))
-                    : wantedWs.some(id => ws.includes(id));
-            });
+
+        // Branche A : filtres complexes prennent le dessus si activés.
+        // Chaque condition matche par sous-ensemble (OU entre ses valeurs).
+        // Les conditions se combinent ensuite via combinator (ET ou OU).
+        if (complexFilter.enabled && complexFilter.conditions.length) {
+            const conds = complexFilter.conditions;
+            const matchCond = (cartel, cond) => {
+                if (!cond.values?.length) return true; // condition vide = passe
+                if (cond.field === 'category') {
+                    const cats = [...(cartel.categories || []), ...(cartel.categories_en || [])];
+                    return cond.values.some(v => cats.includes(v));
+                }
+                if (cond.field === 'workshop') {
+                    const ws = (cartel.workshopIds || []).map(String);
+                    return cond.values.some(v => ws.includes(String(v)));
+                }
+                return true;
+            };
+            data = data.filter(c => complexFilter.combinator === 'OR'
+                ? conds.some(cond => matchCond(c, cond))
+                : conds.every(cond => matchCond(c, cond)));
+        } else {
+            // Branche B : filtres inline multi-valeurs (mode par défaut).
+            if (filterWorkshops.length) {
+                const wantedWs = filterWorkshops.map(String);
+                data = data.filter(c => {
+                    const ws = (c.workshopIds || []).map(String);
+                    return filterWorkshopsOp === 'AND'
+                        ? wantedWs.every(id => ws.includes(id))
+                        : wantedWs.some(id => ws.includes(id));
+                });
+            }
+            if (filterCategories.length) {
+                data = data.filter(c => {
+                    const cats = [...(c.categories || []), ...(c.categories_en || [])];
+                    return filterCategoriesOp === 'AND'
+                        ? filterCategories.every(v => cats.includes(v))
+                        : filterCategories.some(v => cats.includes(v));
+                });
+            }
         }
+
+        // Recherche texte : s'applique dans les deux branches.
         if (search) {
             const q = search.toLowerCase();
             data = data.filter(c =>
@@ -329,14 +373,6 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                 (c.titre_en || '').toLowerCase().includes(q) ||
                 (c.location || '').toLowerCase().includes(q)
             );
-        }
-        if (filterCategories.length) {
-            data = data.filter(c => {
-                const cats = [...(c.categories || []), ...(c.categories_en || [])];
-                return filterCategoriesOp === 'AND'
-                    ? filterCategories.every(v => cats.includes(v))
-                    : filterCategories.some(v => cats.includes(v));
-            });
         }
         data.sort((a, b) => {
             let av, bv;
@@ -349,7 +385,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
             return 0;
         });
         return data;
-    }, [cartels, currentTabDef, search, filterCategories, filterCategoriesOp, filterWorkshops, filterWorkshopsOp, filterSubsiteSlug, sortConfig, issueIdsFilter, scopedCartels]);
+    }, [cartels, currentTabDef, search, filterCategories, filterCategoriesOp, filterWorkshops, filterWorkshopsOp, complexFilter, filterSubsiteSlug, sortConfig, issueIdsFilter, scopedCartels]);
 
     // ── Scroll vers la ligne éditée au retour : location.hash = '#cartel-<id>'
     // (posé par rememberReturn(location, { scrollId })). On déclenche quand
@@ -818,6 +854,41 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                 (dans la page admin principale, on garde le bandeau compact avec
                  le bouton pour retirer le filtre). En mode lockedSubsiteSlug,
                  l'info box contextuelle au-dessus du titre couvre déjà ce rôle. */}
+            {/* Bandeau : filtres complexes actifs.
+                S'affiche au-dessus de la barre filtres pour signaler que les
+                dropdowns inline catégorie/atelier sont ignorés au profit du
+                builder. Boutons Modifier / Désactiver pour reprendre la main. */}
+            {complexFilter.enabled && (
+                <div style={{
+                    display:'flex', alignItems:'center', gap:'10px',
+                    background:'#fff8e6', border:'1px solid #ffe0a8',
+                    borderRadius:'10px', padding:'10px 14px', marginBottom:'12px',
+                    color:'#a85d00', fontSize:'0.88rem', fontWeight:'600',
+                }}>
+                    <SlidersHorizontal size={16} />
+                    <span>
+                        {t('filters.activeBanner', {
+                            count: complexFilter.conditions.length,
+                            combinator: complexFilter.combinator === 'AND' ? t('filters.and', 'ET') : t('filters.or', 'OU'),
+                            defaultValue: `Filtres complexes actifs : {{count}} condition(s) combinées en {{combinator}}.`,
+                        })}
+                    </span>
+                    <span style={{ flex:1 }} />
+                    <button
+                        onClick={() => setShowComplexModal(true)}
+                        style={{ background:'white', border:'1px solid #ffe0a8', color:'#a85d00', borderRadius:'6px', padding:'4px 10px', fontSize:'0.78rem', fontWeight:'700', cursor:'pointer', fontFamily:'inherit' }}
+                    >
+                        {t('filters.edit', 'Modifier')}
+                    </button>
+                    <button
+                        onClick={() => setComplexFilter(f => ({ ...f, enabled: false }))}
+                        style={{ background:'#a85d00', border:'none', color:'white', borderRadius:'6px', padding:'4px 10px', fontSize:'0.78rem', fontWeight:'700', cursor:'pointer', fontFamily:'inherit' }}
+                    >
+                        {t('filters.disable', 'Désactiver')}
+                    </button>
+                </div>
+            )}
+
             {filterSubsiteSlug && !lockedSubsiteSlug && (
                 <div style={{
                     display:'flex', alignItems:'center', gap:'10px',
@@ -906,6 +977,20 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                         {t('manageCartels.workshopFilter', { name: activeWorkshops[0].name })}
                     </span>
                 )}
+
+                {/* Bouton "Filtres complexes" : ouvre le builder modal. */}
+                <button
+                    onClick={() => setShowComplexModal(true)}
+                    style={{ display:'flex', alignItems:'center', gap:'5px', padding:'8px 12px', borderRadius:'8px', border:'1px solid #ddd', background: complexFilter.enabled ? '#fff8e6' : 'white', cursor:'pointer', fontSize:'0.85rem', color: complexFilter.enabled ? '#a85d00' : '#555', fontFamily:'inherit', fontWeight: complexFilter.enabled ? '700' : '500' }}
+                >
+                    <SlidersHorizontal size={14} />
+                    {t('filters.complexButton', 'Filtres complexes')}
+                    {complexFilter.enabled && complexFilter.conditions.length > 0 && (
+                        <span style={{ background:'#f59f00', color:'white', borderRadius:'10px', padding:'1px 7px', fontSize:'0.72rem', fontWeight:'800' }}>
+                            {complexFilter.conditions.length}
+                        </span>
+                    )}
+                </button>
 
                 {/* Tout sélectionner */}
                 <button onClick={selectAll} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'8px 12px', borderRadius:'8px', border:'1px solid #ddd', background:'white', cursor:'pointer', fontSize:'0.85rem', color:'#555', fontFamily:'inherit' }}>
@@ -1265,6 +1350,157 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                     </div>
                 </div>
             )}
+
+            {/* ── Modal Filtres complexes ──────────────────────
+                State local (draftFilter) édité dans la modal, appliqué seulement
+                au clic sur "Appliquer". Annuler/fermer ne touche pas
+                complexFilter, donc l'utilisateur peut explorer librement. */}
+            {showComplexModal && (
+                <ComplexFilterModal
+                    initial={complexFilter}
+                    categories={categories}
+                    workshops={workshops}
+                    onClose={() => setShowComplexModal(false)}
+                    onApply={(next) => { setComplexFilter(next); setShowComplexModal(false); }}
+                    t={t}
+                />
+            )}
+        </div>
+    );
+};
+
+// ── Modal Filtres complexes ─────────────────────────────────────
+// Builder isolé pour ne pas alourdir le composant principal. Édite un draft
+// local du filtre puis l'applique au composant parent via onApply.
+const ComplexFilterModal = ({ initial, categories, workshops, onClose, onApply, t }) => {
+    const [draft, setDraft] = useState(() => ({
+        enabled: true,
+        combinator: initial.combinator || 'AND',
+        conditions: (initial.conditions || []).map(c => ({ ...c, values: [...(c.values || [])] })),
+    }));
+
+    const addCondition = () => {
+        setDraft(d => ({
+            ...d,
+            conditions: [...d.conditions, { id: Date.now() + Math.random(), field: 'category', values: [] }],
+        }));
+    };
+    const removeCondition = (id) => {
+        setDraft(d => ({ ...d, conditions: d.conditions.filter(c => c.id !== id) }));
+    };
+    const updateCondition = (id, patch) => {
+        setDraft(d => ({
+            ...d,
+            conditions: d.conditions.map(c => c.id === id ? { ...c, ...patch } : c),
+        }));
+    };
+
+    const optionsFor = (field) => field === 'workshop'
+        ? workshops.map(w => ({ value: String(w.id), label: w.name }))
+        : categories.map(c => ({ value: c.name || c, label: c.name || c }));
+
+    const handleApply = () => {
+        // Conditions vides ignorées au moment d'appliquer pour éviter une activation
+        // sans effet visible.
+        const cleaned = draft.conditions.filter(c => c.values && c.values.length > 0);
+        if (!cleaned.length) {
+            onApply({ enabled: false, combinator: draft.combinator, conditions: [] });
+            return;
+        }
+        onApply({ enabled: true, combinator: draft.combinator, conditions: cleaned });
+    };
+
+    const handleDisable = () => {
+        onApply({ enabled: false, combinator: 'AND', conditions: [] });
+    };
+
+    return (
+        <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:1200, display:'flex', alignItems:'center', justifyContent:'center', padding:'20px' }}>
+            <div onClick={e => e.stopPropagation()} style={{ background:'white', borderRadius:'16px', padding:'24px', maxWidth:'640px', width:'100%', boxShadow:'0 20px 50px rgba(0,0,0,0.2)', maxHeight:'85vh', overflowY:'auto' }}>
+                <h3 style={{ margin:'0 0 4px', display:'flex', alignItems:'center', gap:'8px' }}>
+                    <SlidersHorizontal size={18} /> {t('filters.complexTitle', 'Filtres complexes')}
+                </h3>
+                <p style={{ color:'#666', fontSize:'0.85rem', margin:'0 0 16px' }}>
+                    {t('filters.complexHelp', 'Ajoutez plusieurs conditions et choisissez comment les combiner. Dans une condition, les valeurs cochées sont liées par OU.')}
+                </p>
+
+                {/* Combinator global entre conditions */}
+                {draft.conditions.length >= 2 && (
+                    <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'14px', padding:'10px 12px', background:'#fafafa', border:'1px solid #eee', borderRadius:'10px' }}>
+                        <span style={{ fontSize:'0.85rem', fontWeight:'600', color:'#555' }}>{t('filters.combine', 'Combiner les conditions par :')}</span>
+                        <div style={{ display:'flex', gap:'4px' }}>
+                            <button
+                                onClick={() => setDraft(d => ({ ...d, combinator: 'AND' }))}
+                                style={{ padding:'5px 12px', borderRadius:'6px', border:'none', background: draft.combinator === 'AND' ? '#3b5bdb' : '#eee', color: draft.combinator === 'AND' ? 'white' : '#555', fontSize:'0.78rem', fontWeight:'700', cursor:'pointer', fontFamily:'inherit' }}
+                            >{t('filters.and', 'ET')}</button>
+                            <button
+                                onClick={() => setDraft(d => ({ ...d, combinator: 'OR' }))}
+                                style={{ padding:'5px 12px', borderRadius:'6px', border:'none', background: draft.combinator === 'OR' ? '#3b5bdb' : '#eee', color: draft.combinator === 'OR' ? 'white' : '#555', fontSize:'0.78rem', fontWeight:'700', cursor:'pointer', fontFamily:'inherit' }}
+                            >{t('filters.or', 'OU')}</button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Liste des conditions */}
+                {draft.conditions.map((cond, idx) => (
+                    <div key={cond.id} style={{ border:'1px solid #eee', borderRadius:'10px', padding:'12px', marginBottom:'10px', background:'white' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'10px' }}>
+                            <span style={{ fontSize:'0.82rem', fontWeight:'700', color:'#888' }}>
+                                {t('filters.conditionNumber', { num: idx + 1, defaultValue: `Condition ${idx + 1}` })}
+                            </span>
+                            <span style={{ flex:1 }} />
+                            <button
+                                onClick={() => removeCondition(cond.id)}
+                                title={t('filters.removeCondition', 'Retirer cette condition')}
+                                style={{ background:'none', border:'none', cursor:'pointer', color:'#d32f2f', padding:'4px', display:'flex' }}
+                            >
+                                <Trash2 size={15} />
+                            </button>
+                        </div>
+                        <div style={{ display:'flex', gap:'8px', flexWrap:'wrap', alignItems:'center' }}>
+                            <select
+                                value={cond.field}
+                                onChange={e => updateCondition(cond.id, { field: e.target.value, values: [] })}
+                                style={{ padding:'8px 12px', borderRadius:'8px', border:'1px solid #ddd', fontSize:'0.88rem', background:'white' }}
+                            >
+                                <option value="category">{t('manageCartels.categories', 'Catégories')}</option>
+                                <option value="workshop">{t('manageCartels.workshops', 'Ateliers')}</option>
+                            </select>
+                            <MultiSelectDropdown
+                                label={cond.field === 'workshop'
+                                    ? t('manageCartels.allWorkshops')
+                                    : t('manageCartels.allCategories')}
+                                options={optionsFor(cond.field)}
+                                selected={cond.values}
+                                onChange={(vals) => updateCondition(cond.id, { values: vals })}
+                                emptyLabel={t('filters.clearSelection', 'Tout afficher')}
+                            />
+                        </div>
+                    </div>
+                ))}
+
+                <button
+                    onClick={addCondition}
+                    style={{ display:'flex', alignItems:'center', gap:'6px', padding:'8px 14px', borderRadius:'8px', border:'1px dashed #aaa', background:'white', cursor:'pointer', fontSize:'0.86rem', color:'#3b5bdb', fontFamily:'inherit', marginBottom:'18px' }}
+                >
+                    + {t('filters.addCondition', 'Ajouter une condition')}
+                </button>
+
+                <div style={{ display:'flex', justifyContent:'flex-end', gap:'10px', borderTop:'1px solid #eee', paddingTop:'14px' }}>
+                    {initial.enabled && (
+                        <button onClick={handleDisable} style={{ padding:'10px 16px', borderRadius:'10px', border:'1px solid #d32f2f', background:'white', color:'#d32f2f', cursor:'pointer', fontWeight:'600', fontFamily:'inherit' }}>
+                            {t('filters.disable', 'Désactiver')}
+                        </button>
+                    )}
+                    <span style={{ flex:1 }} />
+                    <button onClick={onClose} style={{ padding:'10px 16px', borderRadius:'10px', border:'1px solid #ddd', background:'white', cursor:'pointer', fontFamily:'inherit' }}>
+                        {t('common.back')}
+                    </button>
+                    <button onClick={handleApply} style={{ padding:'10px 16px', borderRadius:'10px', border:'none', background:'#3b5bdb', color:'white', cursor:'pointer', fontWeight:'700', fontFamily:'inherit' }}>
+                        {t('filters.apply', 'Appliquer')}
+                    </button>
+                </div>
+            </div>
         </div>
     );
 };

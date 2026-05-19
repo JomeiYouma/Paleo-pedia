@@ -191,7 +191,18 @@
     "filters": {
         "or": "OR",
         "and": "AND",
-        "clearSelection": "Show all"
+        "clearSelection": "Show all",
+        "complexButton": "Advanced filters",
+        "complexTitle": "Advanced filters",
+        "complexHelp": "Add several conditions and choose how to combine them. Within a condition, checked values are joined by OR.",
+        "combine": "Combine conditions with:",
+        "conditionNumber": "Condition {{num}}",
+        "removeCondition": "Remove this condition",
+        "addCondition": "Add a condition",
+        "apply": "Apply",
+        "edit": "Edit",
+        "disable": "Disable",
+        "activeBanner": "Advanced filters active: {{count}} condition(s) combined with {{combinator}}."
     },
     "manageCartels": {
         "import": "Import",
