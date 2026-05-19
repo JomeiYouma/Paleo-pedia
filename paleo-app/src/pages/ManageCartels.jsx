@@ -986,7 +986,8 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                         <th onClick={() => handleSort('loc')}   style={{ padding:'12px', textAlign:'left', cursor:'pointer', userSelect:'none', ...thSticky }}><div style={{ display:'flex', alignItems:'center', gap:'4px' }}>{t('manageCartels.location')} <SortIcon k="loc" /></div></th>
                                         {activeTab === 'pending' && <th style={{ padding:'12px', textAlign:'left', ...thSticky }}>IP</th>}
                                         {activeTab === 'submissions' && <th style={{ padding:'12px', textAlign:'left', ...thSticky }}>{t('manageCartels.subsite')}</th>}
-                                        <th style={{ padding:'12px', textAlign:'center', ...thSticky }}>{t('manageCartels.status')}</th>
+                                        <th style={{ padding:'12px', textAlign:'center', ...thSticky }}>{t('manageCartels.state')}</th>
+                                        <th style={{ padding:'12px', textAlign:'center', ...thSticky }}>{t('manageCartels.statusActions')}</th>
                                         <th style={{ padding:'12px', textAlign:'center', ...thSticky }}>{t('manageCartels.actions')}</th>
                                     </>;
                                 })()}
@@ -1103,24 +1104,10 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                             </div>
                                         </td>
 
-                                        {/* Actions */}
+                                        {/* Actions de statut : changement de cycle de vie (publier, brouillon,
+                                            archiver, supprimer) et workflow de soumission au site principal. */}
                                         <td style={{ padding:'10px' }}>
                                             <div style={{ display:'flex', gap:'4px', justifyContent:'center', flexWrap:'wrap' }}>
-                                                <ActionBtn onClick={() => setPreviewCartel(cartel)} title={t('manageCartels.preview')} color={HEX_COLORS.neutral}><ScanEye size={15} /></ActionBtn>
-                                                {!readOnly && <ActionBtn onClick={() => goToCreate(cartel.id)} title={t('manageCartels.edit')} color="#3b5bdb"><Edit size={15} /></ActionBtn>}
-
-                                                {/* Retraduire (désactivé en lecture seule) */}
-                                                {!readOnly && (
-                                                    <>
-                                                        <ActionBtn onClick={() => handleRetranslate(cartel, 'en')} title={t('manageCartels.retranslateEn', 'Retraduire en anglais')} color="#6741d9" disabled={isTrans}>
-                                                            {isTrans ? <Clock size={15} /> : <Languages size={15} />}
-                                                        </ActionBtn>
-                                                        <ActionBtn onClick={() => handleRetranslate(cartel, 'fr')} title={t('manageCartels.retranslateFr', 'Retraduire en français')} color="#3b82c4" disabled={isTrans}>
-                                                            {isTrans ? <Clock size={15} /> : <Languages size={15} />}
-                                                        </ActionBtn>
-                                                    </>
-                                                )}
-
                                                 {activeTab === 'submissions' && (
                                                     <>
                                                         <ActionBtn onClick={() => handleApproveSubmission(cartel)} title={t('manageCartels.approve')} color="#2e7d32" disabled={isProc}><Check size={15} /></ActionBtn>
@@ -1153,6 +1140,26 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
 
                                                 {!readOnly && activeTab !== 'submissions' && (
                                                     <ActionBtn onClick={() => handleDelete(cartel.id)} title={t('manageCartels.delete')} color="#d32f2f" disabled={isProc}><Trash2 size={15} /></ActionBtn>
+                                                )}
+                                            </div>
+                                        </td>
+
+                                        {/* Actions de modification : aperçu, édition du contenu, retraduction. */}
+                                        <td style={{ padding:'10px' }}>
+                                            <div style={{ display:'flex', gap:'4px', justifyContent:'center', flexWrap:'wrap' }}>
+                                                <ActionBtn onClick={() => setPreviewCartel(cartel)} title={t('manageCartels.preview')} color={HEX_COLORS.neutral}><ScanEye size={15} /></ActionBtn>
+                                                {!readOnly && <ActionBtn onClick={() => goToCreate(cartel.id)} title={t('manageCartels.edit')} color="#3b5bdb"><Edit size={15} /></ActionBtn>}
+
+                                                {/* Retraduire (désactivé en lecture seule) */}
+                                                {!readOnly && (
+                                                    <>
+                                                        <ActionBtn onClick={() => handleRetranslate(cartel, 'en')} title={t('manageCartels.retranslateEn', 'Retraduire en anglais')} color="#6741d9" disabled={isTrans}>
+                                                            {isTrans ? <Clock size={15} /> : <Languages size={15} />}
+                                                        </ActionBtn>
+                                                        <ActionBtn onClick={() => handleRetranslate(cartel, 'fr')} title={t('manageCartels.retranslateFr', 'Retraduire en français')} color="#3b82c4" disabled={isTrans}>
+                                                            {isTrans ? <Clock size={15} /> : <Languages size={15} />}
+                                                        </ActionBtn>
+                                                    </>
                                                 )}
                                             </div>
                                         </td>
