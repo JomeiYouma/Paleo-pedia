@@ -6,7 +6,7 @@ import {
     Download, Square, CheckSquare, Search,
     ArrowUpDown, ArrowUp, ArrowDown,
     FileText, Inbox, Globe, Plus, ScanEye, MapPin, Image as ImageIcon,
-    Languages, Upload, Package, FileJson, ImageIcon as ImgIcon, Columns, SlidersHorizontal,
+    Languages, Upload, Package, FileJson, ImageIcon as ImgIcon, Columns, SlidersHorizontal, StickyNote,
     FolderPlus, AlertTriangle, Loader2,
 } from 'lucide-react';
 import { useTranslation, Trans } from 'react-i18next';
@@ -204,6 +204,8 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     }, [selectedIds, selectionStorageKey]);
     const [processingId,   setProcessingId]    = useState(null);
     const [previewCartel,  setPreviewCartel]   = useState(null);
+    // Cartel cible de la mini-modal "Ajouter une note" (null = modal fermée).
+    const [noteCartel,     setNoteCartel]      = useState(null);
 
     // ── Filtres complexes ────────────────────────────────────────
     // Quand actif, on ignore les filtres inline (categories/workshops) et on
@@ -981,6 +983,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                 {/* Bouton "Filtres complexes" : ouvre le builder modal. */}
                 <button
                     onClick={() => setShowComplexModal(true)}
+                    title={t('filters.complexButtonHelp', 'Cibler un lot de cartels plus précis : combiner plusieurs catégories et ateliers avec ET/OU.')}
                     style={{ display:'flex', alignItems:'center', gap:'5px', padding:'8px 12px', borderRadius:'8px', border:'1px solid #ddd', background: complexFilter.enabled ? '#fff8e6' : 'white', cursor:'pointer', fontSize:'0.85rem', color: complexFilter.enabled ? '#a85d00' : '#555', fontFamily:'inherit', fontWeight: complexFilter.enabled ? '700' : '500' }}
                 >
                     <SlidersHorizontal size={14} />
@@ -1275,16 +1278,23 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                                 <ActionBtn onClick={() => setPreviewCartel(cartel)} title={t('manageCartels.preview')} color={HEX_COLORS.neutral}><ScanEye size={15} /></ActionBtn>
                                                 {!readOnly && <ActionBtn onClick={() => goToCreate(cartel.id)} title={t('manageCartels.edit')} color="#3b5bdb"><Edit size={15} /></ActionBtn>}
 
-                                                {/* Retraduire (désactivé en lecture seule) */}
+                                                {/* Retraduction automatique : on n'affiche que la direction
+                                                    qui part de la langue active. En FR on lance EN→ depuis FR,
+                                                    en EN on lance FR→ depuis EN. L'autre bouton (Ajouter une
+                                                    note) prend la place de l'option redondante. */}
+                                                {!readOnly && (i18n.language === 'en' ? (
+                                                    <ActionBtn onClick={() => handleRetranslate(cartel, 'fr')} title={t('manageCartels.retranslateFr', 'Lancer une traduction automatique en français à partir de la version anglaise.')} color="#3b82c4" disabled={isTrans}>
+                                                        {isTrans ? <Clock size={15} /> : <Languages size={15} />}
+                                                    </ActionBtn>
+                                                ) : (
+                                                    <ActionBtn onClick={() => handleRetranslate(cartel, 'en')} title={t('manageCartels.retranslateEn', 'Lancer une traduction automatique en anglais à partir de la version française.')} color="#6741d9" disabled={isTrans}>
+                                                        {isTrans ? <Clock size={15} /> : <Languages size={15} />}
+                                                    </ActionBtn>
+                                                ))}
                                                 {!readOnly && (
-                                                    <>
-                                                        <ActionBtn onClick={() => handleRetranslate(cartel, 'en')} title={t('manageCartels.retranslateEn', 'Retraduire en anglais')} color="#6741d9" disabled={isTrans}>
-                                                            {isTrans ? <Clock size={15} /> : <Languages size={15} />}
-                                                        </ActionBtn>
-                                                        <ActionBtn onClick={() => handleRetranslate(cartel, 'fr')} title={t('manageCartels.retranslateFr', 'Retraduire en français')} color="#3b82c4" disabled={isTrans}>
-                                                            {isTrans ? <Clock size={15} /> : <Languages size={15} />}
-                                                        </ActionBtn>
-                                                    </>
+                                                    <ActionBtn onClick={() => setNoteCartel(cartel)} title={t('manageCartels.addNote', 'Ajouter une note')} color="#e67e00">
+                                                        <StickyNote size={15} />
+                                                    </ActionBtn>
                                                 )}
                                             </div>
                                         </td>
@@ -1310,14 +1320,21 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                 style={{ display:'flex', alignItems:'center', gap:'6px', background:'#3b5bdb', color:'white', border:'none', padding:'10px 18px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', fontFamily:'inherit' }}>
                                 <Edit size={15} /> {t('manageCartels.edit')}
                             </button>
-                            <button onClick={() => handleRetranslate(previewCartel, 'en')}
-                                style={{ display:'flex', alignItems:'center', gap:'6px', background:'#6741d9', color:'white', border:'none', padding:'10px 18px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', fontFamily:'inherit' }}>
-                                <Languages size={15} /> {t('manageCartels.retranslateEn', 'Retraduire en anglais')}
-                            </button>
-                            <button onClick={() => handleRetranslate(previewCartel, 'fr')}
-                                style={{ display:'flex', alignItems:'center', gap:'6px', background:'#3b82c4', color:'white', border:'none', padding:'10px 18px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', fontFamily:'inherit' }}>
-                                <Languages size={15} /> {t('manageCartels.retranslateFr', 'Retraduire en français')}
-                            </button>
+                            {/* Une seule direction de retraduction selon la langue active,
+                                cohérente avec les boutons d'action de ligne. */}
+                            {i18n.language === 'en' ? (
+                                <button onClick={() => handleRetranslate(previewCartel, 'fr')}
+                                    title={t('manageCartels.retranslateFr')}
+                                    style={{ display:'flex', alignItems:'center', gap:'6px', background:'#3b82c4', color:'white', border:'none', padding:'10px 18px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', fontFamily:'inherit' }}>
+                                    <Languages size={15} /> {t('manageCartels.retranslateShortFr', 'Retraduire en français')}
+                                </button>
+                            ) : (
+                                <button onClick={() => handleRetranslate(previewCartel, 'en')}
+                                    title={t('manageCartels.retranslateEn')}
+                                    style={{ display:'flex', alignItems:'center', gap:'6px', background:'#6741d9', color:'white', border:'none', padding:'10px 18px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', fontFamily:'inherit' }}>
+                                    <Languages size={15} /> {t('manageCartels.retranslateShortEn', 'Retraduire en anglais')}
+                                </button>
+                            )}
                             <button onClick={() => setPreviewCartel(null)} style={{ padding:'10px 18px', borderRadius:'8px', border:'1px solid #ddd', cursor:'pointer', fontFamily:'inherit' }}>{t('manageCartels.importClose')}</button>
                         </div>
                     </div>
@@ -1351,6 +1368,19 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                 </div>
             )}
 
+            {/* ── Mini-modal "Ajouter une note" ────────────
+                Saisie rapide sans ouvrir l'éditeur de cartel. La note est créée
+                via api.cartels.addNote ; pas de relecture liste après (les notes
+                ne s'affichent pas dans le gestionnaire — on évite un re-fetch). */}
+            {noteCartel && (
+                <AddNoteModal
+                    cartel={noteCartel}
+                    subsiteSlug={lockedSubsiteSlug || null}
+                    onClose={() => setNoteCartel(null)}
+                    t={t}
+                />
+            )}
+
             {/* ── Modal Filtres complexes ──────────────────────
                 State local (draftFilter) édité dans la modal, appliqué seulement
                 au clic sur "Appliquer". Annuler/fermer ne touche pas
@@ -1365,6 +1395,60 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                     t={t}
                 />
             )}
+        </div>
+    );
+};
+
+// ── Mini-modal "Ajouter une note" ──────────────────────────────
+// Saisie minimale pour ajouter une note admin à un cartel sans devoir
+// ouvrir l'éditeur complet. Ferme automatiquement après succès.
+const AddNoteModal = ({ cartel, subsiteSlug, onClose, t }) => {
+    const [body, setBody] = useState('');
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleSave = async () => {
+        const trimmed = body.trim();
+        if (!trimmed) return;
+        setBusy(true);
+        setError('');
+        try {
+            await api.cartels.addNote(cartel.id, trimmed, subsiteSlug || undefined);
+            onClose();
+        } catch (e) {
+            setError(e.message || t('manageCartels.addNoteError', 'Erreur lors de l\'ajout de la note'));
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    return (
+        <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:1200, display:'flex', alignItems:'center', justifyContent:'center', padding:'20px' }}>
+            <div onClick={e => e.stopPropagation()} style={{ background:'white', borderRadius:'16px', padding:'22px', maxWidth:'460px', width:'100%', boxShadow:'0 20px 50px rgba(0,0,0,0.2)' }}>
+                <h3 style={{ margin:'0 0 4px', display:'flex', alignItems:'center', gap:'8px' }}>
+                    <StickyNote size={18} /> {t('manageCartels.addNote', 'Ajouter une note')}
+                </h3>
+                <p style={{ color:'#666', fontSize:'0.82rem', margin:'0 0 14px' }}>
+                    {cartel.titre || '(sans titre)'}
+                </p>
+                <textarea
+                    autoFocus
+                    value={body}
+                    onChange={e => setBody(e.target.value)}
+                    placeholder={t('manageCartels.addNotePlaceholder', 'Note interne, visible des admins uniquement…')}
+                    maxLength={5000}
+                    style={{ width:'100%', minHeight:'120px', padding:'10px 12px', borderRadius:'10px', border:'1px solid #ddd', fontFamily:'inherit', fontSize:'0.9rem', resize:'vertical', boxSizing:'border-box' }}
+                />
+                {error && <p style={{ color:'#d32f2f', fontSize:'0.82rem', marginTop:'8px' }}>{error}</p>}
+                <div style={{ display:'flex', justifyContent:'flex-end', gap:'10px', marginTop:'14px' }}>
+                    <button onClick={onClose} disabled={busy} style={{ padding:'9px 16px', borderRadius:'10px', border:'1px solid #ddd', background:'white', cursor: busy ? 'not-allowed' : 'pointer', fontFamily:'inherit' }}>
+                        {t('common.back')}
+                    </button>
+                    <button onClick={handleSave} disabled={busy || !body.trim()} style={{ padding:'9px 16px', borderRadius:'10px', border:'none', background: busy || !body.trim() ? '#bbb' : '#e67e00', color:'white', cursor: busy || !body.trim() ? 'not-allowed' : 'pointer', fontWeight:'700', fontFamily:'inherit' }}>
+                        {busy ? t('manageCartels.savingNote', 'Enregistrement…') : t('manageCartels.saveNote', 'Enregistrer')}
+                    </button>
+                </div>
+            </div>
         </div>
     );
 };
