@@ -21,7 +21,6 @@ const SITE_NAV = [
     { path: '/participer',   labelKey: 'header.participer' },
     { path: '/boutique',     labelKey: 'header.ouvrages' },
     { path: '/presse',       labelKey: 'header.presse' },
-    { path: '/partenaires',  labelKey: 'header.partners' },
     { path: '/contact',      labelKey: 'header.contact' },
 ];
 

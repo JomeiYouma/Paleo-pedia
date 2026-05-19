@@ -32,7 +32,6 @@ import Prestations from './pages/Prestations';
 import Ouvrages from './pages/Ouvrages';
 import Museum from './pages/Museum';
 import Contact from './pages/Contact';
-import Partners from './pages/Partners';
 import Participer from './pages/Participer';
 import Presse from './pages/Presse';
 import LandingPage from './pages/LandingPage';
@@ -132,7 +131,9 @@ const mainRouter = createHashRouter(
         <Route path="museum"       element={<Museum />} />
         <Route path="participer"   element={<Participer />} />
         <Route path="presse"       element={<Presse />} />
-        <Route path="partenaires"  element={<Partners />} />
+        {/* La page Partenaires dédiée a été retirée — son contenu est désormais
+            intégré à /presentation. On redirige pour ne pas casser les liens externes. */}
+        <Route path="partenaires"  element={<Navigate to="/presentation" replace />} />
         <Route path="contact"      element={<Contact />} />
         <Route path="politique-confidentialite" element={<PrivacyPolicy />} />
         <Route path="mentions-legales" element={<LegalNotices />} />
