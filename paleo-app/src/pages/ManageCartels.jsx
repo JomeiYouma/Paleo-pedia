@@ -439,11 +439,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
         () => act(c.id, () => api.cartels.setStatus(c.id, 'draft')),
         { danger: false, confirmLabel: t('manageCartels.draft') }
     );
-    const handleArchive = (c) => askConfirm(
-        t('manageCartels.confirmArchive', { title: c.titre }),
-        () => act(c.id, () => api.cartels.archive(c.id)),
-        { danger: false, confirmLabel: t('manageCartels.archive') }
-    );
+    // handleArchive volontairement retiré avec son bouton d'action.
     const handleDelete = (id) => askConfirm(
         t('messages.confirmDelete'),
         () => act(id, () => api.cartels.delete(id))
@@ -1276,9 +1272,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                                 {!readOnly && activeTab !== 'submissions' && (cartel.status === 'pending_review' || cartel.status === 'published') && (
                                                     <ActionBtn onClick={() => handleToDraft(cartel)} title={t('status.draft')} color="#e67e00" disabled={isProc}><FileText size={15} /></ActionBtn>
                                                 )}
-                                                {!readOnly && activeTab !== 'submissions' && cartel.status === 'published' && (
-                                                    <ActionBtn onClick={() => handleArchive(cartel)} title={t('manageCartels.archive')} color="#6b7280" disabled={isProc}><X size={15} /></ActionBtn>
-                                                )}
+                                                {/* Bouton Archiver volontairement retiré pour l'instant. */}
 
                                                 {/* Workflow site principal (owner/superadmin sur cartels de sous-site) */}
                                                 {!readOnly && activeTab !== 'submissions' && canSubmitThisCartel(cartel) && (
