@@ -1641,9 +1641,16 @@ const ActionBtn = ({ onClick, title, color, disabled, children }) => {
                         color: 'white',
                         fontSize: '0.74rem',
                         fontWeight: '600',
-                        padding: '6px 8px',
+                        padding: '7px 10px',
                         borderRadius: '6px',
-                        whiteSpace: 'nowrap',
+                        // Multi-ligne avec largeur bornée pour ne pas déborder
+                        // du conteneur de scroll (overflow-y:auto rogne aussi
+                        // horizontalement) et garder un tooltip lisible.
+                        whiteSpace: 'normal',
+                        maxWidth: '260px',
+                        width: 'max-content',
+                        lineHeight: 1.35,
+                        textAlign: 'center',
                         pointerEvents: 'none',
                         zIndex: 20,
                         boxShadow: '0 6px 18px rgba(0,0,0,0.22)',
