@@ -7,12 +7,14 @@ import ArborescenceMode from '../components/ArborescenceMode';
 import ConfirmModal from '../components/ConfirmModal';
 import LongOperationOverlay from '../components/LongOperationOverlay';
 import { getYearForSort } from '../utils/helpers';
-import { Download, Trash2, CheckSquare, Square, Edit, LayoutList, CalendarDays, Map as MapIcon, Search, GitGraph } from 'lucide-react';
-import { generateZip } from '../utils/zipGenerator';
+import { Download, Trash2, CheckSquare, Square, Edit, LayoutList, CalendarDays, Map as MapIcon, Search, GitGraph, FolderPlus, Package, FileText, X, ImageIcon as ImgIcon } from 'lucide-react';
+import { generateZip, generatePdf, generateArchive } from '../utils/zipGenerator';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { rememberReturn } from '../utils/navigation';
 import Breadcrumb from '../components/Breadcrumb';
+import { DropdownButton, DropItem } from '../components/DropdownButton';
+import api from '../services/apiClient';
 import './Library.css';
 
 /** Badge de statut pour les cartels hors "published" (visible admin only) */
@@ -54,7 +56,7 @@ function urlForMode(pathname, mode) {
 const Library = ({ fixedCategory = null, fixedSubsiteId = null, viewMode: viewModeProp = 'timeline' }) => {
     const { t, i18n } = useTranslation();
     // Source unique : tous les cartels depuis l'API (l'API filtre selon le rôle)
-    const { cartels, loading, deleteCartel, deleteCartels, isAdmin, currentWorkshop } = useApp();
+    const { cartels, loading, deleteCartel, deleteCartels, isAdmin, currentWorkshop, workshops, addWorkshop, fetchData } = useApp();
 
     const [selectedIds, setSelectedIds]     = useState(new Set());
     const [searchQuery, setSearchQuery]     = useState('');
@@ -63,9 +65,16 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, viewMode: viewMo
     const viewMode = adminListMode ? 'list' : viewModeProp;
     const [selectedCats, setSelectedCats]   = useState([]);
     const [generatingZip, setGeneratingZip] = useState(false);
+    const [busyLabel, setBusyLabel]         = useState('');
     const [progress, setProgress]           = useState({ current: 0, total: 0 });
     const [targetCartelId, setTargetCartelId] = useState(null);
     const [confirmState, setConfirmState]   = useState(null);
+    // Modal d'attribution à un atelier (mode liste admin) : on ouvre la modal,
+    // l'utilisateur choisit un atelier existant OU saisit un nouveau nom, puis
+    // valide. La logique miroir celle de ManageCartels.
+    const [showWorkshopModal, setShowWorkshopModal] = useState(false);
+    const [selectedWorkshopId, setSelectedWorkshopId] = useState('');
+    const [newWorkshopName, setNewWorkshopName] = useState('');
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -224,19 +233,65 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, viewMode: viewMo
             : new Set(filteredCartels.map(c => c.id)));
     };
 
-    const handleZip = async () => {
-        if (!selectedIds.size) return;
+    // Wrapper commun pour les exports longs : affiche l'overlay, capture les
+    // erreurs sans casser l'UI, remet à zéro à la fin.
+    const withExportBusy = async (label, fn) => {
+        setBusyLabel(label);
         setGeneratingZip(true);
         setProgress({ current: 0, total: selectedIds.size });
-        try {
-            const items = cartels.filter(c => selectedIds.has(c.id));
-            await generateZip(items, i18n.language || 'fr', (current, total) => setProgress({ current, total }));
-        } catch (e) {
-            alert(t('messages.zipError'));
-        } finally {
+        try { await fn(); }
+        catch (e) { alert(e.message || t('messages.zipError')); }
+        finally {
             setGeneratingZip(false);
             setProgress({ current: 0, total: 0 });
         }
+    };
+
+    const handleExportImages = async (close) => {
+        close?.();
+        if (!selectedIds.size) return;
+        await withExportBusy(t('library.generating'), async () => {
+            const items = cartels.filter(c => selectedIds.has(c.id));
+            await generateZip(items, i18n.language || 'fr', (current, total) => setProgress({ current, total }));
+        });
+    };
+
+    const handleExportPdf = async (close) => {
+        close?.();
+        if (!selectedIds.size) return;
+        await withExportBusy(t('manageCartels.busyPdf', 'Génération PDF…'), async () => {
+            const items = cartels.filter(c => selectedIds.has(c.id));
+            await generatePdf(items, i18n.language || 'fr', (current, total) => setProgress({ current, total }));
+        });
+    };
+
+    const handleExportArchive = async (close) => {
+        close?.();
+        if (!selectedIds.size) return;
+        await withExportBusy(t('manageCartels.preparingArchive', 'Préparation de l\'archive…'), async () => {
+            const items = cartels.filter(c => selectedIds.has(c.id));
+            await generateArchive(items, (current, total) => setProgress({ current, total }));
+        });
+    };
+
+    const handleBulkWorkshop = async () => {
+        if (!selectedIds.size) return;
+        if (!newWorkshopName.trim() && !selectedWorkshopId) {
+            alert(t('manageCartels.chooseWorkshopWarning'));
+            return;
+        }
+        await withExportBusy(t('manageCartels.busyAssigningWorkshop'), async () => {
+            if (newWorkshopName.trim()) {
+                await addWorkshop(newWorkshopName.trim(), Array.from(selectedIds));
+            } else {
+                await api.workshops.addCartels(selectedWorkshopId, Array.from(selectedIds));
+                await fetchData();
+            }
+            setSelectedIds(new Set());
+            setShowWorkshopModal(false);
+            setNewWorkshopName('');
+            setSelectedWorkshopId('');
+        });
     };
 
     const handleBulkDelete = async () => {
@@ -265,10 +320,11 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, viewMode: viewMo
     return (
         <div style={{ padding: '20px 20px 0' }}>
 
-            {/* Progress overlay export ZIP */}
+            {/* Progress overlay : exports lourds (ZIP/PDF/archive) + attribution
+                d'atelier en bulk. busyLabel donne le contexte à l'utilisateur. */}
             <LongOperationOverlay
                 visible={generatingZip}
-                label={t('library.generating')}
+                label={busyLabel || t('library.generating')}
                 current={progress.current}
                 total={progress.total}
             />
@@ -368,20 +424,28 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, viewMode: viewMo
                 {viewMode === 'list' && isAdmin && (
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', paddingTop: '6px' }}>
                         <button onClick={selectAll} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.88rem', padding: '6px 10px' }}>
-                            {selectedIds.size === filteredCartels.length && filteredCartels.length > 0 ? <CheckSquare size={16} /> : <Square size={16} />}
+                            {selectedIds.size === filteredCartels.length && filteredCartels.length > 0 ? <CheckSquare size={22} /> : <Square size={22} />}
                             {selectedIds.size === filteredCartels.length && filteredCartels.length > 0
                                 ? t('library.deselectAll', 'Tout désélectionner')
                                 : t('library.selectAll', 'Tout sélectionner')}
                         </button>
-                        <button onClick={handleZip} disabled={!selectedIds.size || generatingZip} style={{ fontSize: '0.88rem', padding: '6px 10px' }}>
-                            <Download size={14} style={{ marginRight: 4 }} />
-                            ZIP ({selectedIds.size})
-                        </button>
                         {selectedIds.size > 0 && (
-                            <button onClick={handleBulkDelete} style={{ color: 'red', borderColor: 'red', fontSize: '0.88rem', padding: '6px 10px' }}>
-                                <Trash2 size={14} style={{ marginRight: 4 }} />
-                                {t('library.deleteCount', { count: selectedIds.size, defaultValue: `Supprimer (${selectedIds.size})` })}
-                            </button>
+                            <>
+                                <DropdownButton label={`${t('manageCartels.export', 'Exporter')} (${selectedIds.size})`} icon={Download} color="#555" variant="outline">
+                                    {close => (<>
+                                        <DropItem icon={ImgIcon}  label={t('manageCartels.imagesZip', 'Images (ZIP)')}     onClick={() => handleExportImages(close)} />
+                                        <DropItem icon={FileText} label={t('manageCartels.pdfPrint', 'Frise PDF')}          onClick={() => handleExportPdf(close)} />
+                                        <DropItem icon={Package}  label={t('manageCartels.fullArchive', 'Archive complète')} onClick={() => handleExportArchive(close)} />
+                                    </>)}
+                                </DropdownButton>
+                                <button onClick={() => { setNewWorkshopName(''); setSelectedWorkshopId(''); setShowWorkshopModal(true); }} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 11px', borderRadius: '8px', border: '1px solid #1f6feb', background: 'white', color: '#1f6feb', cursor: 'pointer', fontSize: '0.84rem', fontWeight: '600', fontFamily: 'inherit' }}>
+                                    <FolderPlus size={14} /> {t('manageCartels.assignWorkshop', 'Atelier')} ({selectedIds.size})
+                                </button>
+                                <button onClick={handleBulkDelete} style={{ color: 'red', borderColor: 'red', fontSize: '0.88rem', padding: '6px 10px' }}>
+                                    <Trash2 size={14} style={{ marginRight: 4 }} />
+                                    {t('library.deleteCount', { count: selectedIds.size, defaultValue: `Supprimer (${selectedIds.size})` })}
+                                </button>
+                            </>
                         )}
                     </div>
                 )}
@@ -456,6 +520,34 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, viewMode: viewMo
                     onConfirm={confirmState.onConfirm}
                     onCancel={() => setConfirmState(null)}
                 />
+            )}
+
+            {/* Modal attribution à un atelier (miroir de celle de ManageCartels) */}
+            {showWorkshopModal && (
+                <div onClick={() => setShowWorkshopModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                    <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '16px', padding: '24px', maxWidth: '520px', width: '100%', boxShadow: '0 20px 50px rgba(0,0,0,0.2)' }}>
+                        <h3 style={{ marginTop: 0 }}>{t('manageCartels.assignWorkshop')}</h3>
+                        <p style={{ color: '#666', marginTop: '-4px' }}>{selectedIds.size} cartel(s) sélectionné(s).</p>
+
+                        <div style={{ marginBottom: '14px' }}>
+                            <label style={{ display: 'block', fontWeight: '700', marginBottom: '6px' }}>{t('manageCartels.existingWorkshop')}</label>
+                            <select value={selectedWorkshopId} onChange={e => { setSelectedWorkshopId(e.target.value); setNewWorkshopName(''); }} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #ddd' }}>
+                                <option value="">{t('manageCartels.chooseWorkshop')}</option>
+                                {workshops.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                            </select>
+                        </div>
+
+                        <div style={{ marginBottom: '14px' }}>
+                            <label style={{ display: 'block', fontWeight: '700', marginBottom: '6px' }}>{t('manageCartels.newWorkshop')}</label>
+                            <input value={newWorkshopName} onChange={e => { setNewWorkshopName(e.target.value); setSelectedWorkshopId(''); }} placeholder={t('manageCartels.newWorkshopPlaceholder')} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #ddd' }} />
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                            <button onClick={() => setShowWorkshopModal(false)} style={{ padding: '10px 16px', borderRadius: '10px', border: '1px solid #ddd', background: 'white', cursor: 'pointer' }}>{t('common.back')}</button>
+                            <button onClick={handleBulkWorkshop} style={{ padding: '10px 16px', borderRadius: '10px', border: 'none', background: '#1f6feb', color: 'white', cursor: 'pointer', fontWeight: '700' }}>{t('manageCartels.assign')}</button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
