@@ -119,9 +119,9 @@ const SecondaryCard = ({ member, lang }) => {
             </div>
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: '700', fontSize: '1.05rem' }}>{member.name}</div>
+            <h3 style={{ margin: '0 0 4px', fontSize: '1.15rem' }}>{member.name}</h3>
             {role && (
-                <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.4px', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
                     {role}
                 </div>
             )}
@@ -277,7 +277,7 @@ const Presentation = () => {
                     {/* Équipe principale — cards pleines */}
                     {mainMembers.length > 0 && (
                         <>
-                            <h3 style={{ fontSize: '1.2rem', marginTop: '30px', marginBottom: '16px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            <h3 style={{ fontSize: '1.2rem', marginTop: '30px', marginBottom: '16px', color: 'var(--color-text-muted)' }}>
                                 {t('pages.presentation.teamMain')}
                             </h3>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '40px' }}>
@@ -289,7 +289,7 @@ const Presentation = () => {
                     {/* Équipe secondaire — cards compactes */}
                     {secondaryMembers.length > 0 && (
                         <>
-                            <h3 style={{ fontSize: '1.2rem', marginTop: '30px', marginBottom: '16px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            <h3 style={{ fontSize: '1.2rem', marginTop: '30px', marginBottom: '16px', color: 'var(--color-text-muted)' }}>
                                 {t('pages.presentation.teamSecondary')}
                             </h3>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px', marginBottom: '40px' }}>
@@ -301,7 +301,7 @@ const Presentation = () => {
                     {/* Communauté — liste textuelle */}
                     {communityMembers.length > 0 && (
                         <>
-                            <h3 style={{ fontSize: '1.2rem', marginTop: '30px', marginBottom: '12px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            <h3 style={{ fontSize: '1.2rem', marginTop: '30px', marginBottom: '12px', color: 'var(--color-text-muted)' }}>
                                 {t('pages.presentation.teamCommunity')}
                             </h3>
                             <p style={{ fontSize: '0.95rem', color: 'var(--color-text-muted)', lineHeight: '1.7' }}>

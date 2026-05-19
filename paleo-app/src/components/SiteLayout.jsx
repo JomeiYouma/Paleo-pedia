@@ -10,7 +10,6 @@ const SiteLayout = () => {
     const { t } = useTranslation();
     return (
         <div style={{
-            fontFamily: "'Outfit', sans-serif",
             minHeight: '100vh',
             display: 'flex',
             flexDirection: 'column',

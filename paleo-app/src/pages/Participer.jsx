@@ -24,6 +24,22 @@ const Participer = () => {
                 {t('participer.intro')}
             </p>
 
+            {/* ── Proposer une invention directement ───────────────────── */}
+            <div style={{
+                background: 'white',
+                padding: '40px',
+                borderRadius: '12px',
+                boxShadow: '0 5px 20px rgba(0,0,0,0.05)',
+                marginBottom: '50px',
+                textAlign: 'center',
+            }}>
+                <h2 style={{ marginTop: 0 }}>{t('participer.alreadyIdeaTitle')}</h2>
+                <p style={{ marginBottom: '24px' }}>{t('participer.alreadyIdeaBody')}</p>
+                <Link to="/app/create" className="paleo-btn">
+                    <Send size={18} /> {t('participer.proposeBtn')}
+                </Link>
+            </div>
+
             {/* ── Affiche + bouton de téléchargement ───────────────────── */}
             <div style={{
                 display: 'grid',
@@ -71,22 +87,6 @@ const Participer = () => {
                         </a>.
                     </p>
                 </div>
-            </div>
-
-            {/* ── Proposer une invention directement ───────────────────── */}
-            <div style={{
-                background: 'white',
-                padding: '40px',
-                borderRadius: '12px',
-                boxShadow: '0 5px 20px rgba(0,0,0,0.05)',
-                marginBottom: '50px',
-                textAlign: 'center',
-            }}>
-                <h2 style={{ marginTop: 0 }}>{t('participer.alreadyIdeaTitle')}</h2>
-                <p style={{ marginBottom: '24px' }}>{t('participer.alreadyIdeaBody')}</p>
-                <Link to="/app/create" className="paleo-btn">
-                    <Send size={18} /> {t('participer.proposeBtn')}
-                </Link>
             </div>
 
             {/* ── Que recherche-t-on ? ─────────────────────────────────── */}
