@@ -139,7 +139,7 @@ const BlockFieldsEditor = ({ block, onChange }) => {
                                 placeholder="URL image" style={{ ...inputStyle, flex: 2 }} />
                             <input value={it.caption ?? ''} onChange={e => updItem(idx, { caption: e.target.value })}
                                 placeholder="Légende" style={{ ...inputStyle, flex: 1, fontSize: '0.82rem' }} />
-                            <button onClick={() => removeItem(idx)} style={{ ...iconBtn, color: '#d32f2f' }}>
+                            <button type="button" onClick={() => removeItem(idx)} style={{ ...iconBtn, color: '#d32f2f' }}>
                                 <Trash2 size={14} />
                             </button>
                         </div>
@@ -222,13 +222,13 @@ export const BlockEditor = ({ blocks = [], onChange }) => {
                         background: '#fafafa', borderRadius: '10px', padding: '10px 12px', border: '1px solid #eee',
                     }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingTop: '4px' }}>
-                            <button onClick={() => move(i, i - 1)} style={iconBtn} disabled={i === 0}>▲</button>
-                            <button onClick={() => move(i, i + 1)} style={iconBtn} disabled={i === blocks.length - 1}>▼</button>
+                            <button type="button" onClick={() => move(i, i - 1)} style={iconBtn} disabled={i === 0}>▲</button>
+                            <button type="button" onClick={() => move(i, i + 1)} style={iconBtn} disabled={i === blocks.length - 1}>▼</button>
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <BlockFieldsEditor block={block} onChange={(next) => update(i, next)} />
                         </div>
-                        <button onClick={() => remove(i)} style={{ ...iconBtn, color: '#d32f2f' }}>
+                        <button type="button" onClick={() => remove(i)} style={{ ...iconBtn, color: '#d32f2f' }}>
                             <Trash2 size={14} />
                         </button>
                     </div>

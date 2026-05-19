@@ -801,9 +801,12 @@ const Create = () => {
                     </small>
                 </div>
 
-                {/* Page détail "En savoir plus" éditable (admin uniquement) */}
+                {/* Page détail "En savoir plus" éditable (admin uniquement).
+                    Fond jaune clair (var --color-accent-soft) pour séparer
+                    visuellement cette zone du reste du formulaire — plus
+                    contrasté que le gris ambiant. */}
                 {isAdmin && (
-                    <div style={{ border: '1px solid #e8e8e8', borderRadius: '12px', padding: '16px', background: '#fafafa' }}>
+                    <div style={{ border: '1px solid #f0e2a0', borderRadius: '12px', padding: '16px', background: 'var(--color-accent-soft)' }}>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 600 }}>
                             <input
                                 type="checkbox"
