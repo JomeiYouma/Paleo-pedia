@@ -428,7 +428,11 @@
             "email": "Email",
             "subject": "Subject",
             "message": "Message",
-            "send": "Send"
+            "send": "Send",
+            "sending": "Sending…",
+            "success": "Thanks, your message has been sent. We'll get back to you soon.",
+            "errorRequired": "Name, e-mail and message are required.",
+            "errorGeneric": "Something went wrong. Please retry or write to us at hello@paleo-energetique.org."
         },
         "partners": {
             "title": "Partners",

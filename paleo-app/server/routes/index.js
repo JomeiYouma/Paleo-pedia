@@ -21,6 +21,7 @@ import { TeamMemberController } from '../controllers/teamMemberController.js';
 import { PressArticleController } from '../controllers/pressArticleController.js';
 import { MissionController } from '../controllers/missionController.js';
 import { MissionApplicationController } from '../controllers/missionApplicationController.js';
+import { ContactMessageController } from '../controllers/contactMessageController.js';
 import { PrestationController } from '../controllers/prestationController.js';
 import { ShopItemController } from '../controllers/shopItemController.js';
 import { EventLogController } from '../controllers/eventLogController.js';
@@ -175,6 +176,11 @@ router.delete('/missions/:id', authenticate, requireAdmin,  MissionController.re
 // POST public (avec honeypot dans le contrôleur), lecture admin only.
 router.post('/mission-applications', MissionApplicationController.create);
 router.get ('/mission-applications', authenticate, requireAdmin, MissionApplicationController.list);
+
+// ── Messages du formulaire /contact ───────────────────────────
+// POST public (avec honeypot), lecture admin only.
+router.post('/contact-messages', ContactMessageController.create);
+router.get ('/contact-messages', authenticate, requireAdmin, ContactMessageController.list);
 
 // ── Prestations (page publique /prestations) ──────────────────
 router.get   ('/prestations',     optionalAuth,                PrestationController.getAll);

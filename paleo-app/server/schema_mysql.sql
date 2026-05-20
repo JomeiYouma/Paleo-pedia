@@ -303,7 +303,8 @@ INSERT IGNORE INTO `event_email_config` (`type`) VALUES
   ('partner.created'), ('partner.updated'),('partner.deleted'),
   ('category.created'),('category.updated'),('category.deleted'),
   ('workshop.created'),('workshop.updated'),('workshop.deleted'),
-  ('mission_application.created');
+  ('mission_application.created'),
+  ('contact_message.created');
 
 -- ============================================================
 -- TEAM_MEMBERS (page À propos)
@@ -383,6 +384,21 @@ CREATE TABLE IF NOT EXISTS `mission_applications` (
   KEY `idx_mission_applications_mission` (`mission_id`, `created_at`),
   CONSTRAINT `fk_mission_applications_mission`
     FOREIGN KEY (`mission_id`) REFERENCES `missions` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- CONTACT_MESSAGES (messages du formulaire /contact)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `contact_messages` (
+  `id`           CHAR(36)      NOT NULL DEFAULT (UUID()),
+  `name`         VARCHAR(255)  NOT NULL,
+  `email`        VARCHAR(255)  NOT NULL,
+  `subject`      VARCHAR(500)  NULL DEFAULT NULL,
+  `message`      TEXT          NOT NULL,
+  `submitter_ip` VARCHAR(45)   NULL DEFAULT NULL,
+  `created_at`   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_contact_messages_created` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================

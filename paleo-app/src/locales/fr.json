@@ -434,7 +434,11 @@
             "email": "Email",
             "subject": "Sujet",
             "message": "Message",
-            "send": "Envoyer"
+            "send": "Envoyer",
+            "sending": "Envoi…",
+            "success": "Merci, votre message a bien été envoyé. Nous revenons vers vous très vite.",
+            "errorRequired": "Le nom, l'e-mail et le message sont obligatoires.",
+            "errorGeneric": "Une erreur est survenue. Réessayez ou écrivez-nous à hello@paleo-energetique.org."
         },
         "partners": {
             "title": "Partenaires",

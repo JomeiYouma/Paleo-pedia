@@ -225,6 +225,13 @@ export const missionApplications = {
   getAll:  ()           => get('/mission-applications'),
 };
 
+// ── Messages du formulaire de contact (/contact) ──────────────
+// POST public (no auth). Lecture réservée aux superadmins.
+export const contactMessages = {
+  create:  (data)       => post('/contact-messages', data),
+  getAll:  ()           => get('/contact-messages'),
+};
+
 // ── Prestations (page publique /prestations) ──────────────────
 // Lecture publique (filtrée à publié pour les non-admins, tout pour les
 // admins). Écriture réservée au superadmin.
@@ -393,5 +400,5 @@ export const logs = {
   bulkSetRecipient: (recipient) => patch('/logs/email-config', { recipient }),
 };
 
-const api = { auth, cartels, stats, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners, teamMembers, pressArticles, missions, missionApplications, prestations, shopItems, logs };
+const api = { auth, cartels, stats, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners, teamMembers, pressArticles, missions, missionApplications, contactMessages, prestations, shopItems, logs };
 export default api;
