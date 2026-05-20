@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ExternalLink, Download, Mail, Image as ImageIcon } from 'lucide-react';
 import api from '../services/apiClient';
 import { pickLang } from '../utils/i18nHelpers';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 // Page publique « Presse » — articles rendus depuis /api/press-articles.
 // Le contenu était auparavant codé en dur dans ce fichier ; il est désormais
@@ -27,6 +28,12 @@ const Presse = () => {
     const lang = i18n.language;
     const [articles, setArticles] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    usePageMeta({
+        title: t('pages.presse.title'),
+        description: t('pages.presse.intro'),
+        path: '/presse',
+    });
 
     useEffect(() => {
         api.pressArticles.getAll()

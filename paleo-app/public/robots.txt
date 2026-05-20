@@ -1,0 +1,12 @@
+# Paléo-Énergétique — robots.txt
+# Site public : tout le contenu vitrine est indexable.
+# /app correspond à l'application interne (gestion, admin) — exclu.
+# /api correspond aux endpoints serveur — exclu.
+
+User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /app/
+Disallow: /api/
+
+Sitemap: https://paleo-energetique.org/sitemap.xml

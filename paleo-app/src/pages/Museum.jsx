@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MapPin, Mail, Users } from 'lucide-react';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 // Page "Rétrofutur Museum" — contenu repris de
 // https://paleo-energetique.org/retrofutur-museum/
@@ -9,6 +10,11 @@ import { MapPin, Mail, Users } from 'lucide-react';
 
 const Museum = () => {
     const { t } = useTranslation();
+    usePageMeta({
+        title: t('museum.title'),
+        description: t('museum.bannerAlt') + " — visites en semaine sur rendez-vous, expérience immersive où chaque visiteur·euse produit l'énergie qui éclaire le musée.",
+        path: '/museum',
+    });
     return (
         <>
             {/* ── Bannière pleine largeur ─────────────────────────────── */}

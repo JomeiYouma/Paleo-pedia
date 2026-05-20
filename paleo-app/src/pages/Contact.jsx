@@ -2,9 +2,15 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Send, CheckCircle2, AlertCircle } from 'lucide-react';
 import api from '../services/apiClient';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 const Contact = () => {
     const { t } = useTranslation();
+    usePageMeta({
+        title: t('pages.contact.title'),
+        description: t('pages.contact.intro'),
+        path: '/contact',
+    });
     const [name, setName]       = useState('');
     const [email, setEmail]     = useState('');
     const [subject, setSubject] = useState('');

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ExternalLink, ShoppingBag } from 'lucide-react';
 import api from '../services/apiClient';
 import { pickLang } from '../utils/i18nHelpers';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 // Page publique « Ouvrages » — vitrine de liens vers le PrestaShop externe.
 // Items rendus depuis /api/shop-items, groupés par catégorie (book / game / other).
@@ -94,6 +95,11 @@ const ItemCard = ({ item, lang, t }) => {
 const Ouvrages = () => {
     const { t, i18n } = useTranslation();
     const lang = i18n.language;
+    usePageMeta({
+        title: t('pages.ouvrages.title'),
+        description: t('pages.ouvrages.intro'),
+        path: '/boutique',
+    });
     const CATEGORY_LABELS = {
         book:  t('pages.ouvrages.categoryBook'),
         game:  t('pages.ouvrages.categoryGame'),

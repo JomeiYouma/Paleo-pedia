@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowRight, BookOpen, Map, PenTool, Layers, X, ChevronRight, ExternalLink } from 'lucide-react';
 import { categories as categoriesApi, subsites as subsitesApi } from '../services/apiClient';
 import { getSubsiteHostUrl } from '../utils/subsiteHost';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 const PRIMARY = 'var(--color-primary)';
 const ACCENT  = 'var(--color-accent)';
@@ -11,6 +12,13 @@ const ACCENT  = 'var(--color-accent)';
 const LandingPage = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    // Page d'accueil : on n'ajoute pas de préfixe au titre — le SITE_NAME seul
+    // suffit. La description reprend le tagline du footer (« Une contre-histoire
+    // de l'énergie pour inspirer le futur »).
+    usePageMeta({
+        description: t('footer.tagline') + " Programme de recherche participatif d'Atelier 21 sur les inventions oubliées et les imaginaires énergétiques.",
+        path: '/',
+    });
     const [showCategoryModal, setShowCategoryModal] = useState(false);
     const [cats, setCats] = useState([]);
     const [subsites, setSubsites] = useState([]);

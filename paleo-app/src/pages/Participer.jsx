@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Download, Send, Search, FileText, ChevronDown, ChevronUp, ExternalLink, Target, CheckCircle2, AlertCircle } from 'lucide-react';
 import api from '../services/apiClient';
 import { pickLang } from '../utils/i18nHelpers';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 // Page "Appel à participation" — contenu repris de
 // https://paleo-energetique.org/participer/kit-affiche/
@@ -254,6 +255,12 @@ const Participer = () => {
     const [showApplyForm, setShowApplyForm] = useState(false);
     const [preselectedMissionId, setPreselectedMissionId] = useState('');
     const applyFormRef = useRef(null);
+
+    usePageMeta({
+        title: t('participer.title'),
+        description: t('participer.intro'),
+        path: '/participer',
+    });
 
     useEffect(() => {
         api.missions.getAll()

@@ -5,6 +5,7 @@ import { Linkedin, Globe, Link2 } from 'lucide-react';
 import api from '../services/apiClient';
 import { pickLang } from '../utils/i18nHelpers';
 import PartnersList from '../components/PartnersList';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 // Page "À propos" — équipe rendue depuis la base via /api/team-members.
 // Trois rendus selon la catégorie :
@@ -142,6 +143,12 @@ const Presentation = () => {
     const lang = i18n.language;
     const [members, setMembers] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    usePageMeta({
+        title: t('pages.presentation.title'),
+        description: t('pages.presentation.intro'),
+        path: '/presentation',
+    });
 
     // Offset vertical des personnages décoratifs : quand le footer entre dans
     // le viewport, on translate les personnages vers le haut du même nombre

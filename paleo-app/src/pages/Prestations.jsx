@@ -4,6 +4,7 @@ import { ExternalLink } from 'lucide-react';
 import api from '../services/apiClient';
 import { getPrestationIcon } from '../utils/prestationIcons';
 import { pickLang } from '../utils/i18nHelpers';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 /** Extrait le book code Calaméo d'une URL `calameo.com/books/<code>` ou `read/<code>`. */
 function parseCalameoBookCode(url) {
@@ -239,6 +240,12 @@ const Prestations = () => {
     const lang = i18n.language;
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    usePageMeta({
+        title: t('pages.prestations.title'),
+        description: t('pages.prestations.intro'),
+        path: '/prestations',
+    });
 
     useEffect(() => {
         api.prestations.getAll()
