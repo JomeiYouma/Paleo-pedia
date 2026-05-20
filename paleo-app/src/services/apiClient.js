@@ -208,6 +208,23 @@ export const pressArticles = {
   delete:  (id)         => del(`/press-articles/${id}`),
 };
 
+// ── Missions (page publique /participer — appels à participation) ──
+// Lecture publique (filtrée à publié pour les non-admins, tout pour les
+// admins). Écriture réservée au superadmin.
+export const missions = {
+  getAll:  ()           => get('/missions'),
+  create:  (data)       => post('/missions', data),
+  update:  (id, data)   => patch(`/missions/${id}`, data),
+  delete:  (id)         => del(`/missions/${id}`),
+};
+
+// ── Candidatures aux missions (formulaire public /participer) ─────
+// POST public (no auth). Lecture réservée aux superadmins.
+export const missionApplications = {
+  create:  (data)       => post('/mission-applications', data),
+  getAll:  ()           => get('/mission-applications'),
+};
+
 // ── Prestations (page publique /prestations) ──────────────────
 // Lecture publique (filtrée à publié pour les non-admins, tout pour les
 // admins). Écriture réservée au superadmin.
@@ -376,5 +393,5 @@ export const logs = {
   bulkSetRecipient: (recipient) => patch('/logs/email-config', { recipient }),
 };
 
-const api = { auth, cartels, stats, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners, teamMembers, pressArticles, prestations, shopItems, logs };
+const api = { auth, cartels, stats, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners, teamMembers, pressArticles, missions, missionApplications, prestations, shopItems, logs };
 export default api;

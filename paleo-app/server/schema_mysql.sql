@@ -302,7 +302,8 @@ INSERT IGNORE INTO `event_email_config` (`type`) VALUES
   ('user.created'),    ('user.updated'),   ('user.deleted'), ('user.assigned_subsite'),
   ('partner.created'), ('partner.updated'),('partner.deleted'),
   ('category.created'),('category.updated'),('category.deleted'),
-  ('workshop.created'),('workshop.updated'),('workshop.deleted');
+  ('workshop.created'),('workshop.updated'),('workshop.deleted'),
+  ('mission_application.created');
 
 -- ============================================================
 -- TEAM_MEMBERS (page À propos)
@@ -345,6 +346,43 @@ CREATE TABLE IF NOT EXISTS `press_articles` (
   `updated_at`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_press_publish` (`is_published`, `published_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- MISSIONS (page /participer — appels à participation thématiques)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `missions` (
+  `id`             CHAR(36)      NOT NULL DEFAULT (UUID()),
+  `theme`          VARCHAR(120)  NOT NULL,
+  `name`           VARCHAR(255)  NOT NULL,
+  `name_en`        VARCHAR(255)  NULL DEFAULT NULL,
+  `text`           TEXT          NULL DEFAULT NULL,
+  `text_en`        TEXT          NULL DEFAULT NULL,
+  `link_url`       VARCHAR(500)  NULL DEFAULT NULL,
+  `link_label`     VARCHAR(255)  NULL DEFAULT NULL,
+  `display_order`  INT           NOT NULL DEFAULT 0,
+  `is_published`   TINYINT(1)    NOT NULL DEFAULT 1,
+  `created_at`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_missions_publish` (`is_published`, `display_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- MISSION_APPLICATIONS (candidatures soumises depuis /participer)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `mission_applications` (
+  `id`           CHAR(36)      NOT NULL DEFAULT (UUID()),
+  `name`         VARCHAR(255)  NOT NULL,
+  `email`        VARCHAR(255)  NOT NULL,
+  `mission_id`   CHAR(36)      NULL DEFAULT NULL,
+  `knowledge`    TEXT          NULL DEFAULT NULL,
+  `submitter_ip` VARCHAR(45)   NULL DEFAULT NULL,
+  `created_at`   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_mission_applications_mission` (`mission_id`, `created_at`),
+  CONSTRAINT `fk_mission_applications_mission`
+    FOREIGN KEY (`mission_id`) REFERENCES `missions` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================

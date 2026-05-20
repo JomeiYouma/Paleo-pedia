@@ -5,7 +5,7 @@ import {
     Shield, Users, Key, Save, RefreshCw,
     ToggleLeft, ToggleRight, AlertCircle, CheckCircle2, Check,
     Globe, Plus, Trash2, Edit, ExternalLink, ChevronDown, ChevronUp,
-    FolderOpen, Activity,
+    FolderOpen, Activity, Target,
 } from 'lucide-react';
 import api from '../services/apiClient';
 import i18n from '../i18n';
@@ -764,6 +764,32 @@ const AdminSettings = () => {
                             </button>
                             <p style={{ margin: '10px 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
                                 Tri automatique par date décroissante. Vignettes uploadables. Possibilité de masquer un article sans le supprimer.
+                            </p>
+                        </Section>
+
+                        {/* ── Missions (page publique /participer) ──────────── */}
+                        <Section icon={Target} title="Missions (page Participer)"
+                            color="var(--color-theme-content)" bg="var(--color-theme-content-bg)">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/app/admin/missions')}
+                                style={{
+                                    width: '100%',
+                                    display: 'flex', alignItems: 'center', gap: '12px',
+                                    padding: '14px 18px',
+                                    background: 'var(--color-theme-content-bg)', border: '1px solid var(--color-theme-content)',
+                                    borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-content)',
+                                    fontSize: '0.85rem', fontWeight: '700',
+                                    textTransform: 'uppercase', letterSpacing: '0.5px',
+                                }}
+                            >
+                                <ExternalLink size={16} />
+                                <span style={{ flex: 1, textAlign: 'left' }}>Gérer les missions affichées en haut de la page « Participer »</span>
+                                <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
+                            </button>
+                            <p style={{ margin: '10px 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                                Cards dépliables (thème + nom + texte + lien optionnel). Ordre, visibilité et traduction EN gérés ici.
                             </p>
                         </Section>
 

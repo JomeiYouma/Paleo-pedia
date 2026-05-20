@@ -22,6 +22,7 @@ import AdminPartners from './pages/AdminPartners';
 import AdminTeam from './pages/AdminTeam';
 import AdminTeamContent from './pages/AdminTeamContent';
 import AdminPress from './pages/AdminPress';
+import AdminMissions from './pages/AdminMissions';
 import AdminPrestations from './pages/AdminPrestations';
 import AdminShop from './pages/AdminShop';
 import AdminCategoriesWorkshops from './pages/AdminCategoriesWorkshops';
@@ -174,6 +175,7 @@ const mainRouter = createHashRouter(
         <Route path="admin/team"        element={<AdminTeam />} />
         <Route path="admin/team-content" element={<AdminTeamContent />} />
         <Route path="admin/press"        element={<AdminPress />} />
+        <Route path="admin/missions"     element={<AdminMissions />} />
         <Route path="admin/prestations"  element={<AdminPrestations />} />
         <Route path="admin/shop"         element={<AdminShop />} />
         <Route path="admin/taxonomies"  element={<AdminCategoriesWorkshops />} />
