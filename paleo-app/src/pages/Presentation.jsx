@@ -160,10 +160,6 @@ const Presentation = () => {
         <div style={{ maxWidth: '900px', margin: '60px auto', padding: '0 20px', lineHeight: '1.8', color: 'var(--color-text)' }}>
             <h1 style={{ fontSize: '2.5rem', marginBottom: '40px', color: 'var(--color-primary)' }}>{t('pages.presentation.title')}</h1>
 
-            <p style={{ fontSize: '1.2rem', marginBottom: '30px' }}>
-                <strong>{t('pages.presentation.subtitle')}</strong>
-            </p>
-
             <p>
                 {t('pages.presentation.intro')}
             </p>

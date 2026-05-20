@@ -30,12 +30,12 @@ const Museum = () => {
                 />
             </div>
 
-        <div style={{ maxWidth: '900px', margin: '40px auto 60px', padding: '0 20px', lineHeight: '1.8', color: '#333' }}>
-            <h1 style={{ fontSize: '2.5rem', marginBottom: '12px', color: 'var(--color-pink-darker, #C2185B)' }}>
+        <div style={{ maxWidth: '900px', margin: '40px auto 60px', padding: '0 20px', lineHeight: '1.8', color: 'var(--color-text)' }}>
+            <h1 style={{ fontSize: '2.5rem', marginBottom: '12px' }}>
                 {t('museum.title')}
             </h1>
             <p
-                style={{ fontSize: '1.15rem', color: '#666', marginTop: 0, marginBottom: '32px' }}
+                style={{ fontSize: '1.15rem', color: 'var(--color-text-muted)', marginTop: 0, marginBottom: '32px' }}
                 dangerouslySetInnerHTML={{ __html: t('museum.subtitle') }}
             />
 
@@ -46,18 +46,14 @@ const Museum = () => {
                     background: 'var(--color-surface)',
                     borderLeft: '4px solid var(--color-accent)',
                     borderRadius: 0,
-                    fontSize: '1.15rem',
-                    fontWeight: '700',
+                    fontStyle: 'italic',
                     color: 'var(--color-text)',
-                    lineHeight: '1.5',
+                    lineHeight: '1.55',
                 }}
                 dangerouslySetInnerHTML={{ __html: t('museum.tagline') }}
             />
 
-            <p
-                style={{ fontSize: '1.15rem' }}
-                dangerouslySetInnerHTML={{ __html: t('museum.intro1Html') }}
-            />
+            <p dangerouslySetInnerHTML={{ __html: t('museum.intro1Html') }} />
 
             <p>{t('museum.intro2')}</p>
 
@@ -69,7 +65,7 @@ const Museum = () => {
             />
 
             {/* ── Infos pratiques ──────────────────────────────────────── */}
-            <h2 style={{ marginTop: '40px' }}>{t('museum.findUs')}</h2>
+            <h2 style={{ fontSize: '1.8rem', marginTop: '40px', marginBottom: '20px' }}>{t('museum.findUs')}</h2>
             <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
@@ -101,7 +97,7 @@ const Museum = () => {
             </div>
 
             {/* ── Une expérience immersive ─────────────────────────────── */}
-            <h2 style={{ marginTop: '50px' }}>{t('museum.immersiveTitle')}</h2>
+            <h2 style={{ fontSize: '1.8rem', marginTop: '50px', marginBottom: '20px' }}>{t('museum.immersiveTitle')}</h2>
             <p>{t('museum.immersiveBody')}</p>
 
             {/* ── Photos intérieures du musée ──────────────────────────── */}
@@ -156,7 +152,7 @@ const Museum = () => {
             </div>
 
             {/* ── Expo itinérante ──────────────────────────────────────── */}
-            <h2 style={{ marginTop: '50px' }}>{t('museum.travelingTitle')}</h2>
+            <h2 style={{ fontSize: '1.8rem', marginTop: '50px', marginBottom: '20px' }}>{t('museum.travelingTitle')}</h2>
             <p>{t('museum.travelingBody')}</p>
             <p>
                 <Link to="/prestations" className="paleo-btn">
@@ -165,22 +161,22 @@ const Museum = () => {
             </p>
 
             {/* ── Designers & partenaires ──────────────────────────────── */}
-            <h2 style={{ marginTop: '50px' }}>{t('museum.designersTitle')}</h2>
+            <h2 style={{ fontSize: '1.8rem', marginTop: '50px', marginBottom: '20px' }}>{t('museum.designersTitle')}</h2>
             <p dangerouslySetInnerHTML={{ __html: t('museum.designersBodyHtml') }} />
             <p
-                style={{ fontSize: '0.95rem', color: '#555' }}
+                style={{ color: 'var(--color-text-muted)' }}
                 dangerouslySetInnerHTML={{ __html: t('museum.supportHtml') }}
             />
 
             {/* ── CTAs participation ───────────────────────────────────── */}
             <div style={{
                 marginTop: '50px',
-                background: '#f8f9fa',
+                background: 'var(--color-surface-2)',
                 padding: '30px',
-                borderRadius: '12px',
+                borderRadius: 'var(--radius-md)',
                 textAlign: 'center',
             }}>
-                <h3 style={{ marginTop: 0 }}>{t('museum.contributeTitle')}</h3>
+                <h3 style={{ fontSize: '1.5rem', marginTop: 0, marginBottom: '12px' }}>{t('museum.contributeTitle')}</h3>
                 <p>{t('museum.contributeBody')}</p>
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginTop: '14px' }}>
                     <Link to="/participer" className="paleo-btn">

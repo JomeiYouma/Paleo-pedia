@@ -339,7 +339,6 @@
     "pages": {
         "presentation": {
             "title": "About",
-            "subtitle": "PALEO-ENERGETICS: A Counter-History of Energy",
             "intro": "Resurrect forgotten techniques, demonstrate innovation capacity, revive overlooked innovations and unexpected social, vernacular, decentralized capabilities.",
             "mission": "Our Mission",
             "examples": "A few examples:",
@@ -553,9 +552,9 @@
         "questionContactPage": "contact page"
     },
     "museum": {
-        "bannerAlt": "The 1st alternative-energy museum in Paris",
+        "bannerAlt": "Alternative-energy museum in Paris",
         "title": "Retrofutur Museum",
-        "subtitle": "The 1<sup>st</sup> alternative-energy museum in Paris!",
+        "subtitle": "Alternative-energy museum in Paris!",
         "tagline": "The 1<sup>st</sup> museum where visitors must produce the energy that lights it.",
         "intro1Html": "This citizen-led, low-tech and participatory museum is the fruit of collective work, anchored in the Paleo-Energetique.org research programme launched by <strong>Atelier 21 in 2015</strong>. Its mission: inventory and share forgotten inventions in the field of alternative energy.",
         "intro2": "It brings hidden know-how back to light and — in the second wing inaugurated in 2025 — puts it in dialogue with contemporary works from design, engineering and art. The goal: develop new avenues for research and innovation from a transition standpoint.",
