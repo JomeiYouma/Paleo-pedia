@@ -143,6 +143,26 @@ const Presentation = () => {
     const [members, setMembers] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // Offset vertical des personnages décoratifs : quand le footer entre dans
+    // le viewport, on translate les personnages vers le haut du même nombre
+    // de pixels pour qu'ils « remontent avec lui » au lieu d'être recouverts.
+    const [footerOverlap, setFooterOverlap] = useState(0);
+    useEffect(() => {
+        const update = () => {
+            const footer = document.querySelector('footer');
+            if (!footer) { setFooterOverlap(0); return; }
+            const top = footer.getBoundingClientRect().top;
+            setFooterOverlap(Math.max(0, window.innerHeight - top));
+        };
+        update();
+        window.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('resize', update);
+        return () => {
+            window.removeEventListener('scroll', update);
+            window.removeEventListener('resize', update);
+        };
+    }, []);
+
     useEffect(() => {
         api.teamMembers.getAll()
             .then(data => setMembers(Array.isArray(data) ? data : []))
@@ -157,7 +177,29 @@ const Presentation = () => {
     }), [members]);
 
     return (
-        <div style={{ maxWidth: '900px', margin: '60px auto', padding: '0 20px', lineHeight: '1.8', color: 'var(--color-text)' }}>
+        <div style={{ position: 'relative' }}>
+            {/* ── Décor latéral : Mouchot (gauche) + Maria (droite) ─────
+                Affiché uniquement quand la largeur le permet — sinon caché
+                pour ne pas chevaucher le contenu. Position fixe ancrée en
+                bas. Le translateY dynamique (footerOverlap) fait remonter
+                les personnages quand le footer arrive en bas du viewport,
+                pour qu'ils s'élèvent avec lui plutôt que d'être coupés. */}
+            <img
+                src="/photos/mouchot.png"
+                alt=""
+                aria-hidden="true"
+                className="presentation-decor presentation-decor--left"
+                style={{ transform: `translateY(-${footerOverlap}px) rotate(7deg)` }}
+            />
+            <img
+                src="/photos/maria.png"
+                alt=""
+                aria-hidden="true"
+                className="presentation-decor presentation-decor--right"
+                style={{ transform: `translateY(-${footerOverlap}px) rotate(-7deg)` }}
+            />
+
+        <div style={{ maxWidth: '900px', margin: '60px auto', padding: '0 20px', lineHeight: '1.8', color: 'var(--color-text)', position: 'relative', zIndex: 1 }}>
             <h1 style={{ fontSize: '2.5rem', marginBottom: '40px', color: 'var(--color-primary)' }}>{t('pages.presentation.title')}</h1>
 
             <p>
@@ -344,6 +386,49 @@ const Presentation = () => {
             <p style={{ marginTop: '30px', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
                 {t('pages.presentation.supportNote')}
             </p>
+        </div>
+
+            <style>{`
+                /* Décor latéral de la page « À propos » : Mouchot et Maria
+                   posés dans les marges gauche/droite, bustes coupés par le
+                   bas et par le bord latéral pour donner un effet « les
+                   personnages se penchent vers le contenu ». Hauteurs et
+                   rotations dissymétriques pour éviter l'effet miroir.
+                   Pointer-events désactivés pour rester purement décoratifs. */
+                .presentation-decor {
+                    position: fixed;
+                    width: auto;
+                    pointer-events: none;
+                    user-select: none;
+                    z-index: 0;
+                }
+                .presentation-decor--left {
+                    height: 720px;
+                    left: -40px;             /* léger débord sur le bord gauche */
+                    bottom: -430px;          /* bas du corps coupé par le bord inférieur */
+                    transform-origin: bottom right;
+                    /* transform: translateY(...) rotate(7deg) — appliqué en inline pour
+                       composer la rotation avec l'offset dynamique du footer. */
+                }
+                .presentation-decor--right {
+                    height: 720px;
+                    right: -30px;            /* léger débord sur le bord droit */
+                    bottom: -340px;          /* coupé plus bas → buste plus haut que Mouchot */
+                    transform-origin: bottom left;
+                }
+
+                /* Petit boost de taille sur très grands écrans */
+                @media (min-width: 1800px) {
+                    .presentation-decor--left  { height: 820px; bottom: -490px; }
+                    .presentation-decor--right { height: 820px; bottom: -390px; }
+                }
+
+                /* En-dessous du seuil, on cache pour ne pas mordre sur le
+                   contenu (900 + ~250×2 ≈ 1400px nécessaires). */
+                @media (max-width: 1400px) {
+                    .presentation-decor { display: none; }
+                }
+            `}</style>
         </div>
     );
 };

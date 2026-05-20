@@ -25,6 +25,8 @@ const SiteLayout = () => {
                 padding: '40px',
                 marginTop: 'auto',
                 borderTop: '1px solid #eee',
+                position: 'relative',
+                zIndex: 2,
             }}>
                 <div style={{
                     maxWidth: '1200px',
