@@ -437,8 +437,8 @@ Sur le nouveau domaine :
 - [ ] (admin) Login → bouton "Gérer" → URL `/admin/published` propre
 
 Sur le site principal (paleo-energetique.org / paleo.madore.projetsmmichamps.fr) :
-- [ ] **Tout** continue de marcher comme avant (HashRouter intact)
-- [ ] Liens existants `#/site/solidarite/frise` fonctionnent toujours
+- [ ] **Tout** continue de marcher (depuis 2026-05-XX, le site principal est aussi en BrowserRouter — fallback SPA déjà en place dans `server.js`)
+- [ ] Liens externes legacy `#/site/solidarite/frise` réécrits au boot par le script inline dans `index.html` → fonctionnent toujours
 
 ### Fichiers touchés par cette feature
 
@@ -465,7 +465,7 @@ Sur paleo-h2o.org/frise, le navigateur fait un GET `/frise` au serveur. Express 
 
 **P3. Liens cross-domain depuis le site principal**
 
-Sur la landing page paleo-energetique, [`LandingPage.jsx`](src/pages/LandingPage.jsx) et [`SharedHeader.jsx`](src/components/SharedHeader.jsx) génèrent des liens vers `/site/<slug>` (URL interne HashRouter). Ces liens ouvrent le subsite **dans le même domaine** (`paleo-energetique.org/#/site/paleo-h2o`), pas sur le domaine dédié. C'est un choix UX volontaire (rester dans l'onglet courant), mais ce n'est pas canonique. Pour ouvrir le domaine dédié, il faudrait détecter si le slug a une entrée inverse dans `HOST_TO_SUBSITE_SLUG` et générer un `<a href="https://...">` plutôt qu'un `<Link to>`. À faire plus tard si besoin.
+Sur la landing page paleo-energetique, [`LandingPage.jsx`](src/pages/LandingPage.jsx) et [`SharedHeader.jsx`](src/components/SharedHeader.jsx) génèrent des liens vers `/site/<slug>` (route interne du BrowserRouter principal). Ces liens ouvrent le subsite **dans le même domaine** (`paleo-energetique.org/site/paleo-h2o`), pas sur le domaine dédié. C'est un choix UX volontaire (rester dans l'onglet courant), mais ce n'est pas canonique. Pour ouvrir le domaine dédié, il faudrait détecter si le slug a une entrée inverse dans `HOST_TO_SUBSITE_SLUG` et générer un `<a href="https://...">` plutôt qu'un `<Link to>`. À faire plus tard si besoin.
 
 **P4. Pas de cookie/localStorage cross-domain**
 

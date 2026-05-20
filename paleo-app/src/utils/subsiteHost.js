@@ -6,7 +6,7 @@ export const MAIN_SITE_URL = 'https://paleo-pedia.org';
 // Map host → subsite slug. Un domaine dédié comme paleo-h2o.org affiche
 // le sous-site h2o à la racine (`/`, `/frise`, `/admin/...`) au lieu de
 // passer par `/site/h2o/...`. Quand le host ne correspond à aucun sous-site,
-// l'app utilise son routeur historique (createHashRouter) sans changement.
+// l'app utilise createBrowserRouter avec les routes principales (App.jsx).
 export const HOST_TO_SUBSITE_SLUG = {
     'paleo-h2o.org':      'paleo-h2o',
     'www.paleo-h2o.org':  'paleo-h2o',

@@ -113,8 +113,8 @@ const Create = () => {
     }, [isDirty, isSaving]);
 
     // useBlocker intercepte la navigation interne (Link, navigate(), back btn).
-    // Nécessite le data router (cf. App.jsx createHashRouter). On ne bloque que
-    // les changements de chemin réels — un navigate vers la même URL passe.
+    // Nécessite le data router (cf. App.jsx createBrowserRouter). On ne bloque
+    // que les changements de chemin réels — un navigate vers la même URL passe.
     const blocker = useBlocker(
         useCallback(
             ({ currentLocation, nextLocation }) =>

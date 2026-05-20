@@ -112,7 +112,7 @@ function SubsiteHostCatchAll({ hostSlug }) {
 //   - sinon → BrowserRouter aussi. Le fallback SPA d'Express (server.js
 //     `app.get('*')`) renvoie index.html pour toute route non-API, donc le
 //     refresh sur /presentation/ etc. fonctionne. Les anciens liens
-//     `#/<path>` sont rattrapés au boot par le redirect dans main.jsx.
+//     `#/<path>` sont rattrapés au boot par le script inline dans index.html.
 // Note : on utilise createBrowserRouter (data router) plutôt que
 // <BrowserRouter> legacy pour débloquer useBlocker (Create.jsx confirme la
 // sortie d'un formulaire modifié).
