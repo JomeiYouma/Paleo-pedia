@@ -41,7 +41,7 @@
         "fieldYear": "Année de l'invention (ex: 2024, 2024-01-15...)",
         "fieldLocation": "Localisation (Ville, Pays)",
         "fieldLocationPlaceholder": "Ex: Paris, France",
-        "fieldLocationHelp": "Saisissez d'abord le lieu précis (ex : « Avenue Foch, Paris »). Si le pin (✓ vert) tombe au bon endroit, gardez-le. Sinon, remplacez par « Ville, Pays » ou simplement « , Pays » : le pin se placera sur le pays au lieu d'un endroit erroné.",
+        "fieldLocationHelp": "Saisissez d'abord le lieu précis. Si la localisation tombe au bon endroit, gardez-le. Sinon, remplacez par uniquement le nom de la ville ou simplement le nom du pays : le pin se placera sur le pays au lieu d'un endroit erroné.",
         "fieldDesc": "Description",
         "fieldDescEn": "Description (Anglais)",
         "fieldImage": "Image url",
