@@ -282,7 +282,7 @@ const Admin = () => {
                     {/* Public View Link */}
                     {activeWorkshop && (
                         <a
-                            href={`#/app/workshop/${activeWorkshop.id}`}
+                            href={`/app/workshop/${activeWorkshop.id}`}
                             target="_blank"
                             style={{ display: 'flex', alignItems: 'center', gap: '5px', textDecoration: 'none', color: 'blue', border: '1px solid blue', padding: '5px 10px', borderRadius: '5px' }}
                         >
@@ -388,7 +388,7 @@ const Admin = () => {
                     <h4>Ateliers Actifs :</h4>
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                         {workshops.map(w => {
-                            const publicLink = `${window.location.origin}${window.location.pathname}#/workshop/${w.id}`;
+                            const publicLink = `${window.location.origin}/workshop/${w.id}`;
                             return (
                                 <div key={w.id} style={{
                                     display: 'flex', alignItems: 'center', gap: '5px',

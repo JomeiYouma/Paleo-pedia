@@ -78,6 +78,19 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Compat ancien hash router : on est passé de createHashRouter à
+         createBrowserRouter. Les anciens liens externes / bookmarks /
+         impressions en `/#/presentation` sont réécrits ici, AVANT que le
+         bundle React monte le router. Petit script inline (pas de défer)
+         pour que le router voie tout de suite l'URL propre. -->
+    <script>
+      (function () {
+        var h = window.location.hash;
+        if (h && h.indexOf('#/') === 0) {
+          window.history.replaceState(null, '', h.slice(1) + window.location.search);
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

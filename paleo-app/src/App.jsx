@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import {
-  createHashRouter,
   createBrowserRouter,
   createRoutesFromElements,
   RouterProvider,
@@ -110,15 +109,17 @@ function SubsiteHostCatchAll({ hostSlug }) {
 //   - sur un host de sous-site dédié (cf. utils/subsiteHost) → BrowserRouter
 //     avec routes plates (`/`, `/frise`, `/admin/...`) servies par Express.
 //     L'URL reste propre dans la barre d'adresse (paleo-h2o.org/frise).
-//   - sinon → createHashRouter historique, inchangé. Tous les anciens liens
-//     `#/site/<slug>/...` continuent de marcher comme avant.
-// Note : on utilise createHashRouter (data router) plutôt que <HashRouter>
-// legacy pour débloquer useBlocker (Create.jsx confirme la sortie d'un
-// formulaire modifié).
+//   - sinon → BrowserRouter aussi. Le fallback SPA d'Express (server.js
+//     `app.get('*')`) renvoie index.html pour toute route non-API, donc le
+//     refresh sur /presentation/ etc. fonctionne. Les anciens liens
+//     `#/<path>` sont rattrapés au boot par le redirect dans main.jsx.
+// Note : on utilise createBrowserRouter (data router) plutôt que
+// <BrowserRouter> legacy pour débloquer useBlocker (Create.jsx confirme la
+// sortie d'un formulaire modifié).
 
 const hostSubsiteSlug = getHostSubsiteSlug();
 
-const mainRouter = createHashRouter(
+const mainRouter = createBrowserRouter(
   createRoutesFromElements(
     <Route element={<RootLayout />}>
       {/* ── Site public ──────────────────────────────── */}

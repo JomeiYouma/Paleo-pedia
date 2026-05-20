@@ -445,7 +445,7 @@ const AdminSettings = () => {
                                                 <div style={{ fontWeight: '700', fontSize: '0.95rem' }}>{s.name}</div>
                                                 <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.8rem' }}>/site/{s.slug} · {s.category_name}</div>
                                             </div>
-                                            <a href={`#/site/${s.slug}`} target="_blank" rel="noopener" title="Ouvrir" style={{ color: 'var(--color-text-muted)', display: 'flex' }}><ExternalLink size={14} /></a>
+                                            <a href={`/site/${s.slug}`} target="_blank" rel="noopener" title="Ouvrir" style={{ color: 'var(--color-text-muted)', display: 'flex' }}><ExternalLink size={14} /></a>
                                             <button onClick={() => setEditSubsite(s)} title="Modifier" aria-label={`Modifier ${s.name}`}
                                                 style={{ background: 'none', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '5px 10px', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center' }}>
                                                 <Edit size={13} />
