@@ -70,9 +70,14 @@
         "fieldContact": "Votre contact (email ou téléphone)",
         "fieldContactOptional": "Contact de l'auteur (email ou téléphone)",
         "fieldContactPlaceholder": "ex: vous@exemple.org ou 06 12 34 56 78",
-        "fieldContactHelp": "Indispensable pour pouvoir vous recontacter au sujet de votre proposition. ",
+        "fieldContactHelp": "Facultatif — utile pour vous recontacter au sujet de votre proposition. Jamais affiché publiquement. ",
         "fieldContactAdminHelp": "Renseignez si vous saisissez un cartel pour quelqu'un d'autre. Laissez vide si vous êtes l'auteur·rice.",
-        "fieldContactPolicyLink": "Politique de confidentialité"
+        "fieldContactPolicyLink": "Politique de confidentialité",
+        "contactEncourageTitle": "Un e-mail pour vous recontacter ?",
+        "contactEncourageBody": "Ajouter votre e-mail nous permet de vous recontacter au sujet de votre proposition (précisions, sources, attribution). Il ne sera jamais affiché publiquement.",
+        "contactEncourageHint": "Vous pouvez aussi envoyer sans, mais on ne pourra plus revenir vers vous.",
+        "contactEncourageFill": "Renseigner mon e-mail",
+        "contactEncourageSkip": "Envoyer sans e-mail"
     },
     "cartel": {
         "moreInfo": "Pour aller plus loin",

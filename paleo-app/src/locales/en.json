@@ -68,8 +68,13 @@
         "sendProposal": "Send Proposal",
         "fieldContact": "Your contact (email or phone)",
         "fieldContactPlaceholder": "e.g. you@example.org or +1 555 123 4567",
-        "fieldContactHelp": "Required so we can reach out about your proposal. ",
-        "fieldContactPolicyLink": "Privacy policy"
+        "fieldContactHelp": "Optional — helps us reach out about your proposal. Never shown publicly. ",
+        "fieldContactPolicyLink": "Privacy policy",
+        "contactEncourageTitle": "An e-mail so we can reach you?",
+        "contactEncourageBody": "Adding your e-mail lets us reach out about your proposal (details, sources, attribution). It will never be shown publicly.",
+        "contactEncourageHint": "You can still send without it, but we won't be able to follow up.",
+        "contactEncourageFill": "Add my e-mail",
+        "contactEncourageSkip": "Send without e-mail"
     },
     "cartel": {
         "moreInfo": "Learn more",

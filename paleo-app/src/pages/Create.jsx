@@ -147,6 +147,16 @@ const Create = () => {
     const [langMismatch, setLangMismatch] = useState(null); // { field, detectedLang, content } | null
     const dismissedRef = useRef({ title: '', desc: '' });   // dernier texte écarté par l'utilisateur par champ
 
+    // Encouragement à renseigner le contact lors de la proposition (visiteur non connecté).
+    // Le champ est facultatif côté DB et UI : si vide au moment du « Proposer », on
+    // ouvre une modale qui explique l'intérêt sans forcer la saisie. Le visiteur peut
+    // « renseigner » (focus sur le champ) ou « envoyer sans » (skip = on relance le submit).
+    const [contactEncourage, setContactEncourage]   = useState(false);
+    const skipContactPromptRef = useRef(false);
+    const formRef       = useRef(null);
+    const proposeBtnRef = useRef(null);
+    const contactInputRef = useRef(null);
+
     const checkLangMismatch = (field, text) => {
         if (!text || dismissedRef.current[field] === text) return;
         const detected = detectWrongLanguage(text, i18n.language);
@@ -333,12 +343,25 @@ const Create = () => {
             }
         }
 
+        const action = e.nativeEvent.submitter.name;
+
+        // Visiteur anonyme qui propose un cartel sans avoir renseigné de contact :
+        // on n'empêche plus l'envoi, mais on ouvre une modale qui explique l'intérêt
+        // (nous recontacter à propos du cartel, jamais publié). Le visiteur choisit
+        // ensuite de renseigner ou d'envoyer sans. Le ref garde la décision pour la
+        // relance via formRef.requestSubmit() (sinon on reboucle indéfiniment).
+        if (!isAdmin && action === 'propose'
+            && !(form.submitter_contact || '').trim()
+            && !skipContactPromptRef.current) {
+            setContactEncourage(true);
+            return;
+        }
+
         setIsSaving(true);
         setStatusMsg(t('create.processing'));
         await new Promise(r => setTimeout(r, 100));
 
         let data = { ...form };
-        const action = e.nativeEvent.submitter.name;
 
         // IMAGE UPLOAD
         setStatusMsg(t('create.uploading', "Sauvegarde..."));
@@ -549,6 +572,7 @@ const Create = () => {
             )}
 
             <form
+                ref={formRef}
                 onSubmit={handleSubmit}
                 onChange={() => setIsDirty(true)}
                 className="card"
@@ -845,15 +869,14 @@ const Create = () => {
                         {isAdmin
                             ? t('create.fieldContactOptional', "Contact de l'auteur (email ou téléphone)")
                             : t('create.fieldContact', 'Votre contact (email ou téléphone)')}
-                        {!isAdmin && <RequiredMark />}
                     </label>
                     <input
+                        ref={contactInputRef}
                         id="submitter_contact"
                         name="submitter_contact"
                         type="text"
                         value={form.submitter_contact || ''}
                         onChange={handleInputChange}
-                        required={!isAdmin}
                         maxLength={255}
                         placeholder={t('create.fieldContactPlaceholder', 'ex: vous@exemple.org ou 06 12 34 56 78')}
                         style={{ width: '100%', padding: '8px' }}
@@ -861,7 +884,7 @@ const Create = () => {
                     <small style={{ color: '#777', display: 'block', marginTop: '4px', fontSize: '0.82rem', lineHeight: 1.4 }}>
                         {isAdmin
                             ? t('create.fieldContactAdminHelp', "Renseignez si vous saisissez un cartel pour quelqu'un d'autre. Laissez vide si vous êtes l'auteur·rice.")
-                            : t('create.fieldContactHelp', 'Indispensable pour pouvoir vous recontacter au sujet de votre proposition. ')}
+                            : t('create.fieldContactHelp', 'Facultatif — utile pour vous recontacter au sujet de votre proposition. Jamais affiché publiquement. ')}
                         {!isAdmin && (
                             <Link to="/politique-confidentialite" style={{ color: '#555', textDecoration: 'underline' }}>
                                 {t('create.fieldContactPolicyLink', 'Politique de confidentialité')}
@@ -887,7 +910,7 @@ const Create = () => {
                             <button type="submit" name="save_draft" disabled={isSaving} style={{ flex: 1, backgroundColor: '#555', color: 'white', padding: '15px', border: 'none', borderRadius: '8px', display: 'flex', justifyContent: 'center', gap: '10px', opacity: isSaving ? 0.7 : 1, cursor: 'pointer' }}>
                                 <Save /> {t('create.saveDraft')}
                             </button>
-                            <button type="submit" name="propose" disabled={isSaving} style={{ flex: 1, backgroundColor: 'var(--color-pink-darker, #C2185B)', color: 'white', padding: '15px', border: 'none', borderRadius: '8px', display: 'flex', justifyContent: 'center', gap: '10px', opacity: isSaving ? 0.7 : 1, cursor: 'pointer' }}>
+                            <button ref={proposeBtnRef} type="submit" name="propose" disabled={isSaving} style={{ flex: 1, backgroundColor: 'var(--color-pink-darker, #C2185B)', color: 'white', padding: '15px', border: 'none', borderRadius: '8px', display: 'flex', justifyContent: 'center', gap: '10px', opacity: isSaving ? 0.7 : 1, cursor: 'pointer' }}>
                                 <Check /> {t('create.sendProposal')}
                             </button>
                         </>
@@ -949,6 +972,74 @@ const Create = () => {
                                 }}
                             >
                                 {t('create.langMismatchConfirm', 'Oui, basculer')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal : encouragement à renseigner le contact (visiteur anonyme) */}
+            {contactEncourage && (
+                <div
+                    onClick={() => setContactEncourage(false)}
+                    style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+                >
+                    <div
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            background: 'white', borderRadius: '14px', padding: '28px',
+                            maxWidth: '460px', width: '100%',
+                            boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#fff4e0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <AlertTriangle size={20} color="#e67e00" />
+                            </div>
+                            <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800' }}>
+                                {t('create.contactEncourageTitle', 'Un e-mail pour vous recontacter ?')}
+                            </h3>
+                        </div>
+                        <p style={{ margin: '0 0 10px', fontSize: '0.92rem', color: '#333', lineHeight: '1.5' }}>
+                            {t('create.contactEncourageBody', "Ajouter votre e-mail nous permet de vous recontacter au sujet de votre proposition (précisions, sources, attribution). Il ne sera jamais affiché publiquement.")}
+                        </p>
+                        <p style={{ margin: '0 0 18px', fontSize: '0.8rem', color: '#888' }}>
+                            {t('create.contactEncourageHint', 'Vous pouvez aussi envoyer sans, mais on ne pourra plus revenir vers vous.')}
+                        </p>
+                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    skipContactPromptRef.current = true;
+                                    setContactEncourage(false);
+                                    // Petit délai pour laisser React fermer la modale avant de
+                                    // relancer le submit (sinon requestSubmit court-circuite
+                                    // l'unmount et le focus reste piégé sur le bouton).
+                                    setTimeout(() => formRef.current?.requestSubmit(proposeBtnRef.current), 0);
+                                }}
+                                style={{
+                                    padding: '9px 16px', borderRadius: '8px',
+                                    border: '1px solid #ddd', background: 'white',
+                                    color: '#555', cursor: 'pointer',
+                                    fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: '600',
+                                }}
+                            >
+                                {t('create.contactEncourageSkip', 'Envoyer sans e-mail')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setContactEncourage(false);
+                                    setTimeout(() => contactInputRef.current?.focus(), 0);
+                                }}
+                                style={{
+                                    padding: '9px 16px', borderRadius: '8px',
+                                    border: 'none', background: '#e67e00', color: 'white',
+                                    cursor: 'pointer',
+                                    fontFamily: 'inherit', fontSize: '0.88rem', fontWeight: '700',
+                                }}
+                            >
+                                {t('create.contactEncourageFill', 'Renseigner mon e-mail')}
                             </button>
                         </div>
                     </div>
