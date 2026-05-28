@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Linkedin, Globe, Link2 } from 'lucide-react';
+import { Linkedin, Globe, Link2, X } from 'lucide-react';
 import api from '../services/apiClient';
 import { pickLang } from '../utils/i18nHelpers';
 import PartnersList from '../components/PartnersList';
@@ -12,6 +12,128 @@ import { usePageMeta } from '../hooks/usePageMeta';
 //   - 'main'      → cards complètes (photo, rôle, bio, liens sociaux)
 //   - 'secondary' → cards compactes (photo, rôle)
 //   - 'community' → liste textuelle (nom + rôle, séparés par virgules)
+
+// Bios plus longues que ce seuil sont tronquées avec un bouton « Afficher + »
+// qui ouvre une modale (préserve la géométrie de la grille). Le seuil est
+// calibré sur la bio de Simon Bouchaudy (~245 car.) qui sert de référence.
+const BIO_TRUNCATE_LIMIT = 250;
+
+// Nombre de contributeur·ices affiché·es par défaut avant le bouton
+// « Afficher tous les contributeur·ices » (≈ 2 lignes sur desktop avec la
+// grille auto-fit minmax(240px, 1fr)).
+const CONTRIBUTORS_PREVIEW_COUNT = 6;
+
+// ── Modale bio longue ─────────────────────────────────────────
+// S'affiche au clic sur « Afficher + » d'une bio tronquée. Esc et clic sur
+// le backdrop ferment la modale. Pas de Portal explicite : `position: fixed`
+// + z-index élevé suffit puisque rien d'autre n'utilise un z-index >= 1000.
+const BioModal = ({ member, onClose }) => {
+    const { t } = useTranslation();
+    useEffect(() => {
+        const handler = (e) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', handler);
+        const prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => {
+            window.removeEventListener('keydown', handler);
+            document.body.style.overflow = prevOverflow;
+        };
+    }, [onClose]);
+
+    return (
+        <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="bio-modal-title"
+            onClick={onClose}
+            style={{
+                position: 'fixed', inset: 0, zIndex: 1000,
+                background: 'rgba(0, 0, 0, 0.55)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: '20px',
+            }}
+        >
+            <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                    background: 'var(--color-surface)',
+                    borderRadius: 'var(--radius-md)',
+                    maxWidth: '640px', width: '100%',
+                    maxHeight: '85vh', overflowY: 'auto',
+                    padding: '32px 28px',
+                    position: 'relative',
+                    boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+                }}
+            >
+                <button
+                    onClick={onClose}
+                    aria-label={t('common.close', 'Fermer')}
+                    style={{
+                        position: 'absolute', top: '14px', right: '14px',
+                        background: 'transparent', border: 'none', cursor: 'pointer',
+                        padding: '6px', borderRadius: 'var(--radius-md)',
+                        color: 'var(--color-text-muted)',
+                    }}
+                >
+                    <X size={20} />
+                </button>
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '18px' }}>
+                    {member.photo_path && (
+                        <img
+                            src={member.photo_path}
+                            alt=""
+                            style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                        />
+                    )}
+                    <div>
+                        <h3 id="bio-modal-title" style={{ margin: '0 0 4px', fontSize: '1.2rem' }}>{member.name}</h3>
+                        {member.role && (
+                            <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                                {member.role}
+                            </div>
+                        )}
+                    </div>
+                </div>
+                <p style={{ margin: 0, fontSize: '0.95rem', color: 'var(--color-text)', lineHeight: '1.65', whiteSpace: 'pre-wrap' }}>
+                    {member.bio}
+                </p>
+            </div>
+        </div>
+    );
+};
+
+// ── Bio avec troncature + bouton modale ───────────────────────
+// Si la bio dépasse BIO_TRUNCATE_LIMIT, on tronque proprement à la fin du
+// dernier mot complet et on ajoute un bouton « Afficher + » qui demande
+// l'ouverture de la modale au parent (via onExpand).
+const TruncatedBio = ({ bio, onExpand, style }) => {
+    const { t } = useTranslation();
+    if (!bio) return null;
+    const isLong = bio.length > BIO_TRUNCATE_LIMIT;
+    if (!isLong) {
+        return <p style={style}>{bio}</p>;
+    }
+    const cut = bio.slice(0, BIO_TRUNCATE_LIMIT);
+    const lastSpace = cut.lastIndexOf(' ');
+    const truncated = (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trimEnd();
+    return (
+        <p style={style}>
+            {truncated}…{' '}
+            <button
+                type="button"
+                onClick={onExpand}
+                style={{
+                    background: 'transparent', border: 'none', padding: 0,
+                    color: 'var(--color-primary)', cursor: 'pointer',
+                    fontFamily: 'inherit', fontSize: 'inherit',
+                    textDecoration: 'underline',
+                }}
+            >
+                {t('pages.presentation.showMoreBio', 'Afficher +')}
+            </button>
+        </p>
+    );
+};
 
 // ── Liens sociaux d'un membre ─────────────────────────────────
 const SocialLinks = ({ member }) => {
@@ -51,7 +173,7 @@ const SocialLinks = ({ member }) => {
 };
 
 // ── Card pleine (équipe principale) ───────────────────────────
-const MainCard = ({ member, lang }) => {
+const MainCard = ({ member, lang, onExpandBio }) => {
     const role = pickLang(member, 'role', lang) || member.role;
     const bio  = pickLang(member, 'bio',  lang) || member.bio;
     return (
@@ -88,11 +210,11 @@ const MainCard = ({ member, lang }) => {
                 {role}
             </p>
         )}
-        {bio && (
-            <p style={{ margin: '14px 0 0', fontSize: '0.92rem', color: 'var(--color-text-muted)', lineHeight: '1.55' }}>
-                {bio}
-            </p>
-        )}
+        <TruncatedBio
+            bio={bio}
+            onExpand={() => onExpandBio({ ...member, role, bio })}
+            style={{ margin: '14px 0 0', fontSize: '0.92rem', color: 'var(--color-text-muted)', lineHeight: '1.55' }}
+        />
         <SocialLinks member={member} />
     </article>
     );
@@ -100,7 +222,7 @@ const MainCard = ({ member, lang }) => {
 
 // ── Card compacte (équipe secondaire) — layout horizontal pour distinguer
 //    visuellement des Principaux, mais inclut bio détaillée et liens sociaux.
-const SecondaryCard = ({ member, lang }) => {
+const SecondaryCard = ({ member, lang, onExpandBio }) => {
     const role = pickLang(member, 'role', lang) || member.role;
     const bio  = pickLang(member, 'bio',  lang) || member.bio;
     return (
@@ -127,11 +249,11 @@ const SecondaryCard = ({ member, lang }) => {
                     {role}
                 </div>
             )}
-            {bio && (
-                <p style={{ margin: '10px 0 0', fontSize: '0.9rem', color: 'var(--color-text-muted)', lineHeight: '1.55' }}>
-                    {bio}
-                </p>
-            )}
+            <TruncatedBio
+                bio={bio}
+                onExpand={() => onExpandBio({ ...member, role, bio })}
+                style={{ margin: '10px 0 0', fontSize: '0.9rem', color: 'var(--color-text-muted)', lineHeight: '1.55' }}
+            />
             <SocialLinks member={member} />
         </div>
     </article>
@@ -143,6 +265,8 @@ const Presentation = () => {
     const lang = i18n.language;
     const [members, setMembers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [bioModal, setBioModal] = useState(null);
+    const [showAllContributors, setShowAllContributors] = useState(false);
 
     usePageMeta({
         title: t('pages.presentation.title'),
@@ -326,21 +450,58 @@ const Presentation = () => {
                             <h3 style={{ fontSize: '1.2rem', marginTop: '30px', marginBottom: '16px', color: 'var(--color-text-muted)' }}>
                                 {t('pages.presentation.teamMain')}
                             </h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '40px' }}>
-                                {mainMembers.map(m => <MainCard key={m.id} member={m} lang={lang} />)}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+                                {mainMembers.map(m => <MainCard key={m.id} member={m} lang={lang} onExpandBio={setBioModal} />)}
                             </div>
                         </>
                     )}
 
-                    {/* Équipe secondaire — cards compactes */}
+                    {/* Équipe secondaire — cards compactes.
+                        Séparé visuellement des Principaux par une marge généreuse
+                        + un filet horizontal, pour ne pas paraître en continuité
+                        de la grille principale. Affiché en aperçu (2 lignes ≈ 6
+                        cards) puis un bouton dévoile la liste complète. */}
                     {secondaryMembers.length > 0 && (
                         <>
-                            <h3 style={{ fontSize: '1.2rem', marginTop: '30px', marginBottom: '16px', color: 'var(--color-text-muted)' }}>
+                            <hr style={{
+                                border: 0,
+                                borderTop: '1px solid var(--color-border)',
+                                margin: '64px 0 0',
+                            }} />
+                            <h3 style={{ fontSize: '1.2rem', marginTop: '36px', marginBottom: '16px', color: 'var(--color-text-muted)' }}>
                                 {t('pages.presentation.teamSecondary')}
                             </h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px', marginBottom: '40px' }}>
-                                {secondaryMembers.map(m => <SecondaryCard key={m.id} member={m} lang={lang} />)}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+                                {(showAllContributors ? secondaryMembers : secondaryMembers.slice(0, CONTRIBUTORS_PREVIEW_COUNT))
+                                    .map(m => <SecondaryCard key={m.id} member={m} lang={lang} onExpandBio={setBioModal} />)}
                             </div>
+                            {secondaryMembers.length > CONTRIBUTORS_PREVIEW_COUNT ? (
+                                <div style={{ textAlign: 'center', marginTop: '20px', marginBottom: '40px' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAllContributors(v => !v)}
+                                        style={{
+                                            background: 'var(--color-primary)',
+                                            color: 'var(--color-accent)',
+                                            border: 'none',
+                                            borderRadius: 'var(--radius-md)',
+                                            padding: '10px 22px',
+                                            fontFamily: 'var(--font-heading)',
+                                            fontSize: '0.85rem',
+                                            fontWeight: '700',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.4px',
+                                            cursor: 'pointer',
+                                        }}
+                                    >
+                                        {showAllContributors
+                                            ? t('pages.presentation.showLessContributors', 'Réduire')
+                                            : t('pages.presentation.showAllContributors', 'Afficher tous les contributeur·ices ({{count}})', { count: secondaryMembers.length })}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div style={{ marginBottom: '40px' }} />
+                            )}
                         </>
                     )}
 
@@ -436,6 +597,8 @@ const Presentation = () => {
                     .presentation-decor { display: none; }
                 }
             `}</style>
+
+            {bioModal && <BioModal member={bioModal} onClose={() => setBioModal(null)} />}
         </div>
     );
 };
