@@ -53,7 +53,7 @@ function urlForMode(pathname, mode) {
     return `${base}/${MODE_SUFFIX[mode]}`;
 }
 
-const Library = ({ fixedCategory = null, fixedSubsiteId = null, viewMode: viewModeProp = 'timeline' }) => {
+const Library = ({ fixedCategory = null, fixedSubsiteId = null, fixedWorkshopId = null, viewMode: viewModeProp = 'timeline' }) => {
     const { t, i18n } = useTranslation();
     // Source unique : tous les cartels depuis l'API (l'API filtre selon le rôle)
     const { cartels, loading, deleteCartel, deleteCartels, isAdmin, currentWorkshop, workshops, addWorkshop, fetchData } = useApp();
@@ -122,23 +122,30 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, viewMode: viewMo
             data = data.filter(c => c.status === 'published');
         }
 
-        // Si un sous-site impose une catégorie ou son subsite_id : on filtre en dur ici.
-        // Règle : sur un sous-site on montre ses cartels scopés (subsite_id) ET les cartels
-        // legacy du site principal (subsite_id NULL) partageant la catégorie.
-        if (fixedSubsiteId || fixedCategory) {
+        // Si un sous-site impose une catégorie / son subsite_id / un atelier
+        // source, on filtre en dur ici. Règles :
+        //  - subsite_id  : ses cartels scopés (cartels.subsite_id = subsite)
+        //  - catégorie   : cartels legacy main (subsite_id NULL) ou du subsite
+        //  - workshop_id : cartels membres de l'atelier source (subsite-atelier).
+        //    Cas typique : cartels créés sur main puis taggés dans l'atelier
+        //    « Auroville » → ils apparaissent sur le subsite Auroville sans
+        //    pour autant avoir cartels.subsite_id renseigné.
+        if (fixedSubsiteId || fixedCategory || fixedWorkshopId) {
             data = data.filter(c => {
-                const matchesSubsite = fixedSubsiteId && c.subsite_id === fixedSubsiteId;
-                const matchesCategory = fixedCategory && (c.categories || []).some(
+                const matchesSubsite  = fixedSubsiteId  && c.subsite_id === fixedSubsiteId;
+                const matchesCategory = fixedCategory   && (c.categories || []).some(
                     cat => cat.toLowerCase() === fixedCategory.toLowerCase()
                 );
-                if (fixedSubsiteId && matchesSubsite) return true;
+                const matchesWorkshop = fixedWorkshopId && (c.workshopIds || []).includes(fixedWorkshopId);
+                if (matchesSubsite)  return true;
+                if (matchesWorkshop) return true;
                 if (fixedCategory && matchesCategory && (!c.subsite_id || c.subsite_id === fixedSubsiteId)) return true;
                 return false;
             });
         }
 
         return data;
-    }, [cartels, currentWorkshop, isAdmin, fixedCategory, fixedSubsiteId]);
+    }, [cartels, currentWorkshop, isAdmin, fixedCategory, fixedSubsiteId, fixedWorkshopId]);
 
     // Catégories disponibles dans le dataset de base (sous-ensemble cohérent)
     const allCategories = useMemo(() => {

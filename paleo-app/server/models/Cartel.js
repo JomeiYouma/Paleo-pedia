@@ -86,10 +86,19 @@ export const CartelModel = {
 
     // Isolation par sous-site — toujours appliquée, même valeur 'none' = pas de filtre
     // (superadmin uniquement ; les contrôleurs sont responsables de ne jamais envoyer 'none' pour un non-superadmin)
+    //
+    // Subsite « mode atelier » : si le filtre contient workshopId, le corpus
+    // n'est PAS cartels.subsite_id = subsite.id (vide la plupart du temps,
+    // les cartels d'un atelier vivant ailleurs) mais l'ensemble des cartels
+    // membres de l'atelier via workshop_cartels. C'est une vue live sur
+    // l'atelier — adds/removals dans l'atelier se reflètent immédiatement.
     if (subsiteFilter === 'main') {
       conditions.push('c.subsite_id IS NULL');
     } else if (subsiteFilter === 'main_feed') {
       conditions.push('(c.subsite_id IS NULL OR c.visible_on_main = 1)');
+    } else if (subsiteFilter && typeof subsiteFilter === 'object' && subsiteFilter.workshopId) {
+      conditions.push('c.id IN (SELECT cartel_id FROM workshop_cartels WHERE workshop_id = ?)');
+      values.push(subsiteFilter.workshopId);
     } else if (subsiteFilter && typeof subsiteFilter === 'object' && subsiteFilter.id) {
       conditions.push('c.subsite_id = ?');
       values.push(subsiteFilter.id);
@@ -345,8 +354,12 @@ export const CartelModel = {
     const conditions = [];
     const values = [];
 
+    // Cf. findAll() pour la sémantique du subsiteFilter (notamment workshopId).
     if (subsiteFilter === 'main') {
       conditions.push('c.subsite_id IS NULL');
+    } else if (subsiteFilter && typeof subsiteFilter === 'object' && subsiteFilter.workshopId) {
+      conditions.push('c.id IN (SELECT cartel_id FROM workshop_cartels WHERE workshop_id = ?)');
+      values.push(subsiteFilter.workshopId);
     } else if (subsiteFilter && typeof subsiteFilter === 'object' && subsiteFilter.id) {
       conditions.push('c.subsite_id = ?');
       values.push(subsiteFilter.id);

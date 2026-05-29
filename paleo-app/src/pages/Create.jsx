@@ -449,8 +449,9 @@ const Create = () => {
                     // Admin garde le statut actuel ou force draft
                     entry.status = entry.status || 'draft';
                 } else {
-                    // Visiteur : propose ou sauvegarde
-                    entry.status = action === 'save_draft' ? 'draft' : 'pending_review';
+                    // Visiteur non admin : toujours une proposition (le serveur
+                    // force pending_review de toute façon — cf. resolveCreateStatus).
+                    entry.status = 'pending_review';
                 }
                 const updated = subsiteSlug
                     ? await updateCartelInSubsite(subsiteSlug, entry)
@@ -467,7 +468,9 @@ const Create = () => {
                 if (isAdmin) {
                     entry.status = action === 'publish' ? 'published' : 'draft';
                 } else {
-                    entry.status = action === 'save_draft' ? 'draft' : 'pending_review';
+                    // Visiteur non admin : toujours une proposition (le serveur
+                    // force pending_review de toute façon — cf. resolveCreateStatus).
+                    entry.status = 'pending_review';
                 }
                 if (subsiteSlug) {
                     await addCartelToSubsite(subsiteSlug, entry);
@@ -509,7 +512,10 @@ const Create = () => {
                     ? (inSubsiteAdmin ? t('manageCartels.title', 'Gestion') : t('subsiteFrise.title', 'Frise'))
                     : (inMainManage   ? t('manageCartels.title', 'Gestion') : t('library.title', 'Bibliothèque'));
                 const crumbs = subsiteSlug
-                    ? [{ label: parentLabel, href: returnTo, onClick: clearReturnTo }]
+                    ? [
+                        { label: t('subsite.navHome', 'Accueil'), href: subsiteBasePath(subsiteSlug) || '/' },
+                        { label: parentLabel, href: returnTo, onClick: clearReturnTo },
+                      ]
                     : [
                         { label: t('siteLayout.home', 'Accueil'), href: '/' },
                         { label: parentLabel, href: returnTo, onClick: clearReturnTo },
@@ -661,18 +667,18 @@ const Create = () => {
                         <button
                             type="button"
                             onClick={() => insertMarkdown('**')}
-                            title="Gras (** … **)"
+                            title={t('create.boldTitle', 'Gras (** … **)')}
                             style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', border: '1px solid #ccc', borderRadius: '4px', background: '#f8f8f8', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700', fontFamily: 'inherit' }}
                         >
-                            <Bold size={13} /> Gras
+                            <Bold size={13} /> {t('create.boldBtn', 'Gras')}
                         </button>
                         <button
                             type="button"
                             onClick={() => insertMarkdown('*')}
-                            title="Italique (* … *)"
+                            title={t('create.italicTitle', 'Italique (* … *)')}
                             style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', border: '1px solid #ccc', borderRadius: '4px', background: '#f8f8f8', cursor: 'pointer', fontSize: '0.8rem', fontStyle: 'italic', fontFamily: 'inherit' }}
                         >
-                            <Italic size={13} /> Italique
+                            <Italic size={13} /> {t('create.italicBtn', 'Italique')}
                         </button>
                     </div>
                     {(() => {
@@ -821,7 +827,7 @@ const Create = () => {
                     <label>{t('create.fieldUrlQR')}</label>
                     <input name="url_qr" value={form.url_qr} onChange={handleInputChange} style={{ width: '100%', padding: '8px' }} />
                     <small style={{ color: '#777', display: 'block', marginTop: '4px', fontSize: '0.82rem' }}>
-                        Lien externe affiché par le bouton « En savoir plus » et encodé dans le QR code à l'impression.
+                        {t('create.qrHint', "Lien externe affiché par le bouton « En savoir plus » et encodé dans le QR code à l'impression.")}
                     </small>
                 </div>
 
@@ -837,11 +843,10 @@ const Create = () => {
                                 checked={!!form.use_internal_details}
                                 onChange={e => { setForm(prev => ({ ...prev, use_internal_details: e.target.checked })); setIsDirty(true); }}
                             />
-                            Utiliser une page « En savoir plus » interne
+                            {t('create.internalPageLabel', 'Utiliser une page « En savoir plus » interne')}
                         </label>
                         <small style={{ color: '#777', display: 'block', margin: '4px 0 12px 24px', fontSize: '0.82rem' }}>
-                            Si coché, le bouton et le QR pointent vers une page éditable hébergée sur le site
-                            au lieu du lien externe ci-dessus.
+                            {t('create.internalPageHelp', 'Si coché, le bouton et le QR pointent vers une page éditable hébergée sur le site au lieu du lien externe ci-dessus.')}
                         </small>
                         {form.use_internal_details && (
                             <div style={{ marginTop: '8px' }}>
@@ -906,14 +911,9 @@ const Create = () => {
                         </>
                     )}
                     {!isAdmin && (
-                        <>
-                            <button type="submit" name="save_draft" disabled={isSaving} style={{ flex: 1, backgroundColor: '#555', color: 'white', padding: '15px', border: 'none', borderRadius: '8px', display: 'flex', justifyContent: 'center', gap: '10px', opacity: isSaving ? 0.7 : 1, cursor: 'pointer' }}>
-                                <Save /> {t('create.saveDraft')}
-                            </button>
-                            <button ref={proposeBtnRef} type="submit" name="propose" disabled={isSaving} style={{ flex: 1, backgroundColor: 'var(--color-pink-darker, #C2185B)', color: 'white', padding: '15px', border: 'none', borderRadius: '8px', display: 'flex', justifyContent: 'center', gap: '10px', opacity: isSaving ? 0.7 : 1, cursor: 'pointer' }}>
-                                <Check /> {t('create.sendProposal')}
-                            </button>
-                        </>
+                        <button ref={proposeBtnRef} type="submit" name="propose" disabled={isSaving} style={{ flex: 1, backgroundColor: 'var(--color-pink-darker, #C2185B)', color: 'white', padding: '15px', border: 'none', borderRadius: '8px', display: 'flex', justifyContent: 'center', gap: '10px', opacity: isSaving ? 0.7 : 1, cursor: 'pointer' }}>
+                            <Check /> {t('create.sendProposal')}
+                        </button>
                     )}
                 </div>
             </form>

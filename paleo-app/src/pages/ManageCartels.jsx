@@ -7,11 +7,12 @@ import {
     ArrowUpDown, ArrowUp, ArrowDown,
     FileText, Inbox, Globe, Plus, ScanEye, MapPin, Image as ImageIcon,
     Languages, Upload, Package, FileJson, ImageIcon as ImgIcon, Columns, SlidersHorizontal, StickyNote,
-    FolderPlus, AlertTriangle, Loader2,
+    FolderPlus, AlertTriangle, Loader2, Archive, Monitor,
 } from 'lucide-react';
 import { useTranslation, Trans } from 'react-i18next';
 import { generateZip, generatePdf, generateArchive } from '../utils/zipGenerator';
 import PrintPreview from '../components/PrintPreview';
+import CartelPreview from '../components/CartelPreview';
 import LongOperationOverlay from '../components/LongOperationOverlay';
 import TranslateFriseModal from '../components/TranslateFriseModal';
 import Toast from '../components/Toast';
@@ -49,9 +50,10 @@ function hexToRgba(hex, alpha) {
 // consulté), puis les états de production (Brouillons, En attente), enfin
 // Soumissions (file de modération superadmin).
 const TABS = [
-    { key: 'published', labelKey: 'nav.published', icon: Globe,    color: '#2e7d32', bg: '#e8f5e9', descriptionKey: 'manageCartels.publishedDescription',   filter: c => c.status === 'published' || c.status === 'archived' },
+    { key: 'published', labelKey: 'nav.published', icon: Globe,    color: '#2e7d32', bg: '#e8f5e9', descriptionKey: 'manageCartels.publishedDescription',   filter: c => c.status === 'published' },
     { key: 'drafts',    labelKey: 'nav.drafts',    icon: FileText, color: '#3b5bdb', bg: '#f0f4ff', descriptionKey: 'manageCartels.draftsDescription',      filter: c => c.status === 'draft' },
     { key: 'pending',   labelKey: 'nav.pending',   icon: Inbox,    color: '#e67e00', bg: '#fff4e0', descriptionKey: 'manageCartels.pendingDescription',     filter: c => c.status === 'pending_review' },
+    { key: 'archived',  labelKey: 'nav.archived',  icon: Archive,  color: '#6b7280', bg: '#f3f4f6', descriptionKey: 'manageCartels.archivedDescription',    filter: c => c.status === 'archived' },
     { key: 'submissions', labelKey: 'nav.submissions', icon: Inbox, color: '#C2185B', bg: '#fce4ec', descriptionKey: 'manageCartels.submissionsDescription', filter: c => !!c.submitted_to_main_at && !c.visible_on_main && !!c.subsite_id, superadminOnly: true },
 ];
 
@@ -143,12 +145,14 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
         [`${managePrefix}/drafts`]: 'drafts',
         [`${managePrefix}/pending`]: 'pending',
         [`${managePrefix}/published`]: 'published',
+        [`${managePrefix}/archived`]: 'archived',
         [`${managePrefix}/submissions`]: 'submissions',
     };
     const tabToPath = {
         drafts: `${managePrefix}/drafts`,
         pending: `${managePrefix}/pending`,
         published: `${managePrefix}/published`,
+        archived: `${managePrefix}/archived`,
         submissions: `${managePrefix}/submissions`,
     };
 
@@ -204,6 +208,10 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     }, [selectedIds, selectionStorageKey]);
     const [processingId,   setProcessingId]    = useState(null);
     const [previewCartel,  setPreviewCartel]   = useState(null);
+    // Aperçu « version web » : rend CartelPreview (la carte telle qu'affichée
+    // dans la bibliothèque publique), par opposition à previewCartel qui montre
+    // le rendu imprimé A4 (PrintPreview).
+    const [webPreviewCartel, setWebPreviewCartel] = useState(null);
     // Cartel cible de la mini-modal "Ajouter une note" (null = modal fermée).
     const [noteCartel,     setNoteCartel]      = useState(null);
 
@@ -439,7 +447,20 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
         () => act(c.id, () => api.cartels.setStatus(c.id, 'draft')),
         { danger: false, confirmLabel: t('manageCartels.draft') }
     );
-    // handleArchive volontairement retiré avec son bouton d'action.
+    // Archiver : le cartel reste « publié » côté cycle de vie mais passe en
+    // status='archived' → le serveur ne le renvoie plus aux visiteurs (getAll
+    // filtre status='published' pour les non-admins). Réversible via republish.
+    const handleArchive = (c) => askConfirm(
+        t('manageCartels.confirmArchive', { title: c.titre }),
+        () => act(c.id, () => api.cartels.archive(c.id)),
+        { danger: false, confirmLabel: t('manageCartels.archive') }
+    );
+    // Désarchiver = republier : repasse en status='published' (re-visible).
+    const handleUnarchive = (c) => askConfirm(
+        t('manageCartels.confirmUnarchive', { title: c.titre }),
+        () => act(c.id, () => api.cartels.publish(c.id)),
+        { danger: false, confirmLabel: t('manageCartels.unarchive') }
+    );
     const handleDelete = (id) => askConfirm(
         t('messages.confirmDelete'),
         () => act(id, () => api.cartels.delete(id))
@@ -508,12 +529,29 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
         finally { setBusy(false); }
     };
 
+    // Retire de la sélection les cartels en lecture seule (cartels du site
+    // principal affichés dans une vue owner verrouillée). Un owner ne peut pas
+    // les modifier/supprimer ; on les exclut donc des actions groupées mutantes
+    // (l'export, lui, reste inclusif). Hors vue verrouillée, isReadOnlyMainCartel
+    // est toujours faux → aucun changement de comportement.
+    const actionableSelectedIds = () =>
+        Array.from(selectedIds).filter(id => {
+            const c = cartels.find(x => x.id === id);
+            return c && !isReadOnlyMainCartel(c);
+        });
+    const noEditableMsg = () => t(
+        'manageCartels.noEditableInSelection',
+        'Aucun cartel modifiable dans la sélection : les cartels du site principal sont en lecture seule.'
+    );
+
     const handleBulkDelete = () => {
         if (!selectedIds.size) return;
+        const ids = actionableSelectedIds();
+        if (!ids.length) { alert(noEditableMsg()); return; }
         askConfirm(
-            t('manageCartels.confirmBulkDelete', { count: selectedIds.size }),
+            t('manageCartels.confirmBulkDelete', { count: ids.length }),
             () => withBusy(t('manageCartels.busyDeleting'), async () => {
-                for (const id of selectedIds) await api.cartels.delete(id);
+                for (const id of ids) await api.cartels.delete(id);
                 await fetchData();
                 setSelectedIds(new Set());
             })
@@ -526,12 +564,14 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
             alert(t('manageCartels.chooseWorkshopWarning'));
             return;
         }
+        const ids = actionableSelectedIds();
+        if (!ids.length) { alert(noEditableMsg()); return; }
 
         await withBusy(t('manageCartels.busyAssigningWorkshop'), async () => {
             if (newWorkshopName.trim()) {
-                await addWorkshop(newWorkshopName.trim(), Array.from(selectedIds));
+                await addWorkshop(newWorkshopName.trim(), ids);
             } else {
-                await api.workshops.addCartels(selectedWorkshopId, Array.from(selectedIds));
+                await api.workshops.addCartels(selectedWorkshopId, ids);
                 await fetchData();
             }
             setSelectedIds(new Set());
@@ -543,8 +583,10 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
 
     const handleBulkPublish = async () => {
         if (!selectedIds.size) return;
+        const ids = actionableSelectedIds();
+        if (!ids.length) { alert(noEditableMsg()); return; }
         await withBusy(t('manageCartels.busyPublishing'), async () => {
-            for (const id of selectedIds) {
+            for (const id of ids) {
                 const c = cartels.find(x => x.id === id);
                 if (c && c.status !== 'published') await api.cartels.publish(id);
             }
@@ -555,13 +597,15 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
 
     const handleBulkTranslate = () => {
         if (!selectedIds.size) return;
+        const ids = actionableSelectedIds();
+        if (!ids.length) { alert(noEditableMsg()); return; }
         askConfirm(
-            t('manageCartels.confirmBulkTranslate', { count: selectedIds.size }),
+            t('manageCartels.confirmBulkTranslate', { count: ids.length }),
             () => withBusy(t('manageCartels.busyTranslating'), async () => {
                 let count = 0;
-                for (const id of selectedIds) {
+                for (const id of ids) {
                     count++;
-                    setProgress({ current: count, total: selectedIds.size });
+                    setProgress({ current: count, total: ids.length });
                     const cartel = cartels.find(c => c.id === id);
                     if (!cartel) continue;
                     try {
@@ -1232,6 +1276,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                         <td style={{ padding:'10px' }}>
                                             <div style={{ display:'flex', gap:'4px', justifyContent:'center', flexWrap:'wrap' }}>
                                                 <ActionBtn onClick={() => setPreviewCartel(cartel)} title={t('manageCartels.preview')} color={HEX_COLORS.neutral}><ScanEye size={15} /></ActionBtn>
+                                                <ActionBtn onClick={() => setWebPreviewCartel(cartel)} title={t('manageCartels.webPreview')} color="#0e7490"><Monitor size={15} /></ActionBtn>
                                                 {!readOnly && <ActionBtn onClick={() => goToCreate(cartel.id)} title={t('manageCartels.edit')} color="#3b5bdb"><Edit size={15} /></ActionBtn>}
 
                                                 {/* Retraduction automatique : on n'affiche que la direction
@@ -1269,10 +1314,17 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                                 {!readOnly && activeTab !== 'submissions' && (cartel.status === 'draft' || cartel.status === 'pending_review') && (
                                                     <ActionBtn onClick={() => handlePublish(cartel)} title={t('manageCartels.publish')} color="#2e7d32" disabled={isProc}><Check size={15} /></ActionBtn>
                                                 )}
-                                                {!readOnly && activeTab !== 'submissions' && (cartel.status === 'pending_review' || cartel.status === 'published') && (
+                                                {/* Désarchiver = republier (re-visible aux visiteurs) */}
+                                                {!readOnly && activeTab !== 'submissions' && cartel.status === 'archived' && (
+                                                    <ActionBtn onClick={() => handleUnarchive(cartel)} title={t('manageCartels.unarchive')} color="#2e7d32" disabled={isProc}><Globe size={15} /></ActionBtn>
+                                                )}
+                                                {!readOnly && activeTab !== 'submissions' && (cartel.status === 'pending_review' || cartel.status === 'published' || cartel.status === 'archived') && (
                                                     <ActionBtn onClick={() => handleToDraft(cartel)} title={t('status.draft')} color="#e67e00" disabled={isProc}><FileText size={15} /></ActionBtn>
                                                 )}
-                                                {/* Bouton Archiver volontairement retiré pour l'instant. */}
+                                                {/* Archiver : publié → caché aux visiteurs, contenu conservé */}
+                                                {!readOnly && activeTab !== 'submissions' && cartel.status === 'published' && (
+                                                    <ActionBtn onClick={() => handleArchive(cartel)} title={t('manageCartels.archive')} color="#6b7280" disabled={isProc}><Archive size={15} /></ActionBtn>
+                                                )}
 
                                                 {/* Workflow site principal (owner/superadmin sur cartels de sous-site) */}
                                                 {!readOnly && activeTab !== 'submissions' && canSubmitThisCartel(cartel) && (
@@ -1332,6 +1384,26 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                 </button>
                             )}
                             <button onClick={() => setPreviewCartel(null)} style={{ padding:'10px 18px', borderRadius:'8px', border:'1px solid #ddd', cursor:'pointer', fontFamily:'inherit' }}>{t('manageCartels.importClose')}</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Modal aperçu version web ──────────────────────
+                Rend CartelPreview, le composant utilisé dans la bibliothèque
+                publique : montre le cartel tel que le verra un visiteur. */}
+            {webPreviewCartel && (
+                <div onClick={() => setWebPreviewCartel(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', zIndex:1100, display:'flex', alignItems:'center', justifyContent:'center', padding:'20px' }}>
+                    <div onClick={e => e.stopPropagation()} style={{ background:'white', borderRadius:'16px', padding:'24px', maxWidth:'960px', width:'100%', maxHeight:'90vh', overflowY:'auto', position:'relative' }}>
+                        <button onClick={() => setWebPreviewCartel(null)} style={{ position:'absolute', top:'16px', right:'16px', background:'#f5f5f5', border:'none', borderRadius:'50%', width:'32px', height:'32px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', zIndex: 10 }}><X size={16} /></button>
+                        <h3 style={{ margin:'0 0 16px', fontSize:'1rem', fontWeight:'700', display:'flex', alignItems:'center', gap:'8px' }}><Monitor size={16} /> {t('manageCartels.webPreview')}</h3>
+                        <CartelPreview data={webPreviewCartel} isDraft={webPreviewCartel.status !== 'published'} />
+                        <div style={{ display:'flex', gap:'10px', marginTop:'16px', justifyContent:'flex-end' }}>
+                            <button onClick={() => { setWebPreviewCartel(null); goToCreate(webPreviewCartel.id); }}
+                                style={{ display:'flex', alignItems:'center', gap:'6px', background:'#3b5bdb', color:'white', border:'none', padding:'10px 18px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', fontFamily:'inherit' }}>
+                                <Edit size={15} /> {t('manageCartels.edit')}
+                            </button>
+                            <button onClick={() => setWebPreviewCartel(null)} style={{ padding:'10px 18px', borderRadius:'8px', border:'1px solid #ddd', cursor:'pointer', fontFamily:'inherit' }}>{t('manageCartels.importClose')}</button>
                         </div>
                     </div>
                 </div>

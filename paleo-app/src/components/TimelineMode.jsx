@@ -197,9 +197,17 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
             .attr("opacity", 0); // Hidden by default
 
         // Attach Zoom (store in ref so update effect can reuse it)
+        // translateExtent borné sur l'étendue réelle des marqueurs (du plus
+        // ancien au plus récent) + une marge de confort, plutôt que sur tout
+        // le viewport. Sinon, à fort zoom, le pan bute sur le vide (marges +
+        // padding du domaine) et on ne peut pas amener le tout premier / tout
+        // dernier cartel jusqu'au bord (« on ne peut plus drag jusqu'au bout »).
+        const panPad = 48;
+        const xMinData = Math.min(x(minYear), x(maxYear)) - panPad;
+        const xMaxData = Math.max(x(minYear), x(maxYear)) + panPad;
         const zoom = d3.zoom()
             .scaleExtent([1, 50])
-            .translateExtent([[0, 0], [width, height]])
+            .translateExtent([[xMinData, 0], [xMaxData, height]])
             .extent([[0, 0], [width, height]])
             .on("zoom", (event) => {
                 zoomTransformRef.current = event.transform;

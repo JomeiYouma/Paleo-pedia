@@ -1,4 +1,5 @@
 import { CartelModel } from '../models/Cartel.js';
+import { WorkshopModel } from '../models/Workshop.js';
 import { dispatchEvent } from '../services/eventDispatcher.js';
 
 // Helper local : dispatch fire-and-forget (jamais bloquant)
@@ -76,22 +77,82 @@ function sanitizeWorkshopFields(body, canManageAdmin) {
  *   - Anonyme sur /cartels (écriture)         → 'main' (submission au site principal)
  */
 function resolveSubsiteFilter(req, { anonymousIsMainFeed = true } = {}) {
-  if (req.tenant) return { id: req.tenant.id };
+  // En mode atelier, on signale workshopId au modèle pour que le filtrage
+  // se fasse via workshop_cartels (vue live) plutôt que cartels.subsite_id.
+  if (req.tenant) {
+    return req.tenant.workshop_id
+      ? { id: req.tenant.id, workshopId: req.tenant.workshop_id }
+      : { id: req.tenant.id };
+  }
   if (req.user?.can_manage_admin) return 'none';
   if (req.user?.home_subsite_id) return { id: req.user.home_subsite_id };
   return anonymousIsMainFeed ? 'main_feed' : 'main';
 }
 
-/** Vérifie qu'un cartel chargé en BDD tombe bien dans le scope autorisé */
+/** Vérifie qu'un cartel chargé en BDD tombe bien dans le scope autorisé.
+ *  Le cartel doit avoir été chargé avec `includeWorkshops: true` quand le
+ *  filtre est en mode atelier (sinon cartel.workshopIds est undefined). */
 function cartelInScope(cartel, filter) {
   if (filter === 'none') return true;
   if (filter === 'main')      return cartel.subsite_id === null;
   if (filter === 'main_feed') return cartel.subsite_id === null || !!cartel.visible_on_main;
-  if (filter && typeof filter === 'object') return cartel.subsite_id === filter.id;
+  if (filter && typeof filter === 'object') {
+    // Mode atelier : « in scope » couvre deux cas :
+    //   - le cartel est subsite-owned (cas des cartels créés via ce subsite-atelier)
+    //   - le cartel est membre de l'atelier source (cas des cartels existants
+    //     du main que l'équipe du subsite a la responsabilité de modérer)
+    if (filter.workshopId) {
+      return cartel.subsite_id === filter.id
+          || (Array.isArray(cartel.workshopIds) && cartel.workshopIds.includes(filter.workshopId));
+    }
+    return cartel.subsite_id === filter.id;
+  }
   return false;
 }
 
-/** Résout le subsite_id à stocker pour un cartel créé via cette requête */
+/** True si le filtre actuel impose le chargement des workshops du cartel
+ *  (utile pour cartelInScope en mode atelier). À combiner avec
+ *  includeWorkshops dans les findById/findAll. */
+function filterNeedsWorkshops(filter) {
+  return !!(filter && typeof filter === 'object' && filter.workshopId);
+}
+
+/** Helper : charge un cartel par id en s'assurant que workshops sont
+ *  chargés si le filtre l'impose. Centralise le pattern findById+cartelInScope
+ *  utilisé par toutes les routes single-cartel (PATCH/DELETE/getOne…).
+ *  Retourne le cartel si in-scope, null sinon (le caller renvoie un 404). */
+async function loadCartelInScope(id, filter) {
+  const cartel = await CartelModel.findById(id, {
+    includeWorkshops: filterNeedsWorkshops(filter) || filter === 'none',
+  });
+  if (!cartel) return null;
+  if (!cartelInScope(cartel, filter)) return null;
+  return cartel;
+}
+
+/** True si l'utilisateur, en tant qu'owner d'un subsite, est légitime
+ *  pour modérer ce cartel. Couvre :
+ *   - cartels directement rattachés au subsite (cartels.subsite_id = home)
+ *   - cartels membres de l'atelier source d'un subsite-atelier (vue live)
+ *  La 2ᵉ branche n'est testable que si le cartel a été chargé avec
+ *  includeWorkshops:true (workshopIds présent). */
+function canTenantOwnerEdit(req, cartel) {
+  if (!req.user?.can_manage_team) return false;
+  if (cartel.subsite_id && cartel.subsite_id === req.user.home_subsite_id) return true;
+  // Pour la branche atelier, il faut que la requête soit dans le tenant courant
+  // (req.tenant) pour qu'on connaisse le workshop_id sans nouveau round-trip BDD.
+  if (req.tenant?.workshop_id && req.tenant.id === req.user.home_subsite_id
+      && Array.isArray(cartel.workshopIds)
+      && cartel.workshopIds.includes(req.tenant.workshop_id)) {
+    return true;
+  }
+  return false;
+}
+
+/** Résout le subsite_id à stocker pour un cartel créé via cette requête.
+ *  En mode atelier, le cartel devient subsite-owned (subsite_id = tenant.id) :
+ *  cela permet l'édition ultérieure par les owners ET le passage par le flow
+ *  soumissions supplémentaires quand le cartel est publié. */
 function resolveTargetSubsiteId(req) {
   if (req.tenant) return req.tenant.id;
   // Sur /cartels, un admin rattaché à un sous-site crée dans son sous-site.
@@ -157,7 +218,10 @@ export const CartelController = {
       };
 
       if (!isAdmin) filters.status = 'published';
-      filters.includeWorkshops = !!isAdmin;
+      // Toujours inclure les workshops : le frontend en a besoin pour filtrer
+      // l'affichage public des subsites-ateliers (Library/SubsiteFrise matchent
+      // les cartels par appartenance à l'atelier, pas seulement par subsite_id).
+      filters.includeWorkshops = true;
 
       const cartels = await CartelModel.findAll(filters);
       res.json(cartels);
@@ -168,16 +232,10 @@ export const CartelController = {
 
   async getOne(req, res) {
     try {
-      const cartel = await CartelModel.findById(req.params.id, {
-        includeWorkshops: !!req.user?.can_manage_admin,
-      });
-      if (!cartel) return res.status(404).json({ error: 'Cartel introuvable' });
-
       const filter = resolveSubsiteFilter(req);
-      if (!cartelInScope(cartel, filter)) {
-        // Ne pas divulguer l'existence du cartel hors scope
-        return res.status(404).json({ error: 'Cartel introuvable' });
-      }
+      const cartel = await loadCartelInScope(req.params.id, filter);
+      // Ne pas divulguer l'existence du cartel hors scope
+      if (!cartel) return res.status(404).json({ error: 'Cartel introuvable' });
       res.json(cartel);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -200,6 +258,12 @@ export const CartelController = {
         req.submitterIp ?? null,
         targetSubsiteId,
       );
+      // Subsite-atelier : le nouveau cartel rejoint automatiquement l'atelier
+      // source. Sans ça, le cartel serait subsite-owned mais invisible dans la
+      // vue live (filtre via workshop_cartels).
+      if (req.tenant?.workshop_id) {
+        await WorkshopModel.addCartels(req.tenant.workshop_id, [cartel.id]);
+      }
       cartel = await maybeAutoSubmitToMain(cartel);
 
       // Choix du type d'event : anonyme → submission_pending, sinon selon statut
@@ -225,21 +289,15 @@ export const CartelController = {
       const lengthError = validateFieldLengths(req.body);
       if (lengthError) return res.status(400).json({ error: lengthError });
 
-      const existing = await CartelModel.findById(req.params.id);
-      if (!existing) return res.status(404).json({ error: 'Cartel introuvable' });
-
       const filter = resolveSubsiteFilter(req, { anonymousIsMainFeed: false });
-      if (!cartelInScope(existing, filter)) {
-        return res.status(404).json({ error: 'Cartel introuvable' });
-      }
+      const existing = await loadCartelInScope(req.params.id, filter);
+      if (!existing) return res.status(404).json({ error: 'Cartel introuvable' });
 
       const isOwner = existing.created_by === req.user.id;
       const isEditor = req.user.can_publish_cartel || req.user.can_manage_admin;
-      // Owner d'un sous-site : peut modérer tout cartel de son sous-site
-      const isTenantOwnerOfThisCartel =
-        !!req.user.can_manage_team &&
-        !!existing.subsite_id &&
-        existing.subsite_id === req.user.home_subsite_id;
+      // Owner d'un sous-site : peut modérer tout cartel rattaché à son sous-site,
+      // soit directement (subsite_id) soit via l'atelier source (subsite-atelier).
+      const isTenantOwnerOfThisCartel = canTenantOwnerEdit(req, existing);
       if (!isOwner && !isEditor && !isTenantOwnerOfThisCartel) {
         return res.status(403).json({ error: 'Non autorisé' });
       }
@@ -274,13 +332,9 @@ export const CartelController = {
         return res.status(400).json({ error: `Statut invalide. Valeurs acceptées: ${VALID_STATUSES.join(', ')}` });
       }
 
-      const existing = await CartelModel.findById(req.params.id);
-      if (!existing) return res.status(404).json({ error: 'Cartel introuvable' });
-
       const filter = resolveSubsiteFilter(req, { anonymousIsMainFeed: false });
-      if (!cartelInScope(existing, filter)) {
-        return res.status(404).json({ error: 'Cartel introuvable' });
-      }
+      const existing = await loadCartelInScope(req.params.id, filter);
+      if (!existing) return res.status(404).json({ error: 'Cartel introuvable' });
 
       if (status === 'published' && !req.user.can_publish_cartel) {
         return res.status(403).json({ error: 'Permission can_publish_cartel requise' });
@@ -308,21 +362,13 @@ export const CartelController = {
 
   async delete(req, res) {
     try {
-      const existing = await CartelModel.findById(req.params.id);
-      if (!existing) return res.status(404).json({ error: 'Cartel introuvable' });
-
       const filter = resolveSubsiteFilter(req, { anonymousIsMainFeed: false });
-      if (!cartelInScope(existing, filter)) {
-        return res.status(404).json({ error: 'Cartel introuvable' });
-      }
+      const existing = await loadCartelInScope(req.params.id, filter);
+      if (!existing) return res.status(404).json({ error: 'Cartel introuvable' });
 
       const isOwner = existing.created_by === req.user.id;
       const isAdmin = req.user.can_manage_admin;
-      // Owner d'un sous-site : peut supprimer tout cartel de son sous-site
-      const isTenantOwnerOfThisCartel =
-        !!req.user.can_manage_team &&
-        !!existing.subsite_id &&
-        existing.subsite_id === req.user.home_subsite_id;
+      const isTenantOwnerOfThisCartel = canTenantOwnerEdit(req, existing);
       if (!isOwner && !isAdmin && !isTenantOwnerOfThisCartel) {
         return res.status(403).json({ error: 'Non autorisé' });
       }
@@ -394,13 +440,9 @@ export const CartelController = {
   /** Owner d'un sous-site soumet un cartel publié pour affichage sur le site principal */
   async submitToMain(req, res) {
     try {
-      const existing = await CartelModel.findById(req.params.id);
-      if (!existing) return res.status(404).json({ error: 'Cartel introuvable' });
-
       const filter = resolveSubsiteFilter(req, { anonymousIsMainFeed: false });
-      if (!cartelInScope(existing, filter)) {
-        return res.status(404).json({ error: 'Cartel introuvable' });
-      }
+      const existing = await loadCartelInScope(req.params.id, filter);
+      if (!existing) return res.status(404).json({ error: 'Cartel introuvable' });
 
       // Un cartel de sous-site uniquement, publié localement
       if (existing.subsite_id === null) {
@@ -432,13 +474,9 @@ export const CartelController = {
   /** Owner retire une soumission (annule la demande ou retire un cartel déjà approuvé) */
   async withdrawFromMain(req, res) {
     try {
-      const existing = await CartelModel.findById(req.params.id);
-      if (!existing) return res.status(404).json({ error: 'Cartel introuvable' });
-
       const filter = resolveSubsiteFilter(req, { anonymousIsMainFeed: false });
-      if (!cartelInScope(existing, filter)) {
-        return res.status(404).json({ error: 'Cartel introuvable' });
-      }
+      const existing = await loadCartelInScope(req.params.id, filter);
+      if (!existing) return res.status(404).json({ error: 'Cartel introuvable' });
       if (existing.subsite_id === null) {
         return res.status(400).json({ error: 'Non applicable aux cartels du site principal' });
       }
