@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
 import {
     Users, Plus, Trash2, Upload, ArrowUp, ArrowDown,
@@ -32,7 +33,8 @@ const TABS = [
 ];
 
 // ── Formulaire de création / édition ──────────────────────────
-const MemberForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregistrer' }) => {
+const MemberForm = ({ initial, onCancel, onSubmit, busy, submitLabel }) => {
+    const { t } = useTranslation();
     const [name, setName] = useState(initial?.name || '');
     const [role, setRole] = useState(initial?.role || '');
     const [roleEn, setRoleEn] = useState(initial?.role_en || '');
@@ -79,34 +81,34 @@ const MemberForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregist
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                    <label style={labelStyle}>Nom *</label>
+                    <label style={labelStyle}>{t('teamContent.fieldName', 'Nom *')}</label>
                     <input value={name} onChange={e => setName(e.target.value)} required style={inputStyle} placeholder="Cédric Carles" />
                 </div>
                 <div>
-                    <label style={labelStyle}>Rôle</label>
-                    <input value={role} onChange={e => setRole(e.target.value)} style={inputStyle} placeholder="Designer / chercheur" />
+                    <label style={labelStyle}>{t('teamContent.fieldRole', 'Rôle')}</label>
+                    <input value={role} onChange={e => setRole(e.target.value)} style={inputStyle} placeholder={t('teamContent.fieldRolePh', 'Designer / chercheur')} />
                 </div>
             </div>
 
             <div>
-                <label style={labelStyle}>Bio</label>
-                <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Quelques phrases qui décrivent le parcours et les missions de la personne…" />
+                <label style={labelStyle}>{t('teamContent.fieldBio', 'Bio')}</label>
+                <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' }} placeholder={t('teamContent.fieldBioPh', 'Quelques phrases qui décrivent le parcours et les missions de la personne…')} />
             </div>
 
             {/* Photo */}
             <div>
-                <label style={labelStyle}>Photo</label>
+                <label style={labelStyle}>{t('teamContent.fieldPhoto', 'Photo')}</label>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     {photoPath ? (
                         <img src={photoPath} alt="" style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--color-border)' }} />
                     ) : (
                         <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--color-primary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-subtle)', fontSize: '0.7rem' }}>
-                            (vide)
+                            {t('teamContent.photoEmpty', '(vide)')}
                         </div>
                     )}
                     <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', border: '1px dashed var(--color-border-strong)', borderRadius: 'var(--radius-md)', cursor: uploading ? 'wait' : 'pointer', fontSize: '0.85rem', color: 'var(--color-text-muted)', background: 'var(--color-surface-2)' }}>
                         <Upload size={14} />
-                        {uploading ? 'Upload en cours…' : (photoPath ? 'Remplacer la photo' : 'Choisir une photo…')}
+                        {uploading ? t('teamContent.photoUploading', 'Upload en cours…') : (photoPath ? t('teamContent.photoReplace', 'Remplacer la photo') : t('teamContent.photoChoose', 'Choisir une photo…'))}
                         <input type="file" accept="image/*" disabled={uploading} style={{ display: 'none' }} onChange={e => handlePhoto(e.target.files?.[0])} />
                     </label>
                     {photoPath && (
@@ -127,11 +129,11 @@ const MemberForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregist
                     <input value={urlLinkedin} onChange={e => setUrlLinkedin(e.target.value)} style={inputStyle} placeholder="https://linkedin.com/in/…" />
                 </div>
                 <div>
-                    <label style={labelStyle}><Globe size={11} style={{ verticalAlign: '-2px', marginRight: '4px' }} /> Site web</label>
+                    <label style={labelStyle}><Globe size={11} style={{ verticalAlign: '-2px', marginRight: '4px' }} /> {t('teamContent.fieldWebsite', 'Site web')}</label>
                     <input value={urlWebsite} onChange={e => setUrlWebsite(e.target.value)} style={inputStyle} placeholder="https://…" />
                 </div>
                 <div>
-                    <label style={labelStyle}><Link2 size={11} style={{ verticalAlign: '-2px', marginRight: '4px' }} /> Autre lien</label>
+                    <label style={labelStyle}><Link2 size={11} style={{ verticalAlign: '-2px', marginRight: '4px' }} /> {t('teamContent.fieldOther', 'Autre lien')}</label>
                     <input value={urlOther} onChange={e => setUrlOther(e.target.value)} style={inputStyle} placeholder="https://…" />
                 </div>
             </div>
@@ -144,9 +146,11 @@ const MemberForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregist
                 margin: '8px 0 4px',
             }}>
                 <legend style={{ fontFamily: 'var(--font-heading)', fontSize: '0.78rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text-muted)', padding: '0 8px' }}>
-                    Version anglaise
+                    {t('teamContent.englishVersion', 'Version anglaise')}
                 </legend>
-                <div style={{ marginBottom: '10px' }}>
+                {/* Traduction dans les deux sens : FR → EN (remplit les champs
+                    anglais) et EN → FR (remplit les champs français principaux). */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
                     <TranslateButton
                         getFrFields={() => ({ role, bio })}
                         onTranslated={(out) => {
@@ -154,13 +158,21 @@ const MemberForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregist
                             if ('bio'  in out) setBioEn(out.bio);
                         }}
                     />
+                    <TranslateButton
+                        target="fr"
+                        getFrFields={() => ({ role: roleEn, bio: bioEn })}
+                        onTranslated={(out) => {
+                            if ('role' in out) setRole(out.role);
+                            if ('bio'  in out) setBio(out.bio);
+                        }}
+                    />
                 </div>
                 <div>
-                    <label style={labelStyle}>Role (EN)</label>
+                    <label style={labelStyle}>{t('teamContent.fieldRoleEn', 'Role (EN)')}</label>
                     <input value={roleEn} onChange={e => setRoleEn(e.target.value)} style={inputStyle} placeholder="Designer / researcher" />
                 </div>
                 <div style={{ marginTop: '10px' }}>
-                    <label style={labelStyle}>Bio (EN)</label>
+                    <label style={labelStyle}>{t('teamContent.fieldBioEn', 'Bio (EN)')}</label>
                     <textarea value={bioEn} onChange={e => setBioEn(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' }} placeholder="A few sentences describing their background and missions…" />
                 </div>
             </fieldset>
@@ -169,7 +181,7 @@ const MemberForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregist
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
                 {onCancel && (
                     <button type="button" onClick={onCancel} disabled={busy} style={ghostBtnStyle}>
-                        Annuler
+                        {t('teamContent.cancel', 'Annuler')}
                     </button>
                 )}
                 <button type="submit" disabled={busy || !name.trim()} style={{
@@ -177,7 +189,7 @@ const MemberForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregist
                     opacity: (busy || !name.trim()) ? 0.5 : 1,
                     cursor: (busy || !name.trim()) ? 'not-allowed' : 'pointer',
                 }}>
-                    <Save size={14} /> {busy ? 'Envoi…' : submitLabel}
+                    <Save size={14} /> {busy ? t('teamContent.sending', 'Envoi…') : (submitLabel || t('teamContent.save', 'Enregistrer'))}
                 </button>
             </div>
         </form>
@@ -185,9 +197,18 @@ const MemberForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregist
 };
 
 // ── Page principale ───────────────────────────────────────────
-const AdminTeamContent = () => {
-    const { isSuperadmin } = useApp();
+// Quand `subsiteSlug` est passé (route scopée), la page gère l'équipe du
+// sous-site (toutes les écritures sont scopées via /s/:slug/team-members).
+// Sans subsiteSlug → équipe du site principal (superadmin uniquement).
+const AdminTeamContent = ({ subsiteSlug = null }) => {
+    const { t } = useTranslation();
+    const { isSuperadmin, isOwner, homeSubsiteId } = useApp();
     const { toast, showToast } = useAdminToast();
+    const localizedTabs = useMemo(() => TABS.map(tab => ({
+        ...tab,
+        label: t(`teamContent.tabs.${tab.key}.label`, tab.label),
+        description: t(`teamContent.tabs.${tab.key}.desc`, tab.description),
+    })), [t]);
 
     const [members, setMembers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -200,18 +221,18 @@ const AdminTeamContent = () => {
     const load = async () => {
         setLoading(true);
         try {
-            const data = await api.teamMembers.getAll();
+            const data = await api.teamMembers.getAll(subsiteSlug);
             setMembers(Array.isArray(data) ? data : []);
         } catch (e) {
-            showToast('error', e.message || 'Erreur de chargement');
+            showToast('error', e.message || t('teamContent.toastLoadError', 'Erreur de chargement'));
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => { load(); }, []);
+    useEffect(() => { load(); }, [subsiteSlug]);
 
-    const currentTab = TABS.find(t => t.key === activeTab) || TABS[0];
+    const currentTab = localizedTabs.find(tab => tab.key === activeTab) || localizedTabs[0];
 
     const filteredMembers = useMemo(
         () => members.filter(m => m.category === activeTab),
@@ -222,10 +243,17 @@ const AdminTeamContent = () => {
         TABS.map(t => [t.key, members.filter(m => m.category === t.key).length])
     ), [members]);
 
-    if (!isSuperadmin) {
+    // Accès :
+    //   - Sans subsiteSlug → site principal, réservé au superadmin.
+    //   - Avec subsiteSlug → tenant scope ; superadmin OU owner du subsite.
+    //     Le backend re-valide via requireTenantAccess + canWrite.
+    const canAccess = subsiteSlug
+        ? (isSuperadmin || isOwner)
+        : isSuperadmin;
+    if (!canAccess) {
         return (
             <div style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--color-text-subtle)' }}>
-                Accès réservé aux superadmins.
+                Accès réservé.
             </div>
         );
     }
@@ -238,12 +266,12 @@ const AdminTeamContent = () => {
                 ...data,
                 category: activeTab,
                 display_order: maxOrder + 10,
-            });
+            }, subsiteSlug);
             setMembers(prev => [...prev, created]);
             setShowForm(false);
-            showToast('success', `« ${created.name} » ajouté·e`);
+            showToast('success', t('teamContent.toastAdded', { name: created.name, defaultValue: `« ${created.name} » ajouté·e` }));
         } catch (e) {
-            showToast('error', e.message || 'Erreur création');
+            showToast('error', e.message || t('teamContent.toastCreateError', 'Erreur création'));
         } finally {
             setCreating(false);
         }
@@ -252,26 +280,26 @@ const AdminTeamContent = () => {
     const handleUpdate = async (id, data) => {
         setBusyId(id);
         try {
-            const updated = await api.teamMembers.update(id, data);
+            const updated = await api.teamMembers.update(id, data, subsiteSlug);
             setMembers(prev => prev.map(x => x.id === id ? updated : x));
             setEditingId(null);
-            showToast('success', `« ${updated.name} » mis à jour`);
+            showToast('success', t('teamContent.toastUpdated', { name: updated.name, defaultValue: `« ${updated.name} » mis à jour` }));
         } catch (e) {
-            showToast('error', e.message || 'Erreur mise à jour');
+            showToast('error', e.message || t('teamContent.toastUpdateError', 'Erreur mise à jour'));
         } finally {
             setBusyId(null);
         }
     };
 
     const handleDelete = async (m) => {
-        if (!confirm(`Supprimer définitivement « ${m.name} » ?`)) return;
+        if (!confirm(t('teamContent.confirmDelete', { name: m.name, defaultValue: `Supprimer définitivement « ${m.name} » ?` }))) return;
         setBusyId(m.id);
         try {
-            await api.teamMembers.delete(m.id);
+            await api.teamMembers.delete(m.id, subsiteSlug);
             setMembers(prev => prev.filter(x => x.id !== m.id));
-            showToast('success', `« ${m.name} » supprimé·e`);
+            showToast('success', t('teamContent.toastDeleted', { name: m.name, defaultValue: `« ${m.name} » supprimé·e` }));
         } catch (e) {
-            showToast('error', e.message || 'Erreur suppression');
+            showToast('error', e.message || t('teamContent.toastDeleteError', 'Erreur suppression'));
         } finally {
             setBusyId(null);
         }
@@ -286,8 +314,8 @@ const AdminTeamContent = () => {
         setBusyId(m.id);
         try {
             const [u1, u2] = await Promise.all([
-                api.teamMembers.update(m.id,        { display_order: neighbor.display_order }),
-                api.teamMembers.update(neighbor.id, { display_order: m.display_order }),
+                api.teamMembers.update(m.id,        { display_order: neighbor.display_order }, subsiteSlug),
+                api.teamMembers.update(neighbor.id, { display_order: m.display_order },        subsiteSlug),
             ]);
             setMembers(prev => prev.map(x => {
                 if (x.id === u1.id) return u1;
@@ -295,7 +323,7 @@ const AdminTeamContent = () => {
                 return x;
             }));
         } catch (e) {
-            showToast('error', e.message || 'Erreur réordonnancement');
+            showToast('error', e.message || t('teamContent.toastReorderError', 'Erreur réordonnancement'));
         } finally {
             setBusyId(null);
         }
@@ -305,11 +333,11 @@ const AdminTeamContent = () => {
         if (m.category === category) return;
         setBusyId(m.id);
         try {
-            const updated = await api.teamMembers.update(m.id, { category });
+            const updated = await api.teamMembers.update(m.id, { category }, subsiteSlug);
             setMembers(prev => prev.map(x => x.id === m.id ? updated : x));
-            showToast('success', `« ${updated.name} » déplacé·e`);
+            showToast('success', t('teamContent.toastMoved', { name: updated.name, defaultValue: `« ${updated.name} » déplacé·e` }));
         } catch (e) {
-            showToast('error', e.message || 'Erreur déplacement');
+            showToast('error', e.message || t('teamContent.toastMoveError', 'Erreur déplacement'));
         } finally {
             setBusyId(null);
         }
@@ -319,21 +347,20 @@ const AdminTeamContent = () => {
         <div style={{ maxWidth: '900px', margin: '0 auto', padding: '28px 24px 80px' }}>
             <AdminToast toast={toast} />
 
-            <AdminPageHeader icon={Users} title="Équipe (page À propos)" />
+            <AdminPageHeader icon={Users} title={t('teamContent.pageTitle', 'Équipe (page À propos)')} />
 
-            <ExplainerBox title="À quoi sert cette page ?">
-                Gérer les membres affichés sur la <strong>page publique « À propos »</strong>.
-                Trois catégories sont disponibles :
+            <ExplainerBox title={t('teamContent.explainerTitle', 'À quoi sert cette page ?')}>
+                {t('teamContent.explainerIntro', 'Gérer les membres affichés sur la page publique « À propos ». Trois catégories sont disponibles :')}
                 <ul style={{ margin: '8px 0 0', paddingLeft: '18px', lineHeight: '1.7' }}>
-                    <li><strong>Principaux</strong> — équipe core, cards verticales centrées (photo + rôle + bio + liens).</li>
-                    <li><strong>Secondaires</strong> — contributeur·ices proches, cards horizontales compactes (mêmes infos).</li>
-                    <li><strong>Communauté</strong> — chercheur·euses associé·es, liste textuelle nom + rôle.</li>
+                    <li>{t('teamContent.explainerMain', 'Principaux — équipe core, cards verticales centrées (photo + rôle + bio + liens).')}</li>
+                    <li>{t('teamContent.explainerSecondary', 'Secondaires — contributeur·ices proches, cards horizontales compactes (mêmes infos).')}</li>
+                    <li>{t('teamContent.explainerCommunity', 'Communauté — chercheur·euses associé·es, liste textuelle nom + rôle.')}</li>
                 </ul>
-                Cette page ne gère pas les comptes utilisateurs ; pour ça, voir <em>Gestion d'équipe (comptes)</em>.
+                {t('teamContent.explainerOutro', "Cette page ne gère pas les comptes utilisateurs ; pour ça, voir « Gestion d'équipe (comptes) ».")}
             </ExplainerBox>
 
             <AdminTabs
-                tabs={TABS}
+                tabs={localizedTabs}
                 active={activeTab}
                 onChange={(key) => { setActiveTab(key); setEditingId(null); setShowForm(false); }}
                 counts={counts}
@@ -348,19 +375,19 @@ const AdminTeamContent = () => {
                     onClick={() => { setShowForm(true); setEditingId(null); }}
                     style={{ ...primaryBtnStyle, marginBottom: '16px' }}
                 >
-                    <Plus size={14} /> Ajouter un membre
+                    <Plus size={14} /> {t('teamContent.addMember', 'Ajouter un membre')}
                 </button>
             )}
             {showForm && (
                 <AdminSection>
                     <p style={{ margin: '0 0 14px', fontWeight: '800', fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-primary)', fontFamily: 'var(--font-heading)' }}>
-                        Nouveau membre — {currentTab.label}
+                        {t('teamContent.newMember', { tab: currentTab.label, defaultValue: `Nouveau membre — ${currentTab.label}` })}
                     </p>
                     <MemberForm
                         onCancel={() => setShowForm(false)}
                         onSubmit={handleCreate}
                         busy={creating}
-                        submitLabel="Ajouter"
+                        submitLabel={t('teamContent.add', 'Ajouter')}
                     />
                 </AdminSection>
             )}
@@ -368,10 +395,10 @@ const AdminTeamContent = () => {
             {/* Liste */}
             <AdminSection>
                 {loading ? (
-                    <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0' }}>Chargement…</p>
+                    <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0' }}>{t('teamContent.loading', 'Chargement…')}</p>
                 ) : filteredMembers.length === 0 ? (
                     <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0', fontSize: '0.9rem' }}>
-                        Aucun membre dans cet onglet.
+                        {t('teamContent.empty', 'Aucun membre dans cet onglet.')}
                     </p>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -384,14 +411,14 @@ const AdminTeamContent = () => {
                                     return (
                                         <div key={m.id} style={{ border: '2px solid var(--color-accent)', borderRadius: 'var(--radius-md)', padding: '16px', background: 'var(--color-surface)' }}>
                                             <p style={{ margin: '0 0 12px', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.5px', fontFamily: 'var(--font-heading)', fontWeight: '700', color: 'var(--color-text-muted)' }}>
-                                                Édition de « {m.name} »
+                                                {t('teamContent.editing', { name: m.name, defaultValue: `Édition de « ${m.name} »` })}
                                             </p>
                                             <MemberForm
                                                 initial={m}
                                                 onCancel={() => setEditingId(null)}
                                                 onSubmit={(data) => handleUpdate(m.id, data)}
                                                 busy={busyId === m.id}
-                                                submitLabel="Enregistrer"
+                                                submitLabel={t('teamContent.save', 'Enregistrer')}
                                             />
                                         </div>
                                     );
@@ -424,7 +451,7 @@ const AdminTeamContent = () => {
                                                 onClick={() => handleMove(m, 'up')}
                                                 disabled={idx === 0 || busyId === m.id}
                                                 style={{ ...ghostBtnStyle, padding: '3px 6px', opacity: idx === 0 ? 0.3 : 1 }}
-                                                title="Monter"
+                                                title={t('teamContent.moveUp', 'Monter')}
                                             >
                                                 <ArrowUp size={12} />
                                             </button>
@@ -433,7 +460,7 @@ const AdminTeamContent = () => {
                                                 onClick={() => handleMove(m, 'down')}
                                                 disabled={idx === arr.length - 1 || busyId === m.id}
                                                 style={{ ...ghostBtnStyle, padding: '3px 6px', opacity: idx === arr.length - 1 ? 0.3 : 1 }}
-                                                title="Descendre"
+                                                title={t('teamContent.moveDown', 'Descendre')}
                                             >
                                                 <ArrowDown size={12} />
                                             </button>
@@ -453,9 +480,9 @@ const AdminTeamContent = () => {
                                                 color: 'var(--color-text-muted)',
                                                 cursor: 'pointer',
                                             }}
-                                            title="Déplacer vers une autre catégorie"
+                                            title={t('teamContent.moveCategory', 'Déplacer vers une autre catégorie')}
                                         >
-                                            {TABS.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+                                            {localizedTabs.map(tab => <option key={tab.key} value={tab.key}>{tab.label}</option>)}
                                         </select>
 
                                         <button
@@ -463,7 +490,7 @@ const AdminTeamContent = () => {
                                             onClick={() => { setEditingId(m.id); setShowForm(false); }}
                                             disabled={busyId === m.id}
                                             style={ghostBtnStyle}
-                                            title="Modifier"
+                                            title={t('teamContent.edit', 'Modifier')}
                                         >
                                             <Pencil size={13} />
                                         </button>
@@ -472,7 +499,7 @@ const AdminTeamContent = () => {
                                             onClick={() => handleDelete(m)}
                                             disabled={busyId === m.id}
                                             style={dangerBtnStyle}
-                                            title="Supprimer"
+                                            title={t('teamContent.delete', 'Supprimer')}
                                         >
                                             <Trash2 size={13} />
                                         </button>
