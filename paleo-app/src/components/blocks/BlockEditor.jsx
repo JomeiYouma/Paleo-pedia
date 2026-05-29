@@ -5,22 +5,25 @@
  * title / text / image / video / gallery / quote / button / separator / embed.
  */
 import React, { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Trash2, Type, AlignLeft, Image as ImgIcon, Video, GalleryHorizontal,
     Quote, Link2, Minus, Code, Upload,
 } from 'lucide-react';
 import api from '../../services/apiClient';
 
+// `label` sert de valeur par défaut (FR) ; la clé i18n `blockEditor.types.<type>`
+// fournit la traduction (cf. en.json).
 const BLOCK_TYPES = [
-    { type: 'title',     label: 'Titre',     icon: Type            },
-    { type: 'text',      label: 'Texte',     icon: AlignLeft       },
-    { type: 'image',     label: 'Image',     icon: ImgIcon         },
-    { type: 'video',     label: 'Vidéo',     icon: Video           },
-    { type: 'gallery',   label: 'Galerie',   icon: GalleryHorizontal },
-    { type: 'quote',     label: 'Citation',  icon: Quote           },
-    { type: 'button',    label: 'Bouton',    icon: Link2           },
-    { type: 'separator', label: 'Séparateur', icon: Minus          },
-    { type: 'embed',     label: 'Embed',     icon: Code            },
+    { type: 'title',     label: 'Titre',      icon: Type            },
+    { type: 'text',      label: 'Texte',      icon: AlignLeft       },
+    { type: 'image',     label: 'Image',      icon: ImgIcon         },
+    { type: 'video',     label: 'Vidéo',      icon: Video           },
+    { type: 'gallery',   label: 'Galerie',    icon: GalleryHorizontal },
+    { type: 'quote',     label: 'Citation',   icon: Quote           },
+    { type: 'button',    label: 'Bouton',     icon: Link2           },
+    { type: 'separator', label: 'Séparateur', icon: Minus           },
+    { type: 'embed',     label: 'Embed',      icon: Code            },
 ];
 
 const inputStyle = {
@@ -48,9 +51,11 @@ const newBlockOfType = (type) => {
 };
 
 /** Bouton d'upload d'image qui pose l'URL retournée dans `onUploaded(url)`. */
-const ImageUpload = ({ onUploaded, label = 'Upload' }) => {
+const ImageUpload = ({ onUploaded, label }) => {
+    const { t } = useTranslation();
     const ref = useRef(null);
     const [busy, setBusy] = useState(false);
+    const btnLabel = label ?? t('blockEditor.upload', 'Upload');
     return (
         <>
             <input type="file" accept="image/*" ref={ref} style={{ display: 'none' }}
@@ -62,7 +67,7 @@ const ImageUpload = ({ onUploaded, label = 'Upload' }) => {
                         const { url } = await api.media.upload(file);
                         onUploaded(url);
                     } catch (err) {
-                        alert(`Erreur upload : ${err.message}`);
+                        alert(t('blockEditor.uploadError', { msg: err.message, defaultValue: `Erreur upload : ${err.message}` }));
                     } finally {
                         setBusy(false);
                         e.target.value = '';
@@ -74,13 +79,14 @@ const ImageUpload = ({ onUploaded, label = 'Upload' }) => {
                     borderRadius: '8px', border: '1px solid #ddd', background: busy ? '#f5f5f5' : 'white',
                     cursor: busy ? 'wait' : 'pointer', fontSize: '0.82rem', color: '#555', fontFamily: 'inherit',
                 }}>
-                <Upload size={13} /> {busy ? '…' : label}
+                <Upload size={13} /> {busy ? '…' : btnLabel}
             </button>
         </>
     );
 };
 
 const BlockFieldsEditor = ({ block, onChange }) => {
+    const { t } = useTranslation();
     const upd = (patch) => onChange({ ...block, ...patch });
 
     switch (block.type) {
@@ -94,13 +100,13 @@ const BlockFieldsEditor = ({ block, onChange }) => {
                         <option value={3}>H3</option>
                     </select>
                     <input value={block.content ?? ''} onChange={e => upd({ content: e.target.value })}
-                        placeholder="Titre…" style={{ ...inputStyle, flex: 1, fontWeight: 700 }} />
+                        placeholder={t('blockEditor.ph.title', 'Titre…')} style={{ ...inputStyle, flex: 1, fontWeight: 700 }} />
                 </div>
             );
         case 'text':
             return (
                 <textarea value={block.content ?? ''} onChange={e => upd({ content: e.target.value })}
-                    placeholder="Texte…" rows={3}
+                    placeholder={t('blockEditor.ph.text', 'Texte…')} rows={3}
                     style={{ ...inputStyle, resize: 'vertical', width: '100%' }} />
             );
         case 'image':
@@ -108,20 +114,20 @@ const BlockFieldsEditor = ({ block, onChange }) => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <div style={{ display: 'flex', gap: '6px' }}>
                         <input value={block.url ?? ''} onChange={e => upd({ url: e.target.value })}
-                            placeholder="URL de l'image (ou /api/images/…)" style={{ ...inputStyle, flex: 1 }} />
+                            placeholder={t('blockEditor.ph.imageUrl', "URL de l'image (ou /api/images/…)")} style={{ ...inputStyle, flex: 1 }} />
                         <ImageUpload onUploaded={(url) => upd({ url })} />
                     </div>
                     <input value={block.caption ?? ''} onChange={e => upd({ caption: e.target.value })}
-                        placeholder="Légende (optionnel)" style={{ ...inputStyle, fontSize: '0.85rem', color: '#666' }} />
+                        placeholder={t('blockEditor.ph.caption', 'Légende (optionnel)')} style={{ ...inputStyle, fontSize: '0.85rem', color: '#666' }} />
                 </div>
             );
         case 'video':
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <input value={block.url ?? ''} onChange={e => upd({ url: e.target.value })}
-                        placeholder="URL YouTube / Vimeo / vidéo .mp4" style={inputStyle} />
+                        placeholder={t('blockEditor.ph.videoUrl', 'URL YouTube / Vimeo / vidéo .mp4')} style={inputStyle} />
                     <input value={block.caption ?? ''} onChange={e => upd({ caption: e.target.value })}
-                        placeholder="Légende (optionnel)" style={{ ...inputStyle, fontSize: '0.85rem', color: '#666' }} />
+                        placeholder={t('blockEditor.ph.caption', 'Légende (optionnel)')} style={{ ...inputStyle, fontSize: '0.85rem', color: '#666' }} />
                 </div>
             );
         case 'gallery': {
@@ -136,9 +142,9 @@ const BlockFieldsEditor = ({ block, onChange }) => {
                     {items.map((it, idx) => (
                         <div key={idx} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                             <input value={it.url ?? ''} onChange={e => updItem(idx, { url: e.target.value })}
-                                placeholder="URL image" style={{ ...inputStyle, flex: 2 }} />
+                                placeholder={t('blockEditor.ph.galleryUrl', 'URL image')} style={{ ...inputStyle, flex: 2 }} />
                             <input value={it.caption ?? ''} onChange={e => updItem(idx, { caption: e.target.value })}
-                                placeholder="Légende" style={{ ...inputStyle, flex: 1, fontSize: '0.82rem' }} />
+                                placeholder={t('blockEditor.ph.galleryCaption', 'Légende')} style={{ ...inputStyle, flex: 1, fontSize: '0.82rem' }} />
                             <button type="button" onClick={() => removeItem(idx)} style={{ ...iconBtn, color: '#d32f2f' }}>
                                 <Trash2 size={14} />
                             </button>
@@ -148,8 +154,8 @@ const BlockFieldsEditor = ({ block, onChange }) => {
                         <button type="button" onClick={() => addItem()} style={{
                             padding: '6px 10px', borderRadius: '8px', border: '1px dashed #ddd',
                             background: 'white', cursor: 'pointer', fontSize: '0.82rem', color: '#555', fontFamily: 'inherit',
-                        }}>+ URL</button>
-                        <ImageUpload onUploaded={(url) => addItem(url)} label="Upload image" />
+                        }}>{t('blockEditor.addUrl', '+ URL')}</button>
+                        <ImageUpload onUploaded={(url) => addItem(url)} label={t('blockEditor.uploadImage', 'Upload image')} />
                     </div>
                 </div>
             );
@@ -158,10 +164,10 @@ const BlockFieldsEditor = ({ block, onChange }) => {
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <textarea value={block.content ?? ''} onChange={e => upd({ content: e.target.value })}
-                        placeholder="Citation…" rows={2}
+                        placeholder={t('blockEditor.ph.quote', 'Citation…')} rows={2}
                         style={{ ...inputStyle, resize: 'vertical', fontStyle: 'italic' }} />
                     <input value={block.attribution ?? ''} onChange={e => upd({ attribution: e.target.value })}
-                        placeholder="Attribution (optionnel)" style={{ ...inputStyle, fontSize: '0.85rem' }} />
+                        placeholder={t('blockEditor.ph.attribution', 'Attribution (optionnel)')} style={{ ...inputStyle, fontSize: '0.85rem' }} />
                 </div>
             );
         case 'button':
@@ -169,30 +175,30 @@ const BlockFieldsEditor = ({ block, onChange }) => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <div style={{ display: 'flex', gap: '6px' }}>
                         <input value={block.label ?? ''} onChange={e => upd({ label: e.target.value })}
-                            placeholder="Libellé du bouton" style={{ ...inputStyle, flex: 1, fontWeight: 600 }} />
+                            placeholder={t('blockEditor.ph.buttonLabel', 'Libellé du bouton')} style={{ ...inputStyle, flex: 1, fontWeight: 600 }} />
                         <select value={block.style ?? 'primary'} onChange={e => upd({ style: e.target.value })}
                             style={{ ...inputStyle, width: '130px' }}>
-                            <option value="primary">Plein</option>
-                            <option value="secondary">Contour</option>
+                            <option value="primary">{t('blockEditor.stylePlein', 'Plein')}</option>
+                            <option value="secondary">{t('blockEditor.styleContour', 'Contour')}</option>
                         </select>
                     </div>
                     <input value={block.url ?? ''} onChange={e => upd({ url: e.target.value })}
-                        placeholder="URL de destination" style={inputStyle} />
+                        placeholder={t('blockEditor.ph.buttonUrl', 'URL de destination')} style={inputStyle} />
                 </div>
             );
         case 'separator':
-            return <div style={{ color: '#aaa', fontSize: '0.85rem', fontStyle: 'italic' }}>— Séparateur horizontal —</div>;
+            return <div style={{ color: '#aaa', fontSize: '0.85rem', fontStyle: 'italic' }}>{t('blockEditor.separatorHint', '— Séparateur horizontal —')}</div>;
         case 'embed':
             return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <input value={block.url ?? ''} onChange={e => upd({ url: e.target.value })}
-                        placeholder="URL d'iframe (PDF, Sketchfab, Google Maps, etc.)" style={inputStyle} />
+                        placeholder={t('blockEditor.ph.embedUrl', "URL d'iframe (PDF, Sketchfab, Google Maps, etc.)")} style={inputStyle} />
                     <div style={{ display: 'flex', gap: '6px' }}>
                         <input value={block.caption ?? ''} onChange={e => upd({ caption: e.target.value })}
-                            placeholder="Légende (optionnel)" style={{ ...inputStyle, flex: 1, fontSize: '0.85rem' }} />
+                            placeholder={t('blockEditor.ph.caption', 'Légende (optionnel)')} style={{ ...inputStyle, flex: 1, fontSize: '0.85rem' }} />
                         <input type="number" min={150} max={1200} value={block.height ?? 500}
                             onChange={e => upd({ height: parseInt(e.target.value) || 500 })}
-                            placeholder="Hauteur px" style={{ ...inputStyle, width: '110px' }} />
+                            placeholder={t('blockEditor.ph.embedHeight', 'Hauteur px')} style={{ ...inputStyle, width: '110px' }} />
                     </div>
                 </div>
             );
@@ -202,6 +208,7 @@ const BlockFieldsEditor = ({ block, onChange }) => {
 };
 
 export const BlockEditor = ({ blocks = [], onChange }) => {
+    const { t } = useTranslation();
     const update = (i, next) => onChange(blocks.map((b, idx) => idx === i ? next : b));
     const remove = (i) => onChange(blocks.filter((_, idx) => idx !== i));
     const move = (from, to) => {
@@ -242,7 +249,7 @@ export const BlockEditor = ({ blocks = [], onChange }) => {
                             borderRadius: '8px', border: '1px dashed #ddd', background: 'white',
                             cursor: 'pointer', fontSize: '0.83rem', color: '#555', fontFamily: 'inherit',
                         }}>
-                        <Icon size={14} /> {label}
+                        <Icon size={14} /> {t(`blockEditor.types.${type}`, label)}
                     </button>
                 ))}
             </div>

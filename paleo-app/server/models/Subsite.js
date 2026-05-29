@@ -1,5 +1,16 @@
 /**
  * Subsite.js — Modèle MySQL pour les sous-sites
+ *
+ * Un subsite est lié à UNE source qui détermine son corpus de cartels :
+ *   - mode catégorie : `category_id` set, `workshop_id` null. Les cartels
+ *     du subsite sont ceux dont `cartels.subsite_id = subsite.id`
+ *     (curation manuelle via l'admin du subsite).
+ *   - mode atelier   : `workshop_id` set, `category_id` null. Les cartels
+ *     du subsite sont ceux de l'atelier via la table `workshop_cartels`
+ *     (vue live, pas de modif de `cartels.subsite_id`).
+ *
+ * La contrainte « exactement un des deux » est appliquée au niveau du
+ * controller (cf. SubsiteController).
  */
 import pool from '../lib/db.js';
 
@@ -8,27 +19,33 @@ const parseBlocks = (raw) => {
   try { return JSON.parse(raw); } catch { return []; }
 };
 
+// JOIN partagé entre findAll et findBySlug. Les LEFT JOIN permettent au
+// subsite d'avoir EITHER category_id OR workshop_id sans perdre la row.
+const BASE_SELECT = `
+  SELECT s.*,
+         c.name  AS category_name,
+         c.color AS category_color,
+         w.name  AS workshop_name
+  FROM subsites s
+  LEFT JOIN categories c ON c.id = s.category_id
+  LEFT JOIN workshops  w ON w.id = s.workshop_id
+`;
+
 export const SubsiteModel = {
 
-  /** Tous les sous-sites (avec nom de la catégorie) */
+  /** Tous les sous-sites (avec nom de la source : catégorie ou atelier) */
   async findAll() {
-    const [rows] = await pool.query(`
-      SELECT s.*, c.name AS category_name, c.color AS category_color
-      FROM subsites s
-      JOIN categories c ON c.id = s.category_id
-      ORDER BY s.name ASC
-    `);
-    return rows.map(r => ({ ...r, content_blocks: parseBlocks(r.content_blocks) }));
+    const [rows] = await pool.query(`${BASE_SELECT} ORDER BY s.name ASC`);
+    return rows.map(r => ({
+      ...r,
+      content_blocks: parseBlocks(r.content_blocks),
+      content_blocks_en: parseBlocks(r.content_blocks_en),
+    }));
   },
 
   /** Un sous-site par slug, avec ses partenaires (picks + obligatoires + exclusifs) */
   async findBySlug(slug) {
-    const [[row]] = await pool.query(`
-      SELECT s.*, c.name AS category_name, c.color AS category_color
-      FROM subsites s
-      JOIN categories c ON c.id = s.category_id
-      WHERE s.slug = ?
-    `, [slug]);
+    const [[row]] = await pool.query(`${BASE_SELECT} WHERE s.slug = ?`, [slug]);
     if (!row) return null;
 
     // Picks explicites (via subsite_partners)
@@ -57,31 +74,35 @@ export const SubsiteModel = {
     return {
       ...row,
       content_blocks: parseBlocks(row.content_blocks),
+      content_blocks_en: parseBlocks(row.content_blocks_en),
       primary_partners,
       partners: regular_partners,
     };
   },
 
-  /** Créer un sous-site */
-  async create({ slug, name, category_id, primary_color = '#D65A5A', content_blocks = [] }) {
+  /** Créer un sous-site (mode catégorie OU mode atelier — XOR appliqué côté controller) */
+  async create({ slug, name, category_id = null, workshop_id = null, primary_color = '#D65A5A', content_blocks = [], content_blocks_en = [] }) {
     const id = crypto.randomUUID();
     await pool.query(
-      `INSERT INTO subsites (id, slug, name, category_id, primary_color, content_blocks)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [id, slug, name, category_id, primary_color, JSON.stringify(content_blocks)]
+      `INSERT INTO subsites (id, slug, name, category_id, workshop_id, primary_color, content_blocks, content_blocks_en)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, slug, name, category_id, workshop_id, primary_color, JSON.stringify(content_blocks), JSON.stringify(content_blocks_en)]
     );
     return this.findBySlug(slug);
   },
 
-  /** Mettre à jour un sous-site */
-  async update(slug, data) {
-    const allowed = ['name', 'primary_color', 'content_blocks', 'slug'];
+  /** Mettre à jour un sous-site.
+   *  `allowedFields` restreint les colonnes éditables — passé par le
+   *  controller selon le rôle (owner = sous-ensemble, superadmin = tout
+   *  sauf source qui reste figée une fois le subsite créé). */
+  async update(slug, data, allowedFields = ['name', 'primary_color', 'content_blocks', 'content_blocks_en', 'slug']) {
+    const JSON_FIELDS = new Set(['content_blocks', 'content_blocks_en']);
     const sets = [];
     const vals = [];
-    for (const k of allowed) {
+    for (const k of allowedFields) {
       if (k in data) {
         sets.push(`\`${k}\` = ?`);
-        vals.push(k === 'content_blocks' ? JSON.stringify(data[k]) : data[k]);
+        vals.push(JSON_FIELDS.has(k) ? JSON.stringify(data[k]) : data[k]);
       }
     }
     if (!sets.length) return this.findBySlug(slug);

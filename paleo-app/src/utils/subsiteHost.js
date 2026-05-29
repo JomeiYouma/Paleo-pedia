@@ -28,6 +28,17 @@ export function subsiteBasePath(slug) {
     return getHostSubsiteSlug() === slug ? '' : `/site/${slug}`;
 }
 
+// Lien vers une page GLOBALE du site principal (mentions légales, contact,
+// politique de confidentialité…). Ces routes n'existent que sur le routeur
+// principal : sur un host dédié (ex. paleo-h2o.org) elles tomberaient sur le
+// catch-all. On renvoie donc une URL absolue vers le site principal quand on
+// est sur un host dédié, et un chemin relatif (nav SPA) sinon.
+//   - host dédié  → 'https://paleo-pedia.org/contact'  (rendu via <a>)
+//   - host normal → '/contact'                         (rendu via <Link>)
+export function mainSitePath(path) {
+    return getHostSubsiteSlug() ? `${MAIN_SITE_URL}${path}` : path;
+}
+
 // Inverse de getHostSubsiteSlug : pour un slug donné, renvoie l'URL absolue
 // du host dédié s'il y en a un (ex: 'paleo-h2o' → 'https://paleo-h2o.org'),
 // sinon null. Utilisé pour rediriger les utilisateurs du site principal vers

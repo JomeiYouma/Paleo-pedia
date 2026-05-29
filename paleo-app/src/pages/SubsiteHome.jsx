@@ -3,6 +3,7 @@
  * Page d'accueil d'un sous-site — rendu des content_blocks.
  */
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSubsite } from '../layouts/SubsiteLayout';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
@@ -11,11 +12,19 @@ import { BlockList } from '../components/blocks/BlockRenderer';
 
 const SubsiteHome = () => {
     const subsite = useSubsite();
+    const { t, i18n } = useTranslation();
 
     if (!subsite) return null;
 
     const color = subsite.primary_color || '#D65A5A';
     const friseHref = `${subsiteBasePath(subsite.slug)}/frise`;
+
+    // Page d'accueil bilingue : on affiche la version EN si la langue active
+    // est l'anglais ET qu'elle contient au moins un bloc ; sinon repli sur le FR.
+    const lang = i18n.language === 'gb' ? 'en' : i18n.language;
+    const homeBlocks = (lang === 'en' && subsite.content_blocks_en?.length > 0)
+        ? subsite.content_blocks_en
+        : subsite.content_blocks;
 
     return (
         <div>
@@ -66,14 +75,14 @@ const SubsiteHome = () => {
                         {subsite.name}
                     </h1>
                     <p style={{ color: '#666', fontSize: '1.2rem', maxWidth: '560px', marginBottom: '40px', lineHeight: 1.5 }}>
-                        {subsite.category_name && `Thématique : ${subsite.category_name}`}
+                        {subsite.category_name && t('subsite.theme', { name: subsite.category_name, defaultValue: `Thématique : ${subsite.category_name}` })}
                     </p>
                     <Link
                         to={friseHref}
                         className="paleo-btn paleo-btn--yellow"
                         style={{ padding: '14px 32px', fontSize: '0.95rem', letterSpacing: '0.6px' }}
                     >
-                        Explorer la frise <ArrowRight size={18} />
+                        {t('subsite.exploreFrise', 'Explorer la frise')} <ArrowRight size={18} />
                     </Link>
                 </div>
             </section>
@@ -85,12 +94,12 @@ const SubsiteHome = () => {
                 position: 'relative',
                 zIndex: 2,
                 background: 'var(--color-bg)',
-                paddingTop: subsite.content_blocks?.length > 0 ? '60px' : '120px',
-                paddingBottom: subsite.content_blocks?.length > 0 ? '60px' : '0',
+                paddingTop: homeBlocks?.length > 0 ? '60px' : '120px',
+                paddingBottom: homeBlocks?.length > 0 ? '60px' : '0',
             }}>
-                {subsite.content_blocks?.length > 0 && (
+                {homeBlocks?.length > 0 && (
                     <div style={{ maxWidth: '860px', margin: '0 auto', padding: '0 24px' }}>
-                        <BlockList blocks={subsite.content_blocks} color={color} />
+                        <BlockList blocks={homeBlocks} color={color} />
                     </div>
                 )}
             </section>

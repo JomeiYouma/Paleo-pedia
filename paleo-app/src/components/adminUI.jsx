@@ -4,7 +4,7 @@
  * AdminLogs, …). Style : gris primaire + jaune accent, fontes Bebas Neue
  * pour les labels/boutons, arêtes vives.
  */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { AlertCircle, CheckCircle2, Languages } from 'lucide-react';
 import api from '../services/apiClient';
 import Breadcrumb from './Breadcrumb';
@@ -132,12 +132,40 @@ export const AdminPageHeader = ({
     );
 };
 
-/** Toast simple en haut à droite. À utiliser avec useAdminToast(). */
+/** Toast simple en haut à droite. À utiliser avec useAdminToast().
+ *  Entrée slide depuis la droite + fade, sortie fade simple. Le composant
+ *  reste monté pendant le fade-out (sinon disparition sèche). */
+const ADMIN_TOAST_ENTER_MS = 220;
+const ADMIN_TOAST_EXIT_MS = 180;
 export const AdminToast = ({ toast }) => {
-    if (!toast) return null;
-    const isError = toast.type === 'error';
+    const [shouldRender, setShouldRender] = useState(false);
+    const [phase, setPhase] = useState('exiting');
+    // Le hook passe toast=null à la fin du timer → on garde un instantané
+    // pour pouvoir continuer à afficher pendant la sortie.
+    const [snapshot, setSnapshot] = useState(toast);
+    const exitTimer = useRef(null);
+
+    useEffect(() => {
+        if (toast) {
+            clearTimeout(exitTimer.current);
+            setSnapshot(toast);
+            setShouldRender(true);
+            setPhase('entering');
+        } else if (shouldRender) {
+            setPhase('exiting');
+            exitTimer.current = setTimeout(() => setShouldRender(false), ADMIN_TOAST_EXIT_MS);
+        }
+        return () => clearTimeout(exitTimer.current);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [toast]);
+
+    if (!shouldRender || !snapshot) return null;
+    const isError = snapshot.type === 'error';
+    const animation = phase === 'entering'
+        ? `paleo-toast-in-right ${ADMIN_TOAST_ENTER_MS}ms cubic-bezier(.2,.8,.2,1) both`
+        : `paleo-toast-out ${ADMIN_TOAST_EXIT_MS}ms ease-in both`;
     return (
-        <div role="status" style={{
+        <div className="paleo-toast" role="status" style={{
             position: 'fixed', top: '20px', right: '20px', zIndex: 2000,
             background: isError ? '#fee' : '#efe',
             color: isError ? '#c00' : '#080',
@@ -148,9 +176,11 @@ export const AdminToast = ({ toast }) => {
             boxShadow: 'var(--shadow-md)',
             fontSize: '0.88rem', fontWeight: '600',
             maxWidth: '420px',
+            animation,
+            willChange: 'transform, opacity',
         }}>
             {isError ? <AlertCircle size={16} /> : <CheckCircle2 size={16} />}
-            <span>{toast.message}</span>
+            <span>{snapshot.message}</span>
         </div>
     );
 };
