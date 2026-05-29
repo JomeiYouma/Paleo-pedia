@@ -98,5 +98,215 @@
     "excerpt": null,
     "is_published": true,
     "display_order": 100
+  },
+  {
+    "title": "Chronique du livre Rétrofutur",
+    "source": "Le Temps",
+    "published_date": "2018-12-01",
+    "url": "https://assets.letemps.ch/sites/default/files/20181201-le_temps_we.pdf",
+    "thumbnail_file": "le-temps-retrofutur.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 110
+  },
+  {
+    "title": "Les leçons du passé technologique",
+    "source": "Le Monde — Sciences",
+    "published_date": "2018-10-24",
+    "url": "https://www.lemonde.fr/sciences/article/2018/10/24/les-lecons-du-passe-technologique_5373669_1650684.html",
+    "thumbnail_file": "le-monde-lecons-passe.jpg",
+    "excerpt": "Le collectif Paléo-énergétique écrit une histoire alternative de l'énergie en revisitant des innovations oubliées.",
+    "is_published": true,
+    "display_order": 120
+  },
+  {
+    "title": "Pourquoi une contre-histoire des innovations énergétiques ?",
+    "source": "RFI",
+    "published_date": "2018-09-24",
+    "url": "http://www.rfi.fr/emission/20180924-pourquoi-contre-histoire-innovations-energetiques",
+    "thumbnail_file": "rfi-contre-histoire.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 130
+  },
+  {
+    "title": "Les nouvelles technologies vous fatiguent ? Penchez-vous sur les vieilles !",
+    "source": "L'Obs",
+    "published_date": "2018-09-23",
+    "url": "https://www.nouvelobs.com/planete/20180918.OBS2518/les-nouvelles-technologies-vous-fatiguent-penchez-vous-sur-les-vieilles.html",
+    "thumbnail_file": "lobs-vieilles-technos.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 140
+  },
+  {
+    "title": "Regen Box ou la régénération des piles alcalines",
+    "source": "Intel IQ",
+    "published_date": "2016-11-05",
+    "url": "https://iq.intel.fr/regen-box-ou-la-regeneration-des-piles-alcalines/",
+    "thumbnail_file": "intel-iq-regenbox.jpg",
+    "excerpt": "Et si les piles alcalines n'étaient pas à usage unique ?",
+    "is_published": true,
+    "display_order": 150
+  },
+  {
+    "title": "Le secret industriel bien gardé des piles alcalines : elles sont rechargeables !",
+    "source": "Mr Mondialisation",
+    "published_date": "2016-11-01",
+    "url": "http://mrmondialisation.org/le-secret-industriel-bien-garde-des-piles-alcalines",
+    "thumbnail_file": "mr-mondialisation-regenbox.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 160
+  },
+  {
+    "title": "C'est pas du vent — Interview RegenBox / Paléo-Énergétique",
+    "source": "RFI — C'est pas du vent",
+    "published_date": "2016-10-18",
+    "url": "https://paleo-energetique.org/wp-content/uploads/2016/10/rfi-cest-pas-du-vent-regenbox-paleo-energetique.mp3",
+    "thumbnail_file": "rfi-cest-pas-du-vent.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 170
+  },
+  {
+    "title": "Recharger les piles « jetables » ? C'est possible avec Regen Box !",
+    "source": "Conso Collaborative",
+    "published_date": "2016-09-26",
+    "url": "http://consocollaborative.com/article/reutiliser-les-piles-jetables-jusqua-20-fois-ils-croient-que-cest-possible/",
+    "thumbnail_file": "conso-collaborative-regenbox.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 180
+  },
+  {
+    "title": "RegenBox dans Les Grosses Têtes",
+    "source": "RTL — Les Grosses Têtes",
+    "published_date": "2016-09-20",
+    "url": "https://paleo-energetique.org/wp-content/uploads/2016/09/interview-les-grosses-tetes.mp3",
+    "thumbnail_file": "rtl-grosses-tetes.jpg",
+    "excerpt": "Regen Box est quand-même une invention de dingue.",
+    "is_published": true,
+    "display_order": 190
+  },
+  {
+    "title": "La Regen Box redonne vie aux piles non rechargeables",
+    "source": "Mega-piles.com",
+    "published_date": "2016-09-20",
+    "url": "http://www.mega-piles.com/news/regen-box-recharge-piles-alcalines-749",
+    "thumbnail_file": "mega-piles-regenbox.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 200
+  },
+  {
+    "title": "Piles… n'en jetez plus !",
+    "source": "Le Parisien Magazine",
+    "published_date": "2016-09-16",
+    "url": "http://www.leparisien.fr/magazine/grand-angle/le-parisien-magazine-piles-n-en-jetez-plus-16-09-2016-6120213.php",
+    "thumbnail_file": "le-parisien-magazine-piles.jpg",
+    "excerpt": "Les batteries alcalines jetables peuvent en réalité servir de cinq à dix fois.",
+    "is_published": true,
+    "display_order": 210
+  },
+  {
+    "title": "Esprit d'initiative — Et si les bonnes idées se trouvaient dans les inventions oubliées ?",
+    "source": "France Inter — Esprit d'initiative",
+    "published_date": "2016-09-13",
+    "url": "https://paleo-energetique.org/wp-content/uploads/2016/09/france-inter-paleoenergie.mp3",
+    "thumbnail_file": "france-inter-esprit-initiative.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 220
+  },
+  {
+    "title": "Cédric Carles : « On a toujours innové en période de crise »",
+    "source": "Le Monde",
+    "published_date": "2016-08-05",
+    "url": "http://www.lemonde.fr/tant-de-temps/article/2016/08/05/cedric-carles-on-a-toujours-innove-en-periode-de-crise_4978663_4598196.html",
+    "thumbnail_file": "le-monde-toujours-innove.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 230
+  },
+  {
+    "title": "La méthodologie Paléo dans « Jouer avec les futurs »",
+    "source": "Jouer avec les futurs",
+    "published_date": "2016-07-15",
+    "url": null,
+    "thumbnail_file": "jouer-avec-les-futurs.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 240
+  },
+  {
+    "title": "Paléo-Énergétique : et si les solutions étaient dans le passé ?",
+    "source": "Consoglobe",
+    "published_date": "2016-06-22",
+    "url": "http://www.consoglobe.com/paleo-energetique-cg",
+    "thumbnail_file": "consoglobe-paleo.jpg",
+    "excerpt": "Et si des solutions énergétiques d'avenir pouvaient se trouver dans le passé ?",
+    "is_published": true,
+    "display_order": 250
+  },
+  {
+    "title": "Enquête sur l'histoire de l'innovation énergétique",
+    "source": "AXA — News to Protect",
+    "published_date": "2016-03-02",
+    "url": "https://www.newstoprotect.axa/recherche-innovation/enquete-histoire-innovation-energetique",
+    "thumbnail_file": "axa-news-to-protect.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 260
+  },
+  {
+    "title": "Publication d'un e-book Paléo-Énergétique avec Éric Dussert et Le Livroscope",
+    "source": "Le Livroscope / L'Œil d'or",
+    "published_date": "2016-01-21",
+    "url": null,
+    "thumbnail_file": "livroscope-ebook.jpg",
+    "excerpt": "E-book gratuit publié à l'ouverture de la COP21.",
+    "is_published": true,
+    "display_order": 270
+  },
+  {
+    "title": "Paléo-Énergétique dans Enerpress Magazine",
+    "source": "Enerpress Magazine",
+    "published_date": "2015-08-10",
+    "url": null,
+    "thumbnail_file": "enerpress-magazine.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 280
+  },
+  {
+    "title": "Paléo-Énergétique sur Radio Nova avec Côme Bastin",
+    "source": "Radio Nova",
+    "published_date": "2015-06-23",
+    "url": null,
+    "thumbnail_file": "radio-nova-paleo.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 290
+  },
+  {
+    "title": "Paléo-Énergétique sur Ushuaïa TV — Le Mag",
+    "source": "Ushuaïa TV — Le Mag",
+    "published_date": "2015-06-13",
+    "url": null,
+    "thumbnail_file": "ushuaia-tv-le-mag.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 300
+  },
+  {
+    "title": "Les pionniers oubliés de l'énergie",
+    "source": "We Demain n°9",
+    "published_date": "2015-02-23",
+    "url": null,
+    "thumbnail_file": "we-demain-n9.jpg",
+    "excerpt": null,
+    "is_published": true,
+    "display_order": 310
   }
 ]
