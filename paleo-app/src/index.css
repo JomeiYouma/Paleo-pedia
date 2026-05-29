@@ -184,6 +184,20 @@ button {
   to { transform: rotate(360deg); }
 }
 
+/* ── Toast — entrée slide depuis le bord ancré + fade, sortie fade simple ── */
+@keyframes paleo-toast-in {
+  from { opacity: 0; transform: translateX(-110%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes paleo-toast-in-right {
+  from { opacity: 0; transform: translateX(110%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes paleo-toast-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
 /* ── Arborescence Mode Override (frise SVG) ───────────────────── */
 .arborescence-label {
   fill: #000000 !important;
@@ -352,5 +366,8 @@ button {
   .paleo-nav-link::after {
     transition: none !important;
     transform: none !important;
+  }
+  .paleo-toast {
+    animation: none !important;
   }
 }

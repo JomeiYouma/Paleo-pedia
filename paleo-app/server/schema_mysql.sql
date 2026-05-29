@@ -57,18 +57,26 @@ INSERT IGNORE INTO `categories` (`id`, `name`, `name_en`, `description`, `color`
 -- ============================================================
 -- SUBSITES (multi-tenant)
 -- ============================================================
+-- Un subsite est lié à UNE source (XOR appliqué côté applicatif) :
+--   - category_id (mode catégorie) → cartels curés via cartels.subsite_id
+--   - workshop_id (mode atelier)   → cartels = membres de l'atelier (vue live)
+-- Note : la FK workshop_id est ajoutée plus bas (après la déclaration de
+-- la table workshops) car celle-ci est créée après subsites.
 CREATE TABLE IF NOT EXISTS `subsites` (
   `id`             CHAR(36)      NOT NULL DEFAULT (UUID()),
   `slug`           VARCHAR(64)   NOT NULL,
   `name`           VARCHAR(255)  NOT NULL,
-  `category_id`    VARCHAR(64)   NOT NULL,
+  `category_id`    VARCHAR(64)   NULL DEFAULT NULL,
+  `workshop_id`    CHAR(36)      NULL DEFAULT NULL,
   `primary_color`  VARCHAR(16)   NOT NULL DEFAULT '#D65A5A',
   `logo_path`      VARCHAR(512)  NULL DEFAULT NULL,
-  `content_blocks` LONGTEXT      NULL DEFAULT NULL,      -- JSON array de blocs
+  `content_blocks` LONGTEXT      NULL DEFAULT NULL,      -- JSON array de blocs (FR)
+  `content_blocks_en` LONGTEXT   NULL DEFAULT NULL,      -- JSON array de blocs (EN, optionnel — fallback FR)
   `created_at`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_subsites_slug` (`slug`),
+  KEY `idx_subsite_workshop` (`workshop_id`),
   CONSTRAINT `fk_subsite_category`
     FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -191,6 +199,11 @@ CREATE TABLE IF NOT EXISTS `workshops` (
     ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- FK subsites.workshop_id → workshops.id (déclarée ici car workshops doit exister)
+ALTER TABLE `subsites`
+  ADD CONSTRAINT `fk_subsite_workshop`
+    FOREIGN KEY (`workshop_id`) REFERENCES `workshops` (`id`) ON DELETE CASCADE;
+
 CREATE TABLE IF NOT EXISTS `workshop_cartels` (
   `workshop_id` CHAR(36) NOT NULL,
   `cartel_id`   CHAR(36) NOT NULL,
@@ -309,9 +322,11 @@ INSERT IGNORE INTO `event_email_config` (`type`) VALUES
 -- ============================================================
 -- TEAM_MEMBERS (page À propos)
 -- ============================================================
+-- subsite_id : NULL = équipe du site principal, sinon équipe propre au subsite.
 CREATE TABLE IF NOT EXISTS `team_members` (
   `id`            CHAR(36)      NOT NULL DEFAULT (UUID()),
   `category`      VARCHAR(20)   NOT NULL DEFAULT 'main',     -- 'main' | 'secondary' | 'community'
+  `subsite_id`    CHAR(36)      NULL DEFAULT NULL,
   `name`          VARCHAR(255)  NOT NULL,
   `role`          VARCHAR(255)  NULL DEFAULT NULL,
   `role_en`       VARCHAR(255)  NULL DEFAULT NULL,
@@ -325,7 +340,10 @@ CREATE TABLE IF NOT EXISTS `team_members` (
   `created_at`    DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`    DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `idx_team_category` (`category`, `display_order`)
+  KEY `idx_team_category` (`category`, `display_order`),
+  KEY `idx_team_subsite`  (`subsite_id`, `category`, `display_order`),
+  CONSTRAINT `fk_team_subsite`
+    FOREIGN KEY (`subsite_id`) REFERENCES `subsites` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================

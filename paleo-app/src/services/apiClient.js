@@ -191,11 +191,14 @@ export const partners = {
 
 // ── Membres d'équipe (page publique « À propos ») ─────────────
 // Lecture publique, écriture réservée au superadmin.
+// `slug` (optionnel) scope la requête à un sous-site précis via les routes
+// /s/:slug/team-members. Sans slug → équipe du site principal.
+const teamRoot = (slug) => slug ? `/s/${slug}/team-members` : '/team-members';
 export const teamMembers = {
-  getAll:  ()           => get('/team-members'),
-  create:  (data)       => post('/team-members', data),
-  update:  (id, data)   => patch(`/team-members/${id}`, data),
-  delete:  (id)         => del(`/team-members/${id}`),
+  getAll:  (slug)              => get(teamRoot(slug)),
+  create:  (data, slug)        => post(teamRoot(slug), data),
+  update:  (id, data, slug)    => patch(`${teamRoot(slug)}/${id}`, data),
+  delete:  (id, slug)          => del(`${teamRoot(slug)}/${id}`),
 };
 
 // ── Articles de presse (page publique /presse) ────────────────

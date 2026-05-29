@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Linkedin, Globe, Link2, X } from 'lucide-react';
 import api from '../services/apiClient';
 import { pickLang } from '../utils/i18nHelpers';
 import PartnersList from '../components/PartnersList';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { getHostSubsiteSlug } from '../utils/subsiteHost';
 
 // Page "À propos" — équipe rendue depuis la base via /api/team-members.
 // Trois rendus selon la catégorie :
@@ -294,12 +295,18 @@ const Presentation = () => {
         };
     }, []);
 
+    // Sur un sous-site, on charge l'équipe scopée du subsite (avec fallback
+    // serveur sur l'équipe principale si le subsite n'a aucun membre déclaré).
+    // Le slug provient soit de la route /site/:slug/presentation, soit du
+    // host dédié (ex. paleo-h2o.org → 'paleo-h2o').
+    const params = useParams();
+    const subsiteSlug = params.slug || getHostSubsiteSlug();
     useEffect(() => {
-        api.teamMembers.getAll()
+        api.teamMembers.getAll(subsiteSlug)
             .then(data => setMembers(Array.isArray(data) ? data : []))
             .catch(() => setMembers([]))
             .finally(() => setLoading(false));
-    }, []);
+    }, [subsiteSlug]);
 
     const { mainMembers, secondaryMembers, communityMembers } = useMemo(() => ({
         mainMembers:      members.filter(m => m.category === 'main'),

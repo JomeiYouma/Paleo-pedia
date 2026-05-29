@@ -46,6 +46,9 @@ const LegalNotices = () => {
             <h2 style={{ marginTop: '24px', fontSize: '1.15rem' }}>{t('legal.ip.title')}</h2>
             <p>{t('legal.ip.body')}</p>
 
+            <h2 style={{ marginTop: '24px', fontSize: '1.15rem' }}>{t('legal.subsiteAccess.title', 'Accès aux sites dédiés')}</h2>
+            <p>{t('legal.subsiteAccess.body', "Les identifiants de connexion d'un site dédié sont strictement personnels et réservés aux membres de la structure responsable de ce site. Les partager se fait sous votre seule responsabilité, à vos risques et périls. Toute communication de ces accès à des personnes extérieures à votre structure est formellement interdite.")}</p>
+
             <h2 style={{ marginTop: '24px', fontSize: '1.15rem' }}>{t('legal.contact.title')}</h2>
             <p>
                 {t('legal.contact.body')}{' '}

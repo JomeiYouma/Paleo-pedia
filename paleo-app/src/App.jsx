@@ -35,15 +35,26 @@ import Contact from './pages/Contact';
 import Participer from './pages/Participer';
 import Presse from './pages/Presse';
 import LandingPage from './pages/LandingPage';
+import PaleoPedia from './pages/PaleoPedia';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import LegalNotices from './pages/LegalNotices';
 import SiteLayout from './components/SiteLayout';
+import PediaLayout from './layouts/PediaLayout';
 import SubsiteLayout from './layouts/SubsiteLayout';
 import SubsiteHome from './pages/SubsiteHome';
 import SubsiteFrise from './pages/SubsiteFrise';
 import SubsitePartners from './pages/SubsitePartners';
 import SubsiteAdmin from './pages/SubsiteAdmin';
 import CartelDetail from './pages/CartelDetail';
+
+// Wrapper qui injecte le slug du subsite (route param OU host dédié) dans
+// AdminTeamContent. Permet à la même page d'éditer soit l'équipe principale
+// (sur /app/admin/team-content), soit l'équipe d'un subsite précis.
+const SubsiteTeamContentWrapper = () => {
+    const params = useParams();
+    const slug = params.slug || getHostSubsiteSlug();
+    return <AdminTeamContent subsiteSlug={slug} />;
+};
 
 // Reset du scroll sur changement de route. React Router en SPA conserve la
 // position Y de la page précédente, ce qui faisait apparaître les pages
@@ -142,6 +153,12 @@ const mainRouter = createBrowserRouter(
         <Route path="cartel/:id" element={<CartelDetail />} />
       </Route>
 
+      {/* ── Vitrine paleo-pedia (layout dédié : pas de connexion,
+            branding "Paléo-Pédia", palette neutre) ────────────── */}
+      <Route path="/pedia" element={<PediaLayout />}>
+        <Route index element={<PaleoPedia />} />
+      </Route>
+
       {/* ── Sous-sites (/site/:slug/*) ────────────────── */}
       <Route path="/site/:slug" element={<SubsiteLayout />}>
         <Route index                   element={<SubsiteHome />} />
@@ -155,8 +172,13 @@ const mainRouter = createBrowserRouter(
         <Route path="admin/drafts"     element={<SubsiteAdmin />} />
         <Route path="admin/pending"    element={<SubsiteAdmin />} />
         <Route path="admin/published"  element={<SubsiteAdmin />} />
+        <Route path="admin/archived"   element={<SubsiteAdmin />} />
         <Route path="admin/submissions" element={<SubsiteAdmin />} />
+        <Route path="admin/team-content" element={<SubsiteTeamContentWrapper />} />
         <Route path="cartel/:id" element={<CartelDetail />} />
+        {/* Proposer un cartel : dans le layout du sous-site (header + nav =
+            vrais moyens de retour, cohérent avec /app/create du site principal). */}
+        <Route path="create"     element={<Create />} />
       </Route>
 
       {/* ── Application (frise + gestion) ────────────── */}
@@ -170,6 +192,7 @@ const mainRouter = createBrowserRouter(
         <Route path="manage/drafts"     element={<ManageCartels />} />
         <Route path="manage/pending"    element={<ManageCartels />} />
         <Route path="manage/published"  element={<ManageCartels />} />
+        <Route path="manage/archived"   element={<ManageCartels />} />
         <Route path="manage/submissions" element={<ManageCartels />} />
         <Route path="admin"             element={<AdminSettings />} />
         <Route path="admin/partners"    element={<AdminPartners />} />
@@ -185,9 +208,6 @@ const mainRouter = createBrowserRouter(
         <Route path="admin/workshop/:workshopId" element={<ManageCartels />} />
         <Route path="drafts" element={<Navigate to="/app/manage/pending" replace />} />
       </Route>
-
-      {/* Route de proposition de cartel sur un sous-site (visiteurs) */}
-      <Route path="/site/:slug/create" element={<Create />} />
 
       {/* Redirect workshops (anciens liens partagés) */}
       <Route path="/workshop/:workshopId" element={<WorkshopRedirect />} />
@@ -210,10 +230,13 @@ const subsiteHostRouter = hostSubsiteSlug ? createBrowserRouter(
         <Route path="admin/drafts"     element={<SubsiteAdmin />} />
         <Route path="admin/pending"    element={<SubsiteAdmin />} />
         <Route path="admin/published"  element={<SubsiteAdmin />} />
+        <Route path="admin/archived"   element={<SubsiteAdmin />} />
         <Route path="admin/submissions" element={<SubsiteAdmin />} />
+        <Route path="admin/team-content" element={<SubsiteTeamContentWrapper />} />
         <Route path="cartel/:id" element={<CartelDetail />} />
+        {/* Proposer un cartel : dans le layout du sous-site (header + nav). */}
+        <Route path="create"     element={<Create />} />
       </Route>
-      <Route path="/create" element={<Create />} />
       <Route path="*" element={<SubsiteHostCatchAll hostSlug={hostSubsiteSlug} />} />
     </Route>
   )

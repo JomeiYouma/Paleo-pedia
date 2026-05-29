@@ -106,7 +106,8 @@ router.get('/export',             authenticate, requireAdmin, ExportController.e
 router.get   ('/subsites',       SubsiteController.getAll);
 router.get   ('/subsites/:slug', SubsiteController.getOne);
 router.post  ('/subsites',       authenticate, requireAdmin, SubsiteController.create);
-router.patch ('/subsites/:slug', authenticate, requireAdmin, SubsiteController.update);
+// PATCH : permission gérée dans le controller (superadmin OU owner du subsite courant).
+router.patch ('/subsites/:slug', authenticate,                SubsiteController.update);
 router.delete('/subsites/:slug', authenticate, requireAdmin, SubsiteController.remove);
 
 // ── Routes scopées par sous-site (/s/:slug/*) ────────────────
@@ -153,10 +154,19 @@ router.delete('/partners/:id',   authenticate, PartnerController.remove);
 
 // ── Membres d'équipe (page publique « À propos ») ────────────
 // GET public, write réservé au superadmin.
-router.get   ('/team-members',     TeamMemberController.getAll);
+// Lecture publique avec optionalAuth pour permettre au superadmin de viser
+// un autre subsite via ?subsiteId=... (la cible reste main pour les anonymes).
+router.get   ('/team-members',     optionalAuth, TeamMemberController.getAll);
 router.post  ('/team-members',     authenticate, requireAdmin, TeamMemberController.create);
 router.patch ('/team-members/:id', authenticate, requireAdmin, TeamMemberController.update);
 router.delete('/team-members/:id', authenticate, requireAdmin, TeamMemberController.remove);
+
+// Variantes scopées par sous-site (équipe propre à un subsite).
+// Écriture autorisée à l'owner du subsite OU au superadmin (canWrite côté controller).
+router.get   ('/s/:slug/team-members',     optionalAuth, resolveTenant, TeamMemberController.getAll);
+router.post  ('/s/:slug/team-members',     authenticate, resolveTenant, requireTenantAccess, TeamMemberController.create);
+router.patch ('/s/:slug/team-members/:id', authenticate, resolveTenant, requireTenantAccess, TeamMemberController.update);
+router.delete('/s/:slug/team-members/:id', authenticate, resolveTenant, requireTenantAccess, TeamMemberController.remove);
 
 // ── Articles de presse (page publique /presse) ────────────────
 // optionalAuth pour que les admins puissent voir les articles non publiés.

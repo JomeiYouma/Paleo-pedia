@@ -101,12 +101,20 @@ export const AppProvider = ({ children }) => {
     const login = async (email, password) => {
         const data = await api.auth.login(email, password);
         setUser(data.user);
+        // Re-fetch avec le nouveau token : sans ça, `cartels` reste figé sur la
+        // liste publique (brouillons + pending_review absents) jusqu'au prochain
+        // hard-reload. Idem pour le logout (cf. handler ci-dessous).
+        await fetchData();
         return true;
     };
 
     const logout = () => {
         api.auth.logout();
         setUser(null);
+        // Re-fetch sans token → la liste retombe sur le scope public, sinon
+        // l'écran continue d'afficher les brouillons / pending_review jusqu'au
+        // prochain reload.
+        fetchData().catch(() => {});
     };
 
     // ── Data fetching ─────────────────────────────────────────
