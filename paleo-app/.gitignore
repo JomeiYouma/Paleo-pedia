@@ -16,6 +16,10 @@ dist-ssr
 # Ne pas committer ni builder les images locales.
 public/images/
 
+# Guides PDF (lourds, ~8-9 Mo) : générés localement, déployés à la main.
+# Ils restent sur le disque et sont embarqués dans dist au build local.
+public/guide-site-dedie-*.pdf
+
 # Artefacts de déploiement (ZIPs SFTP)
 *.zip
 
