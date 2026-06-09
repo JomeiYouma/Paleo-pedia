@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import SharedHeader from './SharedHeader';
+import SiteFooter from './SiteFooter';
 import { useApp } from '../context/AppContext';
 
 // Layout de l'application (/app/*)
@@ -25,6 +26,7 @@ const Layout = () => {
             <div style={{ flex: 1 }}>
                 <Outlet />
             </div>
+            <SiteFooter />
         </div>
     );
 };

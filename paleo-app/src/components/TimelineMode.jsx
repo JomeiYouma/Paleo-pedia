@@ -337,11 +337,14 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
     return (
         <div style={{
             height: 'calc(100vh - 180px)',
-            minHeight: '600px',
+            // minHeight abaissé (600→500) et chrome resserré (marges/gap) pour
+            // donner plus de hauteur au cartel sur les écrans standards (~768px),
+            // où le panneau était trop court et imposait un scroll permanent.
+            minHeight: '500px',
             display: 'flex',
             flexDirection: 'column',
-            marginTop: '20px',
-            gap: '20px',
+            marginTop: '10px',
+            gap: '12px',
             padding: '0 4px',
         }}>
             {/* ════════════════════════════════════════════════════════
@@ -381,12 +384,12 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                     <div style={{
                         position: 'relative',
                         height: '100%',
-                        maxHeight: 'calc(100vh - 290px)',
+                        maxHeight: 'calc(100vh - 240px)',
                         width: '80%',
                         maxWidth: '1200px',
                         display: 'flex',
                         flexDirection: 'column',
-                        margin: '24px 0',
+                        margin: '12px 0',
                     }}>
                         <div style={{ flex: 1, overflowY: 'auto' }}>
                             <CartelPreview key={currentCartel.id} data={currentCartel} />
@@ -481,7 +484,10 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                 <div
                     ref={containerRef}
                     style={{
-                        height: '180px',
+                        // 180→150 : le SVG a un viewBox fixe (height=200) qui se met
+                        // automatiquement à l'échelle, donc on récupère ~30px pour le
+                        // cartel sans toucher au rendu D3 (léger tassement vertical).
+                        height: '150px',
                         background: 'var(--color-surface)',
                         position: 'relative',
                         width: '100%',

@@ -58,22 +58,36 @@ const PartnersList = () => {
             onMouseEnter={e => { e.currentTarget.style.opacity = '0.75'; }}
             onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
         >
-            {p.logo_path ? (
-                <img src={p.logo_path} alt={p.name} style={{ height: accent ? '78px' : '60px', objectFit: 'contain', maxWidth: '180px' }} />
-            ) : (
-                <div style={{
-                    width: accent ? '72px' : '56px',
-                    height: accent ? '72px' : '56px',
-                    background: 'var(--color-primary)',
-                    color: 'var(--color-accent)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontFamily: 'var(--font-display)',
-                    fontSize: accent ? '1.8rem' : '1.4rem',
-                    letterSpacing: '0.04em',
-                }}>
-                    {p.name?.charAt(0) || '?'}
-                </div>
-            )}
+            {/* Tuile blanche derrière le logo : garantit un fond neutre quel que
+                soit le PNG (transparent, sombre ou clair) et homogénéise les tailles. */}
+            <div style={{
+                background: 'var(--color-white)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-md)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                width: '100%',
+                minHeight: accent ? '120px' : '96px',
+                padding: accent ? '20px 28px' : '16px 22px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxSizing: 'border-box',
+            }}>
+                {p.logo_path ? (
+                    <img src={p.logo_path} alt={p.name} style={{ height: accent ? '78px' : '60px', maxHeight: '100%', objectFit: 'contain', maxWidth: '100%' }} />
+                ) : (
+                    <div style={{
+                        width: accent ? '72px' : '56px',
+                        height: accent ? '72px' : '56px',
+                        background: 'var(--color-primary)',
+                        color: 'var(--color-accent)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontFamily: 'var(--font-display)',
+                        fontSize: accent ? '1.8rem' : '1.4rem',
+                        letterSpacing: '0.04em',
+                    }}>
+                        {p.name?.charAt(0) || '?'}
+                    </div>
+                )}
+            </div>
             <div style={{ textAlign: 'center', fontFamily: 'var(--font-heading)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.4px', fontSize: accent ? '0.95rem' : '0.85rem', color: 'var(--color-text)' }}>{p.name}</div>
             {p.url && <ExternalLink size={14} color="var(--color-text-subtle)" />}
         </a>

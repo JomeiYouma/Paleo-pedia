@@ -461,10 +461,19 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
         () => act(c.id, () => api.cartels.publish(c.id)),
         { danger: false, confirmLabel: t('manageCartels.unarchive') }
     );
-    const handleDelete = (id) => askConfirm(
-        t('messages.confirmDelete'),
-        () => act(id, () => api.cartels.delete(id))
-    );
+    const handleDelete = (id) => {
+        // Le message s'adapte au statut du cartel : "brouillon" pour un draft,
+        // un avertissement explicite pour un cartel publié (disparaît de la frise),
+        // etc. Évite l'incohérence « Supprimer ce brouillon ? » sur un cartel publié.
+        const c = cartels.find(x => x.id === id);
+        const title = c?.titre || c?.titre_en || '';
+        const message =
+            c?.status === 'published' ? t('messages.confirmDeletePublished', { title })
+          : c?.status === 'archived'  ? t('messages.confirmDeleteArchived',  { title })
+          : c?.status === 'draft'     ? t('messages.confirmDelete')
+          :                             t('messages.confirmDeleteGeneric',   { title });
+        askConfirm(message, () => act(id, () => api.cartels.delete(id)));
+    };
 
     const handleApproveSubmission = (c) => askConfirm(
         t('manageCartels.confirmApproveSubmission', { title: c.titre }),

@@ -364,7 +364,10 @@ const SubsiteLayout = () => {
                 )}
 
                 {/* ── Footer ───────────────────────────────── */}
-                <footer style={{ background: 'var(--color-primary)', color: 'var(--color-white)', padding: '32px 24px', borderTop: `4px solid ${color}` }}>
+                {/* position+zIndex : le footer doit toujours repeindre par-dessus
+                   le décor du hero (personnages en position absolue, qui peuvent
+                   déborder vers le bas). Sans ça, les personnages le recouvrent. */}
+                <footer style={{ background: 'var(--color-primary)', color: 'var(--color-white)', padding: '32px 24px', borderTop: `4px solid ${color}`, position: 'relative', zIndex: 5 }}>
                     <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '24px' }}>
                         <div>
                             <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', color: 'var(--color-white)', marginBottom: '4px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>{subsite.name}</div>
