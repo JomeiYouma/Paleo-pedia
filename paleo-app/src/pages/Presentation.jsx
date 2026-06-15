@@ -5,6 +5,7 @@ import { Linkedin, Globe, Link2, X } from 'lucide-react';
 import api from '../services/apiClient';
 import { pickLang } from '../utils/i18nHelpers';
 import PartnersList from '../components/PartnersList';
+import VideoGallery from '../components/VideoGallery';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { getHostSubsiteSlug } from '../utils/subsiteHost';
 
@@ -349,42 +350,13 @@ const Presentation = () => {
             <p dangerouslySetInnerHTML={{ __html: t('pages.presentation.history1Html') }} />
             <p dangerouslySetInnerHTML={{ __html: t('pages.presentation.history2Html') }} />
 
-            {/* ── Vidéos de présentation ───────────────────────────────── */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: '16px',
-                margin: '30px 0',
-            }}>
-                {[
-                    { id: 'PUdb3Z739rk', title: t('pages.presentation.video1Title') },
-                    { id: '_cJts9dZzGM', title: t('pages.presentation.video2Title') },
-                ].map(v => (
-                    <div key={v.id} style={{
-                        position: 'relative',
-                        width: '100%',
-                        paddingBottom: '56.25%',
-                        background: 'var(--color-primary-soft)',
-                        borderRadius: 'var(--radius-md)',
-                        overflow: 'hidden',
-                    }}>
-                        <iframe
-                            src={`https://www.youtube.com/embed/${v.id}`}
-                            title={v.title}
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            referrerPolicy="strict-origin-when-cross-origin"
-                            allowFullScreen
-                            style={{
-                                position: 'absolute',
-                                top: 0, left: 0,
-                                width: '100%',
-                                height: '100%',
-                                border: 0,
-                            }}
-                        />
-                    </div>
-                ))}
-            </div>
+            {/* ── Vidéos de présentation (une principale + teasers cliquables) ─ */}
+            <VideoGallery videos={[
+                { id: 'PUdb3Z739rk', title: t('pages.presentation.video1Title') },
+                { id: '_cJts9dZzGM', title: t('pages.presentation.video2Title') },
+                { id: 'SaPKsZON5xI', title: t('pages.presentation.video3Title', 'Teaser Paléo-Énergétique 3') },
+                { id: 'KH5py0qhurk', title: t('pages.presentation.video4Title', 'Teaser Paléo-Énergétique 4') },
+            ]} />
 
             <h2 style={{ fontSize: '1.8rem', marginTop: '40px', marginBottom: '20px' }}>{t('pages.presentation.mission')}</h2>
             <p>{t('pages.presentation.missionBody')}</p>
