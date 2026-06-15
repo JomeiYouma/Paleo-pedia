@@ -13,7 +13,7 @@
  * et bascule sur le diagramme 2D si WebGL est absent ou si l'utilisateur
  * préfère réduire les animations.
  */
-import React, { useRef, useMemo, useState, useEffect } from 'react';
+import React, { useRef, useMemo, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Html, Stars } from '@react-three/drei';
 import { useNavigate } from 'react-router-dom';
@@ -30,54 +30,26 @@ const useNodeNavigate = () => {
 
 const setCursor = (v) => { document.body.style.cursor = v; };
 
-// Photo appliquée en texture sur le cœur central. Déposer le fichier dans
-// public/photos/ (servi à /photos/...). Absent → cœur sombre par défaut.
-const HUB_TEXTURE_URL = '/photos/hub.jpg';
-
 // ── Cœur central (le hub) ─────────────────────────────────────
 const Core = ({ hub, onActivate }) => {
-    // Chargement impératif (pas de Suspense) : si le fichier manque, on garde
-    // le cœur sombre sans planter la scène. La texture est appliquée en map ET
-    // emissiveMap pour conserver l'effet « cœur lumineux ».
-    const [tex, setTex] = useState(null);
     // Titre estompé par défaut, plein au survol du cœur OU du titre.
     const [meshHover, setMeshHover] = useState(false);
     const [labelHover, setLabelHover] = useState(false);
     const hovered = meshHover || labelHover;
-    useEffect(() => {
-        let alive = true;
-        new THREE.TextureLoader().load(
-            HUB_TEXTURE_URL,
-            (t) => { if (alive) { t.colorSpace = THREE.SRGBColorSpace; setTex(t); } },
-            undefined,
-            () => { /* fichier absent : repli silencieux sur le cœur sombre */ }
-        );
-        return () => { alive = false; };
-    }, []);
 
     return (
         <group>
             {/* lumière émise par le cœur, qui éclaire les planètes */}
             <pointLight position={[0, 0, 0]} intensity={1.4} distance={40} decay={0} color="#fff5e6" />
 
-            {/* sphère du cœur (photo en texture si disponible) */}
+            {/* sphère sombre lumineuse */}
             <mesh
                 onClick={(e) => { e.stopPropagation(); onActivate(hub.href, hub.external); }}
                 onPointerOver={(e) => { e.stopPropagation(); setCursor('pointer'); setMeshHover(true); }}
                 onPointerOut={() => { setCursor('auto'); setMeshHover(false); }}
             >
                 <sphereGeometry args={[1.3, 48, 48]} />
-                {/* key force le recompile du matériau quand la texture arrive */}
-                <meshStandardMaterial
-                    key={tex ? 'textured' : 'plain'}
-                    color={tex ? '#ffffff' : '#2b2b2e'}
-                    map={tex || undefined}
-                    emissive={tex ? '#ffffff' : '#9a9aa0'}
-                    emissiveMap={tex || undefined}
-                    emissiveIntensity={tex ? 0.4 : 0.22}
-                    roughness={0.6}
-                    metalness={0.1}
-                />
+                <meshStandardMaterial color="#2b2b2e" emissive="#9a9aa0" emissiveIntensity={0.22} roughness={0.55} metalness={0.15} />
             </mesh>
 
             {/* halo lumineux (sphère additive transparente) */}
