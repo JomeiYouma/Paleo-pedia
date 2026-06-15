@@ -30,6 +30,17 @@ const detectSourceType = (subsite) => {
     return 'category';
 };
 
+// Types de planète pour la vitrine Paléo-Pédia (doit rester synchronisé avec
+// PLANET_TYPES dans components/pedia/Ecosystem3D.jsx). '' = automatique.
+const PLANET_TYPE_OPTIONS = [
+    { key: 'wind',   label: 'Éoliennes' },
+    { key: 'forest', label: 'Forêt' },
+    { key: 'solar',  label: 'Panneaux solaires' },
+    { key: 'rocky',  label: 'Minéral / rocheux' },
+    { key: 'icy',    label: 'Glacé (avec anneau)' },
+    { key: 'lush',   label: 'Mixte (forêt + éoliennes)' },
+];
+
 const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = true }) => {
     const isEdit = !!subsite;
     const { t } = useTranslation();
@@ -40,6 +51,7 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
     const [categoryId,    setCategoryId]    = useState(subsite?.category_id   ?? '');
     const [workshopId,    setWorkshopId]    = useState(subsite?.workshop_id   ?? '');
     const [primaryColor,  setPrimaryColor]  = useState(subsite?.primary_color ?? '#4A90D9');
+    const [planetType,    setPlanetType]    = useState(subsite?.planet_type   ?? '');
     const [blocks,        setBlocks]        = useState(subsite?.content_blocks ?? []);
     const [blocksEn,      setBlocksEn]      = useState(subsite?.content_blocks_en ?? []);
     const [blockLang,     setBlockLang]     = useState('fr');
@@ -89,6 +101,7 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
         try {
             const payload = {
                 primary_color: primaryColor,
+                planet_type: planetType || null,
                 content_blocks: blocks,
                 content_blocks_en: blocksEn,
                 primary_partner_ids: primaryPartnerIds,
@@ -215,6 +228,22 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
                             </div>
                         </section>
                     )}
+
+                    {/* Type de planète (apparence dans la vitrine Paléo-Pédia) */}
+                    <section>
+                        <h3 style={{ margin: '0 0 8px', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', color: '#aaa', letterSpacing: '0.5px' }}>
+                            {t('subsiteEditor.planetHeading', 'Planète (vitrine Paléo-Pédia)')}
+                        </h3>
+                        <p style={{ margin: '0 0 10px', fontSize: '0.78rem', color: '#999', lineHeight: 1.4 }}>
+                            {t('subsiteEditor.planetHint', "Apparence de ce sous-site sur la page Paléo-Pédia. « Automatique » varie selon la position dans l'écosystème.")}
+                        </p>
+                        <select value={planetType} onChange={e => setPlanetType(e.target.value)} style={inputStyle}>
+                            <option value="">{t('subsiteEditor.planetAuto', 'Automatique')}</option>
+                            {PLANET_TYPE_OPTIONS.map(o => (
+                                <option key={o.key} value={o.key}>{o.label}</option>
+                            ))}
+                        </select>
+                    </section>
 
                     {/* Blocs de contenu (bilingue : FR + EN optionnel) */}
                     <section>

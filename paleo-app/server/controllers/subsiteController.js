@@ -13,8 +13,8 @@ import { SubsiteModel } from '../models/Subsite.js';
 import { dispatchEvent } from '../services/eventDispatcher.js';
 const dispatch = (args) => { dispatchEvent(args).catch(() => {}); };
 
-const SUPERADMIN_EDITABLE = ['name', 'primary_color', 'content_blocks', 'content_blocks_en', 'slug'];
-const OWNER_EDITABLE      = ['primary_color', 'content_blocks', 'content_blocks_en'];
+const SUPERADMIN_EDITABLE = ['name', 'primary_color', 'planet_type', 'content_blocks', 'content_blocks_en', 'slug'];
+const OWNER_EDITABLE      = ['primary_color', 'planet_type', 'content_blocks', 'content_blocks_en'];
 
 export const SubsiteController = {
 
@@ -35,7 +35,7 @@ export const SubsiteController = {
 
   async create(req, res) {
     try {
-      const { slug, name, category_id, workshop_id, primary_color, content_blocks, content_blocks_en, partner_ids, primary_partner_ids } = req.body;
+      const { slug, name, category_id, workshop_id, primary_color, planet_type, content_blocks, content_blocks_en, partner_ids, primary_partner_ids } = req.body;
       if (!slug || !name) {
         return res.status(400).json({ error: 'slug et name sont requis' });
       }
@@ -51,7 +51,7 @@ export const SubsiteController = {
         slug, name,
         category_id: hasCategory ? category_id : null,
         workshop_id: hasWorkshop ? workshop_id : null,
-        primary_color, content_blocks, content_blocks_en,
+        primary_color, planet_type, content_blocks, content_blocks_en,
       });
       if (partner_ids !== undefined || primary_partner_ids !== undefined) {
         await SubsiteModel.setPartners(subsite.id, {

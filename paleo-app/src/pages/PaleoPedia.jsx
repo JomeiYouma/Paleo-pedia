@@ -1,17 +1,24 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Boxes, Square } from 'lucide-react';
 import { HOST_TO_SUBSITE_SLUG } from '../utils/subsiteHost';
 import { usePageMeta } from '../hooks/usePageMeta';
+import api from '../services/apiClient';
 
 // Vitrine "paleo-pedia" : page d'entrée qui présente l'écosystème Paléo
 // (programme central + sous-sites thématiques). Servie pour l'instant sur
 // /pedia ; quand paleo-energetique.org sera acquis, elle prendra la racine
 // de paleo-pedia.org (cf. memory site-architecture).
 //
-// Mise en page : le schéma cliquable est le PREMIER élément, mis en avant.
-// La présentation textuelle vient en dessous. Palette neutre (gris foncé /
-// blanc) sans jaune accent, pour bien démarquer pedia du programme principal.
+// L'écosystème est présenté en 3D (WebGL, « système solaire ») quand le
+// navigateur le permet ; sinon (ou si l'utilisateur préfère réduire les
+// animations) on retombe sur le diagramme 2D, qui reste la version de
+// référence pour l'accessibilité et le SEO.
+
+// Scène 3D chargée en lazy : embarque three.js, ne doit jamais entrer dans
+// le bundle principal. Vite la découpe en chunk séparé, téléchargé seulement
+// quand la 3D est réellement affichée.
+const Ecosystem3D = lazy(() => import('../components/pedia/Ecosystem3D'));
 
 // Hub central : le programme principal. Tant que paleo-energetique.org
 // n'existe pas, son contenu vit à la racine de paleo-pedia.org → on pointe
@@ -24,21 +31,47 @@ const HUB = {
     external: false,
 };
 
-// Sous-sites en orbite. Dérivés de HOST_TO_SUBSITE_SLUG (les hôtes "www."
-// sont filtrés pour ne garder que l'apex canonique) afin que l'ajout d'un
-// nouveau sous-site avec domaine dédié apparaisse ici sans modifier ce fichier.
-const SUBSITES = Object.entries(HOST_TO_SUBSITE_SLUG)
+// Carte slug → domaine dédié (premier hôte non-"www."). Un sous-site qui
+// possède un domaine dédié est lié vers https://<host> (externe) ; les autres,
+// créés sans domaine, sont accessibles via /site/<slug> sur le site principal.
+const SLUG_TO_HOST = Object.entries(HOST_TO_SUBSITE_SLUG)
     .filter(([host]) => !host.startsWith('www.'))
-    .map(([host, slug]) => ({ host, slug }));
+    .reduce((acc, [host, slug]) => { if (!acc[slug]) acc[slug] = host; return acc; }, {});
 
-// Position des orbites autour du hub, sur un cercle. Un seul sous-site →
-// à droite (angle 0). Deux → opposés. Trois et plus → répartis uniformément.
+// Position des orbites autour du hub, sur un cercle (diagramme 2D). Un seul
+// sous-site → à droite (angle 0). Deux → opposés. Trois et plus → répartis
+// uniformément.
 function orbitCoords(index, count, radius = 38) {
     const angle = (index / Math.max(count, 1)) * 2 * Math.PI;
     return {
         x: 50 + radius * Math.cos(angle),
         y: 50 + radius * Math.sin(angle),
     };
+}
+
+// Détection WebGL (sans monter de contexte coûteux).
+function supportsWebGL() {
+    try {
+        const canvas = document.createElement('canvas');
+        return !!(window.WebGLRenderingContext &&
+            (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+    } catch {
+        return false;
+    }
+}
+
+// Suit la préférence "réduire les animations" (et ses changements à chaud).
+// SPA client pur (pas de SSR) → on peut lire matchMedia dès l'init.
+function usePrefersReducedMotion() {
+    const [reduced, setReduced] = useState(() =>
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    useEffect(() => {
+        const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const onChange = () => setReduced(mq.matches);
+        mq.addEventListener('change', onChange);
+        return () => mq.removeEventListener('change', onChange);
+    }, []);
+    return reduced;
 }
 
 const PaleoPedia = () => {
@@ -48,6 +81,30 @@ const PaleoPedia = () => {
         description: "Paleo Pedia — l'écosystème de recherche Paléo : programme principal Paléo-Énergétique et sous-sites thématiques.",
         path: '/pedia',
     });
+
+    // Tous les sous-sites de la base (endpoint public). Chacun devient une
+    // planète, qu'il ait un domaine dédié ou non.
+    const [subsiteList, setSubsiteList] = useState([]);
+    useEffect(() => {
+        let alive = true;
+        api.subsites.getAll()
+            .then(list => { if (alive && Array.isArray(list)) setSubsiteList(list); })
+            .catch(() => { /* repli : aucun sous-site affiché */ });
+        return () => { alive = false; };
+    }, []);
+
+    const orbits = useMemo(() => subsiteList.map(s => {
+        const host = SLUG_TO_HOST[s.slug] || null;
+        return {
+            slug: s.slug,
+            name: s.name || s.slug,
+            color: s.primary_color || null,
+            planetType: s.planet_type || null,          // type choisi (sinon auto)
+            host,                                       // domaine dédié éventuel
+            href: host ? `https://${host}` : `/site/${s.slug}`,
+            external: !!host,
+        };
+    }), [subsiteList]);
 
     return (
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 64px' }}>
@@ -70,7 +127,7 @@ const PaleoPedia = () => {
                     Cliquez sur un domaine pour le visiter.
                 </p>
 
-                <EcosystemDiagram />
+                <EcosystemShowcase hub={HUB} orbits={orbits} />
             </section>
 
             <section aria-labelledby="intro-heading" style={{
@@ -101,13 +158,105 @@ const PaleoPedia = () => {
     );
 };
 
+// ════════════════════════════════════════════════════════════════
+// Vitrine de l'écosystème : 3D (WebGL) si possible, sinon 2D.
+// ════════════════════════════════════════════════════════════════
+const EcosystemShowcase = ({ hub, orbits }) => {
+    const reducedMotion = usePrefersReducedMotion();
+    // SPA client pur → la détection WebGL peut se faire dès l'init.
+    const [canUse3D] = useState(() => supportsWebGL());
+    // mode : 'auto' (3D si possible & pas reduced-motion) · '3d' · '2d' (forcés)
+    const [mode, setMode] = useState('auto');
+
+    const show3D = canUse3D && (mode === '3d' || (mode === 'auto' && !reducedMotion));
+
+    return (
+        <div style={{ position: 'relative', maxWidth: 760, margin: '0 auto' }}>
+            {/* Bascule 3D / 2D — proposée seulement si la 3D est possible */}
+            {canUse3D && (
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
+                    <button
+                        type="button"
+                        onClick={() => setMode(show3D ? '2d' : '3d')}
+                        aria-pressed={show3D}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 8,
+                            padding: '8px 16px', borderRadius: 999,
+                            border: '1px solid var(--color-border)',
+                            background: 'var(--color-surface)',
+                            color: 'var(--color-text)',
+                            cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600,
+                        }}
+                    >
+                        {show3D
+                            ? (<><Square size={15} aria-hidden="true" /> Vue simplifiée (2D)</>)
+                            : (<><Boxes size={15} aria-hidden="true" /> Vue 3D</>)}
+                    </button>
+                </div>
+            )}
+
+            {show3D ? (
+                <>
+                    <div style={{
+                        width: '100%',
+                        height: 'clamp(360px, 56vh, 560px)',
+                        borderRadius: 16,
+                        overflow: 'hidden',
+                        background: '#0e0e12',
+                        border: '1px solid var(--color-border)',
+                        boxShadow: '0 18px 48px rgba(0,0,0,0.18)',
+                    }}>
+                        {/* Pendant le téléchargement du chunk three.js, on affiche
+                            le diagramme 2D (repli utile et accessible). */}
+                        <Suspense fallback={<Loading3D />}>
+                            <Ecosystem3D hub={hub} orbits={orbits} reducedMotion={reducedMotion} />
+                        </Suspense>
+                    </div>
+                    {/* Liens réels masqués visuellement : SEO + lecteurs d'écran,
+                        puisque le contenu du canvas n'est pas fiablement exposé. */}
+                    <nav aria-label="Domaines de l'écosystème Paléo" style={SR_ONLY}>
+                        <ul>
+                            <li>
+                                <a href={hub.href} {...(hub.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+                                    {hub.host} — {hub.description}
+                                </a>
+                            </li>
+                            {orbits.map(o => (
+                                <li key={o.slug}>
+                                    <a href={o.href} {...(o.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+                                        {o.name}{o.host ? ` (${o.host})` : ''}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    </nav>
+                </>
+            ) : (
+                <EcosystemDiagram2D hub={hub} orbits={orbits} />
+            )}
+        </div>
+    );
+};
+
+const Loading3D = () => (
+    <div style={{
+        width: '100%', height: '100%',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem',
+        background: '#0e0e12',
+    }}>
+        Chargement de la vue 3D…
+    </div>
+);
+
+// ── Diagramme 2D (repli accessible) ───────────────────────────
 // Schéma cliquable : hub au centre, orbites positionnées sur un cercle
-// derrière une couche SVG qui dessine les liaisons. Le ratio est paysage
-// (16/9) pour limiter la hauteur — on évite que la vitrine ne demande
-// trop de scroll. Le SVG est étiré (preserveAspectRatio="none") pour que
-// les liaisons restent collées aux pastilles malgré la forme non carrée.
-const EcosystemDiagram = () => {
-    const orbits = SUBSITES.map((s, i) => ({ ...s, ...orbitCoords(i, SUBSITES.length) }));
+// derrière une couche SVG qui dessine les liaisons. Ratio paysage (16/9)
+// pour limiter la hauteur. Le SVG est étiré (preserveAspectRatio="none")
+// pour que les liaisons restent collées aux pastilles malgré la forme non
+// carrée.
+const EcosystemDiagram2D = ({ hub, orbits }) => {
+    const placed = orbits.map((o, i) => ({ ...o, ...orbitCoords(i, orbits.length) }));
 
     return (
         <div style={{
@@ -123,7 +272,7 @@ const EcosystemDiagram = () => {
                 aria-hidden="true"
                 style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
             >
-                {orbits.map((o, i) => (
+                {placed.map((o, i) => (
                     <line
                         key={i}
                         x1="50" y1="50"
@@ -135,10 +284,10 @@ const EcosystemDiagram = () => {
             </svg>
 
             <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
-                <HubNode {...HUB} />
+                <HubNode {...hub} />
             </div>
 
-            {orbits.map(orbit => (
+            {placed.map(orbit => (
                 <div
                     key={orbit.slug}
                     style={{
@@ -148,7 +297,7 @@ const EcosystemDiagram = () => {
                         transform: 'translate(-50%, -50%)',
                     }}
                 >
-                    <OrbitNode host={orbit.host} />
+                    <OrbitNode href={orbit.href} external={orbit.external} name={orbit.name} color={orbit.color} />
                 </div>
             ))}
         </div>
@@ -199,11 +348,11 @@ const HubNode = ({ host, description, href, external }) => (
 );
 
 // Orbite : pastille claire, texte foncé. Contraste #1a1a1a sur #ffffff = 17.4:1.
-const OrbitNode = ({ host }) => (
+// Le liseré reprend la couleur du sous-site (cohérent avec la 3D).
+const OrbitNode = ({ href, external, name, color }) => (
     <a
-        href={`https://${host}`}
-        target="_blank"
-        rel="noopener noreferrer"
+        href={href}
+        {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
         style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -211,7 +360,7 @@ const OrbitNode = ({ host }) => (
             padding: '14px 20px',
             borderRadius: 999,
             background: 'var(--color-surface)',
-            border: '1px solid var(--color-border)',
+            border: `1px solid ${color || 'var(--color-border)'}`,
             color: 'var(--color-text)',
             textDecoration: 'none',
             fontWeight: 600,
@@ -222,20 +371,23 @@ const OrbitNode = ({ host }) => (
         }}
         onMouseEnter={e => {
             e.currentTarget.style.background = 'var(--color-primary-soft)';
-            e.currentTarget.style.borderColor = 'var(--color-primary)';
             e.currentTarget.style.transform = 'translateY(-2px)';
             e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.10)';
         }}
         onMouseLeave={e => {
             e.currentTarget.style.background = 'var(--color-surface)';
-            e.currentTarget.style.borderColor = 'var(--color-border)';
             e.currentTarget.style.transform = '';
             e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)';
         }}
     >
-        {host}
-        <ExternalLink size={14} aria-hidden="true" />
+        {name}
+        {external && <ExternalLink size={14} aria-hidden="true" />}
     </a>
 );
+
+const SR_ONLY = {
+    position: 'absolute', width: 1, height: 1, padding: 0, margin: -1,
+    overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0,
+};
 
 export default PaleoPedia;

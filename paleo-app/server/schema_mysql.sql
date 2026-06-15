@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS `subsites` (
   `category_id`    VARCHAR(64)   NULL DEFAULT NULL,
   `workshop_id`    CHAR(36)      NULL DEFAULT NULL,
   `primary_color`  VARCHAR(16)   NOT NULL DEFAULT '#D65A5A',
+  `planet_type`    VARCHAR(16)   NULL DEFAULT NULL,        -- vitrine pedia : wind|forest|solar|rocky|icy|lush (NULL = auto)
   `logo_path`      VARCHAR(512)  NULL DEFAULT NULL,
   `content_blocks` LONGTEXT      NULL DEFAULT NULL,      -- JSON array de blocs (FR)
   `content_blocks_en` LONGTEXT   NULL DEFAULT NULL,      -- JSON array de blocs (EN, optionnel — fallback FR)

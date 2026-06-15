@@ -81,12 +81,12 @@ export const SubsiteModel = {
   },
 
   /** Créer un sous-site (mode catégorie OU mode atelier — XOR appliqué côté controller) */
-  async create({ slug, name, category_id = null, workshop_id = null, primary_color = '#D65A5A', content_blocks = [], content_blocks_en = [] }) {
+  async create({ slug, name, category_id = null, workshop_id = null, primary_color = '#D65A5A', planet_type = null, content_blocks = [], content_blocks_en = [] }) {
     const id = crypto.randomUUID();
     await pool.query(
-      `INSERT INTO subsites (id, slug, name, category_id, workshop_id, primary_color, content_blocks, content_blocks_en)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, slug, name, category_id, workshop_id, primary_color, JSON.stringify(content_blocks), JSON.stringify(content_blocks_en)]
+      `INSERT INTO subsites (id, slug, name, category_id, workshop_id, primary_color, planet_type, content_blocks, content_blocks_en)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, slug, name, category_id, workshop_id, primary_color, planet_type || null, JSON.stringify(content_blocks), JSON.stringify(content_blocks_en)]
     );
     return this.findBySlug(slug);
   },
