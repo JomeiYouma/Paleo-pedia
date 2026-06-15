@@ -72,22 +72,40 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
         if (c) lastSelectedIdRef.current = c.id;
     }, [selectedIndex, validCartels]);
 
-    // Résout la sélection : targetId explicite > cartel précédent si toujours
-    // dans la liste > premier cartel. Sans ce fallback, selectedIndex peut
-    // devenir hors bornes après un filtre et plus aucun cartel ne s'affiche.
+    // Position partageable par URL : ?at=<id>. Capturée une seule fois au montage
+    // (on n'y réagit pas ensuite, pour ne pas boucler avec nos propres écritures).
+    const initialAtRef = useRef(new URLSearchParams(location.search).get('at'));
+
+    // Résout la sélection : targetId (#cartel-, retour d'édition) > ?at= (lien
+    // partagé) > cartel précédent > premier. Le fallback évite un selectedIndex
+    // hors bornes après un filtre (sinon plus aucun cartel ne s'affiche).
     useEffect(() => {
         if (!validCartels.length) return;
-        if (targetId) {
-            const idx = validCartels.findIndex(c => c.id === targetId);
-            if (idx !== -1) { setSelectedIndex(idx); return; }
-        }
-        const prevId = lastSelectedIdRef.current;
-        if (prevId) {
-            const idx = validCartels.findIndex(c => c.id === prevId);
-            if (idx !== -1) { setSelectedIndex(idx); return; }
-        }
+        const pick = (id) => {
+            if (id == null) return false;
+            const idx = validCartels.findIndex(c => String(c.id) === String(id));
+            if (idx !== -1) { setSelectedIndex(idx); return true; }
+            return false;
+        };
+        if (targetId && pick(targetId)) return;
+        if (initialAtRef.current && pick(initialAtRef.current)) { initialAtRef.current = null; return; }
+        if (lastSelectedIdRef.current && pick(lastSelectedIdRef.current)) return;
         setSelectedIndex(0);
     }, [targetId, validCartels]);
+
+    // Écrit la position courante dans l'URL (?at=<id>, en replace) à chaque
+    // déplacement → le lien partagé rouvre la frise sur CE cartel. On saute la
+    // résolution initiale pour ne pas écrire au simple chargement.
+    const didInitWriteRef = useRef(false);
+    useEffect(() => {
+        const c = validCartels[selectedIndex];
+        if (!c) return;
+        if (!didInitWriteRef.current) { didInitWriteRef.current = true; return; }
+        const params = new URLSearchParams(location.search);
+        if (params.get('at') === String(c.id)) return;
+        params.set('at', String(c.id));
+        navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+    }, [selectedIndex, validCartels]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Initialization Effect (Draws Axis, Zoom, Markers initially)
     useEffect(() => {
