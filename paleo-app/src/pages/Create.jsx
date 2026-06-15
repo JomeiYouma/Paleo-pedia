@@ -87,6 +87,7 @@ const Create = () => {
 
     const [imageFile, setImageFile] = useState(null);
     const [newCategory, setNewCategory] = useState('');
+    const [showAllCats, setShowAllCats] = useState(false);
     const [newWorkshop, setNewWorkshop] = useState('');
     const [geoStatus, setGeoStatus] = useState('idle');
     const [isSaving, setIsSaving] = useState(false);
@@ -745,39 +746,73 @@ const Create = () => {
                     <p style={{ margin: '0 0 8px', fontSize: '0.82rem', color: 'var(--color-text-subtle)' }}>
                         {t('create.fieldCategoriesHint', 'Cliquez sur les catégories correspondantes.')}
                     </p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
-                        {Array.from(new Set([
-                            // Les catégories globales sont des objets {id, name, ...} → on extrait .name
+                    {(() => {
+                        const allCatNames = Array.from(new Set([
+                            // Catégories globales = objets {id, name, ...} → on extrait .name
                             ...(globalCats || []).map(c => (typeof c === 'object' ? c.name : c)),
-                            ...(form.categories || [])
-                        ])).map(catName => {
-                            const active = (form.categories || []).includes(catName);
-                            return (
-                                <button
-                                    type="button"
-                                    key={catName}
-                                    onClick={() => handleCategoryToggle(catName)}
-                                    aria-pressed={active}
-                                    style={{
-                                        backgroundColor: active ? 'var(--color-primary)' : 'var(--color-surface)',
-                                        color: active ? 'var(--color-white)' : 'var(--color-text)',
-                                        border: `1px solid ${active ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                                        borderRadius: '999px',
-                                        fontFamily: 'var(--font-heading)',
-                                        fontSize: '0.78rem',
-                                        fontWeight: '700',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.4px',
-                                        padding: '5px 12px',
-                                        cursor: 'pointer',
-                                        transition: 'background-color 0.12s, color 0.12s, border-color 0.12s',
-                                    }}
-                                >
-                                    {catName}
-                                </button>
-                            );
-                        })}
-                    </div>
+                            ...(form.categories || []),
+                        ]));
+                        const LIMIT = 12;
+                        const collapsed = !showAllCats && allCatNames.length > LIMIT;
+                        // En replié : on garde les premières + TOUJOURS les sélectionnées.
+                        const shown = collapsed
+                            ? allCatNames.filter((n, i) => i < LIMIT || (form.categories || []).includes(n))
+                            : allCatNames;
+                        const hiddenCount = allCatNames.length - shown.length;
+                        return (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
+                                {shown.map(catName => {
+                                    const active = (form.categories || []).includes(catName);
+                                    return (
+                                        <button
+                                            type="button"
+                                            key={catName}
+                                            onClick={() => handleCategoryToggle(catName)}
+                                            aria-pressed={active}
+                                            style={{
+                                                backgroundColor: active ? 'var(--color-primary)' : 'var(--color-surface)',
+                                                color: active ? 'var(--color-white)' : 'var(--color-text)',
+                                                border: `1px solid ${active ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                                                borderRadius: '999px',
+                                                fontFamily: 'var(--font-heading)',
+                                                fontSize: '0.78rem',
+                                                fontWeight: '700',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '0.4px',
+                                                padding: '5px 12px',
+                                                cursor: 'pointer',
+                                                transition: 'background-color 0.12s, color 0.12s, border-color 0.12s',
+                                            }}
+                                        >
+                                            {catName}
+                                        </button>
+                                    );
+                                })}
+                                {(collapsed || (showAllCats && allCatNames.length > LIMIT)) && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAllCats(v => !v)}
+                                        aria-expanded={!collapsed}
+                                        style={{
+                                            backgroundColor: 'transparent',
+                                            color: 'var(--color-primary)',
+                                            border: '1px dashed var(--color-border)',
+                                            borderRadius: '999px',
+                                            fontFamily: 'var(--font-heading)',
+                                            fontSize: '0.78rem',
+                                            fontWeight: '700',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.4px',
+                                            padding: '5px 12px',
+                                            cursor: 'pointer',
+                                        }}
+                                    >
+                                        {collapsed ? `+${hiddenCount}` : t('create.showLessCategories', 'Réduire')}
+                                    </button>
+                                )}
+                            </div>
+                        );
+                    })()}
                     <div style={{ display: 'flex', gap: '6px' }}>
                         <input placeholder={t('common.otherCategory')} value={newCategory} onChange={e => setNewCategory(e.target.value)} style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--color-border)', fontFamily: 'inherit', fontSize: '0.9rem' }} />
                         <button type="button" onClick={handleAddCategory} style={{ padding: '8px 14px', borderRadius: '6px', border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: '0.78rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('common.add')}</button>

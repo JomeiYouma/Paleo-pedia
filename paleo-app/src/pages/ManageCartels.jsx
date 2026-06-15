@@ -184,7 +184,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     const parseCsvParam = (raw) => (raw ? raw.split(',').map(s => s.trim()).filter(Boolean) : []);
     const [filterCategories,   setFilterCategories]   = useState(() => parseCsvParam(searchParams.get('cat')));
     const [filterCategoriesOp, setFilterCategoriesOp] = useState('OR');
-    const [filterWorkshops,    setFilterWorkshops]    = useState(() => (workshopId ? [String(workshopId)] : []));
+    const [filterWorkshops,    setFilterWorkshops]    = useState(() => (workshopId ? [String(workshopId)] : parseCsvParam(searchParams.get('ws'))));
     const [filterWorkshopsOp,  setFilterWorkshopsOp]  = useState('OR');
     // Si intégré dans un sous-site, le filtre est verrouillé sur ce sous-site et
     // ignore le query param. Sinon on lit ?subsite= depuis l'URL.
@@ -277,8 +277,10 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     }, []);
 
     React.useEffect(() => {
-        setFilterWorkshops(workshopId ? [String(workshopId)] : []);
-    }, [workshopId]);
+        // Le filtre atelier vient du param de route (/workshop/:id) ou de l'URL
+        // (?ws=A,B). Persisté dans l'URL → survit à l'édition d'un cartel + retour.
+        setFilterWorkshops(workshopId ? [String(workshopId)] : parseCsvParam(searchParams.get('ws')));
+    }, [workshopId, location.search]);
 
     // Sync filterCategories avec l'URL (?cat=A,B) pour survivre aux navigations.
     // Format CSV : compatible avec l'ancien ?cat=A (un seul nom = tableau de 1).
@@ -287,6 +289,16 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
         const next = new URLSearchParams(searchParams);
         if (cats.length) next.set('cat', cats.join(','));
         else next.delete('cat');
+        setSearchParams(next, { replace: true });
+    };
+
+    // Idem pour les ateliers (?ws=A,B) — corrige la perte du filtre atelier au
+    // retour d'édition d'un cartel (rememberReturn capture l'URL, donc le filtre).
+    const handleSetFilterWorkshops = (ws) => {
+        setFilterWorkshops(ws);
+        const next = new URLSearchParams(searchParams);
+        if (ws.length) next.set('ws', ws.join(','));
+        else next.delete('ws');
         setSearchParams(next, { replace: true });
     };
 
@@ -1016,7 +1028,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                     label={t('manageCartels.allWorkshops')}
                     options={workshops.map(w => ({ value: w.id, label: w.name }))}
                     selected={filterWorkshops}
-                    onChange={setFilterWorkshops}
+                    onChange={handleSetFilterWorkshops}
                     op={filterWorkshopsOp}
                     onOpChange={setFilterWorkshopsOp}
                     opLabels={{ or: t('filters.or', 'OU'), and: t('filters.and', 'ET') }}
