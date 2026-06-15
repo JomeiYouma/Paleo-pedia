@@ -101,10 +101,16 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
         const c = validCartels[selectedIndex];
         if (!c) return;
         if (!didInitWriteRef.current) { didInitWriteRef.current = true; return; }
-        const params = new URLSearchParams(location.search);
-        if (params.get('at') === String(c.id)) return;
-        params.set('at', String(c.id));
-        navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+        // Debounce : on n'écrit qu'après ~300 ms sans nouveau déplacement, pour
+        // ne pas spammer history.replaceState (limité par les navigateurs) quand
+        // on scrute la frise rapidement (flèches maintenues).
+        const tid = setTimeout(() => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('at') === String(c.id)) return;
+            params.set('at', String(c.id));
+            navigate(`${window.location.pathname}?${params.toString()}`, { replace: true });
+        }, 300);
+        return () => clearTimeout(tid);
     }, [selectedIndex, validCartels]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Initialization Effect (Draws Axis, Zoom, Markers initially)
