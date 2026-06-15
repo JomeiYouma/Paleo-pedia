@@ -36,7 +36,7 @@ const injectCartelMeta = (html, cartel, pageUrl, base) => {
   const desc = escapeHtml(descRaw.length > 200 ? descRaw.slice(0, 197) + '…' : descRaw);
   const img = absoluteImageUrl(base, cartel.image_path);
   const tags = [
-    `<title>${title} — Paléo-Énergétique</title>`,
+    `<title>${title} Paléo-Énergétique</title>`,
     `<meta name="description" content="${desc}" />`,
     `<meta property="og:type" content="article" />`,
     `<meta property="og:site_name" content="Paléo-Énergétique" />`,

@@ -44,7 +44,7 @@ const MethodoSection = () => (
             color: 'var(--color-text-muted)',
         }}>
             Paléo-Énergétique recense, documente et remet en lumière des techniques
-            énergétiques anciennes ou méconnues — pour montrer que l'innovation sobre,
+            énergétiques anciennes ou méconnues, pour montrer que l'innovation sobre,
             vernaculaire et décentralisée a une longue histoire dont nous pouvons
             réapprendre. Voici comment nous travaillons.
         </p>

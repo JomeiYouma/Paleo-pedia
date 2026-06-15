@@ -23,81 +23,63 @@ const PediaLayout = () => (
     </div>
 );
 
-const PediaHeader = () => {
-    // Page unique : la nav fait défiler vers les sections de l'accueil /pedia.
-    const scrollToId = (id) => {
-        const el = document.getElementById(id);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        else window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-    const navBtnStyle = {
-        background: 'none', border: 'none', padding: '2px 0', cursor: 'pointer',
-        fontFamily: 'var(--font-heading)', fontSize: '0.82rem', fontWeight: 700,
-        textTransform: 'uppercase', letterSpacing: '0.5px',
-        color: 'var(--color-text-muted)',
-    };
-    return (
-        <header style={{
-            background: 'var(--color-surface)',
-            borderBottom: '1px solid var(--color-border)',
-            position: 'sticky',
-            top: 0,
-            zIndex: 1000,
+const PediaHeader = () => (
+    <header style={{
+        background: 'var(--color-surface)',
+        borderBottom: '1px solid var(--color-border)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 1000,
+    }}>
+        <div style={{
+            maxWidth: 1200,
+            margin: '0 auto',
+            padding: '16px 28px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16,
         }}>
-            <div style={{
-                maxWidth: 1200,
-                margin: '0 auto',
-                padding: '16px 28px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 16,
-            }}>
-                <Link
-                    to="/pedia"
-                    style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 12 }}
-                    aria-label="Paléo-Pédia — accueil"
-                >
-                    <div style={{ width: 6, height: 32, background: 'var(--color-primary)', flexShrink: 0 }} />
-                    <span style={{
-                        fontFamily: 'var(--font-display)',
-                        fontSize: '1.25rem',
-                        fontWeight: 400,
-                        letterSpacing: '0.04em',
-                        textTransform: 'uppercase',
-                        color: 'var(--color-text)',
-                    }}>
-                        Paléo-Pédia
-                    </span>
-                </Link>
+            <Link
+                to="/pedia"
+                style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 12 }}
+                aria-label="Paléo-Pédia, accueil"
+            >
+                <div style={{ width: 6, height: 32, background: 'var(--color-primary)', flexShrink: 0 }} />
+                <span style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '1.25rem',
+                    fontWeight: 400,
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase',
+                    color: 'var(--color-text)',
+                }}>
+                    Paléo-Pédia
+                </span>
+            </Link>
+        </div>
+    </header>
+);
 
-                <nav aria-label="Navigation Paléo-Pédia" style={{ display: 'flex', gap: 22, alignItems: 'center' }}>
-                    <button type="button" onClick={() => scrollToId('ecosysteme')}
-                        onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-text)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--color-text-muted)'; }}
-                        style={navBtnStyle}>Écosystème</button>
-                    <button type="button" onClick={() => scrollToId('methodologie')}
-                        onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-text)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--color-text-muted)'; }}
-                        style={navBtnStyle}>Méthodologie</button>
-                </nav>
-            </div>
-        </header>
+const PediaFooter = () => {
+    const linkStyle = { color: 'var(--color-text-muted)', textDecoration: 'none' };
+    return (
+        <footer style={{
+            background: 'var(--color-primary-soft)',
+            borderTop: '1px solid var(--color-border)',
+            padding: '28px 24px',
+            marginTop: 'auto',
+            textAlign: 'center',
+            color: 'var(--color-text-muted)',
+            fontSize: '0.85rem',
+        }}>
+            <nav aria-label="Liens légaux" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 18px', justifyContent: 'center', marginBottom: 12 }}>
+                <Link to="/mentions-legales" style={linkStyle}>Mentions légales</Link>
+                <Link to="/politique-confidentialite" style={linkStyle}>Politique de confidentialité</Link>
+                <Link to="/contact" style={linkStyle}>Contact</Link>
+            </nav>
+            <div>© {new Date().getFullYear()} Atelier 21</div>
+        </footer>
     );
 };
-
-const PediaFooter = () => (
-    <footer style={{
-        background: 'var(--color-primary-soft)',
-        borderTop: '1px solid var(--color-border)',
-        padding: '32px 24px',
-        marginTop: 'auto',
-        textAlign: 'center',
-        color: 'var(--color-text-muted)',
-        fontSize: '0.85rem',
-    }}>
-        © {new Date().getFullYear()} Atelier 21
-    </footer>
-);
 
 export default PediaLayout;

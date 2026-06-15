@@ -10,7 +10,7 @@ const SITE_URL  = 'https://paleo-energetique.org';
  * On évite d'embarquer react-helmet pour ce besoin minimal — un effet
  * direct sur document.head suffit.
  *
- * Convention de titre : « <pageTitle> — Paléo-Énergétique ».
+ * Convention de titre : « <pageTitle> Paléo-Énergétique » (séparé par une espace).
  * Si aucun titre, on retombe sur le SITE_NAME seul.
  *
  * @param {{ title?: string, description?: string, path?: string }} opts
@@ -22,7 +22,7 @@ const SITE_URL  = 'https://paleo-energetique.org';
  */
 export function usePageMeta({ title, description, path } = {}) {
     useEffect(() => {
-        const fullTitle = title ? `${title} — ${SITE_NAME}` : SITE_NAME;
+        const fullTitle = title ? `${title} ${SITE_NAME}` : SITE_NAME;
         document.title = fullTitle;
 
         if (description) {

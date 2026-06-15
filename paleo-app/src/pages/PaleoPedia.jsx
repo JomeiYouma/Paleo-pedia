@@ -109,16 +109,41 @@ const PaleoPedia = () => {
 
     return (
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 64px' }}>
+            {/* Accroche + intro en tête de page (au-dessus du visuel) */}
+            <section aria-labelledby="intro-heading" style={{
+                maxWidth: 760,
+                margin: '0 auto 44px',
+                textAlign: 'center',
+            }}>
+                <h1 id="intro-heading" style={{
+                    margin: '0 0 18px',
+                    fontSize: 'clamp(1.6rem, 3.6vw, 2.2rem)',
+                    color: 'var(--color-text)',
+                    lineHeight: 1.2,
+                }}>
+                    {t('footer.tagline')}
+                </h1>
+                <p style={{
+                    margin: 0,
+                    fontSize: '1.02rem',
+                    lineHeight: 1.65,
+                    color: 'var(--color-text-muted)',
+                }}>
+                    {t('pages.presentation.intro')}
+                </p>
+            </section>
+
+            {/* Écosystème + visuel */}
             <section id="ecosysteme" aria-labelledby="ecosystem-heading" style={{ marginBottom: 48 }}>
-                <h1 id="ecosystem-heading" style={{
+                <h2 id="ecosystem-heading" style={{
                     textAlign: 'center',
                     margin: '0 0 6px',
-                    fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+                    fontSize: 'clamp(1.4rem, 3vw, 1.9rem)',
                     color: 'var(--color-text)',
                     lineHeight: 1.2,
                 }}>
                     L'écosystème Paléo
-                </h1>
+                </h2>
                 <p style={{
                     textAlign: 'center',
                     margin: '0 0 24px',
@@ -129,31 +154,6 @@ const PaleoPedia = () => {
                 </p>
 
                 <EcosystemShowcase hub={HUB} orbits={orbits} />
-            </section>
-
-            <section aria-labelledby="intro-heading" style={{
-                maxWidth: 760,
-                margin: '0 auto',
-                textAlign: 'center',
-                borderTop: '1px solid var(--color-border)',
-                paddingTop: 40,
-            }}>
-                <h2 id="intro-heading" style={{
-                    margin: '0 0 18px',
-                    fontSize: 'clamp(1.4rem, 3vw, 1.8rem)',
-                    color: 'var(--color-text)',
-                    lineHeight: 1.25,
-                }}>
-                    {t('footer.tagline')}
-                </h2>
-                <p style={{
-                    margin: 0,
-                    fontSize: '1.02rem',
-                    lineHeight: 1.65,
-                    color: 'var(--color-text-muted)',
-                }}>
-                    {t('pages.presentation.intro')}
-                </p>
             </section>
 
             {/* La méthodologie vient à la suite de l'écosystème (même page). */}
