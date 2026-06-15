@@ -159,6 +159,10 @@ const mainRouter = createBrowserRouter(
         <Route index element={<PaleoPedia />} />
         {/* La méthodo est désormais une section de l'accueil /pedia. */}
         <Route path="methodologie" element={<Navigate to="/pedia" replace />} />
+        {/* Pages globales rendues DANS le layout Pédia (header/footer propres). */}
+        <Route path="mentions-legales" element={<LegalNotices />} />
+        <Route path="politique-confidentialite" element={<PrivacyPolicy />} />
+        <Route path="contact" element={<Contact />} />
       </Route>
 
       {/* ── Sous-sites (/site/:slug/*) ────────────────── */}
@@ -170,6 +174,10 @@ const mainRouter = createBrowserRouter(
         <Route path="presentation"     element={<Presentation />} />
         <Route path="partenaires"      element={<SubsitePartners />} />
         <Route path="mentions"         element={<Presentation />} />
+        {/* Pages globales rendues DANS le layout du sous-site (header/footer propres). */}
+        <Route path="mentions-legales" element={<LegalNotices />} />
+        <Route path="politique-confidentialite" element={<PrivacyPolicy />} />
+        <Route path="contact"          element={<Contact />} />
         <Route path="admin"            element={<SubsiteAdmin />} />
         <Route path="admin/drafts"     element={<SubsiteAdmin />} />
         <Route path="admin/pending"    element={<SubsiteAdmin />} />
@@ -228,6 +236,10 @@ const subsiteHostRouter = hostSubsiteSlug ? createBrowserRouter(
         <Route path="presentation"     element={<Presentation />} />
         <Route path="partenaires"      element={<SubsitePartners />} />
         <Route path="mentions"         element={<Presentation />} />
+        {/* Pages globales rendues DANS le layout du sous-site (header/footer propres). */}
+        <Route path="mentions-legales" element={<LegalNotices />} />
+        <Route path="politique-confidentialite" element={<PrivacyPolicy />} />
+        <Route path="contact"          element={<Contact />} />
         <Route path="admin"            element={<SubsiteAdmin />} />
         <Route path="admin/drafts"     element={<SubsiteAdmin />} />
         <Route path="admin/pending"    element={<SubsiteAdmin />} />

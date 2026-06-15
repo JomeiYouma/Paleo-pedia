@@ -73,9 +73,9 @@ const PediaFooter = () => {
             fontSize: '0.85rem',
         }}>
             <nav aria-label="Liens légaux" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 18px', justifyContent: 'center', marginBottom: 12 }}>
-                <Link to="/mentions-legales" style={linkStyle}>Mentions légales</Link>
-                <Link to="/politique-confidentialite" style={linkStyle}>Politique de confidentialité</Link>
-                <Link to="/contact" style={linkStyle}>Contact</Link>
+                <Link to="/pedia/mentions-legales" style={linkStyle}>Mentions légales</Link>
+                <Link to="/pedia/politique-confidentialite" style={linkStyle}>Politique de confidentialité</Link>
+                <Link to="/pedia/contact" style={linkStyle}>Contact</Link>
             </nav>
             <div>© {new Date().getFullYear()} Atelier 21</div>
         </footer>

@@ -14,15 +14,16 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import SubsiteEditor from '../components/SubsiteEditor';
 import api from '../services/apiClient';
 import { rememberReturn } from '../utils/navigation';
-import { getHostSubsiteSlug, subsiteBasePath, MAIN_SITE_URL, mainSitePath } from '../utils/subsiteHost';
+import { getHostSubsiteSlug, subsiteBasePath, MAIN_SITE_URL } from '../utils/subsiteHost';
 
 // ── Contexte interne sous-site ────────────────────────────────
 export const SubsiteContext = createContext(null);
 export const useSubsite = () => useContext(SubsiteContext);
 
-// Lien du pied de page vers une page globale du site principal. `mainSitePath`
-// renvoie une URL absolue sur un host dédié (où ces routes n'existent pas) →
-// on rend alors un <a> ; sinon un <Link> pour la navigation SPA.
+// Lien de pied de page. Les pages globales (mentions, confidentialité, contact)
+// sont désormais rendues DANS le layout du sous-site via des chemins relatifs
+// (`${base}/...`) → toujours un <Link>. La branche <a> reste pour d'éventuels
+// liens absolus (http) passés en `to`.
 const FooterLink = ({ to, children }) => {
     const style = { color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', textDecoration: 'none' };
     return to.startsWith('http')
@@ -386,9 +387,9 @@ const SubsiteLayout = () => {
                                     <BookOpen size={14} /> {t('subsite.guide', "Guide d'utilisation")}
                                 </a>
                             )}
-                            <FooterLink to={mainSitePath('/mentions-legales')}>{t('subsite.legalNotices', 'Mentions légales')}</FooterLink>
-                            <FooterLink to={mainSitePath('/politique-confidentialite')}>{t('subsite.privacy', 'Politique de confidentialité')}</FooterLink>
-                            <FooterLink to={mainSitePath('/contact')}>{t('subsite.contact', 'Contact')}</FooterLink>
+                            <FooterLink to={`${base}/mentions-legales`}>{t('subsite.legalNotices', 'Mentions légales')}</FooterLink>
+                            <FooterLink to={`${base}/politique-confidentialite`}>{t('subsite.privacy', 'Politique de confidentialité')}</FooterLink>
+                            <FooterLink to={`${base}/contact`}>{t('subsite.contact', 'Contact')}</FooterLink>
                             <a href={MAIN_SITE_URL} style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem', textDecoration: 'none', marginTop: '8px' }}>
                                 {t('subsite.mainSiteLink', 'Accéder au site Paléo-Énergétique →')}
                             </a>

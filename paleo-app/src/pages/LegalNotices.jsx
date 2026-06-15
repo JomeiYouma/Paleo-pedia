@@ -15,7 +15,7 @@ const LegalNotices = () => {
             padding: '40px 24px 80px',
             color: 'var(--color-text)', lineHeight: 1.6,
         }}>
-            <Link to="/" style={{ color: 'var(--color-text-subtle)', textDecoration: 'none', fontSize: '0.88rem' }}>
+            <Link to=".." style={{ color: 'var(--color-text-subtle)', textDecoration: 'none', fontSize: '0.88rem' }}>
                 ← {t('legal.backHome')}
             </Link>
 
@@ -53,13 +53,13 @@ const LegalNotices = () => {
             <p>
                 {t('legal.contact.body')}{' '}
                 <a href="mailto:hello@atelier21.org" style={{ color: 'var(--color-primary)' }}>hello@atelier21.org</a>{' '}
-                — <Link to="/contact" style={{ color: 'var(--color-primary)' }}>{t('legal.contact.formLink')}</Link>.
+                <Link to="../contact" style={{ color: 'var(--color-primary)' }}>{t('legal.contact.formLink')}</Link>.
             </p>
 
             <h2 style={{ marginTop: '24px', fontSize: '1.15rem' }}>{t('legal.privacy.title')}</h2>
             <p>
                 {t('legal.privacy.body')}{' '}
-                <Link to="/politique-confidentialite" style={{ color: 'var(--color-primary)' }}>
+                <Link to="../politique-confidentialite" style={{ color: 'var(--color-primary)' }}>
                     {t('legal.privacy.linkLabel')}
                 </Link>.
             </p>

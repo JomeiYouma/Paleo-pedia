@@ -18,7 +18,7 @@ const PrivacyPolicy = () => {
             padding: '40px 24px 80px',
             color: '#222', lineHeight: 1.6,
         }}>
-            <Link to="/" style={{ color: '#888', textDecoration: 'none', fontSize: '0.88rem' }}>
+            <Link to=".." style={{ color: '#888', textDecoration: 'none', fontSize: '0.88rem' }}>
                 {t('privacy.backHome')}
             </Link>
 
