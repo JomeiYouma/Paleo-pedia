@@ -4,6 +4,7 @@ import { ExternalLink, Boxes, Square } from 'lucide-react';
 import { HOST_TO_SUBSITE_SLUG } from '../utils/subsiteHost';
 import { usePageMeta } from '../hooks/usePageMeta';
 import api from '../services/apiClient';
+import MethodoSection from '../components/pedia/MethodoSection';
 
 // Vitrine "paleo-pedia" : page d'entrée qui présente l'écosystème Paléo
 // (programme central + sous-sites thématiques). Servie pour l'instant sur
@@ -108,7 +109,7 @@ const PaleoPedia = () => {
 
     return (
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 64px' }}>
-            <section aria-labelledby="ecosystem-heading" style={{ marginBottom: 48 }}>
+            <section id="ecosysteme" aria-labelledby="ecosystem-heading" style={{ marginBottom: 48 }}>
                 <h1 id="ecosystem-heading" style={{
                     textAlign: 'center',
                     margin: '0 0 6px',
@@ -154,6 +155,9 @@ const PaleoPedia = () => {
                     {t('pages.presentation.intro')}
                 </p>
             </section>
+
+            {/* La méthodologie vient à la suite de l'écosystème (même page). */}
+            <MethodoSection />
         </div>
     );
 };
@@ -172,29 +176,6 @@ const EcosystemShowcase = ({ hub, orbits }) => {
 
     return (
         <div style={{ position: 'relative', maxWidth: 760, margin: '0 auto' }}>
-            {/* Bascule 3D / 2D — proposée seulement si la 3D est possible */}
-            {canUse3D && (
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
-                    <button
-                        type="button"
-                        onClick={() => setMode(show3D ? '2d' : '3d')}
-                        aria-pressed={show3D}
-                        style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 8,
-                            padding: '8px 16px', borderRadius: 999,
-                            border: '1px solid var(--color-border)',
-                            background: 'var(--color-surface)',
-                            color: 'var(--color-text)',
-                            cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600,
-                        }}
-                    >
-                        {show3D
-                            ? (<><Square size={15} aria-hidden="true" /> Vue simplifiée (2D)</>)
-                            : (<><Boxes size={15} aria-hidden="true" /> Vue 3D</>)}
-                    </button>
-                </div>
-            )}
-
             {show3D ? (
                 <>
                     <div style={{
@@ -206,14 +187,12 @@ const EcosystemShowcase = ({ hub, orbits }) => {
                         border: '1px solid var(--color-border)',
                         boxShadow: '0 18px 48px rgba(0,0,0,0.18)',
                     }}>
-                        {/* Pendant le téléchargement du chunk three.js, on affiche
-                            le diagramme 2D (repli utile et accessible). */}
+                        {/* Pendant le téléchargement du chunk three.js, repli 2D. */}
                         <Suspense fallback={<Loading3D />}>
                             <Ecosystem3D hub={hub} orbits={orbits} reducedMotion={reducedMotion} />
                         </Suspense>
                     </div>
-                    {/* Liens réels masqués visuellement : SEO + lecteurs d'écran,
-                        puisque le contenu du canvas n'est pas fiablement exposé. */}
+                    {/* Liens réels masqués : SEO + lecteurs d'écran (canvas non exposé). */}
                     <nav aria-label="Domaines de l'écosystème Paléo" style={SR_ONLY}>
                         <ul>
                             <li>
@@ -233,6 +212,30 @@ const EcosystemShowcase = ({ hub, orbits }) => {
                 </>
             ) : (
                 <EcosystemDiagram2D hub={hub} orbits={orbits} />
+            )}
+
+            {/* Bascule 3D / 2D — en surimpression, en bas à droite du visuel */}
+            {canUse3D && (
+                <button
+                    type="button"
+                    onClick={() => setMode(show3D ? '2d' : '3d')}
+                    title={show3D ? 'Afficher la vue 2D simplifiée' : 'Afficher la vue 3D'}
+                    style={{
+                        position: 'absolute', bottom: 12, right: 12, zIndex: 5,
+                        display: 'inline-flex', alignItems: 'center', gap: 7,
+                        padding: '7px 13px', borderRadius: 999,
+                        border: '1px solid rgba(0,0,0,0.12)',
+                        background: 'rgba(255,255,255,0.92)',
+                        color: '#1a1a1a',
+                        cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600,
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
+                        backdropFilter: 'blur(2px)',
+                    }}
+                >
+                    {show3D
+                        ? (<><Square size={14} aria-hidden="true" /> Vue simplifiée</>)
+                        : (<><Boxes size={14} aria-hidden="true" /> Vue 3D</>)}
+                </button>
             )}
         </div>
     );

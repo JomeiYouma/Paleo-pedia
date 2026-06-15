@@ -36,7 +36,6 @@ import Participer from './pages/Participer';
 import Presse from './pages/Presse';
 import LandingPage from './pages/LandingPage';
 import PaleoPedia from './pages/PaleoPedia';
-import PaleoPediaMethodo from './pages/PaleoPediaMethodo';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import LegalNotices from './pages/LegalNotices';
 import SiteLayout from './components/SiteLayout';
@@ -158,7 +157,8 @@ const mainRouter = createBrowserRouter(
             branding "Paléo-Pédia", palette neutre) ────────────── */}
       <Route path="/pedia" element={<PediaLayout />}>
         <Route index element={<PaleoPedia />} />
-        <Route path="methodologie" element={<PaleoPediaMethodo />} />
+        {/* La méthodo est désormais une section de l'accueil /pedia. */}
+        <Route path="methodologie" element={<Navigate to="/pedia" replace />} />
       </Route>
 
       {/* ── Sous-sites (/site/:slug/*) ────────────────── */}

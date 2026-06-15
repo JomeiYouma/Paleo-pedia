@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
 
 // Layout dédié à la vitrine paleo-pedia.
 // Distinct de SiteLayout (qui sert le programme Paléo-Énergétique) :
@@ -24,28 +24,17 @@ const PediaLayout = () => (
 );
 
 const PediaHeader = () => {
-    const { pathname } = useLocation();
-    const navLink = (to, label, end = false) => {
-        const active = end ? pathname === to : pathname.startsWith(to);
-        return (
-            <Link
-                to={to}
-                aria-current={active ? 'page' : undefined}
-                style={{
-                    textDecoration: 'none',
-                    fontFamily: 'var(--font-heading)',
-                    fontSize: '0.82rem',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                    color: active ? 'var(--color-text)' : 'var(--color-text-muted)',
-                    borderBottom: active ? '2px solid var(--color-primary)' : '2px solid transparent',
-                    paddingBottom: 2,
-                }}
-            >
-                {label}
-            </Link>
-        );
+    // Page unique : la nav fait défiler vers les sections de l'accueil /pedia.
+    const scrollToId = (id) => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        else window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    const navBtnStyle = {
+        background: 'none', border: 'none', padding: '2px 0', cursor: 'pointer',
+        fontFamily: 'var(--font-heading)', fontSize: '0.82rem', fontWeight: 700,
+        textTransform: 'uppercase', letterSpacing: '0.5px',
+        color: 'var(--color-text-muted)',
     };
     return (
         <header style={{
@@ -83,8 +72,14 @@ const PediaHeader = () => {
                 </Link>
 
                 <nav aria-label="Navigation Paléo-Pédia" style={{ display: 'flex', gap: 22, alignItems: 'center' }}>
-                    {navLink('/pedia', 'Écosystème', true)}
-                    {navLink('/pedia/methodologie', 'Méthodologie')}
+                    <button type="button" onClick={() => scrollToId('ecosysteme')}
+                        onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-text)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--color-text-muted)'; }}
+                        style={navBtnStyle}>Écosystème</button>
+                    <button type="button" onClick={() => scrollToId('methodologie')}
+                        onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-text)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--color-text-muted)'; }}
+                        style={navBtnStyle}>Méthodologie</button>
                 </nav>
             </div>
         </header>
