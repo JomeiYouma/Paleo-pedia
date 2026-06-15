@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 
 // Layout dédié à la vitrine paleo-pedia.
 // Distinct de SiteLayout (qui sert le programme Paléo-Énergétique) :
@@ -23,53 +23,73 @@ const PediaLayout = () => (
     </div>
 );
 
-const PediaHeader = () => (
-    <header style={{
-        background: 'var(--color-surface)',
-        borderBottom: '1px solid var(--color-border)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 1000,
-    }}>
-        <div style={{
-            maxWidth: 1200,
-            margin: '0 auto',
-            padding: '16px 28px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 16,
-        }}>
+const PediaHeader = () => {
+    const { pathname } = useLocation();
+    const navLink = (to, label, end = false) => {
+        const active = end ? pathname === to : pathname.startsWith(to);
+        return (
             <Link
-                to="/pedia"
+                to={to}
+                aria-current={active ? 'page' : undefined}
                 style={{
                     textDecoration: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                }}
-                aria-label="Paléo-Pédia — accueil"
-            >
-                <div style={{
-                    width: 6,
-                    height: 32,
-                    background: 'var(--color-primary)',
-                    flexShrink: 0,
-                }} />
-                <span style={{
-                    fontFamily: 'var(--font-display)',
-                    fontSize: '1.25rem',
-                    fontWeight: 400,
-                    letterSpacing: '0.04em',
+                    fontFamily: 'var(--font-heading)',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
                     textTransform: 'uppercase',
-                    color: 'var(--color-text)',
-                }}>
-                    Paléo-Pédia
-                </span>
+                    letterSpacing: '0.5px',
+                    color: active ? 'var(--color-text)' : 'var(--color-text-muted)',
+                    borderBottom: active ? '2px solid var(--color-primary)' : '2px solid transparent',
+                    paddingBottom: 2,
+                }}
+            >
+                {label}
             </Link>
-        </div>
-    </header>
-);
+        );
+    };
+    return (
+        <header style={{
+            background: 'var(--color-surface)',
+            borderBottom: '1px solid var(--color-border)',
+            position: 'sticky',
+            top: 0,
+            zIndex: 1000,
+        }}>
+            <div style={{
+                maxWidth: 1200,
+                margin: '0 auto',
+                padding: '16px 28px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 16,
+            }}>
+                <Link
+                    to="/pedia"
+                    style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 12 }}
+                    aria-label="Paléo-Pédia — accueil"
+                >
+                    <div style={{ width: 6, height: 32, background: 'var(--color-primary)', flexShrink: 0 }} />
+                    <span style={{
+                        fontFamily: 'var(--font-display)',
+                        fontSize: '1.25rem',
+                        fontWeight: 400,
+                        letterSpacing: '0.04em',
+                        textTransform: 'uppercase',
+                        color: 'var(--color-text)',
+                    }}>
+                        Paléo-Pédia
+                    </span>
+                </Link>
+
+                <nav aria-label="Navigation Paléo-Pédia" style={{ display: 'flex', gap: 22, alignItems: 'center' }}>
+                    {navLink('/pedia', 'Écosystème', true)}
+                    {navLink('/pedia/methodologie', 'Méthodologie')}
+                </nav>
+            </div>
+        </header>
+    );
+};
 
 const PediaFooter = () => (
     <footer style={{
