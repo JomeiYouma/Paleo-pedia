@@ -3,6 +3,18 @@
 // Les formulaires utilisant des styles inline divergents (padding nu, radius
 // 4/6/8px…) doivent référencer ceux-ci.
 
+// Libellé de champ — cohérent avec Contact / Participer (déjà sur ce modèle).
+export const labelStyle = {
+    display: 'block',
+    marginBottom: '6px',
+    fontSize: '0.78rem',
+    fontWeight: 700,
+    color: 'var(--color-text-muted)',
+    fontFamily: 'var(--font-heading)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+};
+
 export const fieldStyle = {
     width: '100%',
     padding: '10px 12px',

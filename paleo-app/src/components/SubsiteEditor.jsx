@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import api from '../services/apiClient';
 import { BlockEditor } from './blocks/BlockEditor';
+import { fieldStyle as inputStyle, labelStyle } from '../styles/formStyles';
 
 const slugify = (str) =>
     str.toLowerCase()
@@ -340,8 +341,5 @@ const SourceTab = ({ active, onClick, children, color }) => (
         transition: 'all 0.12s',
     }}>{children}</button>
 );
-
-const labelStyle = { display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#555', marginBottom: '5px' };
-const inputStyle = { width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.9rem', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' };
 
 export default SubsiteEditor;
