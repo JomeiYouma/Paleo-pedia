@@ -76,9 +76,14 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
     // (on n'y réagit pas ensuite, pour ne pas boucler avec nos propres écritures).
     const initialAtRef = useRef(new URLSearchParams(location.search).get('at'));
 
+    // Vrai dès que l'utilisateur se déplace : on cesse alors de ré-appliquer la
+    // cible initiale (?at=) à chaque re-rendu de la liste.
+    const userMovedRef = useRef(false);
+
     // Résout la sélection : targetId (#cartel-, retour d'édition) > ?at= (lien
-    // partagé) > cartel précédent > premier. Le fallback évite un selectedIndex
-    // hors bornes après un filtre (sinon plus aucun cartel ne s'affiche).
+    // partagé, STICKY tant qu'on n'a pas navigué) > cartel courant > premier.
+    // Le sticky survit aux multiples re-rendus de validCartels au chargement
+    // (sans lui, la sélection initiale était écrasée par une course de rendu).
     useEffect(() => {
         if (!validCartels.length) return;
         const pick = (id) => {
@@ -88,10 +93,14 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
             return false;
         };
         if (targetId && pick(targetId)) return;
-        if (initialAtRef.current && pick(initialAtRef.current)) { initialAtRef.current = null; return; }
+        if (!userMovedRef.current && initialAtRef.current && pick(initialAtRef.current)) return;
         if (lastSelectedIdRef.current && pick(lastSelectedIdRef.current)) return;
         setSelectedIndex(0);
     }, [targetId, validCartels]);
+
+    // Déplacement utilisateur (flèches, clic marqueur, boutons) → marque
+    // userMoved (fige le ?at= sticky) puis met à jour la sélection.
+    const goTo = (next) => { userMovedRef.current = true; setSelectedIndex(next); };
 
     // Écrit la position courante dans l'URL (?at=<id>, en replace) à chaque
     // déplacement → le lien partagé rouvre la frise sur CE cartel. On saute la
@@ -172,7 +181,7 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
             .attr("cursor", "pointer")
             .on("click", (event, d) => {
                 const globalIndex = validCartels.findIndex(c => c.id === d.id);
-                setSelectedIndex(globalIndex);
+                goTo(globalIndex);
                 event.stopPropagation();
             })
             // Hover Effect: Timeline Title
@@ -343,9 +352,9 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.key === 'ArrowLeft') {
-                setSelectedIndex(prev => (prev > 0 ? prev - 1 : prev));
+                goTo(prev => (prev > 0 ? prev - 1 : prev));
             } else if (e.key === 'ArrowRight') {
-                setSelectedIndex(prev => (prev < validCartels.length - 1 ? prev + 1 : prev));
+                goTo(prev => (prev < validCartels.length - 1 ? prev + 1 : prev));
             }
         };
 
@@ -385,7 +394,7 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
             }}>
                 {/* Prev Button */}
                 <button
-                    onClick={() => setSelectedIndex(prev => Math.max(0, prev - 1))}
+                    onClick={() => goTo(prev => Math.max(0, prev - 1))}
                     disabled={selectedIndex === 0}
                     aria-label="Cartel précédent"
                     style={{
@@ -456,7 +465,7 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
 
                 {/* Next Button */}
                 <button
-                    onClick={() => setSelectedIndex(prev => Math.min(validCartels.length - 1, prev + 1))}
+                    onClick={() => goTo(prev => Math.min(validCartels.length - 1, prev + 1))}
                     disabled={selectedIndex === validCartels.length - 1}
                     aria-label="Cartel suivant"
                     style={{
