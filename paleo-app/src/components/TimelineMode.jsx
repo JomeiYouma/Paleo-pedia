@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { getLocalizedContent } from '../utils/i18nHelpers';
 import { rememberReturn } from '../utils/navigation';
 import { getHostSubsiteSlug, subsiteBasePath } from '../utils/subsiteHost';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
     const { t, i18n } = useTranslation();
@@ -31,6 +32,7 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
 
     // Maintain selection state
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const isMobile = useIsMobile();
     const [confirmState, setConfirmState] = useState(null);
 
     // Filter valid cartels with years AND calculate stacking
@@ -101,6 +103,30 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
     // Déplacement utilisateur (flèches, clic marqueur, boutons) → marque
     // userMoved (fige le ?at= sticky) puis met à jour la sélection.
     const goTo = (next) => { userMovedRef.current = true; setSelectedIndex(next); };
+
+    // Boutons préc./suiv. — positionnés (desktop, sur les flancs) ou en flux
+    // (mobile, dans une barre sous la carte pour ne pas chevaucher le texte).
+    const navBtnStyle = (positioned, side, disabled) => ({
+        ...(positioned
+            ? { position: 'absolute', [side]: '16px', top: '50%', transform: 'translateY(-50%)', zIndex: 50 }
+            : { position: 'static' }),
+        background: 'var(--color-surface)', borderRadius: 'var(--radius-md)', padding: '12px',
+        border: '1px solid var(--color-border)', cursor: disabled ? 'not-allowed' : 'pointer',
+        boxShadow: 'var(--shadow-sm)', opacity: disabled ? 0.4 : 1, color: 'var(--color-primary)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+    });
+    const prevBtn = (positioned) => (
+        <button onClick={() => goTo(prev => Math.max(0, prev - 1))} disabled={selectedIndex === 0}
+            aria-label="Cartel précédent" style={navBtnStyle(positioned, 'left', selectedIndex === 0)}>
+            <ChevronLeft size={26} />
+        </button>
+    );
+    const nextBtn = (positioned) => (
+        <button onClick={() => goTo(prev => Math.min(validCartels.length - 1, prev + 1))} disabled={selectedIndex === validCartels.length - 1}
+            aria-label="Cartel suivant" style={navBtnStyle(positioned, 'right', selectedIndex === validCartels.length - 1)}>
+            <ChevronRight size={26} />
+        </button>
+    );
 
     // Écrit la position courante dans l'URL (?at=<id>, en replace) à chaque
     // déplacement → le lien partagé rouvre la frise sur CE cartel. On saute la
@@ -387,50 +413,36 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
             <div style={{
                 flex: 1,
                 display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
                 alignItems: 'center',
                 justifyContent: 'center',
                 position: 'relative',
                 overflow: 'hidden',
             }}>
-                {/* Prev Button */}
-                <button
-                    onClick={() => goTo(prev => Math.max(0, prev - 1))}
-                    disabled={selectedIndex === 0}
-                    aria-label="Cartel précédent"
-                    style={{
-                        position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)',
-                        zIndex: 50, background: 'var(--color-surface)',
-                        borderRadius: 'var(--radius-md)', padding: '12px',
-                        border: '1px solid var(--color-border)',
-                        cursor: selectedIndex === 0 ? 'not-allowed' : 'pointer',
-                        boxShadow: 'var(--shadow-sm)',
-                        opacity: selectedIndex === 0 ? 0.4 : 1,
-                        color: 'var(--color-primary)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}
-                >
-                    <ChevronLeft size={26} />
-                </button>
+                {/* Flèches sur les flancs (desktop) */}
+                {!isMobile && prevBtn(true)}
 
                 {/* Card Display - Constrained Container */}
                 {currentCartel && (
                     <div style={{
                         position: 'relative',
-                        height: '100%',
-                        maxHeight: 'calc(100vh - 240px)',
-                        width: '80%',
+                        height: isMobile ? 'auto' : '100%',
+                        flex: isMobile ? '1 1 0%' : undefined,
+                        minHeight: isMobile ? 0 : undefined,
+                        maxHeight: isMobile ? 'none' : 'calc(100vh - 240px)',
+                        width: isMobile ? '100%' : '80%',
                         maxWidth: '1200px',
                         display: 'flex',
                         flexDirection: 'column',
-                        margin: '12px 0',
+                        margin: isMobile ? '4px 0 0' : '12px 0',
                     }}>
                         <div style={{ flex: 1, overflowY: 'auto' }}>
                             <CartelPreview key={currentCartel.id} data={currentCartel} />
                         </div>
 
-                        {/* Admin Actions */}
+                        {/* Admin Actions — hors carte sur desktop, dans le coin sur mobile */}
                         <div style={{
-                            position: 'absolute', top: '12px', right: '-56px',
+                            position: 'absolute', top: isMobile ? '8px' : '12px', right: isMobile ? '8px' : '-56px',
                             display: 'flex', flexDirection: 'column', gap: '8px', zIndex: 40
                         }}>
                             {isAdmin && (
@@ -463,25 +475,19 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                     </div>
                 )}
 
-                {/* Next Button */}
-                <button
-                    onClick={() => goTo(prev => Math.min(validCartels.length - 1, prev + 1))}
-                    disabled={selectedIndex === validCartels.length - 1}
-                    aria-label="Cartel suivant"
-                    style={{
-                        position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)',
-                        zIndex: 50, background: 'var(--color-surface)',
-                        borderRadius: 'var(--radius-md)', padding: '12px',
-                        border: '1px solid var(--color-border)',
-                        cursor: selectedIndex === validCartels.length - 1 ? 'not-allowed' : 'pointer',
-                        boxShadow: 'var(--shadow-sm)',
-                        opacity: selectedIndex === validCartels.length - 1 ? 0.4 : 1,
-                        color: 'var(--color-primary)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}
-                >
-                    <ChevronRight size={26} />
-                </button>
+                {!isMobile && nextBtn(true)}
+
+                {/* Barre de navigation sous la carte (mobile) — évite que les
+                   flèches chevauchent le texte du cartel sur écran étroit. */}
+                {isMobile && (
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center', justifyContent: 'center', padding: '6px 0 2px', flexShrink: 0 }}>
+                        {prevBtn(false)}
+                        <span style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', minWidth: '64px', textAlign: 'center' }}>
+                            {validCartels.length ? `${selectedIndex + 1} / ${validCartels.length}` : ''}
+                        </span>
+                        {nextBtn(false)}
+                    </div>
+                )}
             </div>
 
             {/* ════════════════════════════════════════════════════════

@@ -7,7 +7,8 @@ import ArborescenceMode from '../components/ArborescenceMode';
 import ConfirmModal from '../components/ConfirmModal';
 import LongOperationOverlay from '../components/LongOperationOverlay';
 import { getYearForSort } from '../utils/helpers';
-import { Download, Trash2, CheckSquare, Square, Edit, LayoutList, CalendarDays, Map as MapIcon, Search, GitGraph, FolderPlus, Package, FileText, X, ImageIcon as ImgIcon } from 'lucide-react';
+import { Download, Trash2, CheckSquare, Square, Edit, LayoutList, CalendarDays, Map as MapIcon, Search, GitGraph, FolderPlus, Package, FileText, X, ImageIcon as ImgIcon, SlidersHorizontal } from 'lucide-react';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { generateZip, generatePdf, generateArchive } from '../utils/zipGenerator';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -64,6 +65,8 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, fixedWorkshopId 
     const [adminListMode, setAdminListMode] = useState(false);
     const viewMode = adminListMode ? 'list' : viewModeProp;
     const [selectedCats, setSelectedCats]   = useState([]);
+    const isMobile = useIsMobile();
+    const [filtersOpen, setFiltersOpen]     = useState(false);
     const [generatingZip, setGeneratingZip] = useState(false);
     const [busyLabel, setBusyLabel]         = useState('');
     const [progress, setProgress]           = useState({ current: 0, total: 0 });
@@ -382,7 +385,27 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, fixedWorkshopId 
                     </div>
                 </div>
 
-                {/* Filtres catégories */}
+                {/* Filtres catégories — repliés derrière un bouton sur mobile
+                   pour ne pas noyer l'écran sous les chips. */}
+                {isMobile && allCategories.length > 0 && (
+                    <button
+                        type="button"
+                        onClick={() => setFiltersOpen(o => !o)}
+                        aria-expanded={filtersOpen}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '8px',
+                            padding: '9px 16px', marginBottom: '10px', borderRadius: '20px',
+                            border: `1px solid ${selectedCats.length ? 'var(--color-pink-darker)' : 'var(--color-border, #ddd)'}`,
+                            background: 'transparent', color: 'var(--color-text, #444)',
+                            fontSize: '0.88rem', fontWeight: '700', cursor: 'pointer',
+                        }}
+                    >
+                        <SlidersHorizontal size={16} />
+                        {filtersOpen ? t('library.hideFilters', 'Masquer les filtres') : t('library.showFilters', 'Afficher les filtres')}
+                        {selectedCats.length > 0 ? ` (${selectedCats.length})` : ''}
+                    </button>
+                )}
+                {(!isMobile || filtersOpen) && (
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px', alignItems: 'center' }}>
                     {/* Chip catégorie fixe du sous-site (non supprimable) */}
                     {fixedCategory && (
@@ -426,6 +449,7 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, fixedWorkshopId 
                         );
                     })}
                 </div>
+                )}
 
                 {/* Actions batch (mode liste admin) */}
                 {viewMode === 'list' && isAdmin && (
