@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Send, CheckCircle2, AlertCircle } from 'lucide-react';
 import api from '../services/apiClient';
@@ -69,7 +70,11 @@ const Contact = () => {
 
     return (
         <div style={{ maxWidth: '600px', margin: '60px auto', padding: '0 20px', lineHeight: '1.8', color: 'var(--color-text)' }}>
-            <h1 style={{ fontSize: '2.5rem', marginBottom: '40px' }}>{t('pages.contact.title')}</h1>
+            {/* Lien retour relatif → reste dans le contexte courant (/pedia, /site/<slug>, principal) */}
+            <Link to=".." style={{ color: 'var(--color-text-subtle)', textDecoration: 'none', fontSize: '0.88rem' }}>
+                ← {t('legal.backHome')}
+            </Link>
+            <h1 style={{ fontSize: '2.5rem', margin: '16px 0 40px' }}>{t('pages.contact.title')}</h1>
 
             <p style={{ fontSize: '1.2rem', marginBottom: '30px' }}>
                 {t('pages.contact.intro')}
