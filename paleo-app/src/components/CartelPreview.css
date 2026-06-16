@@ -242,3 +242,55 @@
 .cartel-qr-link a:hover {
     background-color: var(--color-primary-hover);
 }
+
+/* ── Mobile (≤768px) : image et texte EMPILÉS au lieu du côte-à-côte étroit.
+   Titre/année réduits, méta désempilée, description à gauche (la justification
+   crée de gros trous sur écran étroit). ── */
+@media (max-width: 768px) {
+    .cartel-container {
+        flex-direction: column;
+        gap: 14px;
+        height: auto;
+        overflow: visible;
+    }
+    .cartel-image-column {
+        flex: none;
+        height: auto;
+    }
+    .cartel-image-wrapper {
+        flex: none;
+        height: 38vh;
+        max-height: 300px;
+    }
+    .cartel-content-column {
+        flex: none;
+    }
+    .cartel-card {
+        height: auto;
+        min-height: 0;
+        padding: 18px 18px;
+    }
+    .cartel-year {
+        font-size: 1.45rem;
+    }
+    .cartel-title {
+        font-size: 1.5rem;
+        margin-bottom: 12px;
+    }
+    .cartel-description {
+        flex: none;
+        overflow-y: visible;
+        text-align: left;
+        padding-right: 0;
+    }
+    .cartel-meta-row {
+        flex-direction: column;
+        gap: 6px;
+    }
+    .cartel-location {
+        text-align: left;
+    }
+    .cartel-qr-link {
+        text-align: left;
+    }
+}
