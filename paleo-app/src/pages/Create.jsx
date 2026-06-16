@@ -12,6 +12,8 @@ import api from '../services/apiClient';
 import { BlockEditor } from '../components/blocks/BlockEditor';
 import CartelNotesPanel from '../components/CartelNotesPanel';
 import Breadcrumb from '../components/Breadcrumb';
+import FileButton from '../components/FileButton';
+import { fieldStyle, ghostBtnStyle } from '../styles/formStyles';
 
 const RequiredMark = () => (
     <span aria-hidden="true" style={{ color: '#d32f2f', marginLeft: '3px', fontWeight: 700 }}>*</span>
@@ -612,18 +614,18 @@ const Create = () => {
                         onChange={handleInputChange}
                         onBlur={e => checkLangMismatch('title', e.target.value)}
                         required
-                        style={{ width: '100%', padding: '8px' }}
+                        style={fieldStyle}
                     />
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                     <div>
                         <label>{t('create.fieldYear')}</label>
-                        <input name="annee" value={form.annee} onChange={handleInputChange} style={{ width: '100%', padding: '8px' }} />
+                        <input name="annee" value={form.annee} onChange={handleInputChange} style={fieldStyle} />
                     </div>
                     <div>
                         <label>{t('create.fieldExhume')}</label>
-                        <input name="exhume_par" value={form.exhume_par} onChange={handleInputChange} style={{ width: '100%', padding: '8px' }} />
+                        <input name="exhume_par" value={form.exhume_par} onChange={handleInputChange} style={fieldStyle} />
                     </div>
                 </div>
 
@@ -647,13 +649,13 @@ const Create = () => {
                                 value={isEn ? (form.location_en || '') : (form.location || '')}
                                 onChange={handleInputChange}
                                 placeholder={t('create.fieldLocationPlaceholder')}
-                                style={{ width: '100%', padding: '8px', paddingRight: '30px' }}
+                                style={{ ...fieldStyle, paddingRight: '30px' }}
                                 onBlur={handleGeocode}
                             />
                             {geoStatus === 'success' && <Check size={16} color="green" style={{ position: 'absolute', right: 8, top: 10 }} />}
                             {geoStatus === 'error' && <X size={16} color="red" style={{ position: 'absolute', right: 8, top: 10 }} />}
                         </div>
-                        <button type="button" onClick={handleGeocode} disabled={geoStatus === 'loading'} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc', background: '#f0f0f0' }}>
+                        <button type="button" onClick={handleGeocode} disabled={geoStatus === 'loading'} style={{ ...ghostBtnStyle, padding: '9px' }}>
                             <MapPin size={20} />
                         </button>
                     </div>
@@ -722,7 +724,7 @@ const Create = () => {
                 {/* Image */}
                 <div style={{ padding: '20px', border: '2px dashed #ccc', borderRadius: '10px', background: '#f9f9f9', textAlign: 'center' }}>
                     <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>{t('create.fieldImage')}</label>
-                    <input type="file" onChange={handleImageChange} accept="image/*" style={{ margin: '0 auto', display: 'block' }} />
+                    <FileButton onChange={handleImageChange} />
                     {form.imageUrl && (
                         <div style={{ marginTop: '15px', maxWidth: '100%', display: 'flex', justifyContent: 'center' }}>
                             <img src={form.imageUrl} alt="Previsu" style={{ maxWidth: '300px', maxHeight: '300px', width: '100%', objectFit: 'contain', borderRadius: '8px' }} />
@@ -735,7 +737,7 @@ const Create = () => {
                             value={form.imageCredit || ''}
                             onChange={handleInputChange}
                             placeholder={t('create.imageCreditPlaceholder')}
-                            style={{ width: '100%', padding: '5px', marginTop: '5px', borderRadius: '4px', border: '1px solid #ccc' }}
+                            style={{ ...fieldStyle, marginTop: '8px' }}
                         />
                     </div>
                 </div>
@@ -814,8 +816,8 @@ const Create = () => {
                         );
                     })()}
                     <div style={{ display: 'flex', gap: '6px' }}>
-                        <input placeholder={t('common.otherCategory')} value={newCategory} onChange={e => setNewCategory(e.target.value)} style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--color-border)', fontFamily: 'inherit', fontSize: '0.9rem' }} />
-                        <button type="button" onClick={handleAddCategory} style={{ padding: '8px 14px', borderRadius: '6px', border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', fontFamily: 'var(--font-heading)', fontSize: '0.78rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('common.add')}</button>
+                        <input placeholder={t('common.otherCategory')} value={newCategory} onChange={e => setNewCategory(e.target.value)} style={{ ...fieldStyle, flex: 1 }} />
+                        <button type="button" onClick={handleAddCategory} style={ghostBtnStyle}>{t('common.add')}</button>
                     </div>
                 </div>
 
@@ -850,9 +852,9 @@ const Create = () => {
                                 placeholder={t('create.newWorkshopPlaceholder')}
                                 value={newWorkshop}
                                 onChange={e => setNewWorkshop(e.target.value)}
-                                style={{ flex: 1, padding: '4px' }}
+                                style={{ ...fieldStyle, flex: 1 }}
                             />
-                            <button type="button" onClick={handleAddWorkshop} disabled={!newWorkshop.trim()}>{t('common.add')}</button>
+                            <button type="button" onClick={handleAddWorkshop} disabled={!newWorkshop.trim()} style={{ ...ghostBtnStyle, opacity: newWorkshop.trim() ? 1 : 0.5 }}>{t('common.add')}</button>
                         </div>
                         <small style={{ color: '#777' }}>{t('create.workshopHelp')}</small>
                     </div>
@@ -860,7 +862,7 @@ const Create = () => {
 
                 <div>
                     <label>{t('create.fieldUrlQR')}</label>
-                    <input name="url_qr" value={form.url_qr} onChange={handleInputChange} style={{ width: '100%', padding: '8px' }} />
+                    <input name="url_qr" value={form.url_qr} onChange={handleInputChange} style={fieldStyle} />
                     <small style={{ color: '#777', display: 'block', marginTop: '4px', fontSize: '0.82rem' }}>
                         {t('create.qrHint', "Lien externe affiché par le bouton « En savoir plus » et encodé dans le QR code à l'impression.")}
                     </small>
@@ -919,7 +921,7 @@ const Create = () => {
                         onChange={handleInputChange}
                         maxLength={255}
                         placeholder={t('create.fieldContactPlaceholder', 'ex: vous@exemple.org ou 06 12 34 56 78')}
-                        style={{ width: '100%', padding: '8px' }}
+                        style={fieldStyle}
                     />
                     <small style={{ color: '#777', display: 'block', marginTop: '4px', fontSize: '0.82rem', lineHeight: 1.4 }}>
                         {isAdmin
