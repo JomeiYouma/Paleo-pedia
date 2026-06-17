@@ -46,3 +46,27 @@
     background: var(--color-primary-hover);
     color: var(--color-white);
 }
+
+/* Barre de défilement interne de l'aperçu cartel (frise) : on remplace la barre
+   système (épaisse, grise) par une version fine et arrondie, mieux intégrée. */
+.cartel-scroll-area {
+    scrollbar-width: thin;                                    /* Firefox */
+    scrollbar-color: var(--color-border-strong) transparent; /* pouce / piste */
+}
+
+.cartel-scroll-area::-webkit-scrollbar {
+    width: 8px;
+}
+
+.cartel-scroll-area::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.cartel-scroll-area::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: 999px;
+}
+
+.cartel-scroll-area::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-subtle);
+}

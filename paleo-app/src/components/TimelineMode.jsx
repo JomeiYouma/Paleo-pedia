@@ -436,8 +436,8 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                         flexDirection: 'column',
                         margin: isMobile ? '4px 0 0' : '12px 0',
                     }}>
-                        <div style={{ flex: 1, overflowY: 'auto' }}>
-                            <CartelPreview key={currentCartel.id} data={currentCartel} />
+                        <div className="cartel-scroll-area" style={{ flex: 1, overflowY: 'auto' }}>
+                            <CartelPreview key={currentCartel.id} data={currentCartel} isDraft={isAdmin && currentCartel.status !== 'published'} />
                         </div>
 
                         {/* Admin Actions — hors carte sur desktop, dans le coin sur mobile */}
