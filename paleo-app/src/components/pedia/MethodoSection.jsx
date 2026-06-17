@@ -19,14 +19,20 @@ const PRINCIPLES = [
     ['Low-tech & décentralisé', "On valorise l'innovation vernaculaire, sobre et reproductible, plutôt que la prouesse isolée."],
 ];
 
-const MethodoSection = () => (
+// `standalone` : la section est rendue seule sur sa propre page (ex. la page
+// « Présentation » d'un sous-site) plutôt qu'à la suite de l'écosystème sur
+// /pedia. On retire alors le filet/padding de raccord et on promeut le titre
+// en h1 (une page doit avoir un seul h1).
+const MethodoSection = ({ standalone = false }) => {
+    const Heading = standalone ? 'h1' : 'h2';
+    return (
     <section id="methodologie" aria-labelledby="methodo-heading" style={{
         maxWidth: 820,
         margin: '0 auto',
-        paddingTop: 44,
-        borderTop: '1px solid var(--color-border)',
+        paddingTop: standalone ? 0 : 44,
+        borderTop: standalone ? 'none' : '1px solid var(--color-border)',
     }}>
-        <h2 id="methodo-heading" style={{
+        <Heading id="methodo-heading" style={{
             margin: '0 0 14px',
             fontSize: 'clamp(1.5rem, 3.4vw, 2rem)',
             color: 'var(--color-text)',
@@ -34,7 +40,7 @@ const MethodoSection = () => (
             textAlign: 'center',
         }}>
             La méthodologie du projet
-        </h2>
+        </Heading>
         <p style={{
             margin: '0 auto 36px',
             maxWidth: 680,
@@ -91,6 +97,7 @@ const MethodoSection = () => (
             ))}
         </div>
     </section>
-);
+    );
+};
 
 export default MethodoSection;

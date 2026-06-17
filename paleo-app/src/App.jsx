@@ -43,6 +43,7 @@ import PediaLayout from './layouts/PediaLayout';
 import SubsiteLayout from './layouts/SubsiteLayout';
 import SubsiteHome from './pages/SubsiteHome';
 import SubsiteFrise from './pages/SubsiteFrise';
+import SubsitePresentation from './pages/SubsitePresentation';
 import SubsitePartners from './pages/SubsitePartners';
 import SubsiteAdmin from './pages/SubsiteAdmin';
 import CartelDetail from './pages/CartelDetail';
@@ -171,7 +172,7 @@ const mainRouter = createBrowserRouter(
         <Route path="frise"            element={<SubsiteFrise viewMode="timeline" />} />
         <Route path="carte"            element={<SubsiteFrise viewMode="map" />} />
         <Route path="arborescence"     element={<SubsiteFrise viewMode="arborescence" />} />
-        <Route path="presentation"     element={<Presentation />} />
+        <Route path="presentation"     element={<SubsitePresentation />} />
         <Route path="partenaires"      element={<SubsitePartners />} />
         <Route path="mentions"         element={<Presentation />} />
         {/* Pages globales rendues DANS le layout du sous-site (header/footer propres). */}
@@ -233,7 +234,7 @@ const subsiteHostRouter = hostSubsiteSlug ? createBrowserRouter(
         <Route path="frise"            element={<SubsiteFrise viewMode="timeline" />} />
         <Route path="carte"            element={<SubsiteFrise viewMode="map" />} />
         <Route path="arborescence"     element={<SubsiteFrise viewMode="arborescence" />} />
-        <Route path="presentation"     element={<Presentation />} />
+        <Route path="presentation"     element={<SubsitePresentation />} />
         <Route path="partenaires"      element={<SubsitePartners />} />
         <Route path="mentions"         element={<Presentation />} />
         {/* Pages globales rendues DANS le layout du sous-site (header/footer propres). */}
