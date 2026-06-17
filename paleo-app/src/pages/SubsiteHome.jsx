@@ -4,14 +4,15 @@
  */
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSubsite } from '../layouts/SubsiteLayout';
+import { useSubsite, useSubsiteEditor } from '../layouts/SubsiteLayout';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, LayoutTemplate, Pencil } from 'lucide-react';
 import { subsiteBasePath } from '../utils/subsiteHost';
 import { BlockList } from '../components/blocks/BlockRenderer';
 
 const SubsiteHome = () => {
     const subsite = useSubsite();
+    const { canEditSubsite, openEditor } = useSubsiteEditor();
     const { t, i18n } = useTranslation();
 
     if (!subsite) return null;
@@ -25,6 +26,11 @@ const SubsiteHome = () => {
     const homeBlocks = (lang === 'en' && subsite.content_blocks_en?.length > 0)
         ? subsite.content_blocks_en
         : subsite.content_blocks;
+
+    // Page d'accueil vide (aucun bloc affiché) : on invite l'admin/propriétaire
+    // à la configurer. Repère visible UNIQUEMENT pour qui peut éditer le sous-site.
+    const homeIsEmpty = !homeBlocks || homeBlocks.length === 0;
+    const showEmptyHomeCta = canEditSubsite && homeIsEmpty;
 
     return (
         <div>
@@ -95,11 +101,60 @@ const SubsiteHome = () => {
                 zIndex: 2,
                 background: 'var(--color-bg)',
                 paddingTop: homeBlocks?.length > 0 ? '60px' : '120px',
-                paddingBottom: homeBlocks?.length > 0 ? '60px' : '0',
+                paddingBottom: (homeBlocks?.length > 0 || showEmptyHomeCta) ? '60px' : '0',
             }}>
                 {homeBlocks?.length > 0 && (
                     <div style={{ maxWidth: '860px', margin: '0 auto', padding: '0 24px' }}>
                         <BlockList blocks={homeBlocks} color={color} />
+                    </div>
+                )}
+
+                {/* ── Repère admin : page d'accueil vide ──────────
+                   Visible seulement par un admin/propriétaire pouvant éditer ce
+                   sous-site. Clic → ouvre le module de contrôle de la page
+                   d'accueil (SubsiteEditor, géré par le layout). */}
+                {showEmptyHomeCta && (
+                    <div style={{ maxWidth: '640px', margin: '0 auto', padding: '0 24px' }}>
+                        <div style={{
+                            border: `2px dashed ${color}`,
+                            borderRadius: 'var(--radius-lg)',
+                            background: `color-mix(in srgb, ${color} 6%, white)`,
+                            padding: '40px 32px',
+                            textAlign: 'center',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '18px',
+                        }}>
+                            <div style={{
+                                width: '54px', height: '54px', borderRadius: '50%',
+                                background: color, flexShrink: 0,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}>
+                                <LayoutTemplate size={26} color="var(--color-white)" />
+                            </div>
+                            <div>
+                                <h2 style={{ margin: '0 0 8px', fontSize: '1.5rem', color: 'var(--color-text)' }}>
+                                    {t('subsite.emptyHomeTitle', "Votre page d'accueil est vide")}
+                                </h2>
+                                <p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: '0.95rem', lineHeight: 1.55 }}>
+                                    {t('subsite.emptyHomeText', "Ajoutez du texte, des images ou des blocs pour présenter votre thématique aux visiteurs. Ce message n'est visible que par vous, en tant qu'administrateur.")}
+                                </p>
+                            </div>
+                            <button
+                                onClick={openEditor}
+                                style={{
+                                    background: color, border: 'none', borderRadius: 'var(--radius-md)',
+                                    padding: '12px 24px', cursor: 'pointer',
+                                    color: 'var(--color-primary)',
+                                    fontSize: '0.85rem', fontWeight: '700', fontFamily: 'var(--font-heading)',
+                                    textTransform: 'uppercase', letterSpacing: '0.5px',
+                                    display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                }}
+                            >
+                                <Pencil size={16} /> {t('subsite.emptyHomeCta', "Configurer la page d'accueil")}
+                            </button>
+                        </div>
                     </div>
                 )}
             </section>
