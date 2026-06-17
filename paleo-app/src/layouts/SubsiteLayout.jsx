@@ -5,10 +5,10 @@
  * - Injecte la couleur primaire comme CSS variable
  * - Header propre + footer discret avec retour au site principal
  */
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Outlet, Link, useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Lock, LogOut, Languages, PlusCircle, Settings2, LogIn, Home, Users, BookOpen } from 'lucide-react';
+import { Menu, X, Lock, LogOut, Languages, PlusCircle, Settings2, LogIn, Home, Users, BookOpen, ChevronDown } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import SubsiteEditor from '../components/SubsiteEditor';
@@ -19,6 +19,12 @@ import { getHostSubsiteSlug, subsiteBasePath, MAIN_SITE_URL } from '../utils/sub
 // ── Contexte interne sous-site ────────────────────────────────
 export const SubsiteContext = createContext(null);
 export const useSubsite = () => useContext(SubsiteContext);
+
+// Contrôles d'édition exposés aux pages enfant (ex : ouvrir l'éditeur de la
+// page d'accueil depuis SubsiteHome). Contexte distinct de `useSubsite` pour
+// ne pas changer la forme de ce dernier (toujours le sous-site brut).
+export const SubsiteEditorContext = createContext({ canEditSubsite: false, openEditor: () => {} });
+export const useSubsiteEditor = () => useContext(SubsiteEditorContext);
 
 // Lien de pied de page. Les pages globales (mentions, confidentialité, contact)
 // sont désormais rendues DANS le layout du sous-site via des chemins relatifs
@@ -60,6 +66,14 @@ const SubsiteLayout = () => {
     const [error,      setError]      = useState(null);
     const [menuOpen,   setMenuOpen]   = useState(false);
     const [showEditor, setShowEditor] = useState(false);
+    // Menu admin compact (desktop) : regroupe Page d'accueil / Équipe / Gérer.
+    const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+    // Repli adaptatif de la navbar : on bascule en burger UNIQUEMENT quand la
+    // barre déborde réellement (mesuré ci-dessous), pas à un point de rupture
+    // fixe — ainsi le menu complet reste affiché tant qu'il y a la place.
+    const [collapsed, setCollapsed] = useState(false);
+    const barRef = useRef(null);
+    const neededWidthRef = useRef(0);
 
     const [showLogin,     setShowLogin]     = useState(false);
     const [loginEmail,    setLoginEmail]    = useState('');
@@ -120,6 +134,31 @@ const SubsiteLayout = () => {
         };
     }, [subsite]);
 
+    // Détection de débordement : on rend la barre complète, puis on mesure si
+    // son contenu dépasse la largeur disponible (scrollWidth > clientWidth).
+    // Si oui → mode burger, en mémorisant la largeur requise ; on ne ré-étend
+    // la barre que lorsque la place redevient suffisante (hystérésis de 8px
+    // pour éviter le clignotement à la frontière). Le spacer flexible absorbe
+    // la marge tant que ça tient, puis se réduit à 0 avant que ça déborde.
+    useLayoutEffect(() => {
+        const el = barRef.current;
+        if (!el) return;
+        const measure = () => {
+            if (!collapsed) {
+                if (el.scrollWidth > el.clientWidth + 1) {
+                    neededWidthRef.current = el.scrollWidth;
+                    setCollapsed(true);
+                }
+            } else if (el.clientWidth >= neededWidthRef.current + 8) {
+                setCollapsed(false);
+            }
+        };
+        measure();
+        const ro = new ResizeObserver(measure);
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [collapsed, subsite?.name, user, isAdmin, isSuperadmin, isOwner, i18n.language]);
+
     if (loading) return (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', color: '#aaa' }}>
             {t('subsite.loading', 'Chargement…')}
@@ -168,6 +207,32 @@ const SubsiteLayout = () => {
     // backend (subsiteController) re-valide cette règle.
     const canEditSubsite = isSuperadmin || (isOwner && homeSubsiteId === subsite.id);
 
+    // ── Actions admin regroupées sous un seul bouton (comme le site principal) ──
+    // Chaque entrée n'apparaît que selon les droits. Le bouton « Administration »
+    // (desktop) et le burger (mobile) consomment cette même liste.
+    const adminItems = [
+        canEditSubsite && { key: 'home',   icon: Home,      label: t('subsite.homePage', "Page d'accueil"), onClick: () => setShowEditor(true) },
+        canEditSubsite && { key: 'team',   icon: Users,     label: t('subsite.team', 'Équipe'),             onClick: () => navigate(`${base}/admin/team-content`), active: onTeamContent },
+        isAdmin        && { key: 'manage', icon: Settings2, label: t('subsite.manage', 'Gérer'),            onClick: () => navigate(`${base}/admin/published`),    active: onManage },
+    ].filter(Boolean);
+
+    // Styles partagés des menus déroulants (panneau clair posé sur l'en-tête sombre).
+    const menuPanelStyle = {
+        position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 2000,
+        background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
+        minWidth: '220px', padding: '6px',
+    };
+    const menuItemStyle = (active) => ({
+        display: 'flex', alignItems: 'center', gap: '10px', width: '100%', boxSizing: 'border-box',
+        padding: '10px 14px', borderRadius: 'var(--radius-md)',
+        textDecoration: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
+        background: active ? 'var(--color-accent-soft)' : 'transparent',
+        color: active ? color : 'var(--color-text)',
+        fontFamily: 'var(--font-heading)', fontWeight: '700', fontSize: '0.85rem',
+        textTransform: 'uppercase', letterSpacing: '0.3px',
+    });
+
     const refreshSubsite = async () => {
         try {
             const fresh = await api.subsites.getOne(slug);
@@ -177,11 +242,12 @@ const SubsiteLayout = () => {
 
     return (
         <SubsiteContext.Provider value={subsite}>
+          <SubsiteEditorContext.Provider value={{ canEditSubsite, openEditor: () => setShowEditor(true) }}>
             <div style={{ fontFamily: 'var(--font-body)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
 
                 {/* ── Header (dark, signature couleur du sous-site) ───────────── */}
                 <header style={{ background: 'var(--color-primary)', color: 'var(--color-white)', position: 'sticky', top: 0, zIndex: 1000 }}>
-                    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', gap: '16px', height: '60px' }}>
+                    <div ref={barRef} style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', gap: '16px', height: '60px' }}>
 
                         {/* Logo / nom */}
                         <Link to={homeHref} style={{ textDecoration: 'none', color: 'var(--color-white)', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
@@ -191,8 +257,12 @@ const SubsiteLayout = () => {
                             </span>
                         </Link>
 
-                        {/* Nav desktop */}
-                        <nav aria-label={`Navigation ${subsite.name}`} style={{ display: 'flex', gap: '2px', flex: 1, marginLeft: '20px' }}>
+                        {/* Nav desktop (repliée dans le burger quand ça déborde).
+                            flexShrink: 0 → les liens gardent leur largeur naturelle
+                            pour que le débordement soit mesurable ; le spacer
+                            flexible qui suit absorbe la marge restante. */}
+                        {!collapsed && (
+                        <nav aria-label={`Navigation ${subsite.name}`} style={{ display: 'flex', gap: '2px', flexShrink: 0, marginLeft: '20px' }}>
                             {navLinks.map(l => {
                                 const active = isNavActive(l);
                                 return (
@@ -230,62 +300,171 @@ const SubsiteLayout = () => {
                                 );
                             })}
                         </nav>
+                        )}
+                        {/* Spacer flexible : pousse les actions à droite et se réduit
+                           à 0 avant que la barre ne déborde (déclencheur du repli). */}
+                        <div style={{ flex: 1, minWidth: 0 }} />
 
                         {/* Actions droite */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                             <LanguageSwitcher />
 
-                            {/* Proposer un cartel (visiteurs + admins) */}
-                            <button
-                                onClick={() => {
-                                    const returnTo = rememberReturn(location);
-                                    navigate(`${base}/create`, { state: { returnTo } });
-                                }}
-                                title={t('subsite.proposeCartelTitle', 'Proposer un cartel pour ce sous-site')}
-                                style={{ background: color, border: 'none', borderRadius: 'var(--radius-md)', padding: '7px 14px', color: 'var(--color-white)', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '700', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                            >
-                                <PlusCircle size={14} /> {t('subsite.proposeCartel', 'Proposer un cartel')}
-                            </button>
+                            {/* ── Desktop : Proposer + menu admin compact + connexion ── */}
+                            {!collapsed && (
+                                <>
+                                    {/* Proposer un cartel (visiteurs + admins) */}
+                                    <button
+                                        onClick={() => {
+                                            const returnTo = rememberReturn(location);
+                                            navigate(`${base}/create`, { state: { returnTo } });
+                                        }}
+                                        title={t('subsite.proposeCartelTitle', 'Proposer un cartel pour ce sous-site')}
+                                        style={{ background: color, border: 'none', borderRadius: 'var(--radius-md)', padding: '7px 14px', color: 'var(--color-primary)', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '700', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                    >
+                                        <PlusCircle size={14} /> {t('subsite.proposeCartel', 'Proposer un cartel')}
+                                    </button>
 
-                            {canEditSubsite && (
-                                <button
-                                    onClick={() => setShowEditor(true)}
-                                    title={t('subsite.homePageTitle', "Éditer le contenu de la page d'accueil, la couleur et les partenaires")}
-                                    style={adminBtnStyle(false)}
-                                >
-                                    <Home size={14} /> {t('subsite.homePage', "Page d'accueil")}
-                                </button>
+                                    {/* Menu admin compact : Page d'accueil · Équipe · Gérer */}
+                                    {adminItems.length > 0 && (
+                                        <div style={{ position: 'relative' }}>
+                                            <button
+                                                onClick={() => setAdminMenuOpen(v => !v)}
+                                                aria-haspopup="true"
+                                                aria-expanded={adminMenuOpen}
+                                                title={t('subsite.adminMenu', 'Administration du sous-site')}
+                                                style={{ ...adminBtnStyle(onManage || onTeamContent), gap: '8px' }}
+                                            >
+                                                <Settings2 size={14} /> {t('subsite.adminMenu', 'Administration')} <ChevronDown size={13} style={{ opacity: 0.7 }} />
+                                            </button>
+                                            {adminMenuOpen && (
+                                                <>
+                                                    <div onClick={() => setAdminMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 1500 }} />
+                                                    <div style={menuPanelStyle}>
+                                                        {adminItems.map(it => {
+                                                            const Icon = it.icon;
+                                                            return (
+                                                                <button
+                                                                    key={it.key}
+                                                                    onClick={() => { setAdminMenuOpen(false); it.onClick(); }}
+                                                                    aria-current={it.active ? 'page' : undefined}
+                                                                    style={menuItemStyle(it.active)}
+                                                                    onMouseEnter={e => { if (!it.active) e.currentTarget.style.background = 'var(--color-primary-soft)'; }}
+                                                                    onMouseLeave={e => { if (!it.active) e.currentTarget.style.background = 'transparent'; }}
+                                                                >
+                                                                    <Icon size={15} /> {it.label}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Connexion / déconnexion */}
+                                    {user ? (
+                                        <button onClick={() => { logout(); navigate(homeHref); }} title={t('subsite.logout', 'Se déconnecter')} aria-label={t('subsite.logout', 'Se déconnecter')}
+                                            style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 'var(--radius-md)', padding: '7px 10px', cursor: 'pointer', color: 'var(--color-white)', display: 'flex', alignItems: 'center' }}>
+                                            <LogOut size={14} />
+                                        </button>
+                                    ) : (
+                                        <button onClick={() => setShowLogin(true)} title={t('subsite.login', 'Se connecter')}
+                                            style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 'var(--radius-md)', padding: '7px 14px', cursor: 'pointer', color: 'var(--color-white)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', fontWeight: '700', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                            <LogIn size={14} /> {t('subsite.login', 'Se connecter')}
+                                        </button>
+                                    )}
+                                </>
                             )}
-                            {canEditSubsite && (
-                                <button
-                                    onClick={() => navigate(`${base}/admin/team-content`)}
-                                    title={t('subsite.teamTitle', 'Gérer les membres affichés sur la page « À propos » de ce sous-site')}
-                                    aria-current={onTeamContent ? 'page' : undefined}
-                                    style={adminBtnStyle(onTeamContent)}
-                                >
-                                    <Users size={14} /> {t('subsite.team', 'Équipe')}
-                                </button>
-                            )}
-                            {isAdmin && (
-                                <button
-                                    onClick={() => navigate(`${base}/admin/published`)}
-                                    title={t('subsite.manageTitle', 'Gérer les cartels de ce sous-site')}
-                                    aria-current={onManage ? 'page' : undefined}
-                                    style={adminBtnStyle(onManage)}
-                                >
-                                    <Settings2 size={14} /> {t('subsite.manage', 'Gérer')}
-                                </button>
-                            )}
-                            {user ? (
-                                <button onClick={() => { logout(); navigate(homeHref); }} title={t('subsite.logout', 'Se déconnecter')} aria-label={t('subsite.logout', 'Se déconnecter')}
-                                    style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 'var(--radius-md)', padding: '7px 10px', cursor: 'pointer', color: 'var(--color-white)', display: 'flex', alignItems: 'center' }}>
-                                    <LogOut size={14} />
-                                </button>
-                            ) : (
-                                <button onClick={() => setShowLogin(true)} title={t('subsite.login', 'Se connecter')}
-                                    style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 'var(--radius-md)', padding: '7px 14px', cursor: 'pointer', color: 'var(--color-white)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', fontWeight: '700', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                    <LogIn size={14} /> {t('subsite.login', 'Se connecter')}
-                                </button>
+
+                            {/* ── Replié : navigation + actions dans un burger ── */}
+                            {collapsed && (
+                                <div style={{ position: 'relative' }}>
+                                    <button
+                                        onClick={() => setMenuOpen(v => !v)}
+                                        aria-label="Menu"
+                                        aria-haspopup="true"
+                                        aria-expanded={menuOpen}
+                                        style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 'var(--radius-md)', padding: '8px 10px', cursor: 'pointer', color: 'var(--color-white)', display: 'flex', alignItems: 'center' }}
+                                    >
+                                        {menuOpen ? <X size={18} /> : <Menu size={18} />}
+                                    </button>
+                                    {menuOpen && (
+                                        <>
+                                            <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 1500 }} />
+                                            <div style={{ ...menuPanelStyle, minWidth: '240px' }}>
+                                                {/* Liens de navigation */}
+                                                {navLinks.map(l => {
+                                                    const active = isNavActive(l);
+                                                    return (
+                                                        <Link
+                                                            key={l.to}
+                                                            to={l.to}
+                                                            onClick={() => setMenuOpen(false)}
+                                                            aria-current={active ? 'page' : undefined}
+                                                            style={menuItemStyle(active)}
+                                                            onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'var(--color-primary-soft)'; }}
+                                                            onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}
+                                                        >
+                                                            {t(l.key, l.fr)}
+                                                        </Link>
+                                                    );
+                                                })}
+
+                                                <div style={{ borderTop: '1px solid var(--color-border)', margin: '6px 0' }} />
+
+                                                {/* Proposer un cartel */}
+                                                <button
+                                                    onClick={() => { setMenuOpen(false); const returnTo = rememberReturn(location); navigate(`${base}/create`, { state: { returnTo } }); }}
+                                                    style={menuItemStyle(false)}
+                                                    onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-soft)'}
+                                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                >
+                                                    <PlusCircle size={15} /> {t('subsite.proposeCartel', 'Proposer un cartel')}
+                                                </button>
+
+                                                {/* Actions admin (Page d'accueil · Équipe · Gérer) */}
+                                                {adminItems.map(it => {
+                                                    const Icon = it.icon;
+                                                    return (
+                                                        <button
+                                                            key={it.key}
+                                                            onClick={() => { setMenuOpen(false); it.onClick(); }}
+                                                            aria-current={it.active ? 'page' : undefined}
+                                                            style={menuItemStyle(it.active)}
+                                                            onMouseEnter={e => { if (!it.active) e.currentTarget.style.background = 'var(--color-primary-soft)'; }}
+                                                            onMouseLeave={e => { if (!it.active) e.currentTarget.style.background = 'transparent'; }}
+                                                        >
+                                                            <Icon size={15} /> {it.label}
+                                                        </button>
+                                                    );
+                                                })}
+
+                                                <div style={{ borderTop: '1px solid var(--color-border)', margin: '6px 0' }} />
+
+                                                {/* Connexion / déconnexion */}
+                                                {user ? (
+                                                    <button
+                                                        onClick={() => { setMenuOpen(false); logout(); navigate(homeHref); }}
+                                                        style={menuItemStyle(false)}
+                                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-soft)'}
+                                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                    >
+                                                        <LogOut size={15} /> {t('subsite.logout', 'Se déconnecter')}
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => { setMenuOpen(false); setShowLogin(true); }}
+                                                        style={menuItemStyle(false)}
+                                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-soft)'}
+                                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                    >
+                                                        <LogIn size={15} /> {t('subsite.login', 'Se connecter')}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>
@@ -397,6 +576,7 @@ const SubsiteLayout = () => {
                     </div>
                 </footer>
             </div>
+          </SubsiteEditorContext.Provider>
         </SubsiteContext.Provider>
     );
 };
