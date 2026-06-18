@@ -23,20 +23,40 @@ function notifySessionExpired() {
   } catch { /* SSR / tests : noop */ }
 }
 
-async function request(method, path, body, requireAuth = true) {
+async function request(method, path, body) {
   const headers = { 'Content-Type': 'application/json' };
   const t = token.get();
   if (t) headers['Authorization'] = `Bearer ${t}`;
 
-  const res = await fetch(`${BASE}${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  let res;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch {
+    // fetch ne rejette que sur erreur réseau (hors-ligne, DNS…). Le serveur
+    // de dev arrêté entre dans ce cas.
+    throw new Error('Serveur injoignable. Vérifiez votre connexion et réessayez.');
+  }
+
   if (res.status === 401 && t) notifySessionExpired();
   if (res.status === 204) return null;
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? `Erreur ${res.status}`);
+
+  // On lit le corps en texte d'abord : un backend coupé/planté (ou le proxy
+  // Vite qui n'atteint pas localhost:3001) répond souvent SANS corps JSON,
+  // et res.json() planterait alors avec un « Unexpected end of JSON input »
+  // illisible. On parse défensivement et on remonte un message clair.
+  const raw = await res.text();
+  let data = null;
+  if (raw) {
+    try { data = JSON.parse(raw); } catch { /* corps non-JSON : page d'erreur HTML, etc. */ }
+  }
+
+  if (!res.ok) {
+    throw new Error(data?.error ?? `Erreur ${res.status} — serveur indisponible.`);
+  }
   return data;
 }
 
@@ -54,6 +74,9 @@ export const auth = {
   },
   me: () => get('/auth/me'),
   logout: () => token.clear(),
+  /** L'utilisateur connecté change son propre mot de passe (vérifie l'actuel). */
+  changePassword: (current_password, new_password) =>
+    post('/auth/change-password', { current_password, new_password }),
 };
 
 // ── Cartels ───────────────────────────────────────────────────
@@ -125,6 +148,7 @@ export const team = {
   list:    (slug)           => get(`/s/${slug}/users`),
   create:  (slug, data)     => post(`/s/${slug}/users`, data),
   update:  (slug, id, data) => patch(`/s/${slug}/users/${id}`, data),
+  setPassword: (slug, id, new_password) => patch(`/s/${slug}/users/${id}/password`, { new_password }),
   delete:  (slug, id)       => del(`/s/${slug}/users/${id}`),
 };
 
@@ -167,6 +191,7 @@ export const users = {
   getOne:  (id)       => get(`/users/${id}`),
   create:  (data)     => post('/users', data),
   update:  (id, data) => patch(`/users/${id}`, data),
+  setPassword: (id, new_password) => patch(`/users/${id}/password`, { new_password }),
   delete:  (id)       => del(`/users/${id}`),
 };
 

@@ -15,6 +15,20 @@ const CreateSchema = z.object({
   home_subsite_id:     z.string().nullable().optional(),
 }).strict();
 
+const UpdateSchema = z.object({
+  role:                z.enum(['contributor', 'editor', 'admin', 'superadmin']).optional(),
+  can_create_cartel:   z.boolean().optional(),
+  can_publish_cartel:  z.boolean().optional(),
+  can_manage_admin:    z.boolean().optional(),
+  can_create_subsite:  z.boolean().optional(),
+  can_manage_team:     z.boolean().optional(),
+  home_subsite_id:     z.string().nullable().optional(),
+}).strict();
+
+const PasswordSchema = z.object({
+  new_password: z.string().min(8, 'Nouveau mot de passe : 8 caractères minimum'),
+}).strict();
+
 export const UserController = {
 
   async create(req, res) {
@@ -65,12 +79,16 @@ export const UserController = {
 
   async update(req, res) {
     try {
-      const user = await UserModel.update(req.params.id, req.body);
+      const parsed = UpdateSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors[0].message });
+      }
+      const user = await UserModel.update(req.params.id, parsed.data);
       if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
       // On capture les permissions modifiées pour faciliter l'audit
       const trackedFields = ['role', 'can_create_cartel', 'can_publish_cartel', 'can_manage_admin', 'can_create_subsite', 'can_manage_team', 'home_subsite_id'];
       const changed = Object.fromEntries(
-        Object.entries(req.body || {}).filter(([k]) => trackedFields.includes(k))
+        Object.entries(parsed.data).filter(([k]) => trackedFields.includes(k))
       );
       dispatch({
         type: 'user.updated', req,
@@ -79,6 +97,23 @@ export const UserController = {
         payload: { changed },
       });
       res.json(user);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  /** PATCH /api/users/:id/password — un superadmin réinitialise le mot de passe d'un compte. */
+  async setPassword(req, res) {
+    try {
+      const parsed = PasswordSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors[0].message });
+      }
+      const target = await UserModel.findById(req.params.id);
+      if (!target) return res.status(404).json({ error: 'Utilisateur introuvable' });
+      await UserModel.updatePassword(target.id, parsed.data.new_password);
+      dispatch({ type: 'user.password_reset', req, targetId: target.id, summary: target.email });
+      res.json({ ok: true });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

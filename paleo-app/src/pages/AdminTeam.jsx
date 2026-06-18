@@ -2,11 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import {
     UserPlus, Trash2, Mail, Crown, Users as UsersIcon,
-    Shield, Home, HelpCircle,
+    Shield, Home, HelpCircle, KeyRound,
 } from 'lucide-react';
 import api from '../services/apiClient';
 import i18n from '../i18n';
 import ExplainerBox from '../components/ExplainerBox';
+import PasswordModal from '../components/PasswordModal';
 import {
     AdminPageHeader, AdminSection, AdminToast, useAdminToast,
     primaryBtnStyle, ghostBtnStyle, dangerBtnStyle, inputStyle, labelStyle,
@@ -56,6 +57,7 @@ const AdminTeam = () => {
     const [newEmail,    setNewEmail]    = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [creating,    setCreating]    = useState(false);
+    const [resetTarget, setResetTarget] = useState(null);
 
     const isMain = selected?.__main === true;
 
@@ -154,6 +156,15 @@ const AdminTeam = () => {
         } catch (err) {
             showToast('error', err.message || i18n.t('errors.deleting'));
         }
+    };
+
+    // Réinitialisation du mot de passe d'un membre (sans connaître l'actuel —
+    // prérogative d'administration). La modale gère l'affichage des erreurs.
+    const handleResetPassword = async ({ newPassword }) => {
+        const m = resetTarget;
+        if (isMain) await api.users.setPassword(m.id, newPassword);
+        else        await api.team.setPassword(selected.slug, m.id, newPassword);
+        showToast('success', `Mot de passe réinitialisé pour ${m.email}`);
     };
 
     if (!isSuperadmin && !isOwner) {
@@ -366,6 +377,15 @@ const AdminTeam = () => {
                                         )}
                                     </div>
 
+                                    {canManageCurrent && !readOnly && (
+                                        <button
+                                            onClick={() => setResetTarget(m)}
+                                            style={{ ...ghostBtnStyle, padding: '5px 10px' }}
+                                            title="Réinitialiser le mot de passe"
+                                        >
+                                            <KeyRound size={13} />
+                                        </button>
+                                    )}
                                     {canManageCurrent && !isSelf && !readOnly && (
                                         <button
                                             onClick={() => handleDelete(m)}
@@ -381,6 +401,15 @@ const AdminTeam = () => {
                     </div>
                 )}
             </AdminSection>
+
+            {resetTarget && (
+                <PasswordModal
+                    mode="reset"
+                    targetEmail={resetTarget.email}
+                    onClose={() => setResetTarget(null)}
+                    onSubmit={handleResetPassword}
+                />
+            )}
         </div>
     );
 };

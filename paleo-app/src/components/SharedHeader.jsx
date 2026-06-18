@@ -3,13 +3,14 @@ import { Link, useLocation, NavLink } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import {
     Menu, X, Lock, LogIn, LogOut,
-    Library, PlusCircle, ClipboardList, Settings2, BarChart3,
+    Library, PlusCircle, ClipboardList, Settings2, BarChart3, KeyRound,
 } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useNavigate } from 'react-router-dom';
-import { subsites as subsitesApi } from '../services/apiClient';
+import { subsites as subsitesApi, auth as authApi } from '../services/apiClient';
 import { getSubsiteHostUrl } from '../utils/subsiteHost';
 import { useTranslation } from 'react-i18next';
+import PasswordModal from './PasswordModal';
 
 // ── Liens du site public (inclut la frise) ──────────────────
 const SITE_NAV = [
@@ -87,7 +88,7 @@ const NavBadge = ({ count }) => {
  *   currentWorkshop, quitWorkshop
  */
 const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
-    const { user, isAdmin, homeSubsiteId, login, logout, cartels = [] } = useApp();
+    const { user, isAdmin, homeSubsiteId, login, logout, cartels = [], setGlobalToast } = useApp();
     const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
@@ -107,6 +108,7 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
     const [isMenuOpen,     setIsMenuOpen]     = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [showLogin,      setShowLogin]       = useState(false);
+    const [showChangePwd,  setShowChangePwd]   = useState(false);
     const [loginEmail,     setLoginEmail]      = useState('');
     const [loginPassword,  setLoginPassword]   = useState('');
     const [loginError,     setLoginError]      = useState('');
@@ -202,7 +204,7 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                 top: 0,
                 zIndex: 1000,
             }}>
-                <div style={{
+                <div className="shared-header-bar" style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
@@ -580,6 +582,22 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                                     );
                                                 })}
                                                 <button
+                                                    onClick={() => { setIsUserMenuOpen(false); setShowChangePwd(true); }}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', gap: '8px',
+                                                        width: '100%', background: 'none', border: 'none',
+                                                        borderRadius: 'var(--radius-md)', padding: '8px 12px',
+                                                        cursor: 'pointer', fontSize: '0.82rem', color: 'var(--color-text)',
+                                                        textAlign: 'left', fontFamily: 'var(--font-heading)',
+                                                        fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.3px',
+                                                    }}
+                                                    onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-soft)'}
+                                                    onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                                                >
+                                                    <KeyRound size={14} />
+                                                    Mot de passe
+                                                </button>
+                                                <button
                                                     onClick={() => {
                                                         setIsUserMenuOpen(false);
                                                         logout();
@@ -630,7 +648,7 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                         letterSpacing: '0.4px',
                                     }}
                                 >
-                                    <Lock size={13} /> {t('header.login')}
+                                    <Lock size={13} /> <span className="header-login-label">{t('header.login')}</span>
                                 </button>
                             )
                         )}
@@ -844,6 +862,18 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                 </div>
             )}
 
+            {/* ── Modal « changer mon mot de passe » ───────────── */}
+            {showChangePwd && (
+                <PasswordModal
+                    mode="self"
+                    onClose={() => setShowChangePwd(false)}
+                    onSubmit={async ({ currentPassword, newPassword }) => {
+                        await authApi.changePassword(currentPassword, newPassword);
+                        setGlobalToast?.({ type: 'success', message: 'Mot de passe modifié.' });
+                    }}
+                />
+            )}
+
             <style>{`
                 @keyframes menuFadeIn {
                     from { opacity: 0; transform: translateY(-6px); }
@@ -858,6 +888,10 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                 @media (max-width: 900px) {
                     .desktop-nav { display: none !important; }
                     .mobile-burger { display: block !important; }
+                    /* Resserrer la barre sur mobile pour éviter tout débordement
+                       horizontal : padding réduit + libellé "Connexion" en icône seule. */
+                    .shared-header-bar { padding-left: 14px !important; padding-right: 14px !important; gap: 10px !important; }
+                    .header-login-label { display: none !important; }
                 }
             `}</style>
         </>

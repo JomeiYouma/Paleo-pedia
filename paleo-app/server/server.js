@@ -10,6 +10,19 @@ import { CartelModel } from './models/Cartel.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProd = process.env.NODE_ENV === 'production';
 
+// ── Garde de configuration : secret JWT obligatoire ──────────
+// Sans JWT_SECRET, la signature des tokens échoue (donc toute connexion).
+// On échoue tôt et clairement en production plutôt que de planter de façon
+// obscure à la première tentative de connexion.
+if (!process.env.JWT_SECRET) {
+  if (isProd) {
+    console.error('❌ JWT_SECRET non défini. Démarrage refusé en production.');
+    process.exit(1);
+  } else {
+    console.warn('⚠️  JWT_SECRET non défini : la connexion échouera. Définissez-le dans votre .env.');
+  }
+}
+
 // ── SEO : balises Open Graph pour les pages cartel ───────────
 // Un SPA pose ses balises en JS, que les crawlers des réseaux sociaux
 // n'exécutent pas. On injecte donc les balises OG (titre, description, image
@@ -83,10 +96,38 @@ app.use((req, res, next) => {
 
 // ── Middleware ───────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
+
+// ── En-têtes de sécurité (toutes réponses) ───────────────────
+// Durcissement « standard » sans CSP stricte globale : on évite de casser la
+// vue 3D (three.js), les cartes Leaflet et les embeds (YouTube, Calaméo,
+// Sketchfab). La neutralisation des SVG se fait plus bas, sur /api/images.
 app.use((req, res, next) => {
-  // En production, limiter CORS au domaine déclaré dans ALLOWED_ORIGIN
-  const allowedOrigin = process.env.ALLOWED_ORIGIN || '*';
-  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('X-XSS-Protection', '0'); // filtre legacy désactivé (bonne pratique moderne)
+  res.setHeader('Permissions-Policy', 'camera=(), geolocation=(), browsing-topics=()');
+  if (isProd) {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
+
+// ── CORS ─────────────────────────────────────────────────────
+// ALLOWED_ORIGIN : origines autorisées, séparées par des virgules. En
+// production sans valeur, on n'émet AUCUN en-tête CORS (l'app et l'API sont
+// servies en same-origin, rien à autoriser en cross-origin). En dev, on
+// autorise « * » pour le proxy Vite.
+const corsOrigins = (process.env.ALLOWED_ORIGIN || (isProd ? '' : '*'))
+  .split(',').map(s => s.trim()).filter(Boolean);
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (corsOrigins.includes('*')) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  } else if (origin && corsOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
@@ -94,8 +135,18 @@ app.use((req, res, next) => {
 });
 
 // ── Servir les images uploadées ───────────────────────────────
-app.use('/api/images', express.static(UPLOADS_DIR));
-app.use('/api/images', express.static(LEGACY_UPLOADS_DIR));
+// Neutralisation XSS : un SVG malveillant ouvert DIRECTEMENT (navigation
+// top-level vers /api/images/x.svg) pourrait exécuter du JavaScript. On pose
+// une CSP « sandbox » sur les réponses .svg (scripts neutralisés) et nosniff
+// sur toutes les images. L'affichage via <img> reste inchangé.
+const imageStaticHeaders = (res, filePath) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  if (filePath.toLowerCase().endsWith('.svg')) {
+    res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+  }
+};
+app.use('/api/images', express.static(UPLOADS_DIR, { setHeaders: imageStaticHeaders }));
+app.use('/api/images', express.static(LEGACY_UPLOADS_DIR, { setHeaders: imageStaticHeaders }));
 
 // ── Routes ───────────────────────────────────────────────────
 app.use('/api', routes);

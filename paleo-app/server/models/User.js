@@ -64,4 +64,11 @@ export const UserModel = {
   async verifyPassword(plain, hash) {
     return bcrypt.compare(plain, hash);
   },
+
+  /** Définit un nouveau mot de passe (hash bcrypt, coût 12). */
+  async updatePassword(id, newPassword) {
+    const hash = await bcrypt.hash(newPassword, 12);
+    await query('UPDATE users SET password_hash = ? WHERE id = ?', [hash, id]);
+    return true;
+  },
 };

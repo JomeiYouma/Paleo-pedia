@@ -27,6 +27,10 @@ const UpdateSchema = z.object({
   role:               z.enum(['contributor', 'editor', 'admin', 'superadmin']).optional(),
 }).strict();
 
+const PasswordSchema = z.object({
+  new_password: z.string().min(8, 'Nouveau mot de passe : 8 caractères minimum'),
+}).strict();
+
 function isAllowed(req) {
   if (!req.user || !req.tenant) return false;
   if (req.user.can_manage_admin) return true;
@@ -115,6 +119,36 @@ export const TeamController = {
         payload: { changed: parsed.data },
       });
       res.json(safe);
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  },
+
+  /** PATCH /api/s/:slug/users/:id/password — owner/superadmin réinitialise le mot de passe d'un membre du sous-site. */
+  async setPassword(req, res) {
+    try {
+      if (!isAllowed(req)) return res.status(403).json({ error: 'Non autorisé' });
+
+      const target = await UserModel.findById(req.params.id);
+      if (!target) return res.status(404).json({ error: 'Utilisateur introuvable' });
+      if (target.home_subsite_id !== req.tenant.id) {
+        return res.status(404).json({ error: 'Utilisateur introuvable' });
+      }
+      if (target.can_manage_admin && !req.user.can_manage_admin) {
+        return res.status(403).json({ error: 'Non autorisé à modifier un superadmin' });
+      }
+
+      const parsed = PasswordSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors[0].message });
+      }
+      await UserModel.updatePassword(target.id, parsed.data.new_password);
+      dispatch({
+        type: 'user.password_reset', req,
+        targetId: target.id, subsiteId: req.tenant.id,
+        summary: target.email,
+      });
+      res.json({ ok: true });
     } catch (e) {
       res.status(500).json({ error: e.message });
     }

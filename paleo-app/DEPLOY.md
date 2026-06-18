@@ -34,7 +34,22 @@ Définies dans cPanel → Setup Node.js App → Environment variables (PAS dans 
 | `DB_NAME` | `madore_paleo` |
 | `DB_USER` | `madore_paleoadmin` |
 | `DB_PASSWORD` | (voir panel) |
-| `JWT_SECRET` | (chaîne aléatoire longue) |
+| `JWT_SECRET` | (chaîne aléatoire longue) — **le serveur refuse de démarrer sans, en production** |
+| `SEED_ADMIN_EMAIL` | email du superadmin initial (ex. `admin@atelier21.org`) — utilisé par `seed_admin.js` |
+| `SEED_ADMIN_PASSWORD` | mot de passe initial (8+ car.) — **obligatoire en prod** : le seed refuse `admin/admin` |
+
+### Durcissement sécurité
+
+Comportements de sécurité actifs (la plupart sans config, valeurs par défaut sûres) :
+
+- **Compte admin initial** : `seed_admin.js` lit `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`. En production, sans `SEED_ADMIN_PASSWORD`, le script s'arrête sans rien créer (plus de `admin/admin`).
+- **JWT_SECRET obligatoire** : démarrage refusé en production s'il manque.
+- **Inscription publique désactivée** : `POST /api/auth/register` renvoie 403 sauf si `ALLOW_PUBLIC_REGISTRATION="true"`.
+- **Anti-force-brute** sur `/api/auth/login` : 15 tentatives / 15 min / IP par défaut (`LOGIN_MAX_ATTEMPTS`, `LOGIN_WINDOW_MS`). Compteur en mémoire (remis à zéro au Stop/Start).
+- **En-têtes de sécurité** posés sur toutes les réponses (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, et `Strict-Transport-Security` en prod). Pas de CSP stricte globale (pour ne pas casser 3D / cartes / embeds).
+- **SVG neutralisés** : les réponses `/api/images/*.svg` portent une CSP `sandbox` (un SVG ouvert directement ne peut pas exécuter de script).
+- **CORS** : en prod, sans `ALLOWED_ORIGIN`, aucun en-tête CORS n'est émis (l'app et l'API sont same-origin). `ALLOWED_ORIGIN` accepte une liste séparée par des virgules.
+- **Mots de passe** : un admin peut réinitialiser celui d'un membre (Gestion d'équipe), et chaque utilisateur peut changer le sien (menu utilisateur → « Mot de passe »). Pas de « mot de passe oublié » par email.
 
 ### Notifications email (v8+) — optionnel
 
@@ -290,7 +305,7 @@ ls node_modules/nodemailer/package.json  # doit exister
 # 3.2 Appliquer la migration v8 (idempotente : CREATE TABLE IF NOT EXISTS + INSERT IGNORE)
 node server/scripts/run_migration.js server/migration_v8_event_logs.sql
 node server/scripts/verify_event_tables.js
-# → doit afficher : 28 types seedés, event_email_config + event_logs présentes
+# → doit afficher : 30 types seedés (28 à l'époque de la v8, +2 en v22/v23), event_email_config + event_logs présentes
 ```
 
 ### Étape 4 — Variables d'env email (cPanel UI)
@@ -328,7 +343,7 @@ Côté UI (en superadmin) :
 
 - [ ] `/app/admin/logs` ouvre la page sans 404
 - [ ] Onglet **Journal** : créer un brouillon → la ligne `cartel.draft_created` apparaît
-- [ ] Onglet **Configuration emails** : 28 types listés ; le formulaire mauve "Appliquer un destinataire à tous" fonctionne ; sticky footer "Enregistrer (N)" avec lignes dirty surlignées
+- [ ] Onglet **Configuration emails** : 30 types listés ; le formulaire mauve "Appliquer un destinataire à tous" fonctionne ; sticky footer "Enregistrer (N)" avec lignes dirty surlignées
 - [ ] Activer un type avec un destinataire valide + créer le brouillon correspondant → le mail arrive
 - [ ] Frise traduite (Gestion → Exporter → "PDF traduit") : si clé OpenAI configurée, le PDF est généré ; si DeepL, toast en bas à gauche "Clef DeepL pas assez puissante"
 - [ ] Bibliothèque publique (en navigation privée) : les boutons PNG/PDF sur les cartels ont disparu

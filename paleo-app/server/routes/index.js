@@ -12,6 +12,7 @@ import { ImportController }    from '../controllers/importController.js';
 import { ExportController }    from '../controllers/exportController.js';
 import { authenticate, requireAdmin, optionalAuth } from '../middleware/auth.js';
 import { submissionGuard } from '../middleware/submissionGuard.js';
+import { loginRateLimit } from '../middleware/loginGuard.js';
 import { uploadGuard } from '../middleware/uploadGuard.js';
 import { resolveTenant, requireTenantAccess } from '../middleware/tenant.js';
 import { SubsiteController }  from '../controllers/subsiteController.js';
@@ -30,8 +31,9 @@ const router = Router();
 
 // ── Auth ─────────────────────────────────────────────────────
 router.post('/auth/register', AuthController.register);
-router.post('/auth/login',    AuthController.login);
+router.post('/auth/login',    loginRateLimit, AuthController.login);
 router.get ('/auth/me',       authenticate, AuthController.me);
+router.post('/auth/change-password', authenticate, AuthController.changePassword);
 
 // ── Cartels ──────────────────────────────────────────────────
 // GET public : sans auth → ne voit que published+visible
@@ -81,6 +83,7 @@ router.get   ('/users',              authenticate, requireAdmin, UserController.
 router.post  ('/users',              authenticate, requireAdmin, UserController.create);
 router.get   ('/users/:id',          authenticate, requireAdmin, UserController.getOne);
 router.patch ('/users/:id',          authenticate, requireAdmin, UserController.update);
+router.patch ('/users/:id/password', authenticate, requireAdmin, UserController.setPassword);
 router.delete('/users/:id',          authenticate, requireAdmin, UserController.delete);
 
 // ── Upload image ─────────────────────────────────────────────
@@ -137,6 +140,7 @@ router.post  ('/submissions/:id/reject',  authenticate, requireAdmin, CartelCont
 router.get   ('/s/:slug/users',     authenticate, resolveTenant, requireTenantAccess, TeamController.list);
 router.post  ('/s/:slug/users',     authenticate, resolveTenant, requireTenantAccess, TeamController.create);
 router.patch ('/s/:slug/users/:id', authenticate, resolveTenant, requireTenantAccess, TeamController.update);
+router.patch ('/s/:slug/users/:id/password', authenticate, resolveTenant, requireTenantAccess, TeamController.setPassword);
 router.delete('/s/:slug/users/:id', authenticate, resolveTenant, requireTenantAccess, TeamController.remove);
 
 // ── Partenaires (public GET, admin write) ────────────────────
