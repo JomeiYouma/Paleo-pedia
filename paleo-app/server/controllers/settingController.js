@@ -48,6 +48,10 @@ export const SettingController = {
         'deepl_key',
         'site_primary_partner_ids',
         'site_partner_ids',
+        // Politique de re-validation quand un sous-site modifie un cartel déjà
+        // approuvé sur le principal : 'off' (legacy) | 'strict' (retrait + re-file).
+        // 'soft' (reste en ligne + flag) prévu mais pas encore livré.
+        'subsite_edit_revalidation',
       ];
       const pairs = {};
       for (const key of allowed) {

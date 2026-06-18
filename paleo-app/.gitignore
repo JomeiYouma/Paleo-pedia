@@ -23,6 +23,11 @@ public/guide-site-dedie-*.pdf
 # Artefacts de déploiement (ZIPs SFTP)
 *.zip
 
+# Outils de dev locaux jetables (probes BDD, générateurs de migration ponctuels).
+# Ne pas committer ni déployer — probe_press.mjs lit DATABASE_URL dans .env.
+probe_*.mjs
+gen_*.mjs
+
 # Secrets — ne JAMAIS committer le .env réel
 .env
 .env.local

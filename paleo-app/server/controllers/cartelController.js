@@ -1,5 +1,6 @@
 import { CartelModel } from '../models/Cartel.js';
 import { WorkshopModel } from '../models/Workshop.js';
+import { SettingModel } from '../models/Setting.js';
 import { dispatchEvent } from '../services/eventDispatcher.js';
 
 // Helper local : dispatch fire-and-forget (jamais bloquant)
@@ -203,6 +204,51 @@ async function maybeAutoSubmitToMain(cartel) {
   return await CartelModel.markSubmittedToMain(cartel.id);
 }
 
+/**
+ * Champs de contenu dont la modification, sur un cartel déjà validé sur le
+ * principal, justifie une re-validation. On ignore volontairement les champs
+ * non-contenu (visible local, lat/lng, ordre…) : un simple ajustement cosmétique
+ * ne doit pas re-filer une soumission.
+ */
+const REVALIDATION_FIELDS = [
+  'titre', 'titre_en', 'annee', 'description', 'description_en',
+  'exhume_par', 'location', 'location_en', 'image_path', 'url_qr', 'imageCredit',
+];
+
+function contentChangedForRevalidation(before, after) {
+  for (const f of REVALIDATION_FIELDS) {
+    if ((before?.[f] ?? '') !== (after?.[f] ?? '')) return true;
+  }
+  // Catégories et blocs de détail : comparaison structurelle (tableaux)
+  if (JSON.stringify(before?.categories ?? []) !== JSON.stringify(after?.categories ?? [])) return true;
+  if (JSON.stringify(before?.details_blocks ?? []) !== JSON.stringify(after?.details_blocks ?? [])) return true;
+  return false;
+}
+
+/**
+ * Re-validation après édition d'un cartel de sous-site DÉJÀ approuvé sur le
+ * principal. Pilotée par le réglage `subsite_edit_revalidation` :
+ *   - 'off'    : ne rien faire — les modifs passent directement (comportement legacy)
+ *   - 'strict' : retirer du principal + re-mettre en file de validation superadmin
+ * (Le mode 'soft' — rester en ligne + flag « à re-contrôler » — est prévu mais
+ * pas encore livré : on traite toute valeur ≠ 'strict' comme 'off'.)
+ *
+ * Retourne `{ cartel, requeued }` : `requeued=true` signale qu'une nouvelle
+ * soumission a été créée (pour déclencher la notification superadmin).
+ */
+async function maybeRevalidateAfterEdit(existing, updated) {
+  if (!updated || !existing) return { cartel: updated, requeued: false };
+  if (!existing.subsite_id) return { cartel: updated, requeued: false };      // pas un cartel de sous-site
+  if (!existing.visible_on_main) return { cartel: updated, requeued: false }; // pas (encore) approuvé sur le principal
+  if (!contentChangedForRevalidation(existing, updated)) return { cartel: updated, requeued: false };
+
+  const policy = (await SettingModel.get('subsite_edit_revalidation')) || 'off';
+  if (policy === 'strict') {
+    return { cartel: await CartelModel.requeueForMain(updated.id), requeued: true };
+  }
+  return { cartel: updated, requeued: false };
+}
+
 export const CartelController = {
 
   async getAll(req, res) {
@@ -308,6 +354,11 @@ export const CartelController = {
       );
       cartel = await maybeAutoSubmitToMain(cartel);
 
+      // Cartel déjà validé sur le principal + modifié → re-validation selon le
+      // réglage `subsite_edit_revalidation` (mode 'strict' = retrait + re-file).
+      const revalidation = await maybeRevalidateAfterEdit(existing, cartel);
+      cartel = revalidation.cartel;
+
       // Si la modif passe le statut à "published", c'est sémantiquement une publication
       const becamePublished = existing.status !== 'published' && cartel.status === 'published';
       dispatch({
@@ -319,6 +370,18 @@ export const CartelController = {
         summary: cartel.titre || '(sans titre)',
         payload: { previousStatus: existing.status, status: cartel.status },
       });
+
+      // Re-mise en file après modif d'un cartel validé → prévenir le superadmin
+      // (réutilise l'event de soumission sous-site → principal, déjà câblé aux emails).
+      if (revalidation.requeued) {
+        dispatch({
+          type: 'cartel.subsite_submitted',
+          req,
+          targetId: cartel.id, subsiteId: cartel.subsite_id ?? null,
+          summary: cartel.titre || '(sans titre)',
+          payload: { reason: 'edited_after_approval' },
+        });
+      }
       res.json(cartel);
     } catch (err) {
       res.status(500).json({ error: err.message });

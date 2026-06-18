@@ -5,15 +5,12 @@
 >
 > Vous n'avez besoin d'aucune compétence technique. Tout se fait depuis le site, dans votre navigateur.
 
-> **Comment utiliser ce manuel comme Google Doc ?**
-> Ce fichier est en *Markdown*. Pour en faire un Google Doc : ouvrez un nouveau document, puis collez le contenu (les titres, listes et tableaux sont conservés au collage), ou importez ce fichier via *Fichier → Ouvrir → Importer*. Les emplacements de captures d'écran sont signalés par le pictogramme **📸 [Capture Sxx]** ; la liste complète des captures à réaliser figure en **Annexe A**.
-
 ---
 
 ## Sommaire
 
-1. [Comprendre ce qu'est un site dédié](#1-comprendre-ce-quest-un-site-dédié)
-2. [Vocabulaire essentiel](#2-vocabulaire-essentiel)
+1. [Vocabulaire essentiel](#1-vocabulaire-essentiel)
+2. [Comprendre ce qu'est un site dédié](#2-comprendre-ce-quest-un-site-dédié)
 3. [Les rôles : qui peut faire quoi](#3-les-rôles--qui-peut-faire-quoi)
 4. [Se connecter et se repérer](#4-se-connecter-et-se-repérer)
 5. [Les pages publiques (côté visiteur)](#5-les-pages-publiques-côté-visiteur)
@@ -26,12 +23,27 @@
 12. [Modes opératoires pas-à-pas (recettes)](#12-modes-opératoires-pas-à-pas-recettes)
 13. [Points d'attention et pièges à éviter](#13-points-dattention-et-pièges-à-éviter)
 14. [FAQ](#14-faq)
-- [Annexe A — Liste des captures d'écran à insérer](#annexe-a--liste-des-captures-décran-à-insérer)
-- [Annexe B — Glossaire](#annexe-b--glossaire)
+- [Glossaire](#glossaire)
 
 ---
 
-## 1. Comprendre ce qu'est un site dédié
+## 1. Vocabulaire essentiel
+
+- **Cartel** : la fiche d'un objet / d'une invention (titre, année, lieu, image, description, catégories…). C'est l'unité de base affichée sur la frise.
+- **Frise** : la collection des cartels publiés de votre site dédié, présentée sous forme de chronologie. Trois modes d'affichage existent : **Frise** (chronologie), **Carte** (géographique) et **Arborescence**.
+- **Statut d'un cartel** : son état dans le cycle de vie.
+  - **Brouillon** (idée non publiée, invisible du public)
+  - **En attente** (proposition d'un visiteur, à modérer)
+  - **Publié** (visible du public)
+  - **Archivé** (conservé mais masqué du public, réversible)
+- **Slug** : la partie « adresse » d'un site dédié (ex. `paleo-h2o` dans `…/site/paleo-h2o`).
+- **Owner / Propriétaire** : la personne autorisée à administrer *un* site dédié précis (le vôtre).
+- **Superadmin / Administrateur général** : la personne qui gère l'ensemble de la plateforme et tous les sites dédiés.
+- **Soumettre au site principal** : proposer qu'un cartel publié sur votre site dédié apparaisse **aussi** sur le site principal (après validation de l'administrateur général).
+
+---
+
+## 2. Comprendre ce qu'est un site dédié
 
 Un **site dédié** est un mini-site thématique autonome, en orbite autour du site principal (Paléo-Énergétique). Il possède :
 
@@ -47,28 +59,12 @@ Un site dédié reste connecté au site principal : certains de vos cartels peuv
 
 | Type de source | Comment les cartels arrivent dans le site dédié |
 |---|---|
-| **Source « Catégorie »** | Les cartels sont ceux **explicitement rattachés** au site dédié. Vous décidez au cas par cas ce qui y figure (curation manuelle). |
-| **Source « Atelier »** | Les cartels sont **tous les membres d'un atelier** donné. La liste est **vivante** : ajouter/retirer un cartel de l'atelier l'ajoute/le retire automatiquement du site dédié. |
+| **Source « Catégorie »** | Les cartels sont ceux **explicitement rattachés** au site dédié. Vous choisissez vous-même, un par un, les cartels qui y figurent : c'est vous qui composez la sélection à la main. |
+| **Source « Atelier »** | Les cartels sont **tous ceux rattachés à un même atelier** (un atelier est un groupe de cartels). La liste se met à jour **toute seule** : ajouter ou retirer un cartel de l'atelier l'ajoute ou le retire aussitôt du site dédié. |
 
 > 📸 **[Capture S01]** — Vue d'ensemble d'un site dédié (page d'accueil affichée dans le navigateur, avec l'URL visible dans la barre d'adresse).
 
 > ⚠️ **À retenir :** le **type de source** (catégorie ou atelier), le **nom** et le **slug** (l'adresse) du site dédié sont définis à sa création par l'administrateur général et **ne sont plus modifiables ensuite**. En tant que propriétaire, vous gérez le contenu, pas l'identité technique.
-
----
-
-## 2. Vocabulaire essentiel
-
-- **Cartel** : la fiche d'un objet / d'une invention (titre, année, lieu, image, description, catégories…). C'est l'unité de base affichée sur la frise.
-- **Frise** : la collection des cartels publiés de votre site dédié, présentée sous forme de chronologie. Trois modes d'affichage existent : **Frise** (chronologie), **Carte** (géographique) et **Arborescence**.
-- **Statut d'un cartel** : son état dans le cycle de vie.
-  - **Brouillon** (idée non publiée, invisible du public)
-  - **En attente** (proposition d'un visiteur, à modérer)
-  - **Publié** (visible du public)
-  - **Archivé** (conservé mais masqué du public, réversible)
-- **Slug** : la partie « adresse » d'un site dédié (ex. `paleo-h2o` dans `…/site/paleo-h2o`).
-- **Owner / Propriétaire** : la personne autorisée à administrer *un* site dédié précis (le vôtre).
-- **Superadmin / Administrateur général** : la personne qui gère l'ensemble de la plateforme et tous les sites dédiés.
-- **Soumettre au site principal** : proposer qu'un cartel publié sur votre site dédié apparaisse **aussi** sur le site principal (après validation de l'administrateur général).
 
 ---
 
@@ -118,7 +114,7 @@ De gauche à droite :
 - **« Gérer »** — *(propriétaire)* gérer les cartels (modération).
 - **Icône de déconnexion**.
 
-> 📸 **[Capture S03]** — La barre du haut **vue connecté en propriétaire**, avec les boutons « Proposer un cartel », « Page d'accueil », « Équipe », « Gérer » bien visibles. Annotez chaque bouton.
+> 📸 **[Capture S03]** — La barre du haut **vue connecté en propriétaire**, avec les boutons « Proposer un cartel », « Page d'accueil », « Équipe », « Gérer » bien visibles.
 
 > 💡 **Repère visuel :** un fil d'Ariane (chemin de navigation) s'affiche en haut des pages profondes pour savoir où vous êtes et revenir en arrière.
 
@@ -156,7 +152,7 @@ Le lien **« Présentation »** du menu ouvre la page « À propos » **de votre
 
 ### 5.4 Partenaires
 
-Liste des partenaires associés à votre site dédié, séparés en **Partenaires principaux** (mis en avant) et **Partenaires**. Chaque partenaire affiche son logo (ou son initiale) et un lien vers son site si renseigné. *(Vous choisissez ces partenaires depuis l'éditeur de page d'accueil — voir [§8.4](#84-partenaires).)*
+Liste des partenaires associés à votre site dédié, séparés en **Partenaires principaux** (mis en premier) et **Partenaires**. Chaque partenaire affiche son logo (ou son initiale) et un lien vers son site si renseigné. *(Vous choisissez ces partenaires depuis l'éditeur de page d'accueil — voir [§8.4](#84-partenaires).)*
 
 > 📸 **[Capture S07]** — Page Partenaires d'un site dédié.
 
@@ -180,7 +176,7 @@ En haut à droite, deux boutons **FR / EN**. Le choix est **mémorisé dans le n
 
 ### 6.2 Comment le contenu bilingue est stocké
 
-Chaque **cartel** possède deux versions de ses textes clés : **titre, description et lieu**, en français **et** en anglais. De même, chaque **membre d'équipe** dispose d'un **rôle (EN)** et d'une **bio (EN)**.
+Chaque **cartel** possède deux versions de ses textes clés : **titre, description et lieu**, en français et en anglais. De même, chaque **membre d'équipe** dispose d'un **rôle (EN)** et d'une **bio (EN)**.
 
 > 💡 **Règle de repli (fallback) :** si un visiteur est en anglais mais que la version EN d'un champ est vide, c'est le **texte français qui s'affiche** (jamais de blanc). Rien ne « casse » donc si une traduction manque — mais le visiteur anglophone voit alors du français à cet endroit.
 
@@ -236,8 +232,8 @@ Le bouton **« Proposer un cartel »** ouvre le formulaire de création. **Le co
 | **Année de l'invention** | ❌ | Ex. `2024` ou `2024-01-15`. |
 | **Exhumé par** | ❌ | Crédite la personne qui a retrouvé/identifié l'objet. |
 | **Localisation (Ville, Pays)** | ❌ | Ex. `Paris, France`. Un bouton 📍 géolocalise automatiquement (point sur la carte). ✓ vert si trouvé, ✗ rouge si introuvable. |
-| **Description** | ❌ | Jusqu'à **1500 caractères**. Boutons **Gras** / **Italique**. Un compteur affiche `n / 1500`. |
-| **Image** | ❌ | Tout format image. Compressée automatiquement, prévisualisée immédiatement. |
+| **Description** | ❌ | Jusqu'à **1500 caractères** (espaces comprises). Boutons **Gras** / **Italique**. Un compteur affiche `n / 1500`. |
+| **Image** | ❌ | Compressée automatiquement, à partir de n'importe quel format d'image, et prévisualisée immédiatement. |
 | **Crédit image** | ❌ | Ex. `Wikimedia Commons, Auteur inconnu…`. |
 | **Catégories** | ❌ | Cliquez les catégories qui s'appliquent ; possibilité d'en créer une nouvelle. |
 | **Ateliers** | ❌ *(admins)* | Tags internes, **invisibles** sur la frise et à l'impression. |
@@ -313,7 +309,7 @@ Pour les blocs **Image** et **Galerie**, le bouton *Upload* ouvre votre explorat
 ### 8.4 Partenaires
 
 Sélectionnez les partenaires de votre site dédié en cliquant sur leurs noms, répartis en deux groupes :
-- **Partenaires principaux** (mis en avant en haut de la page Partenaires).
+- **Partenaires principaux** (mis en premier en haut de la page Partenaires).
 - **Partenaires** (groupe standard).
 
 Un partenaire ne peut être que dans un seul groupe à la fois. *(Le catalogue des partenaires lui-même est géré au niveau de la plateforme.)*
@@ -444,11 +440,7 @@ Sans aucune sélection, un bouton **« Exporter tout »** propose directement l'
 
 > 💡 Les actions groupées qui **modifient** (Publier, Retraduire, Associer à un atelier, Supprimer) **ignorent automatiquement** les cartels du site principal (« consultation », en lecture seule) : seuls vos cartels sont concernés. L'**export**, lui, les inclut (sans risque).
 
-> 📸 **[Capture S17]** — Toute la barre d'outils de la gestion (elle illustre à la fois §10.3 et §10.4). Repères de la capture :
-> - **Encadré rouge (en haut)** : la **recherche** et les filtres *Toutes catégories*, *Tous les ateliers*, *Filtres complexes* (§10.3).
-> - **Encadré vert** : le compteur **« N sélectionnés »** (case *Tout sélectionner*) et le bouton **Colonnes**.
-> - **Encadré jaune** : la **barre d'actions groupées** (Retraduire, Exporter, Associer à un atelier, Supprimer) — ici le menu **Exporter** est ouvert avec ses 4 formats.
-> - **Encadré rouge (à gauche)** : les **cases de sélection** de chaque ligne.
+> 📸 **[Capture S17]** — La barre d'outils de la gestion : en haut la **recherche** et les filtres (*Toutes catégories*, *Tous les ateliers*, *Filtres complexes*) ; le compteur **« N sélectionnés »** et le bouton **Colonnes** ; la **barre d'actions groupées** (Retraduire, Exporter, Associer à un atelier, Supprimer) avec le menu **Exporter** ouvert sur ses 4 formats ; et à gauche les **cases de sélection** de chaque ligne (§10.3 et §10.4).
 
 ### 10.5 Impression et QR codes
 
@@ -470,7 +462,7 @@ Vos cartels vivent d'abord sur **votre** site dédié. Vous pouvez proposer qu'i
 | **Horloge** (rose) | Soumis, **en attente** de validation. | Retirer la soumission. |
 | **Globe** (vert) | **Validé** : visible sur le site principal. | Retirer du site principal. |
 
-> 📸 **[Capture S18]** — Les boutons d'état de soumission sur un cartel publié (idéalement montrer un cartel « en attente » avec l'icône horloge).
+> 📸 **[Capture S18]** — Les boutons d'état de soumission sur un cartel publié.
 
 ### 11.2 Le déroulé complet
 
@@ -555,7 +547,7 @@ Vos cartels vivent d'abord sur **votre** site dédié. Vous pouvez proposer qu'i
 - **Page d'accueil bilingue, mais EN saisi à la main.** Les blocs ont une version FR et une version EN (onglet *English* de l'éditeur), sans traduction automatique. Si vous laissez l'EN vide, le visiteur anglophone voit le français (voir [§6.3](#63-ce-qui-se-traduit-et-ce-qui-ne-se-traduit-pas)).
 - **Pas d'aperçu en direct** dans l'éditeur de blocs : enregistrez puis vérifiez sur la page réelle.
 - **Identité figée.** Nom, slug et type de source ne se changent plus après création : passez par l'administrateur général.
-- **Source « Atelier » = liste vivante.** Si votre site dédié est alimenté par un atelier, ajouter/retirer un cartel de cet atelier modifie automatiquement votre frise.
+- **Source « Atelier » = mise à jour automatique.** Si votre site dédié est alimenté par un atelier, ajouter ou retirer un cartel de cet atelier modifie aussitôt votre frise.
 - **Cartels du site principal = lecture seule** dans votre vue (badge « consultation »).
 - **Suppression locale.** Supprimer un cartel depuis votre site dédié n'affecte pas le site principal.
 - **Réordonnancement des blocs et des membres : flèches ▲▼ uniquement** (pas de glisser-déposer).
@@ -595,35 +587,7 @@ Oui, à l'upload, pour optimiser le chargement, sans démarche de votre part.
 
 ---
 
-## Annexe A — Liste des captures d'écran à insérer
-
-| Réf. | Emplacement dans le manuel | Sujet de la capture |
-|---|---|---|
-| **S01** | §1 | Vue d'ensemble d'un site dédié (accueil + URL). |
-| **S02** | §4.1 | Fenêtre de connexion. |
-| **S03** | §4.2 | Barre du haut vue **connecté en propriétaire** (boutons annotés). |
-| **S04** | §5.1 | Page d'accueil complète (bannière + blocs). |
-| **S05** | §5.2 | Frise avec plusieurs cartels. |
-| **S06** | §5.2 | Mode **Carte**. |
-| **S07** | §5.4 | Page Partenaires. |
-| **S08** | §5.5 | Fiche détaillée d'un cartel. |
-| **S19** | §6.1 | Le sélecteur de langue **FR / EN** dans la barre du haut. |
-| **S09** | §7.1 | Formulaire « Proposer un cartel » vue propriétaire. |
-| **S10** | §7.1 | Même formulaire vue visiteur (champs admin absents). |
-| **S11** | §8 | Fenêtre d'édition de la page d'accueil (vue propriétaire). |
-| **S12** | §8.2 | Éditeur de blocs avec ▲▼ et corbeille. |
-| **S13** | §8.2 | Rangée des 9 boutons d'ajout de blocs. |
-| **S14** | §9.2 | Page Équipe (3 onglets + formulaire d'ajout). |
-| **S15** | §10 | Écran « Gérer » (bandeau + liste). |
-| **S16** | §10.2 | Gros plan rangée d'actions d'un cartel. |
-| **S17** | §10.4 | Barre d'actions groupées + menu Exporter (montrer « PDF traduit »). |
-| **S18** | §11.1 | Boutons d'état de soumission (idéalement « en attente »). |
-
-> 💡 Astuce captures : faites-les sur un site dédié de démonstration rempli de contenu réaliste, en étant connecté(e) en propriétaire. Pensez à masquer toute donnée personnelle (e-mails, IP) avant publication du document. *(La numérotation S01→S18 suit le fil de lecture ; S19 a été ajoutée pour le chapitre Langues et s'insère au chapitre 6.)*
-
----
-
-## Annexe B — Glossaire
+## Glossaire
 
 - **Cartel** — fiche d'un objet/invention affichée sur la frise.
 - **Site dédié** — mini-site thématique autonome rattaché à l'écosystème Paléo.

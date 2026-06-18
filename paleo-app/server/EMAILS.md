@@ -26,7 +26,7 @@ Si le SMTP n'est pas configuré, **rien ne plante** : les événements continuen
 
 | Fichier | Rôle |
 |---|---|
-| `migration_v8_event_logs.sql` | Crée les 2 tables et seed les 28 types d'événements |
+| `migration_v8_event_logs.sql` | Crée les 2 tables et seed les types d'événements (28 à l'origine en v8 ; **30 aujourd'hui** avec les ajouts v22/v23, cf. § 5). Note : ce fichier a depuis été fusionné dans `schema_mysql.sql` (seed canonique). |
 | `models/EventLog.js` | Insertion + lecture filtrable du journal |
 | `models/EventEmailConfig.js` | Lecture/upsert de la config email par type |
 | `services/mailer.js` | Wrapper nodemailer (no-op si SMTP non configuré) |
@@ -125,7 +125,7 @@ nano .env
 ```bash
 # 1. Vérifier que les tables existent et que le seed est en place
 node server/scripts/verify_event_tables.js
-# Attendu : 28 types seedés, 0 entrées dans event_logs
+# Attendu : 30 types seedés, 0 entrées dans event_logs
 
 # 2. Smoke test du dispatcher (insertion + lecture + cleanup)
 node server/scripts/smoke_event_dispatcher.js
@@ -146,6 +146,8 @@ Si rien n'arrive : voir [§ 7 Troubleshooting](#7-troubleshooting).
 ---
 
 ## 5. Liste des types d'événements
+
+> **30 types au total** : 28 seedés à l'origine (v8) + `mission_application.created` (ajouté en v22) + `contact_message.created` (ajouté en v23). Liste canonique = seed de `event_email_config` dans `schema_mysql.sql`.
 
 | Scope | Type | Émis par |
 |---|---|---|
@@ -169,6 +171,8 @@ Si rien n'arrive : voir [§ 7 Troubleshooting](#7-troubleshooting).
 | **partner** | `partner.created` / `.updated` / `.deleted` | CRUD partenaires |
 | **category** | `category.created` / `.updated` / `.deleted` | CRUD catégories |
 | **workshop** | `workshop.created` / `.updated` / `.deleted` | CRUD ateliers (`.updated` couvre aussi ajout/retrait de cartels) |
+| **mission_application** | `mission_application.created` | candidature soumise via le formulaire public `/participer` (ajouté en v22) |
+| **contact_message** | `contact_message.created` | message envoyé via le formulaire public `/contact` (ajouté en v23) |
 
 > **Note sur les deux files de modération** : `cartel.submission_pending` (visiteur anonyme via le formulaire public) et `cartel.subsite_submitted` (sous-site → site principal) sont **distincts**. Ne pas les confondre — voir mémoire interne `project_submissions_vs_pending`.
 
@@ -287,7 +291,7 @@ Soit désactive le type concerné dans la config, soit coche `Spam` pour qu'ils 
 - [ ] `git pull` la version contenant `migration_v8_event_logs.sql`
 - [ ] `npm install` (ajoute `nodemailer`)
 - [ ] `node server/scripts/run_migration.js server/migration_v8_event_logs.sql`
-- [ ] `node server/scripts/verify_event_tables.js` (28 types seedés)
+- [ ] `node server/scripts/verify_event_tables.js` (30 types seedés)
 - [ ] Renseigner `MAIL_SMTP_*` + `MAIL_FROM` dans le `.env` de prod
 - [ ] Redémarrer l'app (Passenger restart sur o2switch)
 - [ ] `node server/scripts/smoke_event_dispatcher.js` (insertion + cleanup OK)

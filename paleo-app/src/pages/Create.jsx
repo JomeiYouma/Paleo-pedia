@@ -55,9 +55,15 @@ const Create = () => {
         || readStoredReturnTo()
         || (subsiteSlug ? (subsiteBasePath(subsiteSlug) || '/') : '/app');
 
+    // Clé de sauvegarde locale du formulaire (anti-perte réseau). Par contexte :
+    // sous-site + nouveau/édition, pour ne jamais mélanger deux cartels distincts.
+    const draftKey = `paleo_cartel_draft:${subsiteSlug || 'main'}:${editId || 'new'}`;
+
     const isEn = i18n.language === 'en';
 
-    const [form, setForm] = useState({
+    // Form initial extrait en fabrique : réutilisé par useState ET par le bouton
+    // « repartir de zéro » qui réinitialise après récupération d'un brouillon local.
+    const makeInitialForm = () => ({
         titre: '',
         titre_en: '',
         annee: '2025',
@@ -87,6 +93,8 @@ const Create = () => {
         website: '',
     });
 
+    const [form, setForm] = useState(makeInitialForm);
+
     const [imageFile, setImageFile] = useState(null);
     const [newCategory, setNewCategory] = useState('');
     const [showAllCats, setShowAllCats] = useState(false);
@@ -95,10 +103,18 @@ const Create = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [statusMsg, setStatusMsg] = useState('');
     const [submitError, setSubmitError] = useState('');
+    // Notice post-enregistrement : ce cartel était publié sur le site principal
+    // et vient d'en être retiré + resoumis à validation (mode « strict »). On
+    // diffère la navigation tant que l'owner n'a pas lu le message.
+    const [revalNotice, setRevalNotice] = useState(false);
     // Vrai dès que l'utilisateur a modifié le form. Sert au garde-fou anti-perte
     // (handleBack + beforeunload). Reste false tant qu'on est sur le pré-remplissage
     // initial en mode edit (cf. useEffect editId plus bas).
     const [isDirty, setIsDirty] = useState(false);
+    // Horodatage ISO d'un brouillon local récupéré → déclenche le bandeau d'info.
+    // null tant qu'aucune récupération.
+    const [restoredAt, setRestoredAt] = useState(null);
+    const draftLoadedRef = useRef(false);
     const descRef = useRef(null);
 
     // beforeunload : bloque les refreshs / fermetures d'onglet si modifs en cours.
@@ -215,6 +231,75 @@ const Create = () => {
     // contexte via fetchData) écrase silencieusement les modifs en cours de
     // l'utilisateur — y compris la prévisu d'image qu'il vient de choisir.
     const initializedRef = useRef(false);
+
+    // ── Récupération du brouillon local au montage ───────────────
+    // S'il existe, il représente des saisies non enregistrées (coupure réseau,
+    // reload, onglet fermé) : il prime sur la version serveur, donc on bloque le
+    // pré-remplissage edit en passant initializedRef à true.
+    useEffect(() => {
+        if (draftLoadedRef.current) return;
+        draftLoadedRef.current = true;
+        let saved = null;
+        try { saved = JSON.parse(localStorage.getItem(draftKey) || 'null'); } catch { /* JSON corrompu */ }
+        if (!saved || !saved.form) return;
+        // Purge d'un brouillon trop vieux (> 30 j) pour ne pas ressortir une
+        // saisie oubliée ni encombrer le stockage indéfiniment.
+        const ageMs = saved.savedAt ? (Date.now() - (Date.parse(saved.savedAt) || 0)) : 0;
+        if (saved.savedAt && ageMs > 30 * 24 * 3600 * 1000) {
+            try { localStorage.removeItem(draftKey); } catch { /* noop */ }
+            return;
+        }
+        initializedRef.current = true; // empêche l'écrasement par le prefill serveur
+        setForm(prev => ({
+            ...prev,
+            ...saved.form,
+            // Le blob de prévisualisation d'image ne survit pas au reload : on
+            // retombe sur l'éventuel chemin déjà uploadé, sinon vide.
+            imageUrl: saved.form.image_path || '',
+        }));
+        setIsDirty(true);
+        setRestoredAt(saved.savedAt || true);
+    }, [draftKey]);
+
+    // ── Sauvegarde locale à chaque frappe (debounce) ─────────────
+    // On n'écrit qu'une fois le form « sale » pour ne pas stocker le squelette
+    // vide à chaque ouverture. try/catch : quota plein ou navigation privée.
+    useEffect(() => {
+        if (!isDirty) return;
+        const id = setTimeout(() => {
+            try {
+                const snapshot = { ...form };
+                delete snapshot.imageUrl; // blob de prévisu non sérialisable utilement
+                localStorage.setItem(draftKey, JSON.stringify({ form: snapshot, savedAt: new Date().toISOString() }));
+            } catch { /* on abandonne sans bruit */ }
+        }, 600);
+        return () => clearTimeout(id);
+    }, [form, isDirty, draftKey]);
+
+    // « Repartir de zéro » : oublie le brouillon local et restaure l'état initial
+    // (form vierge en création, version serveur en édition).
+    const discardLocalDraft = () => {
+        try { localStorage.removeItem(draftKey); } catch { /* noop */ }
+        setRestoredAt(null);
+        setIsDirty(false);
+        setImageFile(null);
+        if (editId) {
+            const existing = cartels.find(c => c.id === editId);
+            if (existing) {
+                setForm(prev => ({
+                    ...prev,
+                    ...existing,
+                    imageUrl: existing.image_path || '',
+                    categories: existing.categories || [],
+                    categories_en: existing.categories_en || [],
+                    workshopIds: existing.workshopIds || [],
+                }));
+            }
+        } else {
+            setForm(makeInitialForm());
+        }
+    };
+
     useEffect(() => {
         if (!editId || initializedRef.current) return;
         const existing = cartels.find(c => c.id === editId);
@@ -443,6 +528,14 @@ const Create = () => {
             }
         }
 
+        // Détection de re-validation : si on édite un cartel déjà publié sur le
+        // site principal, le serveur peut le retirer + le resoumettre (réglage
+        // « strict »). On capture l'état AVANT pour comparer à la réponse.
+        let requeuedForMain = false;
+        const wasVisibleOnMain = editId
+            ? !!cartels.find(c => c.id === editId)?.visible_on_main
+            : false;
+
         try {
             if (editId) {
                 // Mise à jour d'un cartel existant
@@ -466,6 +559,9 @@ const Create = () => {
                     setIsSaving(false);
                     return;
                 }
+                // Le serveur a retiré le cartel du principal pour re-validation
+                // (était visible_on_main, ne l'est plus, et repart en file).
+                requeuedForMain = wasVisibleOnMain && !updated.visible_on_main && !!updated.submitted_to_main_at;
             } else {
                 // Nouveau cartel
                 if (isAdmin) {
@@ -492,6 +588,15 @@ const Create = () => {
 
         setIsDirty(false);
         setIsSaving(false);
+        // Succès only : le brouillon local a rempli son rôle, on le purge. (Sur
+        // échec/retour anticipé plus haut, on le GARDE pour permettre le retry.)
+        try { localStorage.removeItem(draftKey); } catch { /* noop */ }
+        // Cartel retiré du principal pour re-validation : on diffère la navigation
+        // et on affiche un message explicatif (le modal navigue à la fermeture).
+        if (requeuedForMain) {
+            setRevalNotice(true);
+            return;
+        }
         clearReturnTo();
         navigate(returnTo);
     };
@@ -502,6 +607,51 @@ const Create = () => {
                 <div className="loading-overlay">
                     <div className="spinner"></div>
                     <h3>{statusMsg || t('common.loading', 'Chargement...')}</h3>
+                </div>
+            )}
+
+            {/* Notice de re-validation : le cartel a été retiré du site principal */}
+            {revalNotice && (
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="reval-notice-title"
+                    style={{
+                        position: 'fixed', inset: 0, zIndex: 10000,
+                        background: 'rgba(0,0,0,0.45)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        padding: '20px',
+                    }}
+                >
+                    <div style={{
+                        background: 'var(--color-surface, #fff)',
+                        borderRadius: '14px',
+                        maxWidth: '460px', width: '100%',
+                        padding: '26px 26px 22px',
+                        boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
+                        borderTop: '5px solid var(--color-warning, #e0a000)',
+                    }}>
+                        <h3 id="reval-notice-title" style={{ margin: '0 0 12px', fontSize: '1.15rem' }}>
+                            {t('create.revalNoticeTitle', 'Cartel retiré du site principal')}
+                        </h3>
+                        <p style={{ margin: '0 0 18px', fontSize: '0.95rem', lineHeight: 1.5, color: 'var(--color-text-muted, #555)' }}>
+                            {t('create.revalNoticeBody', "Vos modifications ont bien été enregistrées et restent visibles sur votre sous-site. Comme ce cartel était aussi publié sur le site principal, il en a été retiré le temps qu'un·e responsable le revalide. Il y réapparaîtra une fois la validation effectuée.")}
+                        </p>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <button
+                                type="button"
+                                onClick={() => { setRevalNotice(false); clearReturnTo(); navigate(returnTo); }}
+                                style={{
+                                    border: 'none', borderRadius: '10px',
+                                    padding: '11px 22px', cursor: 'pointer',
+                                    background: 'var(--color-primary, #2a6)', color: '#fff',
+                                    fontWeight: '700', fontSize: '0.9rem',
+                                }}
+                            >
+                                {t('create.revalNoticeOk', 'Compris')}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -551,6 +701,42 @@ const Create = () => {
                         onClick={() => setSubmitError('')}
                         aria-label={t('common.close', 'Fermer')}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#842029', padding: 0 }}
+                    >
+                        <X size={16} />
+                    </button>
+                </div>
+            )}
+
+            {/* Bandeau : un brouillon local a été restauré après une coupure/un reload */}
+            {restoredAt && (
+                <div
+                    role="status"
+                    style={{
+                        display: 'flex', alignItems: 'flex-start', gap: '10px',
+                        background: '#e8f5e9', border: '1px solid #a5d6a7',
+                        borderRadius: '10px', padding: '12px 14px', marginBottom: '14px',
+                        color: '#1b5e20', fontSize: '0.9rem', lineHeight: '1.5',
+                    }}
+                >
+                    <Info size={18} color="#2e7d32" style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <div style={{ flex: 1 }}>
+                        <strong>{t('create.draftRestoredTitle', 'Brouillon récupéré')}</strong>
+                        <div style={{ marginTop: '4px' }}>
+                            {t('create.draftRestoredBody', "Une saisie non enregistrée a été retrouvée sur cet appareil et restaurée. Si vous aviez ajouté une image, pensez à la re-sélectionner.")}
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={discardLocalDraft}
+                        style={{ flexShrink: 0, background: 'none', border: '1px solid #a5d6a7', borderRadius: '6px', cursor: 'pointer', color: '#1b5e20', padding: '4px 8px', fontFamily: 'inherit', fontSize: '0.8rem', fontWeight: 600 }}
+                    >
+                        {t('create.draftRestoredDiscard', 'Repartir de zéro')}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setRestoredAt(null)}
+                        aria-label={t('common.close', 'Fermer')}
+                        style={{ flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer', color: '#1b5e20', padding: 0 }}
                     >
                         <X size={16} />
                     </button>

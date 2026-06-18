@@ -5,15 +5,12 @@
 >
 > No technical skills are required. Everything is done from the website, in your browser.
 
-> **How to turn this guide into a Google Doc?**
-> This file is in *Markdown*. To make a Google Doc out of it: open a new document, then paste the content (titles, lists and tables are preserved on paste), or import this file via *File → Open → Upload*. Screenshot locations are flagged with the **📸 [Screenshot Sxx]** icon; the full list of screenshots to capture is in **Appendix A**.
-
 ---
 
 ## Table of contents
 
-1. [Understanding what a dedicated site is](#1-understanding-what-a-dedicated-site-is)
-2. [Key vocabulary](#2-key-vocabulary)
+1. [Key vocabulary](#1-key-vocabulary)
+2. [Understanding what a dedicated site is](#2-understanding-what-a-dedicated-site-is)
 3. [Roles: who can do what](#3-roles-who-can-do-what)
 4. [Signing in and finding your way around](#4-signing-in-and-finding-your-way-around)
 5. [The public pages (visitor view)](#5-the-public-pages-visitor-view)
@@ -26,12 +23,27 @@
 12. [Step-by-step recipes](#12-step-by-step-recipes)
 13. [Things to watch out for](#13-things-to-watch-out-for)
 14. [FAQ](#14-faq)
-- [Appendix A — List of screenshots to insert](#appendix-a--list-of-screenshots-to-insert)
-- [Appendix B — Glossary](#appendix-b--glossary)
+- [Glossary](#glossary)
 
 ---
 
-## 1. Understanding what a dedicated site is
+## 1. Key vocabulary
+
+- **Cartel**: the record for an object / invention (title, year, location, image, description, categories…). It is the basic unit shown on the timeline.
+- **Timeline (Frise)**: the collection of your dedicated site's published cartels, shown as a chronology. Three display modes exist: **Timeline** (chronology), **Map** (geographic) and **Tree** (Arborescence).
+- **Cartel status**: its state in the life cycle.
+  - **Draft** (unpublished idea, hidden from the public)
+  - **Pending** (a visitor's submission, awaiting moderation)
+  - **Published** (visible to the public)
+  - **Archived** (kept but hidden from the public, reversible)
+- **Slug**: the "address" part of a dedicated site (e.g. `paleo-h2o` in `…/site/paleo-h2o`).
+- **Owner**: the person allowed to administer *one* specific dedicated site (yours).
+- **Superadmin / General administrator**: the person who manages the entire platform and all dedicated sites.
+- **Submit to the main site**: propose that a cartel published on your dedicated site also appears on the main site (after the general administrator's approval).
+
+---
+
+## 2. Understanding what a dedicated site is
 
 A **dedicated site** is a standalone thematic mini-site orbiting the main site (Paléo-Énergétique). It has:
 
@@ -47,28 +59,12 @@ A dedicated site stays connected to the main site: some of your cartels can, if 
 
 | Source type | How cartels end up in the dedicated site |
 |---|---|
-| **"Category" source** | The cartels are those **explicitly attached** to the dedicated site. You decide case by case what appears there (manual curation). |
-| **"Workshop" source** | The cartels are **all the members of a given workshop**. The list is **live**: adding/removing a cartel from the workshop adds/removes it from the dedicated site automatically. |
+| **"Category" source** | The cartels are those **explicitly attached** to the dedicated site. You decide, one by one, which cartels appear there: you build the selection by hand. |
+| **"Workshop" source** | The cartels are **all those attached to a given workshop** (a workshop is a group of cartels). The list updates **on its own**: adding or removing a cartel from the workshop adds or removes it from the dedicated site right away. |
 
 > 📸 **[Screenshot S01]** — Overview of a dedicated site (home page shown in the browser, with the URL visible in the address bar).
 
 > ⚠️ **Keep in mind:** the **source type** (category or workshop), the **name** and the **slug** (the address) of the dedicated site are set at creation by the general administrator and **can no longer be changed afterwards**. As an owner, you manage the content, not the technical identity.
-
----
-
-## 2. Key vocabulary
-
-- **Cartel**: the record for an object / invention (title, year, location, image, description, categories…). It is the basic unit shown on the timeline.
-- **Timeline (Frise)**: the collection of your dedicated site's published cartels, shown as a chronology. Three display modes exist: **Timeline** (chronology), **Map** (geographic) and **Tree** (Arborescence).
-- **Cartel status**: its state in the life cycle.
-  - **Draft** (unpublished idea, hidden from the public)
-  - **Pending** (a visitor's submission, awaiting moderation)
-  - **Published** (visible to the public)
-  - **Archived** (kept but hidden from the public, reversible)
-- **Slug**: the "address" part of a dedicated site (e.g. `paleo-h2o` in `…/site/paleo-h2o`).
-- **Owner**: the person allowed to administer *one* specific dedicated site (yours).
-- **Superadmin / General administrator**: the person who manages the entire platform and all dedicated sites.
-- **Submit to the main site**: propose that a cartel published on your dedicated site also appears on the main site (after the general administrator's approval).
 
 ---
 
@@ -118,7 +114,7 @@ From left to right:
 - **"Manage"** — *(owner)* manage the cartels (moderation).
 - **Sign-out icon**.
 
-> 📸 **[Screenshot S03]** — The top bar **as seen when signed in as an owner**, with the "Submit a cartel", "Home page", "Team", "Manage" buttons clearly visible. Annotate each button.
+> 📸 **[Screenshot S03]** — The top bar **as seen when signed in as an owner**, with the "Submit a cartel", "Home page", "Team", "Manage" buttons clearly visible.
 
 > 💡 **Visual cue:** a breadcrumb trail appears at the top of deep pages so you know where you are and can step back.
 
@@ -156,7 +152,7 @@ The **"Presentation"** menu link opens **your dedicated site's** "About" page: i
 
 ### 5.4 Partners
 
-A list of the partners associated with your dedicated site, split into **Main partners** (highlighted) and **Partners**. Each partner shows its logo (or its initial) and a link to its website if provided. *(You choose these partners from the home page editor — see [§8.4](#84-partners).)*
+A list of the partners associated with your dedicated site, split into **Main partners** (shown first) and **Partners**. Each partner shows its logo (or its initial) and a link to its website if provided. *(You choose these partners from the home page editor — see [§8.4](#84-partners).)*
 
 > 📸 **[Screenshot S07]** — A dedicated site's Partners page.
 
@@ -180,7 +176,7 @@ In the top right, two **FR / EN** buttons. The choice is **stored in the visitor
 
 ### 6.2 How bilingual content is stored
 
-Each **cartel** has two versions of its key texts: **title, description and location**, in French **and** in English. Likewise, each **team member** has a **Role (EN)** and a **Bio (EN)**.
+Each **cartel** has two versions of its key texts: **title, description and location**, in French and in English. Likewise, each **team member** has a **Role (EN)** and a **Bio (EN)**.
 
 > 💡 **Fallback rule:** if a visitor is in English but the EN version of a field is empty, the **French text is shown** (never a blank). So nothing "breaks" if a translation is missing — but an English-speaking visitor then sees French at that spot.
 
@@ -236,8 +232,8 @@ The **"Submit a cartel"** button opens the creation form. **The behaviour depend
 | **Year of the invention** | ❌ | E.g. `2024` or `2024-01-15`. |
 | **Unearthed by** | ❌ | Credits the person who found/identified the object. |
 | **Location (City, Country)** | ❌ | E.g. `Paris, France`. A 📍 button geolocates automatically (a pin on the map). ✓ green if found, ✗ red if not found. |
-| **Description** | ❌ | Up to **1500 characters**. **Bold** / **Italic** buttons. A counter shows `n / 1500`. |
-| **Image** | ❌ | Any image format. Compressed automatically, previewed instantly. |
+| **Description** | ❌ | Up to **1500 characters** (spaces included). **Bold** / **Italic** buttons. A counter shows `n / 1500`. |
+| **Image** | ❌ | Automatically compressed, from any image format, and previewed instantly. |
 | **Image credit** | ❌ | E.g. `Wikimedia Commons, Unknown author…`. |
 | **Categories** | ❌ | Click the categories that apply; you can create a new one. |
 | **Workshops** | ❌ *(admins)* | Internal tags, **hidden** on the timeline and in printing. |
@@ -313,7 +309,7 @@ For the **Image** and **Gallery** blocks, the *Upload* button opens your file ex
 ### 8.4 Partners
 
 Select your dedicated site's partners by clicking their names, split into two groups:
-- **Main partners** (highlighted at the top of the Partners page).
+- **Main partners** (shown first at the top of the Partners page).
 - **Partners** (standard group).
 
 A partner can only be in one group at a time. *(The partner catalogue itself is managed at the platform level.)*
@@ -444,11 +440,7 @@ With no selection at all, an **"Export all"** button directly offers the full ar
 
 > 💡 Bulk actions that **modify** (Publish, Re-translate, Assign to a workshop, Delete) **automatically skip** main-site cartels ("view only", read-only): only your own cartels are affected. **Export**, however, includes them (no risk).
 
-> 📸 **[Screenshot S17]** — The whole management toolbar (it illustrates both §10.3 and §10.4). Guides on the screenshot:
-> - **Red box (top)**: the **search** and the *All categories*, *All workshops*, *Complex filters* filters (§10.3).
-> - **Green box**: the **"N selected"** counter (the *Select all* checkbox) and the **Columns** button.
-> - **Yellow box**: the **bulk action bar** (Re-translate, Export, Assign to a workshop, Delete) — here the **Export** menu is open with its 4 formats.
-> - **Red box (left)**: the per-row **selection checkboxes**.
+> 📸 **[Screenshot S17]** — The management toolbar: at the top the **search** and the filters (*All categories*, *All workshops*, *Complex filters*); the **"N selected"** counter and the **Columns** button; the **bulk action bar** (Re-translate, Export, Assign to a workshop, Delete) with the **Export** menu open on its 4 formats; and on the left the per-row **selection checkboxes** (§10.3 and §10.4).
 
 ### 10.5 Printing and QR codes
 
@@ -470,7 +462,7 @@ Your cartels live first on **your** dedicated site. You can propose that they **
 | **Clock** (pink) | Submitted, **awaiting** validation. | Withdraw the submission. |
 | **Globe** (green) | **Validated**: visible on the main site. | Withdraw from the main site. |
 
-> 📸 **[Screenshot S18]** — The submission-state buttons on a published cartel (ideally show a "pending" cartel with the clock icon).
+> 📸 **[Screenshot S18]** — The submission-state buttons on a published cartel.
 
 ### 11.2 The full flow
 
@@ -555,7 +547,7 @@ Your cartels live first on **your** dedicated site. You can propose that they **
 - **Home page is bilingual, but EN is entered by hand.** Blocks have a FR version and an EN version (*English* tab in the editor), with no automatic translation. If you leave EN empty, the English-speaking visitor sees French (see [§6.3](#63-what-gets-translated-and-what-does-not)).
 - **No live preview** in the block editor: save, then check on the real page.
 - **Frozen identity.** Name, slug and source type cannot be changed after creation: go through the general administrator.
-- **"Workshop" source = live list.** If your dedicated site is fed by a workshop, adding/removing a cartel from that workshop automatically changes your timeline.
+- **"Workshop" source = automatic updates.** If your dedicated site is fed by a workshop, adding or removing a cartel from that workshop changes your timeline right away.
 - **Main site cartels = read-only** in your view ("view only" badge).
 - **Local deletion.** Deleting a cartel from your dedicated site does not affect the main site.
 - **Reordering blocks and members: ▲▼ arrows only** (no drag-and-drop).
@@ -595,35 +587,7 @@ Yes, on upload, to optimise loading, with no action on your part.
 
 ---
 
-## Appendix A — List of screenshots to insert
-
-| Ref. | Location in the guide | Screenshot subject |
-|---|---|---|
-| **S01** | §1 | Overview of a dedicated site (home + URL). |
-| **S02** | §4.1 | Sign-in window. |
-| **S03** | §4.2 | Top bar seen **signed in as owner** (annotated buttons). |
-| **S04** | §5.1 | Full home page (banner + blocks). |
-| **S05** | §5.2 | Timeline with several cartels. |
-| **S06** | §5.2 | **Map** mode. |
-| **S07** | §5.4 | Partners page. |
-| **S08** | §5.5 | A cartel's detailed record. |
-| **S19** | §6.1 | The **FR / EN** language switcher in the top bar. |
-| **S09** | §7.1 | "Submit a cartel" form, owner view. |
-| **S10** | §7.1 | Same form, visitor view (admin fields absent). |
-| **S11** | §8 | Home page editing window (owner view). |
-| **S12** | §8.2 | Block editor with ▲▼ and trash. |
-| **S13** | §8.2 | The row of the 9 block-adding buttons. |
-| **S14** | §9.2 | Team page (3 tabs + add form). |
-| **S15** | §10 | "Manage" screen (banner + list). |
-| **S16** | §10.2 | Close-up of a cartel's action row. |
-| **S17** | §10.4 | Bulk action bar + Export menu (show "Translated PDF"). |
-| **S18** | §11.1 | Submission-state buttons (ideally "pending"). |
-
-> 💡 Screenshot tip: take them on a demo dedicated site filled with realistic content, signed in as an owner. Remember to mask any personal data (emails, IPs) before publishing the document. *(Numbering S01→S18 follows the reading order; S19 was added for the Languages chapter and slots into chapter 6.)*
-
----
-
-## Appendix B — Glossary
+## Glossary
 
 - **Cartel** — the record of an object/invention shown on the timeline.
 - **Dedicated site** — a standalone thematic mini-site attached to the Paléo ecosystem.

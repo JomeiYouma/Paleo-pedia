@@ -309,6 +309,21 @@ export const CartelModel = {
     return this.findById(id);
   },
 
+  /**
+   * Re-met en file de validation principale un cartel DÉJÀ approuvé qui vient
+   * d'être modifié par son sous-site (mode 'strict'). On retire du principal
+   * (visible_on_main = 0) et on rafraîchit l'horodatage pour que la soumission
+   * réapparaisse en bas de la file (≠ markSubmittedToMain qui conserve la date
+   * d'origine via IFNULL).
+   */
+  async requeueForMain(id) {
+    await query(
+      'UPDATE cartels SET visible_on_main = 0, submitted_to_main_at = NOW() WHERE id = ?',
+      [id]
+    );
+    return this.findById(id);
+  },
+
   /** Liste des cartels de sous-sites soumis et en attente de décision */
   async findPendingSubmissions({ limit = 50, offset = 0 } = {}) {
     const { rows } = await query(

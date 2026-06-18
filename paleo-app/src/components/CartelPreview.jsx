@@ -103,15 +103,28 @@ const CartelPreview = ({ data, isDraft = false, showExports = false }) => {
                                 © {data.imageCredit}
                             </div>
                         )}
+                        {isDraft && (
+                            <div className="draft-ribbon" aria-hidden="true">
+                                <span>{t('status.draft')}</span>
+                            </div>
+                        )}
                     </div>
                 ) : (
-                    <div className="cartel-no-image">{i18n.language === 'fr' ? 'Aucune image' : 'No image'}</div>
+                    <div className="cartel-no-image" style={{ position: 'relative' }}>
+                        {i18n.language === 'fr' ? 'Aucune image' : 'No image'}
+                        {isDraft && (
+                            <div className="draft-ribbon" aria-hidden="true">
+                                <span>{t('status.draft')}</span>
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
 
             <div className="cartel-content-column">
                 <div className="cartel-card">
-                    {isDraft && <div className="draft-badge">⚠️ BROUILLON</div>}
+                    {/* Le statut brouillon est signalé par le bandeau diagonal sur l'image
+                        (.draft-ribbon) — pas de badge redondant ici. */}
 
                     {/* Boutons d'export — réservés à la gestion (cachés en bibliothèque publique) */}
                     {showExports && (

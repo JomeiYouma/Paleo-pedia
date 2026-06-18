@@ -4,3 +4,4 @@
 # Staging local : assets bruts à intégrer (non versionnés, le script de seed
 # les copie ensuite dans seed-content/ et/ou paleo-uploads/ aux bons endroits).
 upload-dev/
+upload_dev/

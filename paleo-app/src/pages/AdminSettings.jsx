@@ -235,6 +235,9 @@ const AdminSettings = () => {
     const [deeplKey,      setDeeplKey]     = useState('');
     const [showOpenaiKey, setShowOpenaiKey] = useState(false);
     const [showDeeplKey,  setShowDeeplKey]  = useState(false);
+    // Politique de re-validation quand un sous-site modifie un cartel déjà
+    // publié sur le principal : 'off' | 'strict' ('soft' prévu mais pas livré).
+    const [revalPolicy,   setRevalPolicy]   = useState('off');
 
     // ── Chargement initial ───────────────────────────────────
     useEffect(() => {
@@ -247,6 +250,7 @@ const AdminSettings = () => {
                 setMaxTotal(parseInt(s.max_submissions_per_ip_total, 10) || 10);
                 setMaxWindow(parseInt(s.max_submissions_per_ip_window, 10) || 3);
                 setWindowMinutes(parseInt(s.submission_window_minutes, 10) || 60);
+                setRevalPolicy(s.subsite_edit_revalidation || 'off');
                 try {
                     setSitePrimaryPartnerIds(JSON.parse(s.site_primary_partner_ids || '[]'));
                     setSitePartnerIds(JSON.parse(s.site_partner_ids || '[]'));
@@ -287,6 +291,7 @@ const AdminSettings = () => {
                 max_submissions_per_ip_total:  String(maxTotal),
                 max_submissions_per_ip_window: String(maxWindow),
                 submission_window_minutes:     String(windowMinutes),
+                subsite_edit_revalidation:     revalPolicy,
                 openai_key: openaiKey,
                 deepl_key:  deeplKey,
             };
@@ -713,6 +718,58 @@ const AdminSettings = () => {
                                     </div>
                                 </div>
                             )}
+                        </Section>
+
+                        {/* ── Re-validation des modifs sous-site ──────── */}
+                        <Section icon={Shield} title="Cartels de sous-site publiés sur le principal"
+                            color="var(--color-theme-people)" bg="var(--color-theme-people-bg)">
+                            <Field
+                                label="Que faire quand un sous-site modifie un cartel déjà validé sur le site principal ?"
+                                hint="Un cartel de sous-site approuvé reste la même fiche : sans contrôle, une modification du sous-site s'affiche aussi sur le site principal sans nouvelle validation."
+                            >
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {[
+                                        { key: 'off',    title: 'Désactivé', desc: 'Les modifications passent directement sur le site principal (comportement par défaut).' },
+                                        { key: 'strict', title: 'Stricte — retrait + re-validation', desc: 'La modification retire le cartel du site principal jusqu’à une nouvelle validation. Le superadmin est notifié.' },
+                                        { key: 'soft',   title: 'Souple — reste en ligne + signalement', desc: 'À venir : le cartel reste visible avec le nouveau contenu, mais est signalé pour contrôle.', disabled: true },
+                                    ].map(opt => {
+                                        const active = revalPolicy === opt.key;
+                                        return (
+                                            <button
+                                                key={opt.key}
+                                                type="button"
+                                                disabled={opt.disabled}
+                                                onClick={() => !opt.disabled && setRevalPolicy(opt.key)}
+                                                aria-pressed={active}
+                                                style={{
+                                                    textAlign: 'left',
+                                                    display: 'flex', alignItems: 'flex-start', gap: '12px',
+                                                    padding: '14px 16px',
+                                                    borderRadius: 'var(--radius-md)',
+                                                    border: active ? '2px solid var(--color-theme-people)' : '2px solid var(--color-border)',
+                                                    background: active ? 'var(--color-theme-people-bg)' : 'var(--color-surface-2)',
+                                                    cursor: opt.disabled ? 'not-allowed' : 'pointer',
+                                                    opacity: opt.disabled ? 0.55 : 1,
+                                                    fontFamily: 'inherit',
+                                                }}
+                                            >
+                                                <div style={{
+                                                    width: '18px', height: '18px', flexShrink: 0, marginTop: '2px',
+                                                    borderRadius: '50%',
+                                                    border: active ? '5px solid var(--color-theme-people)' : '2px solid var(--color-border-strong)',
+                                                    background: 'var(--color-surface)',
+                                                }} />
+                                                <div>
+                                                    <div style={{ fontWeight: '700', fontSize: '0.9rem', color: 'var(--color-text)' }}>
+                                                        {opt.title}{opt.disabled && <span style={{ marginLeft: '8px', fontSize: '0.7rem', color: 'var(--color-text-subtle)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>bientôt</span>}
+                                                    </div>
+                                                    <div style={{ fontSize: '0.84rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>{opt.desc}</div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </Field>
                         </Section>
 
                         {/* ── Équipe (page publique « À propos ») ──────────── */}

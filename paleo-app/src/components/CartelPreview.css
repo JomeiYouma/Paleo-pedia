@@ -104,20 +104,6 @@
     box-shadow: var(--shadow-sm);
 }
 
-.draft-badge {
-    background: var(--color-accent);
-    color: var(--color-primary);
-    padding: 6px 10px;
-    text-align: center;
-    font-weight: 700;
-    font-family: var(--font-heading);
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    font-size: 0.78rem;
-    margin-bottom: 14px;
-    border-radius: var(--radius-md);
-}
-
 .cartel-year {
     text-align: right;
     font-family: var(--font-display);
@@ -150,6 +136,41 @@
     overflow-y: auto;
     padding-right: 10px;
     color: var(--color-text);
+}
+
+/* Estampille « brouillon » : bandeau rouge en diagonale, semi-transparent,
+   posé sur l'image pour repérer d'un coup d'œil un cartel non publié au milieu
+   des cartels en ligne (utile surtout dans la frise admin, qui n'affiche qu'un
+   cartel à la fois). pointer-events: none → ne gêne ni le lien d'erreur image
+   ni le crédit. */
+.draft-ribbon {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.draft-ribbon span {
+    position: absolute;
+    width: 160%;
+    text-align: center;
+    transform: rotate(-22deg);
+    background: rgba(200, 32, 32, 0.6);
+    color: #fff;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.4em;
+    /* compense le letter-spacing pour garder le texte centré */
+    text-indent: 0.4em;
+    font-size: 1.6rem;
+    padding: 10px 0;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
 .cartel-credit-overlay {
