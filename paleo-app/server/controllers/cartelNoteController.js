@@ -8,6 +8,10 @@
  */
 import { CartelModel }     from '../models/Cartel.js';
 import { CartelNoteModel } from '../models/CartelNote.js';
+import { dispatchEvent }   from '../services/eventDispatcher.js';
+
+// Helper local : journalisation fire-and-forget (jamais bloquante).
+const dispatch = (args) => { dispatchEvent(args).catch(() => {}); };
 
 const MAX_NOTE_LENGTH = 5000;
 
@@ -66,6 +70,7 @@ export const CartelNoteController = {
         authorEmail: req.user.email || '',
         body,
       });
+      dispatch({ type: 'cartel_note.created', req, targetId: cartel.id, subsiteId: cartel.subsite_id ?? null, summary: cartel.titre || '', payload: { noteId: note.id } });
       res.status(201).json(note);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -82,6 +87,7 @@ export const CartelNoteController = {
         return res.status(404).json({ error: 'Note introuvable' });
       }
       await CartelNoteModel.delete(note.id);
+      dispatch({ type: 'cartel_note.deleted', req, targetId: cartel.id, subsiteId: cartel.subsite_id ?? null, summary: cartel.titre || '', payload: { noteId: note.id } });
       res.status(204).send();
     } catch (err) {
       res.status(500).json({ error: err.message });

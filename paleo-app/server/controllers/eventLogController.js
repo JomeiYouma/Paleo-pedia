@@ -11,6 +11,10 @@
 
 import { EventLogModel }         from '../models/EventLog.js';
 import { EventEmailConfigModel } from '../models/EventEmailConfig.js';
+import { dispatchEvent }         from '../services/eventDispatcher.js';
+
+// Helper local : journalisation fire-and-forget (jamais bloquante).
+const dispatch = (args) => { dispatchEvent(args).catch(() => {}); };
 
 export const EventLogController = {
   async list(req, res) {
@@ -64,6 +68,7 @@ export const EventLogController = {
         mark_as_spam:   !!req.body.mark_as_spam,
         subject_prefix: req.body.subject_prefix ?? '[Paléo]',
       });
+      dispatch({ type: 'event_email_config.updated', req, summary: type, payload: { enabled: !!req.body.enabled, recipient: req.body.recipient ?? '', mark_as_spam: !!req.body.mark_as_spam } });
       res.json(updated);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -82,6 +87,7 @@ export const EventLogController = {
       // Pas de validation stricte d'email côté serveur : on autorise vide
       // (= retirer le destinataire partout) et on laisse le mailer gérer.
       const affected = await EventEmailConfigModel.bulkSetRecipient(recipient);
+      dispatch({ type: 'event_email_config.updated', req, summary: 'destinataire global', payload: { recipient, affected } });
       const items = await EventEmailConfigModel.getAll();
       res.json({ affected, items });
     } catch (err) {

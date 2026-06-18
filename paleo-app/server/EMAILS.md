@@ -147,7 +147,7 @@ Si rien n'arrive : voir [§ 7 Troubleshooting](#7-troubleshooting).
 
 ## 5. Liste des types d'événements
 
-> **30 types au total** : 28 seedés à l'origine (v8) + `mission_application.created` (ajouté en v22) + `contact_message.created` (ajouté en v23). Liste canonique = seed de `event_email_config` dans `schema_mysql.sql`.
+> **56 types au total** : 28 seedés à l'origine (v8) + `mission_application.created` (v22) + `contact_message.created` (v23) + **26 ajoutés en v30** (audit « logs pour toutes les actions » : auth/sécurité, réglages, import, CRUD de contenu, notes). Liste canonique = seed de `event_email_config` dans `schema_mysql.sql`.
 
 | Scope | Type | Émis par |
 |---|---|---|
@@ -173,6 +173,21 @@ Si rien n'arrive : voir [§ 7 Troubleshooting](#7-troubleshooting).
 | **workshop** | `workshop.created` / `.updated` / `.deleted` | CRUD ateliers (`.updated` couvre aussi ajout/retrait de cartels) |
 | **mission_application** | `mission_application.created` | candidature soumise via le formulaire public `/participer` (ajouté en v22) |
 | **contact_message** | `contact_message.created` | message envoyé via le formulaire public `/contact` (ajouté en v23) |
+| **auth** _(v30)_ | `auth.login` | connexion réussie |
+| | `auth.login_failed` | échec de connexion (email inconnu ou mot de passe incorrect ; `payload.reason`) |
+| | `auth.locked_out` | blocage anti-force-brute (seuil d'IP franchi, `loginGuard`) — émis une fois par fenêtre |
+| | `auth.register` | inscription (seulement si `ALLOW_PUBLIC_REGISTRATION="true"`) |
+| **user** _(v30, déjà émis depuis le durcissement)_ | `user.password_changed` | l'utilisateur change son propre mot de passe |
+| | `user.password_reset` | un admin réinitialise le mot de passe d'un compte |
+| **setting** _(v30)_ | `setting.updated` | modification des réglages (`payload.changed` ; valeurs des clés API masquées) |
+| **cartel** _(v30)_ | `cartel.imported` | import ZIP de masse (un événement de synthèse par import) |
+| **event_email_config** _(v30)_ | `event_email_config.updated` | modification de la config des notifications email |
+| **mission** _(v30)_ | `mission.created` / `.updated` / `.deleted` | CRUD des missions (`/participer`) |
+| **press_article** _(v30)_ | `press_article.created` / `.updated` / `.deleted` | CRUD des articles de presse (`/presse`) |
+| **prestation** _(v30)_ | `prestation.created` / `.updated` / `.deleted` | CRUD des prestations (`/prestations`) |
+| **shop_item** _(v30)_ | `shop_item.created` / `.updated` / `.deleted` | CRUD de la boutique (`/ouvrages`) |
+| **team_member** _(v30)_ | `team_member.created` / `.updated` / `.deleted` | CRUD des membres d'équipe (page « À propos », scopé par sous-site) |
+| **cartel_note** _(v30)_ | `cartel_note.created` / `.deleted` | notes internes admin sur un cartel |
 
 > **Note sur les deux files de modération** : `cartel.submission_pending` (visiteur anonyme via le formulaire public) et `cartel.subsite_submitted` (sous-site → site principal) sont **distincts**. Ne pas les confondre — voir mémoire interne `project_submissions_vs_pending`.
 

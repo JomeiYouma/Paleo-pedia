@@ -46,6 +46,17 @@ const SiteFooter = () => {
                     <p style={{ color: '#999', fontSize: '0.9rem', margin: 0 }}>
                         © {new Date().getFullYear()} Atelier 21
                     </p>
+                    <p style={{ color: '#999', fontSize: '0.85rem', margin: '6px 0 0' }}>
+                        {t('footer.createdBy')}{' '}
+                        <a
+                            href="https://jomeiyouma.github.io/portfolio/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: '#666', textDecoration: 'underline' }}
+                        >
+                            Youma
+                        </a>
+                    </p>
                 </div>
             </div>
         </footer>

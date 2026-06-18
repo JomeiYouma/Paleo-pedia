@@ -16,6 +16,10 @@
  * teamController.js (qui gère les comptes utilisateurs des sous-sites).
  */
 import { TeamMemberModel } from '../models/TeamMember.js';
+import { dispatchEvent } from '../services/eventDispatcher.js';
+
+// Helper local : journalisation fire-and-forget (jamais bloquante).
+const dispatch = (args) => { dispatchEvent(args).catch(() => {}); };
 
 /** Résout le subsite_id cible :
  *   - req.tenant      → subsite courant
@@ -65,6 +69,7 @@ export const TeamMemberController = {
       // Quand 'all' (superadmin global hors tenant), on prend le subsiteId du body si fourni, sinon null.
       const targetSubsite = scope === 'all' ? (req.body?.subsite_id ?? null) : scope;
       const created = await TeamMemberModel.create(req.body || {}, { subsiteId: targetSubsite });
+      dispatch({ type: 'team_member.created', req, targetId: created.id, subsiteId: targetSubsite, summary: created.name || '' });
       res.status(201).json(created);
     } catch (e) {
       res.status(e.status || 500).json({ error: e.message });
@@ -81,6 +86,7 @@ export const TeamMemberController = {
         return res.status(404).json({ error: 'Membre introuvable' });
       }
       const updated = await TeamMemberModel.update(req.params.id, req.body || {});
+      dispatch({ type: 'team_member.updated', req, targetId: req.params.id, subsiteId: existing.subsite_id ?? null, summary: updated?.name || existing.name || '' });
       res.json(updated);
     } catch (e) {
       res.status(e.status || 500).json({ error: e.message });
@@ -96,6 +102,7 @@ export const TeamMemberController = {
         return res.status(404).json({ error: 'Membre introuvable' });
       }
       await TeamMemberModel.delete(req.params.id);
+      dispatch({ type: 'team_member.deleted', req, targetId: req.params.id, subsiteId: existing.subsite_id ?? null, summary: existing.name || '' });
       res.sendStatus(204);
     } catch (e) {
       res.status(500).json({ error: e.message });

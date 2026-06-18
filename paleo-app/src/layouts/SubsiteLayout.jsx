@@ -552,6 +552,10 @@ const SubsiteLayout = () => {
                         <div>
                             <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', color: 'var(--color-white)', marginBottom: '4px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>{subsite.name}</div>
                             <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem' }}>© {new Date().getFullYear()} Atelier 21</div>
+                            <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.78rem', marginTop: '2px' }}>
+                                {t('footer.createdBy', 'Plateforme créée par')}{' '}
+                                <a href="https://jomeiyouma.github.io/portfolio/" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.7)' }}>Youma</a>
+                            </div>
                         </div>
                         <nav aria-label={t('subsite.secondaryLinks', 'Liens secondaires')} style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
                             {/* Lien Guide d'utilisation (PDF statique) — réservé aux utilisateurs

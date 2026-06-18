@@ -10,6 +10,11 @@
  * normale en fait 1 à 3, donc une limite généreuse ne gêne pas les utilisateurs
  * légitimes tout en bloquant le bourrage d'identifiants.
  */
+import { dispatchEvent } from '../services/eventDispatcher.js';
+
+// Helper local : journalisation fire-and-forget (jamais bloquante).
+const dispatch = (args) => { dispatchEvent(args).catch(() => {}); };
+
 const WINDOW_MS    = Number(process.env.LOGIN_WINDOW_MS)   || 15 * 60 * 1000; // 15 min
 const MAX_ATTEMPTS = Number(process.env.LOGIN_MAX_ATTEMPTS) || 15;
 
@@ -32,6 +37,11 @@ export function loginRateLimit(req, res, next) {
   rec.count += 1;
 
   if (rec.count > MAX_ATTEMPTS) {
+    // Journaliser une seule fois, au franchissement du seuil — pas à chaque
+    // requête suivante de la même fenêtre, sinon une attaque noierait le journal.
+    if (rec.count === MAX_ATTEMPTS + 1) {
+      dispatch({ type: 'auth.locked_out', req, actorEmail: req.body?.email ?? null, summary: `IP ${ip}`, payload: { ip, email: req.body?.email ?? null, attempts: rec.count } });
+    }
     const mins = Math.max(1, Math.ceil((rec.resetAt - now) / 60000));
     return res.status(429).json({
       error: `Trop de tentatives de connexion. Réessayez dans ${mins} minute(s).`,

@@ -6,6 +6,10 @@
  * Écriture : superadmin (requireAdmin dans les routes).
  */
 import { MissionModel } from '../models/Mission.js';
+import { dispatchEvent } from '../services/eventDispatcher.js';
+
+// Helper local : journalisation fire-and-forget (jamais bloquante).
+const dispatch = (args) => { dispatchEvent(args).catch(() => {}); };
 
 export const MissionController = {
 
@@ -22,6 +26,7 @@ export const MissionController = {
   async create(req, res) {
     try {
       const created = await MissionModel.create(req.body || {});
+      dispatch({ type: 'mission.created', req, targetId: created.id, summary: created.title || created.name || '' });
       res.status(201).json(created);
     } catch (e) {
       res.status(e.status || 500).json({ error: e.message });
@@ -33,6 +38,7 @@ export const MissionController = {
       const existing = await MissionModel.findById(req.params.id);
       if (!existing) return res.status(404).json({ error: 'Mission introuvable' });
       const updated = await MissionModel.update(req.params.id, req.body || {});
+      dispatch({ type: 'mission.updated', req, targetId: req.params.id, summary: updated?.title || updated?.name || existing.title || existing.name || '' });
       res.json(updated);
     } catch (e) {
       res.status(e.status || 500).json({ error: e.message });
@@ -44,6 +50,7 @@ export const MissionController = {
       const existing = await MissionModel.findById(req.params.id);
       if (!existing) return res.status(404).json({ error: 'Mission introuvable' });
       await MissionModel.delete(req.params.id);
+      dispatch({ type: 'mission.deleted', req, targetId: req.params.id, summary: existing.title || existing.name || '' });
       res.sendStatus(204);
     } catch (e) {
       res.status(500).json({ error: e.message });

@@ -17,6 +17,10 @@ import path from 'path';
 import fs from 'fs';
 import { CartelModel } from '../models/Cartel.js';
 import { UPLOADS_DIR } from './uploadController.js';
+import { dispatchEvent } from '../services/eventDispatcher.js';
+
+// Helper local : journalisation fire-and-forget (jamais bloquante).
+const dispatch = (args) => { dispatchEvent(args).catch(() => {}); };
 
 // Multer en mémoire pour recevoir le ZIP
 const zipUpload = multer({
@@ -114,6 +118,14 @@ export const ImportController = {
         results.errors.push({ index: idx, titre: raw.titre, error: e.message });
       }
     }
+
+    // Un seul événement de synthèse par import (≠ un par cartel : éviterait de
+    // noyer le journal lors d'un import de masse).
+    dispatch({
+      type: 'cartel.imported', req,
+      summary: `${results.created} cartel(s) importé(s)`,
+      payload: { created: results.created, errors: results.errors.length, total: cartelsData.length },
+    });
 
     res.status(201).json({
       message: `Import terminé : ${results.created} cartel(s) créé(s).`,

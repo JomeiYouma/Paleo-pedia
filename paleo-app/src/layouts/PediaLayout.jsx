@@ -78,6 +78,10 @@ const PediaFooter = () => {
                 <Link to="/pedia/contact" style={linkStyle}>Contact</Link>
             </nav>
             <div>© {new Date().getFullYear()} Atelier 21</div>
+            <div style={{ marginTop: '4px', fontSize: '0.8rem' }}>
+                Plateforme créée par{' '}
+                <a href="https://jomeiyouma.github.io/portfolio/" target="_blank" rel="noopener noreferrer" style={linkStyle}>Youma</a>
+            </div>
         </footer>
     );
 };

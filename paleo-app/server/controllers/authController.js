@@ -69,6 +69,7 @@ export const AuthController = {
       // 4. JWT avec les permissions réelles issues de la BDD (pas de req.body)
       const token = buildToken(user);
       const { password_hash, ...safeUser } = user;
+      dispatch({ type: 'auth.register', req, actorId: user.id, actorEmail: user.email, targetId: user.id, summary: user.email });
       res.status(201).json({ token, user: safeUser });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -87,14 +88,21 @@ export const AuthController = {
 
       // 2. Vérification
       const user = await UserModel.findByEmail(email);
-      if (!user) return res.status(401).json({ error: 'Identifiants incorrects' });
+      if (!user) {
+        dispatch({ type: 'auth.login_failed', req, actorEmail: email, summary: email, payload: { reason: 'unknown_email' } });
+        return res.status(401).json({ error: 'Identifiants incorrects' });
+      }
 
       const valid = await UserModel.verifyPassword(password, user.password_hash);
-      if (!valid) return res.status(401).json({ error: 'Identifiants incorrects' });
+      if (!valid) {
+        dispatch({ type: 'auth.login_failed', req, actorEmail: email, targetId: user.id, summary: email, payload: { reason: 'bad_password' } });
+        return res.status(401).json({ error: 'Identifiants incorrects' });
+      }
 
       // 3. JWT avec les permissions actuelles (snapshot à la connexion)
       const token = buildToken(user);
       const { password_hash, ...safeUser } = user;
+      dispatch({ type: 'auth.login', req, actorId: user.id, actorEmail: user.email, targetId: user.id, summary: user.email });
       res.json({ token, user: safeUser });
     } catch (err) {
       res.status(500).json({ error: err.message });

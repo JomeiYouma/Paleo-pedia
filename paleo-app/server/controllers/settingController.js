@@ -1,4 +1,11 @@
 import { SettingModel } from '../models/Setting.js';
+import { dispatchEvent } from '../services/eventDispatcher.js';
+
+// Helper local : journalisation fire-and-forget (jamais bloquante).
+const dispatch = (args) => { dispatchEvent(args).catch(() => {}); };
+
+// Réglages secrets : on journalise leur MODIFICATION mais jamais leur valeur.
+const SECRET_KEYS = ['openai_key', 'deepl_key'];
 
 export const SettingController = {
 
@@ -61,6 +68,14 @@ export const SettingController = {
         return res.status(400).json({ error: 'Aucun paramètre valide fourni' });
       }
       await SettingModel.setMany(pairs);
+
+      // Journalisation : on liste les clés modifiées, en masquant la valeur des
+      // réglages secrets (clés API) — seul le fait qu'elles ont changé est tracé.
+      const changedKeys = Object.keys(pairs);
+      const safeChanged = {};
+      for (const k of changedKeys) safeChanged[k] = SECRET_KEYS.includes(k) ? '(modifiée)' : pairs[k];
+      dispatch({ type: 'setting.updated', req, summary: changedKeys.join(', '), payload: { changed: safeChanged } });
+
       const updated = await SettingModel.getAll();
       delete updated.openai_key;
       delete updated.deepl_key;

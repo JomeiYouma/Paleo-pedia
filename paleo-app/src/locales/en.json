@@ -712,7 +712,8 @@
         "partners": "Partners",
         "contactUs": "Contact us",
         "legalNotices": "Legal notices",
-        "privacy": "Privacy policy"
+        "privacy": "Privacy policy",
+        "createdBy": "Platform created by"
     },
     "participer": {
         "title": "Call for participation",

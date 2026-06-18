@@ -318,7 +318,20 @@ INSERT IGNORE INTO `event_email_config` (`type`) VALUES
   ('category.created'),('category.updated'),('category.deleted'),
   ('workshop.created'),('workshop.updated'),('workshop.deleted'),
   ('mission_application.created'),
-  ('contact_message.created');
+  ('contact_message.created'),
+  -- v30 — audit complet du journal : actions auth/sécurité, réglages, import,
+  -- et CRUD de contenu (presse, missions, prestations, boutique, équipe, notes)
+  -- jusque-là non journalisés. (password_changed/password_reset : émis depuis le
+  -- durcissement sécurité mais jamais seedés auparavant.)
+  ('auth.login'), ('auth.login_failed'), ('auth.locked_out'), ('auth.register'),
+  ('user.password_changed'), ('user.password_reset'),
+  ('setting.updated'), ('cartel.imported'), ('event_email_config.updated'),
+  ('mission.created'), ('mission.updated'), ('mission.deleted'),
+  ('press_article.created'), ('press_article.updated'), ('press_article.deleted'),
+  ('prestation.created'), ('prestation.updated'), ('prestation.deleted'),
+  ('shop_item.created'), ('shop_item.updated'), ('shop_item.deleted'),
+  ('team_member.created'), ('team_member.updated'), ('team_member.deleted'),
+  ('cartel_note.created'), ('cartel_note.deleted');
 
 -- ============================================================
 -- TEAM_MEMBERS (page À propos)
