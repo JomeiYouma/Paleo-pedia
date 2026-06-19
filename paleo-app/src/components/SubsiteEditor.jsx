@@ -11,7 +11,7 @@
  *     ne sont modifiables — cohérent avec la liste OWNER_EDITABLE du
  *     controller (paleo-app/server/controllers/subsiteController.js).
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import api from '../services/apiClient';
@@ -42,7 +42,7 @@ const PLANET_TYPE_OPTIONS = [
     { key: 'lush',   label: 'Mixte (forêt + éoliennes)' },
 ];
 
-const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = true }) => {
+const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = true, initialFocus = null }) => {
     const isEdit = !!subsite;
     const { t } = useTranslation();
 
@@ -64,12 +64,21 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
     const [saving,        setSaving]        = useState(false);
     const [error,         setError]         = useState('');
     const [slugManual,    setSlugManual]    = useState(isEdit);
+    const partnersRef = useRef(null);
 
     useEffect(() => {
         api.categories.getAll().then(d => setCategories(Array.isArray(d) ? d : []));
         api.workshops.getAll().then(d => setWorkshops(Array.isArray(d) ? d : []));
         api.partners.getAll().then(d => setAllPartners(Array.isArray(d) ? d : []));
     }, []);
+
+    // Ouverture ciblée sur les partenaires (depuis le menu admin « Partenaires »
+    // du sous-site) : on fait défiler jusqu'à la section une fois la liste chargée.
+    useEffect(() => {
+        if (initialFocus === 'partners' && allPartners.length && partnersRef.current) {
+            partnersRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, [initialFocus, allPartners.length]);
 
     // Auto-slug depuis le nom
     useEffect(() => {
@@ -271,7 +280,7 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
 
                     {/* Partenaires */}
                     {allPartners.length > 0 && (
-                        <section>
+                        <section ref={partnersRef}>
                             <h3 style={{ margin: '0 0 14px', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', color: '#aaa', letterSpacing: '0.5px' }}>{t('subsiteEditor.partnersHeading', 'Partenaires du sous-site')}</h3>
                             <p style={{ margin: '0 0 10px', color: '#888', fontSize: '0.82rem' }}>
                                 {t('subsiteEditor.partnersIntro', 'Sélectionnez les partenaires mis en avant (principaux) et les partenaires standards.')}

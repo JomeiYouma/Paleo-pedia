@@ -8,7 +8,7 @@
 import React, { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Outlet, Link, useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Lock, LogOut, Languages, PlusCircle, Settings2, LogIn, Home, Users, BookOpen, ChevronDown } from 'lucide-react';
+import { Menu, X, Lock, LogOut, Languages, PlusCircle, Settings2, LogIn, Home, Handshake, BookOpen, ChevronDown } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import SubsiteEditor from '../components/SubsiteEditor';
@@ -66,6 +66,9 @@ const SubsiteLayout = () => {
     const [error,      setError]      = useState(null);
     const [menuOpen,   setMenuOpen]   = useState(false);
     const [showEditor, setShowEditor] = useState(false);
+    // Section sur laquelle ouvrir l'éditeur : null = haut (Page d'accueil),
+    // 'partners' = défile jusqu'aux partenaires (item admin « Partenaires »).
+    const [editorFocus, setEditorFocus] = useState(null);
     // Menu admin compact (desktop) : regroupe Page d'accueil / Équipe / Gérer.
     const [adminMenuOpen, setAdminMenuOpen] = useState(false);
     // Repli adaptatif de la navbar : on bascule en burger UNIQUEMENT quand la
@@ -211,9 +214,9 @@ const SubsiteLayout = () => {
     // Chaque entrée n'apparaît que selon les droits. Le bouton « Administration »
     // (desktop) et le burger (mobile) consomment cette même liste.
     const adminItems = [
-        canEditSubsite && { key: 'home',   icon: Home,      label: t('subsite.homePage', "Page d'accueil"), onClick: () => setShowEditor(true) },
-        canEditSubsite && { key: 'team',   icon: Users,     label: t('subsite.team', 'Équipe'),             onClick: () => navigate(`${base}/admin/team-content`), active: onTeamContent },
-        isAdmin        && { key: 'manage', icon: Settings2, label: t('subsite.manage', 'Gérer'),            onClick: () => navigate(`${base}/admin/published`),    active: onManage },
+        canEditSubsite && { key: 'home',     icon: Home,      label: t('subsite.homePage', "Page d'accueil"), onClick: () => { setEditorFocus(null); setShowEditor(true); } },
+        canEditSubsite && { key: 'partners', icon: Handshake, label: t('subsite.partners', 'Partenaires'),    onClick: () => { setEditorFocus('partners'); setShowEditor(true); } },
+        isAdmin        && { key: 'manage',   icon: Settings2, label: t('subsite.manage', 'Gérer'),            onClick: () => navigate(`${base}/admin/published`),    active: onManage },
     ].filter(Boolean);
 
     // Styles partagés des menus déroulants (panneau clair posé sur l'en-tête sombre).
@@ -480,7 +483,8 @@ const SubsiteLayout = () => {
                     <SubsiteEditor
                         subsite={subsite}
                         canEditIdentity={isSuperadmin}
-                        onClose={() => setShowEditor(false)}
+                        initialFocus={editorFocus}
+                        onClose={() => { setShowEditor(false); setEditorFocus(null); }}
                         onSaved={refreshSubsite}
                     />
                 )}

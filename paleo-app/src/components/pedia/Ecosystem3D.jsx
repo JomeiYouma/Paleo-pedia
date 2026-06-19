@@ -431,7 +431,7 @@ const Scene = ({ hub, orbits, reducedMotion }) => {
                 enablePan={false}
                 enableZoom
                 minDistance={6}
-                maxDistance={18}
+                maxDistance={22}
                 minPolarAngle={Math.PI * 0.18}
                 maxPolarAngle={Math.PI * 0.82}
                 autoRotate={!reducedMotion}
@@ -445,7 +445,10 @@ const Scene = ({ hub, orbits, reducedMotion }) => {
 
 const Ecosystem3D = ({ hub, orbits, reducedMotion = false }) => (
     <Canvas
-        camera={{ position: [0, 2.8, 10.5], fov: 50 }}
+        // Vue initiale plus dézoomée et légèrement surélevée : tout le système
+        // (planètes + ceinture) tient dans le cadre avec de la marge, et l'angle
+        // un peu plus haut donne de jolies ellipses d'orbite (≈ distance 15,8).
+        camera={{ position: [0, 5, 15], fov: 50 }}
         dpr={[1, 1.75]}
         gl={{ antialias: true }}
         style={{ width: '100%', height: '100%', display: 'block', borderRadius: 'inherit' }}

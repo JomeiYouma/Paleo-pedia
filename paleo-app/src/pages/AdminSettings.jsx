@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useBlocker } from 'react-router-dom';
 import {
     Shield, Users, Key, Save, RefreshCw,
     ToggleLeft, ToggleRight, AlertCircle, CheckCircle2, Check,
@@ -73,7 +73,7 @@ const Toggle = ({ value, onChange, label }) => (
 
 // ── Groupe thématique : titre + bandeau coloré qui rassemble plusieurs Section ──
 // On regroupe pour que la page de réglages soit lisible d'un coup d'œil :
-// l'œil sait où chercher Contenus / Communauté / Système.
+// l'œil sait où chercher Contenu / Communauté / Système.
 const Group = ({ title, color, children }) => (
     <section style={{ marginBottom: '40px' }} aria-label={title}>
         <header style={{
@@ -139,7 +139,7 @@ const ApiKeyField = ({ label, hint, placeholder, value, onChange, show, onToggle
                     padding: '10px 14px',
                     borderRadius: 'var(--radius-md)',
                     border: 'none',
-                    background: saving ? 'var(--color-border-strong)' : 'var(--color-theme-system)',
+                    background: saving ? 'var(--color-border-strong)' : 'var(--color-theme-people)',
                     color: 'var(--color-white)',
                     cursor: saving || loading ? 'not-allowed' : 'pointer',
                     fontSize: '0.78rem',
@@ -200,7 +200,6 @@ const AdminSettings = () => {
     const { isAdmin } = useApp();
     const navigate = useNavigate();
 
-    const [settings, setSettings]   = useState(null);
     const [loading, setLoading]     = useState(true);
     const [saving, setSaving]       = useState(false);
     const [toast, setToast]         = useState(null);
@@ -238,6 +237,9 @@ const AdminSettings = () => {
     // Politique de re-validation quand un sous-site modifie un cartel déjà
     // publié sur le principal : 'off' | 'strict' ('soft' prévu mais pas livré).
     const [revalPolicy,   setRevalPolicy]   = useState('off');
+    // Snapshot des valeurs sauvegardées : sert à détecter les modifications non
+    // enregistrées (garde-fou de navigation « quitter sans sauvegarder »).
+    const [baseline, setBaseline] = useState(null);
 
     // ── Chargement initial ───────────────────────────────────
     useEffect(() => {
@@ -245,7 +247,6 @@ const AdminSettings = () => {
             setLoading(true);
             try {
                 const s = await api.settings.getAll();
-                setSettings(s);
                 setAllowAnon(s.allow_anonymous_submit === 'true');
                 setMaxTotal(parseInt(s.max_submissions_per_ip_total, 10) || 10);
                 setMaxWindow(parseInt(s.max_submissions_per_ip_window, 10) || 3);
@@ -267,6 +268,16 @@ const AdminSettings = () => {
                     ]);
                     setOpenaiKey(k1.openai_key || '');
                     setDeeplKey(k2.deepl_key   || '');
+                    // Référence « état sauvegardé » pour détecter les modifs non enregistrées.
+                    setBaseline({
+                        allowAnon:     s.allow_anonymous_submit === 'true',
+                        maxTotal:      parseInt(s.max_submissions_per_ip_total, 10) || 10,
+                        maxWindow:     parseInt(s.max_submissions_per_ip_window, 10) || 3,
+                        windowMinutes: parseInt(s.submission_window_minutes, 10) || 60,
+                        revalPolicy:   s.subsite_edit_revalidation || 'off',
+                        openaiKey:     k1.openai_key || '',
+                        deeplKey:      k2.deepl_key  || '',
+                    });
                 } catch { /* pas critique */ }
             } catch (e) {
                 showToast('error', i18n.t('errors.loadingPrefix', { msg: e.message }));
@@ -297,6 +308,8 @@ const AdminSettings = () => {
             };
 
             await api.settings.update(payload);
+            // La sauvegarde réussie devient la nouvelle référence « propre ».
+            setBaseline({ allowAnon, maxTotal, maxWindow, windowMinutes, revalPolicy, openaiKey, deeplKey });
             showToast('success', i18n.t('toasts.settingsSaved'));
         } catch (e) {
             showToast('error', i18n.t('common.error', { msg: e.message }));
@@ -325,7 +338,7 @@ const AdminSettings = () => {
 
             try {
                 await api.settings.update(payload);
-            } catch (settingsError) {
+            } catch {
                 await api.partners.setSiteSelection({
                     primary_partner_ids: sitePrimaryPartnerIds,
                     partner_ids: sitePartnerIds,
@@ -338,6 +351,40 @@ const AdminSettings = () => {
         } finally {
             setSavingPartners(false);
         }
+    };
+
+    // ── Garde-fou « modifications non enregistrées » ─────────
+    // Vrai dès qu'un réglage diffère de la dernière sauvegarde.
+    const isDirty = !!baseline && (
+        allowAnon     !== baseline.allowAnon ||
+        maxTotal      !== baseline.maxTotal ||
+        maxWindow     !== baseline.maxWindow ||
+        windowMinutes !== baseline.windowMinutes ||
+        revalPolicy   !== baseline.revalPolicy ||
+        openaiKey     !== baseline.openaiKey ||
+        deeplKey      !== baseline.deeplKey
+    );
+
+    // 1) Fermeture / refresh d'onglet : confirmation native du navigateur.
+    useEffect(() => {
+        if (!isDirty || saving) return;
+        const handler = (e) => { e.preventDefault(); e.returnValue = ''; };
+        window.addEventListener('beforeunload', handler);
+        return () => window.removeEventListener('beforeunload', handler);
+    }, [isDirty, saving]);
+
+    // 2) Navigation interne (Link, navigate, retour) : bloquée tant que l'utilisateur
+    //    n'a pas tranché via la modale. Nécessite le data router (cf. App.jsx).
+    const blocker = useBlocker(useCallback(
+        ({ currentLocation, nextLocation }) =>
+            isDirty && !saving && currentLocation.pathname !== nextLocation.pathname,
+        [isDirty, saving],
+    ));
+
+    // « Enregistrer & quitter » depuis la modale : on sauvegarde puis on poursuit.
+    const handleSaveAndLeave = async () => {
+        await handleSave();
+        blocker.proceed?.();
     };
 
     if (!isAdmin) {
@@ -388,8 +435,49 @@ const AdminSettings = () => {
                 </div>
             )}
 
-            {/* ── En-tête ──────────────────────────────────── */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', gap: '16px', flexWrap: 'wrap' }}>
+            {/* ── Modale : modifications non enregistrées ───── */}
+            {blocker.state === 'blocked' && (
+                <div role="dialog" aria-modal="true" aria-labelledby="unsaved-title" style={{
+                    position: 'fixed', inset: 0, zIndex: 10000,
+                    background: 'rgba(0,0,0,0.45)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
+                }}>
+                    <div style={{
+                        background: 'var(--color-surface)', borderRadius: '14px',
+                        maxWidth: '460px', width: '100%', padding: '24px 24px 20px',
+                        boxShadow: 'var(--shadow-lg)', borderTop: '5px solid var(--color-warning, #e0a000)',
+                    }}>
+                        <h3 id="unsaved-title" style={{ margin: '0 0 10px', fontSize: '1.12rem' }}>Modifications non enregistrées</h3>
+                        <p style={{ margin: '0 0 18px', fontSize: '0.92rem', lineHeight: 1.5, color: 'var(--color-text-muted)' }}>
+                            Attention : vous allez quitter cette page sans avoir sauvegardé vos changements. Que souhaitez-vous faire ?
+                        </p>
+                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                            <button type="button" onClick={() => blocker.reset?.()}
+                                style={{ border: '1px solid var(--color-border)', background: 'var(--color-surface-2)', borderRadius: '10px', padding: '10px 16px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', color: 'var(--color-text)' }}>
+                                Annuler
+                            </button>
+                            <button type="button" onClick={() => blocker.proceed?.()}
+                                style={{ border: 'none', background: 'var(--color-error)', color: '#fff', borderRadius: '10px', padding: '10px 16px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem' }}>
+                                Quitter sans sauvegarder
+                            </button>
+                            <button type="button" onClick={handleSaveAndLeave} disabled={saving}
+                                style={{ border: 'none', background: 'var(--color-primary)', color: '#fff', borderRadius: '10px', padding: '10px 16px', cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: '0.85rem' }}>
+                                {saving ? 'Sauvegarde…' : 'Enregistrer & quitter'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── En-tête (sticky : le bouton « Sauvegarder » reste toujours visible) ── */}
+            <div style={{
+                position: 'sticky', top: 0, zIndex: 50,
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                gap: '16px', flexWrap: 'wrap',
+                marginBottom: '24px', padding: '12px 0',
+                background: 'var(--color-surface)',
+                borderBottom: '1px solid var(--color-border)',
+            }}>
                 <div>
                     <h1 style={{ margin: 0, fontSize: '2rem' }}>Administration</h1>
                     <p style={{ margin: '4px 0 0', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Paramètres globaux de l'application</p>
@@ -426,74 +514,143 @@ const AdminSettings = () => {
             ) : (
                 <>
                     {/* ════════════════════════════════════════════════════════
-                        GROUPE 1 — CONTENUS : ce qui peuple le site
+                        GROUPE 1 — CONTENU : ce qui peuple le site (jaune orangé foncé)
                        ════════════════════════════════════════════════════════ */}
-                    <Group title="Contenus" color="var(--color-theme-content)">
+                    <Group title="Contenu" color="var(--color-theme-system)">
 
-                        {/* ── Sous-sites ──────────── */}
-                        <Section icon={Globe} title="Sous-sites thématiques"
-                            color="var(--color-theme-content)" bg="var(--color-theme-content-bg)">
-                            <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'flex-end' }}>
-                                <button onClick={() => setEditSubsite('new')}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--color-theme-content)', color: 'white', border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 16px', cursor: 'pointer', fontWeight: '700', fontSize: '0.82rem', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                    <Plus size={14} /> Nouveau sous-site
-                                </button>
-                            </div>
-                            {subsites.length === 0 ? (
-                                <p style={{ color: 'var(--color-text-subtle)', textAlign: 'center', padding: '24px 0' }}>Aucun sous-site configuré.</p>
-                            ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    {subsites.map(s => (
-                                        <div key={s.slug} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '12px 16px' }}>
-                                            <div style={{ width: '4px', height: '32px', background: s.primary_color, flexShrink: 0 }} />
-                                            <div style={{ flex: 1 }}>
-                                                <div style={{ fontWeight: '700', fontSize: '0.95rem' }}>{s.name}</div>
-                                                <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.8rem' }}>/site/{s.slug} · {s.category_name}</div>
-                                            </div>
-                                            <a href={`/site/${s.slug}`} target="_blank" rel="noopener" title="Ouvrir" style={{ color: 'var(--color-text-muted)', display: 'flex' }}><ExternalLink size={14} /></a>
-                                            <button onClick={() => setEditSubsite(s)} title="Modifier" aria-label={`Modifier ${s.name}`}
-                                                style={{ background: 'none', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '5px 10px', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center' }}>
-                                                <Edit size={13} />
-                                            </button>
-                                            <button onClick={async () => { if (!confirm(`Supprimer "${s.name}" ?`)) return; await api.subsites.delete(s.slug); loadSubsites(); }} title="Supprimer" aria-label={`Supprimer ${s.name}`}
-                                                style={{ background: 'none', border: '1px solid var(--color-error)', borderRadius: 'var(--radius-md)', padding: '5px 10px', cursor: 'pointer', color: 'var(--color-error)', display: 'flex', alignItems: 'center' }}>
-                                                <Trash2 size={13} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </Section>
-
-                        {/* ── Catégories & ateliers ──────────── */}
-                        <Section icon={FolderOpen} title="Catégories & ateliers"
-                            color="var(--color-theme-content)" bg="var(--color-theme-content-bg)">
+                        {/* ── Articles de presse (page publique /presse) ──────────── */}
+                        <Section icon={FolderOpen} title="Articles de presse"
+                            color="var(--color-theme-system)" bg="var(--color-theme-system-bg)">
                             <button
                                 type="button"
-                                onClick={() => navigate('/app/admin/taxonomies')}
+                                onClick={() => navigate('/app/admin/press')}
                                 style={{
                                     width: '100%',
                                     display: 'flex', alignItems: 'center', gap: '12px',
                                     padding: '14px 18px',
-                                    background: 'var(--color-theme-content-bg)', border: '1px solid var(--color-theme-content)',
+                                    background: 'var(--color-theme-system-bg)', border: '1px solid var(--color-theme-system)',
                                     borderRadius: 'var(--radius-md)', cursor: 'pointer',
-                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-content)',
+                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-system)',
                                     fontSize: '0.85rem', fontWeight: '700',
                                     textTransform: 'uppercase', letterSpacing: '0.5px',
                                 }}
                             >
                                 <ExternalLink size={16} />
-                                <span style={{ flex: 1, textAlign: 'left' }}>Modifier ou supprimer les catégories et ateliers</span>
+                                <span style={{ flex: 1, textAlign: 'left' }}>Gérer les articles affichés sur la page publique « Presse »</span>
                                 <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
                             </button>
                             <p style={{ margin: '10px 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-                                Gérez la taxonomie des cartels (couleurs, traductions) et le cycle de vie des ateliers.
+                                Tri automatique par date décroissante. Vignettes uploadables. Possibilité de masquer un article sans le supprimer.
+                            </p>
+                        </Section>
+
+                        {/* ── Missions (page publique /participer) ──────────── */}
+                        <Section icon={Target} title="Missions (page Participer)"
+                            color="var(--color-theme-system)" bg="var(--color-theme-system-bg)">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/app/admin/missions')}
+                                style={{
+                                    width: '100%',
+                                    display: 'flex', alignItems: 'center', gap: '12px',
+                                    padding: '14px 18px',
+                                    background: 'var(--color-theme-system-bg)', border: '1px solid var(--color-theme-system)',
+                                    borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-system)',
+                                    fontSize: '0.85rem', fontWeight: '700',
+                                    textTransform: 'uppercase', letterSpacing: '0.5px',
+                                }}
+                            >
+                                <ExternalLink size={16} />
+                                <span style={{ flex: 1, textAlign: 'left' }}>Gérer les missions affichées en haut de la page « Participer »</span>
+                                <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
+                            </button>
+                            <p style={{ margin: '10px 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                                Cards dépliables (thème + nom + texte + lien optionnel). Ordre, visibilité et traduction EN gérés ici.
+                            </p>
+                        </Section>
+
+                        {/* ── Prestations (page publique /prestations) ──────────── */}
+                        <Section icon={FolderOpen} title="Prestations"
+                            color="var(--color-theme-system)" bg="var(--color-theme-system-bg)">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/app/admin/prestations')}
+                                style={{
+                                    width: '100%',
+                                    display: 'flex', alignItems: 'center', gap: '12px',
+                                    padding: '14px 18px',
+                                    background: 'var(--color-theme-system-bg)', border: '1px solid var(--color-theme-system)',
+                                    borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-system)',
+                                    fontSize: '0.85rem', fontWeight: '700',
+                                    textTransform: 'uppercase', letterSpacing: '0.5px',
+                                }}
+                            >
+                                <ExternalLink size={16} />
+                                <span style={{ flex: 1, textAlign: 'left' }}>Gérer les cards de la page publique « Prestations »</span>
+                                <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
+                            </button>
+                            <p style={{ margin: '10px 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                                Challenges, ateliers, expo itinérante, conseil… Titre + icône + intro + description + bullets + plaquette PDF.
+                            </p>
+                        </Section>
+
+                        {/* ── Boutique (liens PrestaShop) ──────────── */}
+                        <Section icon={FolderOpen} title="Boutique (liens externes)"
+                            color="var(--color-theme-system)" bg="var(--color-theme-system-bg)">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/app/admin/shop')}
+                                style={{
+                                    width: '100%',
+                                    display: 'flex', alignItems: 'center', gap: '12px',
+                                    padding: '14px 18px',
+                                    background: 'var(--color-theme-system-bg)', border: '1px solid var(--color-theme-system)',
+                                    borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-system)',
+                                    fontSize: '0.85rem', fontWeight: '700',
+                                    textTransform: 'uppercase', letterSpacing: '0.5px',
+                                }}
+                            >
+                                <ExternalLink size={16} />
+                                <span style={{ flex: 1, textAlign: 'left' }}>Gérer les liens vers le PrestaShop (livres, jeux, autres)</span>
+                                <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
+                            </button>
+                            <p style={{ margin: '10px 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                                Vitrine sans panier — chaque card renvoie vers la fiche produit du PrestaShop externe.
+                            </p>
+                        </Section>
+
+                        {/* ── Équipe (page publique « À propos ») ──────────── */}
+                        <Section icon={Users} title="Équipe (page À propos)"
+                            color="var(--color-theme-system)" bg="var(--color-theme-system-bg)">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/app/admin/team-content')}
+                                style={{
+                                    width: '100%',
+                                    display: 'flex', alignItems: 'center', gap: '12px',
+                                    padding: '14px 18px',
+                                    background: 'var(--color-theme-system-bg)', border: '1px solid var(--color-theme-system)',
+                                    borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-system)',
+                                    fontSize: '0.85rem', fontWeight: '700',
+                                    textTransform: 'uppercase', letterSpacing: '0.5px',
+                                }}
+                            >
+                                <ExternalLink size={16} />
+                                <span style={{ flex: 1, textAlign: 'left' }}>Gérer les membres affichés sur la page publique « À propos »</span>
+                                <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
+                            </button>
+                            <p style={{ margin: '10px 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                                Trois catégories : principaux (avec photo + bio), secondaires (compact), communauté (liste de chercheur·euses associé·es).
                             </p>
                         </Section>
 
                         {/* ── Partenaires ──────────── */}
                         <Section icon={Users} title="Partenaires"
-                            color="var(--color-theme-content)" bg="var(--color-theme-content-bg)">
+                            color="var(--color-theme-system)" bg="var(--color-theme-system-bg)">
                             <div style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
                                 <button
                                     type="button"
@@ -522,9 +679,9 @@ const AdminSettings = () => {
                                                     width: '100%',
                                                     display: 'flex', alignItems: 'center', gap: '12px',
                                                     padding: '14px 18px',
-                                                    background: 'var(--color-theme-content-bg)', border: '1px solid var(--color-theme-content)',
+                                                    background: 'var(--color-theme-system-bg)', border: '1px solid var(--color-theme-system)',
                                                     borderRadius: 'var(--radius-md)', cursor: 'pointer',
-                                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-content)',
+                                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-system)',
                                                     fontSize: '0.85rem', fontWeight: '700',
                                                     textTransform: 'uppercase', letterSpacing: '0.5px',
                                                 }}
@@ -538,7 +695,7 @@ const AdminSettings = () => {
                                         <div style={{ borderTop: '1px solid var(--color-border)' }} />
 
                                         <div style={{ padding: '20px' }}>
-                                            <p style={{ margin: '0 0 4px', fontWeight: '700', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-theme-content)', fontFamily: 'var(--font-heading)' }}>
+                                            <p style={{ margin: '0 0 4px', fontWeight: '700', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-theme-system)', fontFamily: 'var(--font-heading)' }}>
                                                 Affichage sur le site principal
                                             </p>
                                             <p style={{ margin: '0 0 16px', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
@@ -550,8 +707,8 @@ const AdminSettings = () => {
                                             ) : (
                                                 <>
                                                     <div style={{ marginBottom: '16px' }}>
-                                                        <div style={{ fontWeight: '700', fontSize: '0.78rem', color: 'var(--color-theme-content)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                                            <span style={{ background: 'var(--color-theme-content-bg)', borderRadius: 'var(--radius-md)', padding: '2px 8px' }}>★ Principaux</span>
+                                                        <div style={{ fontWeight: '700', fontSize: '0.78rem', color: 'var(--color-theme-system)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                                            <span style={{ background: 'var(--color-theme-system-bg)', borderRadius: 'var(--radius-md)', padding: '2px 8px' }}>★ Principaux</span>
                                                             <span style={{ fontWeight: '400', color: 'var(--color-text-subtle)' }}>— mis en avant (grande vignette)</span>
                                                         </div>
                                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -566,8 +723,8 @@ const AdminSettings = () => {
                                                                         style={{
                                                                             display: 'flex', alignItems: 'center', gap: '6px',
                                                                             borderRadius: 'var(--radius-md)',
-                                                                            border: active ? '2px solid var(--color-theme-content)' : '2px solid var(--color-border)',
-                                                                            background: active ? 'var(--color-theme-content)' : 'var(--color-surface-2)',
+                                                                            border: active ? '2px solid var(--color-theme-system)' : '2px solid var(--color-border)',
+                                                                            background: active ? 'var(--color-theme-system)' : 'var(--color-surface-2)',
                                                                             color: active ? 'var(--color-white)' : 'var(--color-text-muted)',
                                                                             padding: '6px 12px', fontSize: '0.82rem',
                                                                             cursor: 'pointer', fontFamily: 'var(--font-heading)', fontWeight: '700',
@@ -625,7 +782,7 @@ const AdminSettings = () => {
                                                         disabled={savingPartners}
                                                         style={{
                                                             border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 18px',
-                                                            background: savingPartners ? 'var(--color-border-strong)' : 'var(--color-theme-content)', color: 'var(--color-white)',
+                                                            background: savingPartners ? 'var(--color-border-strong)' : 'var(--color-theme-system)', color: 'var(--color-white)',
                                                             fontWeight: '700', cursor: savingPartners ? 'not-allowed' : 'pointer',
                                                             fontFamily: 'var(--font-heading)', fontSize: '0.82rem',
                                                             textTransform: 'uppercase', letterSpacing: '0.5px',
@@ -641,88 +798,77 @@ const AdminSettings = () => {
                                 )}
                             </div>
                         </Section>
+
+                        {/* ── Catégories & ateliers ──────────── */}
+                        <Section icon={FolderOpen} title="Catégories & ateliers"
+                            color="var(--color-theme-system)" bg="var(--color-theme-system-bg)">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/app/admin/taxonomies')}
+                                style={{
+                                    width: '100%',
+                                    display: 'flex', alignItems: 'center', gap: '12px',
+                                    padding: '14px 18px',
+                                    background: 'var(--color-theme-system-bg)', border: '1px solid var(--color-theme-system)',
+                                    borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-system)',
+                                    fontSize: '0.85rem', fontWeight: '700',
+                                    textTransform: 'uppercase', letterSpacing: '0.5px',
+                                }}
+                            >
+                                <ExternalLink size={16} />
+                                <span style={{ flex: 1, textAlign: 'left' }}>Modifier ou supprimer les catégories et ateliers</span>
+                                <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
+                            </button>
+                            <p style={{ margin: '10px 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                                Gérez la taxonomie des cartels (couleurs, traductions) et le cycle de vie des ateliers.
+                            </p>
+                        </Section>
                     </Group>
 
                     {/* ════════════════════════════════════════════════════════
-                        GROUPE 2 — COMMUNAUTÉ & MODÉRATION
+                        GROUPE 2 — COMMUNAUTÉ & MODÉRATION (vert)
                        ════════════════════════════════════════════════════════ */}
-                    <Group title="Communauté & modération" color="var(--color-theme-people)">
+                    <Group title="Communauté & modération" color="var(--color-theme-content)">
 
-                        {/* ── Soumissions de visiteurs ──────── */}
-                        <Section icon={Users} title="Soumissions de visiteurs"
-                            color="var(--color-theme-people)" bg="var(--color-theme-people-bg)">
-
-                            <Field
-                                label="Autoriser les soumissions anonymes"
-                                hint="Si désactivé, seuls les utilisateurs connectés pourront proposer des cartels."
-                            >
-                                <Toggle value={allowAnon} onChange={setAllowAnon} />
-                            </Field>
-
-                            {allowAnon && (
-                                <div style={{
-                                    background: 'var(--color-theme-people-bg)',
-                                    border: '1px solid var(--color-theme-people)',
-                                    borderRadius: 'var(--radius-md)',
-                                    padding: '20px',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '20px',
-                                }}>
-                                    <Field
-                                        label="Maximum de soumissions par adresse IP (total)"
-                                        hint="Nombre total de cartels qu'une même IP peut soumettre, toutes périodes confondues."
-                                    >
-                                        <NumberInput
-                                            value={maxTotal}
-                                            onChange={v => setMaxTotal(Number(v))}
-                                            min={1}
-                                            max={500}
-                                            suffix="cartels max"
-                                        />
-                                    </Field>
-
-                                    <div style={{ borderTop: '1px solid var(--color-theme-people)', paddingTop: '20px' }}>
-                                        <p style={{ margin: '0 0 14px', fontWeight: '700', fontSize: '0.78rem', color: 'var(--color-theme-people)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                            Limite sur fenêtre glissante
-                                        </p>
-                                        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                                            <Field label="Soumissions autorisées par fenêtre" hint="Nombre max de cartels sur la période définie ci-dessous.">
-                                                <NumberInput value={maxWindow} onChange={v => setMaxWindow(Number(v))} min={1} max={50} suffix="cartels" />
-                                            </Field>
-                                            <Field label="Durée de la fenêtre" hint="Période glissante de contrôle.">
-                                                <NumberInput value={windowMinutes} onChange={v => setWindowMinutes(Number(v))} min={1} max={1440} suffix="minutes" />
-                                            </Field>
+                        {/* ── Sites dédiés (sous-sites) ──────────── */}
+                        <Section icon={Globe} title="Sites dédiés (sous-sites)"
+                            color="var(--color-theme-content)" bg="var(--color-theme-content-bg)">
+                            <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+                                <button onClick={() => setEditSubsite('new')}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--color-theme-content)', color: 'white', border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 16px', cursor: 'pointer', fontWeight: '700', fontSize: '0.82rem', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                    <Plus size={14} /> Nouveau sous-site
+                                </button>
+                            </div>
+                            {subsites.length === 0 ? (
+                                <p style={{ color: 'var(--color-text-subtle)', textAlign: 'center', padding: '24px 0' }}>Aucun sous-site configuré.</p>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {subsites.map(s => (
+                                        <div key={s.slug} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '12px 16px' }}>
+                                            <div style={{ width: '4px', height: '32px', background: s.primary_color, flexShrink: 0 }} />
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontWeight: '700', fontSize: '0.95rem' }}>{s.name}</div>
+                                                <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.8rem' }}>/site/{s.slug} · {s.category_name}</div>
+                                            </div>
+                                            <a href={`/site/${s.slug}`} target="_blank" rel="noopener" title="Ouvrir" style={{ color: 'var(--color-text-muted)', display: 'flex' }}><ExternalLink size={14} /></a>
+                                            <button onClick={() => setEditSubsite(s)} title="Modifier" aria-label={`Modifier ${s.name}`}
+                                                style={{ background: 'none', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '5px 10px', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center' }}>
+                                                <Edit size={13} />
+                                            </button>
+                                            <button onClick={async () => { if (!confirm(`Supprimer "${s.name}" ?`)) return; await api.subsites.delete(s.slug); loadSubsites(); }} title="Supprimer" aria-label={`Supprimer ${s.name}`}
+                                                style={{ background: 'none', border: '1px solid var(--color-error)', borderRadius: 'var(--radius-md)', padding: '5px 10px', cursor: 'pointer', color: 'var(--color-error)', display: 'flex', alignItems: 'center' }}>
+                                                <Trash2 size={13} />
+                                            </button>
                                         </div>
-
-                                        <div style={{
-                                            background: 'var(--color-surface)',
-                                            border: '1px solid var(--color-theme-people)',
-                                            borderRadius: 'var(--radius-md)',
-                                            padding: '12px 16px',
-                                            marginTop: '4px',
-                                            fontSize: '0.87rem',
-                                            color: 'var(--color-theme-people)',
-                                            fontWeight: '600',
-                                        }}>
-                                            Règle active : chaque IP peut soumettre au maximum{' '}
-                                            <strong>{maxWindow} cartel{maxWindow > 1 ? 's' : ''}</strong> toutes les{' '}
-                                            <strong>
-                                                {windowMinutes >= 60
-                                                    ? `${Math.floor(windowMinutes / 60)}h${windowMinutes % 60 > 0 ? ` ${windowMinutes % 60}min` : ''}`
-                                                    : `${windowMinutes} min`
-                                                }
-                                            </strong>,
-                                            et <strong>{maxTotal} cartel{maxTotal > 1 ? 's' : ''} au total</strong>.
-                                        </div>
-                                    </div>
+                                    ))}
                                 </div>
                             )}
                         </Section>
 
                         {/* ── Re-validation des modifs sous-site ──────── */}
                         <Section icon={Shield} title="Cartels de sous-site publiés sur le principal"
-                            color="var(--color-theme-people)" bg="var(--color-theme-people-bg)">
+                            color="var(--color-theme-content)" bg="var(--color-theme-content-bg)">
                             <Field
                                 label="Que faire quand un sous-site modifie un cartel déjà validé sur le site principal ?"
                                 hint="Un cartel de sous-site approuvé reste la même fiche : sans contrôle, une modification du sous-site s'affiche aussi sur le site principal sans nouvelle validation."
@@ -746,8 +892,8 @@ const AdminSettings = () => {
                                                     display: 'flex', alignItems: 'flex-start', gap: '12px',
                                                     padding: '14px 16px',
                                                     borderRadius: 'var(--radius-md)',
-                                                    border: active ? '2px solid var(--color-theme-people)' : '2px solid var(--color-border)',
-                                                    background: active ? 'var(--color-theme-people-bg)' : 'var(--color-surface-2)',
+                                                    border: active ? '2px solid var(--color-theme-content)' : '2px solid var(--color-border)',
+                                                    background: active ? 'var(--color-theme-content-bg)' : 'var(--color-surface-2)',
                                                     cursor: opt.disabled ? 'not-allowed' : 'pointer',
                                                     opacity: opt.disabled ? 0.55 : 1,
                                                     fontFamily: 'inherit',
@@ -756,7 +902,7 @@ const AdminSettings = () => {
                                                 <div style={{
                                                     width: '18px', height: '18px', flexShrink: 0, marginTop: '2px',
                                                     borderRadius: '50%',
-                                                    border: active ? '5px solid var(--color-theme-people)' : '2px solid var(--color-border-strong)',
+                                                    border: active ? '5px solid var(--color-theme-content)' : '2px solid var(--color-border-strong)',
                                                     background: 'var(--color-surface)',
                                                 }} />
                                                 <div>
@@ -772,139 +918,9 @@ const AdminSettings = () => {
                             </Field>
                         </Section>
 
-                        {/* ── Équipe (page publique « À propos ») ──────────── */}
-                        <Section icon={Users} title="Équipe (page À propos)"
+                        {/* ── Gestion des comptes et équipes ──────────── */}
+                        <Section icon={Users} title="Gestion des comptes et équipes"
                             color="var(--color-theme-content)" bg="var(--color-theme-content-bg)">
-                            <button
-                                type="button"
-                                onClick={() => navigate('/app/admin/team-content')}
-                                style={{
-                                    width: '100%',
-                                    display: 'flex', alignItems: 'center', gap: '12px',
-                                    padding: '14px 18px',
-                                    background: 'var(--color-theme-content-bg)', border: '1px solid var(--color-theme-content)',
-                                    borderRadius: 'var(--radius-md)', cursor: 'pointer',
-                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-content)',
-                                    fontSize: '0.85rem', fontWeight: '700',
-                                    textTransform: 'uppercase', letterSpacing: '0.5px',
-                                }}
-                            >
-                                <ExternalLink size={16} />
-                                <span style={{ flex: 1, textAlign: 'left' }}>Gérer les membres affichés sur la page publique « À propos »</span>
-                                <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
-                            </button>
-                            <p style={{ margin: '10px 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-                                Trois catégories : principaux (avec photo + bio), secondaires (compact), communauté (liste de chercheur·euses associé·es).
-                            </p>
-                        </Section>
-
-                        {/* ── Articles de presse (page publique /presse) ──────────── */}
-                        <Section icon={FolderOpen} title="Articles de presse"
-                            color="var(--color-theme-content)" bg="var(--color-theme-content-bg)">
-                            <button
-                                type="button"
-                                onClick={() => navigate('/app/admin/press')}
-                                style={{
-                                    width: '100%',
-                                    display: 'flex', alignItems: 'center', gap: '12px',
-                                    padding: '14px 18px',
-                                    background: 'var(--color-theme-content-bg)', border: '1px solid var(--color-theme-content)',
-                                    borderRadius: 'var(--radius-md)', cursor: 'pointer',
-                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-content)',
-                                    fontSize: '0.85rem', fontWeight: '700',
-                                    textTransform: 'uppercase', letterSpacing: '0.5px',
-                                }}
-                            >
-                                <ExternalLink size={16} />
-                                <span style={{ flex: 1, textAlign: 'left' }}>Gérer les articles affichés sur la page publique « Presse »</span>
-                                <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
-                            </button>
-                            <p style={{ margin: '10px 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-                                Tri automatique par date décroissante. Vignettes uploadables. Possibilité de masquer un article sans le supprimer.
-                            </p>
-                        </Section>
-
-                        {/* ── Missions (page publique /participer) ──────────── */}
-                        <Section icon={Target} title="Missions (page Participer)"
-                            color="var(--color-theme-content)" bg="var(--color-theme-content-bg)">
-                            <button
-                                type="button"
-                                onClick={() => navigate('/app/admin/missions')}
-                                style={{
-                                    width: '100%',
-                                    display: 'flex', alignItems: 'center', gap: '12px',
-                                    padding: '14px 18px',
-                                    background: 'var(--color-theme-content-bg)', border: '1px solid var(--color-theme-content)',
-                                    borderRadius: 'var(--radius-md)', cursor: 'pointer',
-                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-content)',
-                                    fontSize: '0.85rem', fontWeight: '700',
-                                    textTransform: 'uppercase', letterSpacing: '0.5px',
-                                }}
-                            >
-                                <ExternalLink size={16} />
-                                <span style={{ flex: 1, textAlign: 'left' }}>Gérer les missions affichées en haut de la page « Participer »</span>
-                                <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
-                            </button>
-                            <p style={{ margin: '10px 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-                                Cards dépliables (thème + nom + texte + lien optionnel). Ordre, visibilité et traduction EN gérés ici.
-                            </p>
-                        </Section>
-
-                        {/* ── Prestations (page publique /prestations) ──────────── */}
-                        <Section icon={FolderOpen} title="Prestations"
-                            color="var(--color-theme-content)" bg="var(--color-theme-content-bg)">
-                            <button
-                                type="button"
-                                onClick={() => navigate('/app/admin/prestations')}
-                                style={{
-                                    width: '100%',
-                                    display: 'flex', alignItems: 'center', gap: '12px',
-                                    padding: '14px 18px',
-                                    background: 'var(--color-theme-content-bg)', border: '1px solid var(--color-theme-content)',
-                                    borderRadius: 'var(--radius-md)', cursor: 'pointer',
-                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-content)',
-                                    fontSize: '0.85rem', fontWeight: '700',
-                                    textTransform: 'uppercase', letterSpacing: '0.5px',
-                                }}
-                            >
-                                <ExternalLink size={16} />
-                                <span style={{ flex: 1, textAlign: 'left' }}>Gérer les cards de la page publique « Prestations »</span>
-                                <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
-                            </button>
-                            <p style={{ margin: '10px 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-                                Challenges, ateliers, expo itinérante, conseil… Titre + icône + intro + description + bullets + plaquette PDF.
-                            </p>
-                        </Section>
-
-                        {/* ── Boutique (liens PrestaShop) ──────────── */}
-                        <Section icon={FolderOpen} title="Boutique (liens externes)"
-                            color="var(--color-theme-content)" bg="var(--color-theme-content-bg)">
-                            <button
-                                type="button"
-                                onClick={() => navigate('/app/admin/shop')}
-                                style={{
-                                    width: '100%',
-                                    display: 'flex', alignItems: 'center', gap: '12px',
-                                    padding: '14px 18px',
-                                    background: 'var(--color-theme-content-bg)', border: '1px solid var(--color-theme-content)',
-                                    borderRadius: 'var(--radius-md)', cursor: 'pointer',
-                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-content)',
-                                    fontSize: '0.85rem', fontWeight: '700',
-                                    textTransform: 'uppercase', letterSpacing: '0.5px',
-                                }}
-                            >
-                                <ExternalLink size={16} />
-                                <span style={{ flex: 1, textAlign: 'left' }}>Gérer les liens vers le PrestaShop (livres, jeux, autres)</span>
-                                <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />
-                            </button>
-                            <p style={{ margin: '10px 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-                                Vitrine sans panier — chaque card renvoie vers la fiche produit du PrestaShop externe.
-                            </p>
-                        </Section>
-
-                        {/* ── Gestion d'équipe (comptes utilisateurs) ──────────── */}
-                        <Section icon={Users} title="Gestion d'équipe (comptes)"
-                            color="var(--color-theme-people)" bg="var(--color-theme-people-bg)">
                             <button
                                 type="button"
                                 onClick={() => navigate('/app/admin/team')}
@@ -912,9 +928,9 @@ const AdminSettings = () => {
                                     width: '100%',
                                     display: 'flex', alignItems: 'center', gap: '12px',
                                     padding: '14px 18px',
-                                    background: 'var(--color-theme-people-bg)', border: '1px solid var(--color-theme-people)',
+                                    background: 'var(--color-theme-content-bg)', border: '1px solid var(--color-theme-content)',
                                     borderRadius: 'var(--radius-md)', cursor: 'pointer',
-                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-people)',
+                                    fontFamily: 'var(--font-heading)', color: 'var(--color-theme-content)',
                                     fontSize: '0.85rem', fontWeight: '700',
                                     textTransform: 'uppercase', letterSpacing: '0.5px',
                                 }}
@@ -927,6 +943,84 @@ const AdminSettings = () => {
                                 Owners : gérez votre propre équipe. Superadmins : vous pouvez aussi utiliser la page globale des utilisateurs.
                             </p>
                         </Section>
+
+                        {/* ── Soumissions de visiteurs ──────── */}
+                        <Section icon={Users} title="Soumissions de visiteurs"
+                            color="var(--color-theme-content)" bg="var(--color-theme-content-bg)">
+
+                            <Field
+                                label="Autoriser les soumissions anonymes"
+                                hint="Si désactivé, seuls les utilisateurs connectés pourront proposer des cartels."
+                            >
+                                <Toggle value={allowAnon} onChange={setAllowAnon} />
+                            </Field>
+
+                            {allowAnon && (
+                                <div style={{
+                                    background: 'var(--color-theme-content-bg)',
+                                    border: '1px solid var(--color-theme-content)',
+                                    borderRadius: 'var(--radius-md)',
+                                    padding: '20px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '20px',
+                                }}>
+                                    <Field
+                                        label="Maximum de soumissions par adresse IP (total)"
+                                        hint="Nombre total de cartels qu'une même IP peut soumettre, toutes périodes confondues."
+                                    >
+                                        <NumberInput
+                                            value={maxTotal}
+                                            onChange={v => setMaxTotal(Number(v))}
+                                            min={1}
+                                            max={500}
+                                            suffix="cartels max"
+                                        />
+                                    </Field>
+
+                                    <div style={{ borderTop: '1px solid var(--color-theme-content)', paddingTop: '20px' }}>
+                                        <p style={{ margin: '0 0 14px', fontWeight: '700', fontSize: '0.78rem', color: 'var(--color-theme-content)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                            Limite sur fenêtre glissante
+                                        </p>
+                                        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                                            <Field label="Soumissions autorisées par fenêtre" hint="Nombre max de cartels sur la période définie ci-dessous.">
+                                                <NumberInput value={maxWindow} onChange={v => setMaxWindow(Number(v))} min={1} max={50} suffix="cartels" />
+                                            </Field>
+                                            <Field label="Durée de la fenêtre" hint="Période glissante de contrôle.">
+                                                <NumberInput value={windowMinutes} onChange={v => setWindowMinutes(Number(v))} min={1} max={1440} suffix="minutes" />
+                                            </Field>
+                                        </div>
+
+                                        <div style={{
+                                            background: 'var(--color-surface)',
+                                            border: '1px solid var(--color-theme-content)',
+                                            borderRadius: 'var(--radius-md)',
+                                            padding: '12px 16px',
+                                            marginTop: '4px',
+                                            fontSize: '0.87rem',
+                                            color: 'var(--color-theme-content)',
+                                            fontWeight: '600',
+                                        }}>
+                                            Règle active : chaque IP peut soumettre au maximum{' '}
+                                            <strong>{maxWindow} cartel{maxWindow > 1 ? 's' : ''}</strong> toutes les{' '}
+                                            <strong>
+                                                {windowMinutes >= 60
+                                                    ? `${Math.floor(windowMinutes / 60)}h${windowMinutes % 60 > 0 ? ` ${windowMinutes % 60}min` : ''}`
+                                                    : `${windowMinutes} min`
+                                                }
+                                            </strong>,
+                                            et <strong>{maxTotal} cartel{maxTotal > 1 ? 's' : ''} au total</strong>.
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </Section>
+                    </Group>
+
+                    {/* ════════════════════════════════════════════════════════
+                        GROUPE 3 — SYSTÈME : config technique & état (violet)
+                       ════════════════════════════════════════════════════════ */}
+                    <Group title="Système" color="var(--color-theme-people)">
 
                         {/* ── Journal d'événements ──────────── */}
                         <Section icon={Activity} title="Journal d'événements"
@@ -953,16 +1047,10 @@ const AdminSettings = () => {
                                 Audit complet des actions (publications, modifications, créations de comptes…) et activation des notifications par email à l'équipe.
                             </p>
                         </Section>
-                    </Group>
-
-                    {/* ════════════════════════════════════════════════════════
-                        GROUPE 3 — SYSTÈME : config technique & état
-                       ════════════════════════════════════════════════════════ */}
-                    <Group title="Système" color="var(--color-theme-system)">
 
                         {/* ── Clés API ──────── */}
                         <Section icon={Key} title="Clés API (traduction automatique)"
-                            color="var(--color-theme-system)" bg="var(--color-theme-system-bg)">
+                            color="var(--color-theme-people)" bg="var(--color-theme-people-bg)">
 
                             <p style={{ margin: '0 0 18px', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
                                 Si une clé DeepL est renseignée, elle est utilisée pour les traductions <strong>FR&nbsp;↔&nbsp;EN</strong> (moins coûteux).
@@ -1012,7 +1100,7 @@ const AdminSettings = () => {
 
                         {/* ── Informations système ──────── */}
                         <Section icon={Shield} title="Informations système"
-                            color="var(--color-theme-system)" bg="var(--color-theme-system-bg)">
+                            color="var(--color-theme-people)" bg="var(--color-theme-people-bg)">
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
                                 {[
                                     { label: 'Soumissions anonymes',  value: allowAnon ? 'Autorisées' : 'Bloquées' },

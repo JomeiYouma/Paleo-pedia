@@ -1,5 +1,6 @@
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
+import { pediaBasePath } from '../utils/subsiteHost';
 
 // Layout dédié à la vitrine paleo-pedia.
 // Distinct de SiteLayout (qui sert le programme Paléo-Énergétique) :
@@ -40,7 +41,7 @@ const PediaHeader = () => (
             gap: 16,
         }}>
             <Link
-                to="/pedia"
+                to={pediaBasePath() || '/'}
                 style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 12 }}
                 aria-label="Paléo-Pédia, accueil"
             >
@@ -73,14 +74,14 @@ const PediaFooter = () => {
             fontSize: '0.85rem',
         }}>
             <nav aria-label="Liens légaux" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 18px', justifyContent: 'center', marginBottom: 12 }}>
-                <Link to="/pedia/mentions-legales" style={linkStyle}>Mentions légales</Link>
-                <Link to="/pedia/politique-confidentialite" style={linkStyle}>Politique de confidentialité</Link>
-                <Link to="/pedia/contact" style={linkStyle}>Contact</Link>
+                <Link to={`${pediaBasePath()}/mentions-legales`} style={linkStyle}>Mentions légales</Link>
+                <Link to={`${pediaBasePath()}/politique-confidentialite`} style={linkStyle}>Politique de confidentialité</Link>
+                <Link to={`${pediaBasePath()}/contact`} style={linkStyle}>Contact</Link>
             </nav>
             <div>© {new Date().getFullYear()} Atelier 21</div>
             <div style={{ marginTop: '4px', fontSize: '0.8rem' }}>
                 Plateforme créée par{' '}
-                <a href="https://jomeiyouma.github.io/portfolio/" target="_blank" rel="noopener noreferrer" style={linkStyle}>Youma</a>
+                <a href="https://jomeiyouma.github.io/portfolio/" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, textDecoration: 'underline' }}>Youma</a>
             </div>
         </footer>
     );

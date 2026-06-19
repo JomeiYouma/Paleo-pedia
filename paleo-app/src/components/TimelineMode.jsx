@@ -388,6 +388,22 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [validCartels.length]);
 
+    // Molette = zoom de la frise, jamais scroll de la page.
+    // d3-zoom appelle bien preventDefault… SAUF quand la molette ne peut plus
+    // changer le zoom (limite de scaleExtent atteinte) : dans ce cas il fait un
+    // return anticipé et laisse l'événement filer, donc la page scrolle. On
+    // ajoute un écouteur wheel NON-PASSIF sur le conteneur qui preventDefault
+    // systématiquement (onWheel de React étant passif, on passe par addEventListener).
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const blockPageScroll = (e) => { e.preventDefault(); };
+        el.addEventListener('wheel', blockPageScroll, { passive: false });
+        return () => el.removeEventListener('wheel', blockPageScroll);
+        // deps sur la longueur : le conteneur n'est rendu que lorsqu'il y a des
+        // cartels (early-return plus bas), il faut donc (re)attacher a ce moment.
+    }, [validCartels.length]);
+
 
     if (!validCartels.length) return <div className="container">{t('library.empty')}</div>;
 
