@@ -12,6 +12,7 @@ const CreateSchema = z.object({
   can_manage_admin:    z.boolean().optional(),
   can_create_subsite:  z.boolean().optional(),
   can_manage_team:     z.boolean().optional(),
+  can_export_cartel:   z.boolean().optional(),
   home_subsite_id:     z.string().nullable().optional(),
 }).strict();
 
@@ -22,6 +23,7 @@ const UpdateSchema = z.object({
   can_manage_admin:    z.boolean().optional(),
   can_create_subsite:  z.boolean().optional(),
   can_manage_team:     z.boolean().optional(),
+  can_export_cartel:   z.boolean().optional(),
   home_subsite_id:     z.string().nullable().optional(),
 }).strict();
 
@@ -86,7 +88,7 @@ export const UserController = {
       const user = await UserModel.update(req.params.id, parsed.data);
       if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
       // On capture les permissions modifiées pour faciliter l'audit
-      const trackedFields = ['role', 'can_create_cartel', 'can_publish_cartel', 'can_manage_admin', 'can_create_subsite', 'can_manage_team', 'home_subsite_id'];
+      const trackedFields = ['role', 'can_create_cartel', 'can_publish_cartel', 'can_manage_admin', 'can_create_subsite', 'can_manage_team', 'can_export_cartel', 'home_subsite_id'];
       const changed = Object.fromEntries(
         Object.entries(parsed.data).filter(([k]) => trackedFields.includes(k))
       );

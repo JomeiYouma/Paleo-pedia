@@ -25,6 +25,7 @@ export async function authenticate(req, res, next) {
       can_manage_admin:   !!decoded.can_manage_admin,
       can_create_subsite: !!decoded.can_create_subsite,
       can_manage_team:    !!decoded.can_manage_team,
+      can_export_cartel:  !!decoded.can_export_cartel,
       home_subsite_id:    decoded.home_subsite_id ?? null,
     };
     next();
@@ -50,6 +51,20 @@ export const requirePublish = require('can_publish_cartel');
 export const requireAdmin   = require('can_manage_admin');
 
 /**
+ * Accès au gestionnaire de cartels en mode export / traduction :
+ * autorisé aux admins (can_manage_admin) OU aux comptes « exportateur »
+ * (can_export_cartel). Permet d'exporter / traduire des cartels publiés
+ * sans donner les droits d'administration.
+ */
+export const requireExportOrAdmin = (req, res, next) => {
+  if (!req.user) return res.status(401).json({ error: 'Non authentifié' });
+  if (!req.user.can_manage_admin && !req.user.can_export_cartel) {
+    return res.status(403).json({ error: 'Permission refusée : export réservé' });
+  }
+  next();
+};
+
+/**
  * Auth optionnelle : tente de décoder le token JWT si présent.
  * N'échoue jamais — req.user reste null si token absent ou invalide.
  * Utiliser sur les routes publiques qui ont un comportement enrichi pour les admins.
@@ -69,6 +84,7 @@ export function optionalAuth(req, res, next) {
         can_manage_admin:   !!decoded.can_manage_admin,
         can_create_subsite: !!decoded.can_create_subsite,
         can_manage_team:    !!decoded.can_manage_team,
+        can_export_cartel:  !!decoded.can_export_cartel,
         home_subsite_id:    decoded.home_subsite_id ?? null,
       };
     } catch {

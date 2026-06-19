@@ -10,7 +10,7 @@ import { UploadController, upload } from '../controllers/uploadController.js';
 import { TranslateController } from '../controllers/translateController.js';
 import { ImportController }    from '../controllers/importController.js';
 import { ExportController }    from '../controllers/exportController.js';
-import { authenticate, requireAdmin, optionalAuth } from '../middleware/auth.js';
+import { authenticate, requireAdmin, requireExportOrAdmin, optionalAuth } from '../middleware/auth.js';
 import { submissionGuard } from '../middleware/submissionGuard.js';
 import { loginRateLimit } from '../middleware/loginGuard.js';
 import { uploadGuard } from '../middleware/uploadGuard.js';
@@ -93,17 +93,17 @@ router.delete('/users/:id',          authenticate, requireAdmin, UserController.
 // ajoute un rate-limit par IP pour les visiteurs anonymes.
 router.post('/upload', optionalAuth, uploadGuard, upload.single('image'), UploadController.uploadImage);
 
-// ── Traduction (admin) ───────────────────────────────────────
+// ── Traduction (admin ; /bulk ouvert aux exportateurs pour la frise traduite) ──
 router.post('/translate',        authenticate, requireAdmin, TranslateController.translate);
-router.post('/translate/bulk',   authenticate, requireAdmin, TranslateController.bulkTranslate);
+router.post('/translate/bulk',   authenticate, requireExportOrAdmin, TranslateController.bulkTranslate);
 router.post('/translate/fields', authenticate, requireAdmin, TranslateController.translateFields);
 
 // ── Import ZIP (admin) ───────────────────────────────────────
 router.post('/import', authenticate, requireAdmin, ImportController.middleware, ImportController.importZip);
 
-// ── Export archive (admin) ───────────────────────────────────
-router.get('/export/image-check', authenticate, requireAdmin, ExportController.imageCheck);
-router.get('/export',             authenticate, requireAdmin, ExportController.exportArchive);
+// ── Export archive (admin + exportateurs) ────────────────────
+router.get('/export/image-check', authenticate, requireExportOrAdmin, ExportController.imageCheck);
+router.get('/export',             authenticate, requireExportOrAdmin, ExportController.exportArchive);
 
 // ── Sous-sites (public GET, admin write) ─────────────────────
 router.get   ('/subsites',       SubsiteController.getAll);

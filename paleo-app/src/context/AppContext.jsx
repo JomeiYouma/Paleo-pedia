@@ -26,6 +26,9 @@ export const AppProvider = ({ children }) => {
     const homeSubsiteId = user?.home_subsite_id ?? null;
     // isAdmin = accès à l'UI d'administration (superadmin OU owner d'un sous-site)
     const isAdmin = isSuperadmin || isOwner;
+    // canExport = compte « exportateur » : accède au gestionnaire de cartels en
+    // lecture seule, uniquement pour exporter / traduire les cartels publiés.
+    const canExport = !!user?.can_export_cartel;
 
     const [currentWorkshopId, setCurrentWorkshopId] = useState(null);
     const currentWorkshop = (currentWorkshopId && Array.isArray(workshops))
@@ -346,7 +349,7 @@ export const AppProvider = ({ children }) => {
             // Data
             cartels, loading, hasFetched, categories, workshops, user,
             // Computed
-            isAdmin, isSuperadmin, isOwner, homeSubsiteId,
+            isAdmin, isSuperadmin, isOwner, canExport, homeSubsiteId,
             currentWorkshopId, currentWorkshop, setWorkshopContext,
             // Auth
             login, logout,

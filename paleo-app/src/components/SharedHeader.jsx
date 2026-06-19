@@ -31,6 +31,13 @@ const APP_NAV_VISITOR = [
     { path: '/app/create', labelKey: 'nav.create', icon: PlusCircle },
 ];
 
+// Nav d'un compte « exportateur » : frise + gestionnaire en lecture seule
+// (cartels publiés à exporter / traduire). Ni modération, ni admin.
+const APP_NAV_EXPORT = [
+    { path: '/app',                  labelKey: 'nav.library', icon: Library,       end: true },
+    { path: '/app/manage/published', labelKey: 'nav.cartels', icon: ClipboardList },
+];
+
 // Une seule entrée "Cartels" remplace l'ancien trio drafts/pending/published :
 // les filtres par statut sont déjà sur la page elle-même (onglets internes), pas
 // la peine de les redoubler dans la nav. La pastille rouge reste sur les cartels
@@ -88,7 +95,7 @@ const NavBadge = ({ count }) => {
  *   currentWorkshop, quitWorkshop
  */
 const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
-    const { user, isAdmin, homeSubsiteId, login, logout, cartels = [], setGlobalToast } = useApp();
+    const { user, isAdmin, canExport, homeSubsiteId, login, logout, cartels = [], setGlobalToast } = useApp();
     const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
@@ -152,7 +159,7 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
         }
     };
 
-    const appLinks = isAdmin ? APP_NAV_ADMIN : APP_NAV_VISITOR;
+    const appLinks = isAdmin ? APP_NAV_ADMIN : canExport ? APP_NAV_EXPORT : APP_NAV_VISITOR;
 
     return (
         <>

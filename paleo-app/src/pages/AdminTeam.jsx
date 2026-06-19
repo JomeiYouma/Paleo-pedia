@@ -302,6 +302,7 @@ const AdminTeam = () => {
                     <ul style={{ margin: '8px 0 0', paddingLeft: '18px', lineHeight: '1.7' }}>
                         <li><strong>Créer cartels</strong> — le membre peut créer de nouveaux cartels (en brouillon par défaut).</li>
                         <li><strong>Publier</strong> — le membre peut faire passer un cartel en statut <em>publié</em> (sinon ils restent en brouillon ou en attente).</li>
+                        <li><strong>Exporter cartels</strong> — accès <em>lecture seule</em> au gestionnaire : voir les cartels publiés, les sélectionner et les exporter / traduire (PDF, images, archive). Aucune autre action (ni édition, ni publication, ni modération).</li>
                         <li><strong>Gérer équipe</strong> — <em>owner</em> : le membre peut inviter, modifier et supprimer d'autres comptes dans le contexte courant.</li>
                         {isSuperadmin && (
                             <li><strong>Créer sous-sites</strong> — superadmin uniquement : le membre peut créer de nouveaux sous-sites.</li>
@@ -357,6 +358,13 @@ const AdminTeam = () => {
                                             hint="Peut publier les cartels (sinon ils restent en brouillon / en attente)"
                                             value={!!m.can_publish_cartel}
                                             onChange={() => handleTogglePerm(m, 'can_publish_cartel')}
+                                            disabled={readOnly}
+                                        />
+                                        <Toggle
+                                            label="Exporter cartels"
+                                            hint="Accès lecture seule au gestionnaire : voir les cartels publiés et les exporter / traduire (PDF, images, archive). Aucune autre action."
+                                            value={!!m.can_export_cartel}
+                                            onChange={() => handleTogglePerm(m, 'can_export_cartel')}
                                             disabled={readOnly}
                                         />
                                         <Toggle

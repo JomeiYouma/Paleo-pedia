@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `can_manage_admin`    TINYINT(1)    NOT NULL DEFAULT 0,
   `can_create_subsite`  TINYINT(1)    NOT NULL DEFAULT 0,
   `can_manage_team`     TINYINT(1)    NOT NULL DEFAULT 0,
+  `can_export_cartel`   TINYINT(1)    NOT NULL DEFAULT 0,
   `home_subsite_id`     CHAR(36)      NULL DEFAULT NULL,
   `created_at`          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

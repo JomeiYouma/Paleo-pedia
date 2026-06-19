@@ -131,7 +131,10 @@ const ImportModal = ({ onClose, onDone, t }) => {
 
 // ── Composant principal ──────────────────────────────────────
 const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null } = {}) => {
-    const { cartels, fetchData, deleteCartel, deleteCartels, updateCartel, isAdmin, isSuperadmin, isOwner, homeSubsiteId, categories, workshops, addWorkshop, loading: appLoading, hasFetched } = useApp();
+    const { cartels, fetchData, isAdmin, isSuperadmin, isOwner, canExport, homeSubsiteId, categories, workshops, addWorkshop, loading: appLoading, hasFetched } = useApp();
+    // Compte « exportateur » : accès lecture seule au gestionnaire (cartels
+    // publiés → export / traduction PDF), sans aucune action de modification.
+    const exportOnly = canExport && !isAdmin;
     const navigate = useNavigate();
     const location = useLocation();
     const { workshopId } = useParams();
@@ -159,6 +162,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     // L'onglet submissions est réservé à la page admin principale (file de validation
     // globale du superadmin). Il n'a aucun sens dans un contexte sous-site verrouillé.
     const visibleTabs = TABS.filter(tab => {
+        if (exportOnly) return tab.key === 'published';   // exportateur : publiés uniquement
         if (tab.key === 'submissions') return isSuperadmin && !lockedSubsiteSlug;
         if (tab.superadminOnly) return isSuperadmin;
         return true;
@@ -434,7 +438,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
         return sample?.subsite_name || filterSubsiteSlug;
     }, [filterSubsiteSlug, cartels]);
 
-    if (!isAdmin) {
+    if (!isAdmin && !canExport) {
         return <div style={{ textAlign:'center', padding:'80px 20px', color:'#aaa' }}><p>{t('manageCartels.adminOnly')}</p></div>;
     }
 
@@ -850,6 +854,8 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                     <p style={{ margin:'4px 0 0', color:'#999', fontSize:'0.88rem' }}>{t('manageCartels.totalCount', { count: scopedCartels.length })}</p>
                 </div>
                 <div style={{ display:'flex', gap:'8px', flexWrap:'wrap' }}>
+                    {/* Import / création masqués pour un compte exportateur (lecture seule). */}
+                    {!exportOnly && (<>
                     <button
                         onClick={() => setShowImport(true)}
                         style={{ display:'flex', alignItems:'center', gap:'6px', background:'#6b7280', color:'white', border:'none', borderRadius:'10px', padding:'10px 16px', cursor:'pointer', fontWeight:'700', fontSize:'0.88rem', fontFamily:'inherit' }}
@@ -862,6 +868,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                     >
                         <Plus size={15} /> {t('manageCartels.newCartel')}
                     </button>
+                    </>)}
                 </div>
             </div>
 
@@ -1099,9 +1106,11 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                 <Check size={14} /> {t('manageCartels.publish')} ({selectedIds.size})
                             </button>
                         )}
+                        {!exportOnly && (
                         <button onClick={handleBulkTranslate} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'7px 11px', borderRadius:'8px', border:'1px solid #6741d9', background:'white', color:'#6741d9', cursor:'pointer', fontSize:'0.84rem', fontWeight:'600', fontFamily:'inherit' }}>
                             <Languages size={14} /> {t('manageCartels.retranslate')} ({selectedIds.size})
                         </button>
+                        )}
                         <DropdownButton label={t('manageCartels.export')} icon={Download} color="#555" variant="outline">
                             {close => (<>
                                 <DropItem icon={ImgIcon}   label={t('manageCartels.imagesZip')} onClick={() => handleExportImages(close)} />
@@ -1110,12 +1119,16 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                 <DropItem icon={Package}   label={t('manageCartels.fullArchive')} onClick={() => handleExportArchive(close)} />
                             </>)}
                         </DropdownButton>
+                        {!exportOnly && (
                         <button onClick={() => { setNewWorkshopName(''); setSelectedWorkshopId(''); setShowWorkshopModal(true); }} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'7px 11px', borderRadius:'8px', border:'1px solid #1f6feb', background:'white', color:'#1f6feb', cursor:'pointer', fontSize:'0.84rem', fontWeight:'600', fontFamily:'inherit' }}>
                             <FolderPlus size={14} /> {t('manageCartels.assignWorkshop')} ({selectedIds.size})
                         </button>
+                        )}
+                        {!exportOnly && (
                         <button onClick={handleBulkDelete} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'7px 11px', borderRadius:'8px', border:'none', background:'var(--color-error, #d32f2f)', color:'white', cursor:'pointer', fontSize:'0.84rem', fontWeight:'600', fontFamily:'inherit' }}>
                             <Trash2 size={14} /> {t('manageCartels.delete')}
                         </button>
+                        )}
                     </div>
                 )}
 
@@ -1185,7 +1198,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                             {filteredCartels.map(cartel => {
                                 const isProc  = processingId === cartel.id;
                                 const isTrans = translating.has(cartel.id);
-                                const readOnly = isReadOnlyMainCartel(cartel);
+                                const readOnly = exportOnly || isReadOnlyMainCartel(cartel);
                                 // Archivé : le badge "État" a été retiré ; on garde la distinction
                                 // visuelle via une opacité plus faible sur la ligne entière.
                                 const rowOpacity = isProc ? 0.7 : cartel.status === 'archived' ? 0.55 : 1;
@@ -1385,6 +1398,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                             pour ne pas modifier la composition imprimée. */}
                         <PrintPreview data={previewCartel} />
                         <div style={{ display:'flex', gap:'10px', marginTop:'16px', justifyContent:'flex-end' }}>
+                            {!exportOnly && (<>
                             <button onClick={() => { setPreviewCartel(null); goToCreate(previewCartel.id); }}
                                 style={{ display:'flex', alignItems:'center', gap:'6px', background:'#3b5bdb', color:'white', border:'none', padding:'10px 18px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', fontFamily:'inherit' }}>
                                 <Edit size={15} /> {t('manageCartels.edit')}
@@ -1404,6 +1418,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                     <Languages size={15} /> {t('manageCartels.retranslateShortEn', 'Retraduire en anglais')}
                                 </button>
                             )}
+                            </>)}
                             <button onClick={() => setPreviewCartel(null)} style={{ padding:'10px 18px', borderRadius:'8px', border:'1px solid #ddd', cursor:'pointer', fontFamily:'inherit' }}>{t('manageCartels.importClose')}</button>
                         </div>
                     </div>
@@ -1420,10 +1435,12 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                         <h3 style={{ margin:'0 0 16px', fontSize:'1rem', fontWeight:'700', display:'flex', alignItems:'center', gap:'8px' }}><Monitor size={16} /> {t('manageCartels.webPreview')}</h3>
                         <CartelPreview data={webPreviewCartel} isDraft={webPreviewCartel.status !== 'published'} />
                         <div style={{ display:'flex', gap:'10px', marginTop:'16px', justifyContent:'flex-end' }}>
+                            {!exportOnly && (
                             <button onClick={() => { setWebPreviewCartel(null); goToCreate(webPreviewCartel.id); }}
                                 style={{ display:'flex', alignItems:'center', gap:'6px', background:'#3b5bdb', color:'white', border:'none', padding:'10px 18px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', fontFamily:'inherit' }}>
                                 <Edit size={15} /> {t('manageCartels.edit')}
                             </button>
+                            )}
                             <button onClick={() => setWebPreviewCartel(null)} style={{ padding:'10px 18px', borderRadius:'8px', border:'1px solid #ddd', cursor:'pointer', fontFamily:'inherit' }}>{t('manageCartels.importClose')}</button>
                         </div>
                     </div>
