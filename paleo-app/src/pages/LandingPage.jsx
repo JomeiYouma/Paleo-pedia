@@ -10,7 +10,7 @@ const ACCENT  = 'var(--color-accent)';
 const LandingPage = () => {
     const { t } = useTranslation();
     // Page d'accueil : on n'ajoute pas de préfixe au titre — le SITE_NAME seul
-    // suffit. La description reprend le tagline du footer (« Une contre-histoire
+    // suffit. La description reprend le tagline du footer (« Une autre histoire
     // de l'énergie pour inspirer le futur »).
     usePageMeta({
         description: t('footer.tagline') + " Programme de recherche participatif d'Atelier 21 sur les inventions oubliées et les imaginaires énergétiques.",
