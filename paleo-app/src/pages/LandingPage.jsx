@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, BookOpen, Map, PenTool, Layers, X, ChevronRight, ExternalLink } from 'lucide-react';
-import { categories as categoriesApi, subsites as subsitesApi } from '../services/apiClient';
-import { getSubsiteHostUrl } from '../utils/subsiteHost';
+import { ArrowRight, BookOpen, Map, PenTool, Lightbulb } from 'lucide-react';
 import { usePageMeta } from '../hooks/usePageMeta';
 
 const PRIMARY = 'var(--color-primary)';
@@ -11,7 +9,6 @@ const ACCENT  = 'var(--color-accent)';
 
 const LandingPage = () => {
     const { t } = useTranslation();
-    const navigate = useNavigate();
     // Page d'accueil : on n'ajoute pas de préfixe au titre — le SITE_NAME seul
     // suffit. La description reprend le tagline du footer (« Une contre-histoire
     // de l'énergie pour inspirer le futur »).
@@ -19,65 +16,6 @@ const LandingPage = () => {
         description: t('footer.tagline') + " Programme de recherche participatif d'Atelier 21 sur les inventions oubliées et les imaginaires énergétiques.",
         path: '/',
     });
-    const [showCategoryModal, setShowCategoryModal] = useState(false);
-    const [cats, setCats] = useState([]);
-    const [subsites, setSubsites] = useState([]);
-    const [explorerMode, setExplorerMode] = useState(null); // 'subsites' | 'categories' | null
-    const [loadingCats, setLoadingCats] = useState(false);
-
-    const closeCategoryModal = () => {
-        setShowCategoryModal(false);
-        setExplorerMode(null);
-    };
-
-    // Charger les catégories + sous-sites à la demande
-    const openCategoryModal = async () => {
-        setShowCategoryModal(true);
-        if (explorerMode) return;
-        setLoadingCats(true);
-        try {
-            const subs = await subsitesApi.getAll();
-            const subsiteList = Array.isArray(subs) ? subs : [];
-            setSubsites(subsiteList);
-
-            if (subsiteList.length > 0) {
-                setCats([]);
-                setExplorerMode('subsites');
-                return;
-            }
-
-            const data = await categoriesApi.getAll();
-            setCats(Array.isArray(data) ? data : []);
-            setExplorerMode('categories');
-        } catch (e) {
-            console.error('Impossible de charger les catégories', e);
-        } finally {
-            setLoadingCats(false);
-        }
-    };
-
-    const handleThemeClick = (item) => {
-        setShowCategoryModal(false);
-        if (explorerMode === 'subsites') {
-            // Si le sous-site a un domaine dédié, on y envoie l'utilisateur
-            // (URL canonique, telle qu'on la communique en externe).
-            const hostUrl = getSubsiteHostUrl(item.slug);
-            if (hostUrl) {
-                window.location.href = hostUrl;
-            } else {
-                navigate(`/site/${item.slug}`);
-            }
-        } else {
-            navigate(`/app?category=${encodeURIComponent(item.name)}`);
-        }
-    };
-
-    // Fermer le modal sur Escape
-    useEffect(() => {
-        const onKey = (e) => { if (e.key === 'Escape') closeCategoryModal(); };
-        window.addEventListener('keydown', onKey);
-        return () => window.removeEventListener('keydown', onKey);
-    }, []);
 
     return (
         <div>
@@ -159,14 +97,15 @@ const LandingPage = () => {
                             {t('landing.hero.exploreTimeline')} <ArrowRight size={18} />
                         </Link>
 
-                        <button
-                            id="cta-explorer-thematique"
-                            onClick={openCategoryModal}
+                        {/* CTA « Proposer une invention » → création de cartel (ouvert aux visiteurs) */}
+                        <Link
+                            to="/app/create"
+                            id="cta-proposer-invention"
                             className="paleo-btn paleo-btn--inverse"
                             style={{ padding: '14px 32px', fontSize: '0.95rem', letterSpacing: '0.6px' }}
                         >
-                            <Layers size={18} /> {t('landing.hero.exploreTheme')}
-                        </button>
+                            <Lightbulb size={18} /> {t('landing.hero.proposeInvention', 'Proposer une invention')}
+                        </Link>
                     </div>
                 </div>
             </section>
@@ -223,125 +162,32 @@ const LandingPage = () => {
             </div>
             </section>
 
-            {/* ── Category Modal ───────────────────────────────────── */}
-            {showCategoryModal && (
-                <div
-                    id="modal-thematiques"
-                    onClick={(e) => { if (e.target === e.currentTarget) closeCategoryModal(); }}
-                    style={{
-                        position: 'fixed', inset: 0,
-                        background: 'rgba(0,0,0,0.5)',
-                        backdropFilter: 'blur(4px)',
-                        zIndex: 5000,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '20px',
-                        animation: 'fadeIn 0.2s ease-out',
-                    }}
-                >
-                    <div style={{
-                        background: 'var(--color-surface)',
-                        borderRadius: 'var(--radius-lg)',
-                        padding: '40px',
-                        maxWidth: '560px',
-                        width: '100%',
-                        maxHeight: '80vh',
-                        overflowY: 'auto',
-                        boxShadow: 'var(--shadow-lg)',
-                        border: '1px solid var(--color-border)',
-                        position: 'relative',
-                    }}>
-                        {/* Close */}
-                        <button
-                            onClick={closeCategoryModal}
-                            aria-label={t('common.close')}
-                            style={{
-                                position: 'absolute', top: '16px', right: '16px',
-                                background: 'var(--color-primary-soft)', border: 'none', borderRadius: 'var(--radius-md)',
-                                width: '36px', height: '36px', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                transition: 'background 0.2s',
-                            }}
-                            title={t('common.close')}
-                        >
-                            <X size={18} color="var(--color-text-muted)" />
-                        </button>
-
-                        <h2 style={{ margin: '0 0 8px 0', fontSize: '1.6rem' }}>{t('landing.modal.title')}</h2>
-                        <p style={{ margin: '0 0 28px 0', color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>
-                            {explorerMode === 'subsites'
-                                ? t('landing.modal.subsiteHint')
-                                : t('landing.modal.categoryHint')}
-                        </p>
-
-                        {loadingCats && (
-                            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--color-text-subtle)' }}>{t('common.loadingEllipsis')}</div>
-                        )}
-
-                        {!loadingCats && explorerMode === 'categories' && cats.length === 0 && (
-                            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--color-text-subtle)' }}>{t('landing.modal.emptyCategories')}</div>
-                        )}
-
-                        {!loadingCats && explorerMode === 'subsites' && subsites.length === 0 && (
-                            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--color-text-subtle)' }}>{t('landing.modal.emptySubsites')}</div>
-                        )}
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {(explorerMode === 'subsites' ? subsites : cats).map(item => {
-                                const isSubsite = explorerMode === 'subsites';
-                                const itemColor = isSubsite ? (item.primary_color || PRIMARY) : (item.color || PRIMARY);
-                                return (
-                                <button
-                                    key={item.id || item.slug}
-                                    id={`theme-btn-${item.id || item.slug}`}
-                                    onClick={() => handleThemeClick(item)}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        padding: '14px 18px',
-                                        borderRadius: 'var(--radius-md)',
-                                        border: '1px solid var(--color-border)',
-                                        borderLeft: `4px solid ${itemColor}`,
-                                        background: 'var(--color-surface)',
-                                        cursor: 'pointer',
-                                        textAlign: 'left',
-                                        transition: 'background-color 0.15s, border-color 0.15s',
-                                        fontSize: '0.95rem',
-                                        fontWeight: '700',
-                                        fontFamily: 'var(--font-heading)',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.4px',
-                                        color: 'var(--color-text)',
-                                    }}
-                                    onMouseEnter={e => {
-                                        e.currentTarget.style.background = 'var(--color-primary-soft)';
-                                    }}
-                                    onMouseLeave={e => {
-                                        e.currentTarget.style.background = 'var(--color-surface)';
-                                    }}
-                                >
-                                    <span>{item.name}</span>
-                                    <ChevronRight size={18} color="var(--color-text-subtle)" />
-                                </button>
-                                );
-                            })}
-                        </div>
-
-                        {/* Lien vers tous les cartels sans filtre */}
-                        <div style={{ marginTop: '24px', textAlign: 'center' }}>
-                            <Link
-                                to="/app"
-                                onClick={closeCategoryModal}
-                                style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', textDecoration: 'underline' }}
-                            >
-                                {t('landing.modal.allCartels')} →
-                            </Link>
-                        </div>
-                    </div>
+            {/* ── CTA : Participer au projet (démo / partenariat / frise dédiée) ── */}
+            <section style={{
+                position: 'relative',
+                zIndex: 2,
+                background: PRIMARY,
+                color: 'var(--color-white)',
+                padding: '76px 20px',
+                textAlign: 'center',
+            }}>
+                <div aria-hidden="true" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '6px', background: ACCENT }} />
+                <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+                    <h2 style={{ fontSize: 'clamp(1.6rem, 3.4vw, 2.2rem)', margin: '0 0 16px', color: 'var(--color-white)' }}>
+                        {t('landing.collaborate.title', 'Participer au projet')}
+                    </h2>
+                    <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.85)', margin: '0 0 32px', lineHeight: '1.6' }}>
+                        {t('landing.collaborate.body', "Vous êtes enseignant, formateur, collectivité ou acteur de la transition ? Démonstration, formation, frise thématique dédiée ou votre propre plateforme pédagogique : construisons-la ensemble.")}
+                    </p>
+                    <Link
+                        to="/participer-au-projet"
+                        className="paleo-btn paleo-btn--yellow"
+                        style={{ padding: '14px 32px', fontSize: '0.95rem', letterSpacing: '0.6px' }}
+                    >
+                        {t('landing.collaborate.cta', 'Participer au projet')} <ArrowRight size={18} />
+                    </Link>
                 </div>
-            )}
+            </section>
 
             <style>{`
                 @keyframes fadeIn {

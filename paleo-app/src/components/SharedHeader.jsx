@@ -20,6 +20,7 @@ const SITE_NAV = [
     { path: '/presentation', labelKey: 'header.presentation' },
     { path: '/prestations',  labelKey: 'header.prestations' },
     { path: '/participer',   labelKey: 'header.participer' },
+    { path: '/participer-au-projet', labelKey: 'header.participerProjet' },
     { path: '/boutique',     labelKey: 'header.ouvrages' },
     { path: '/presse',       labelKey: 'header.presse' },
     { path: '/contact',      labelKey: 'header.contact' },

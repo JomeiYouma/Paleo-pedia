@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ExternalLink, Boxes, Square } from 'lucide-react';
-import { HOST_TO_SUBSITE_SLUG } from '../utils/subsiteHost';
+import { ExternalLink, Boxes } from 'lucide-react';
+import { HOST_TO_SUBSITE_SLUG, MAIN_SITE_URL, PEDIA_SITE_URL, isPediaHost } from '../utils/subsiteHost';
 import { usePageMeta } from '../hooks/usePageMeta';
 import api from '../services/apiClient';
 import MethodoSection from '../components/pedia/MethodoSection';
@@ -21,15 +21,19 @@ import MethodoSection from '../components/pedia/MethodoSection';
 // quand la 3D est réellement affichée.
 const Ecosystem3D = lazy(() => import('../components/pedia/Ecosystem3D'));
 
-// Hub central : le programme principal. Tant que paleo-energetique.org
-// n'existe pas, son contenu vit à la racine de paleo-pedia.org → on pointe
-// le hub vers '/'. Après bascule DNS, ce href deviendra
-// 'https://paleo-energetique.org' (external = true).
+// Vrai quand la vitrine est servie sur son host dédié (paleo-pedia.org). Le
+// host ne change pas pendant la session SPA → on le calcule une fois.
+const ON_PEDIA_HOST = isPediaHost();
+
+// Hub central : le programme principal (Paléo-Énergétique).
+//   - sur le host Pédia → c'est un AUTRE domaine : lien absolu, ouvert dans un
+//     nouvel onglet (external = true ; en 3D, external déclenche window.open).
+//   - en sous-chemin /pedia (même host) → navigation SPA interne vers '/'.
 const HUB = {
     host: 'paleo-energetique.org',
     description: 'Frise complète · Détail équipe, projet, museum',
-    href: '/',
-    external: false,
+    href: ON_PEDIA_HOST ? MAIN_SITE_URL : '/',
+    external: ON_PEDIA_HOST,
 };
 
 // Carte slug → domaine dédié (premier hôte non-"www."). Un sous-site qui
@@ -80,7 +84,9 @@ const PaleoPedia = () => {
     usePageMeta({
         title: 'Paleo Pedia',
         description: "Paleo Pedia — l'écosystème de recherche Paléo : programme principal Paléo-Énergétique et sous-sites thématiques.",
-        path: '/pedia',
+        // Canonical = la vitrine sur son domaine dédié, quel que soit le host
+        // courant (évite le duplicate content avec paleo-energetique.org/pedia).
+        url: `${PEDIA_SITE_URL}/`,
     });
 
     // Tous les sous-sites de la base (endpoint public). Chacun devient une
@@ -96,14 +102,23 @@ const PaleoPedia = () => {
 
     const orbits = useMemo(() => subsiteList.map(s => {
         const host = SLUG_TO_HOST[s.slug] || null;
+        // Cible du lien :
+        //   - domaine dédié     → https://<host> (externe, quel que soit le contexte)
+        //   - sinon, host Pédia → /site/<slug> du site principal en ABSOLU (autre
+        //     domaine → externe : la route /site/:slug n'existe pas sur ce host)
+        //   - sinon (host principal) → /site/<slug> en relatif (navigation SPA)
+        let href, external;
+        if (host)            { href = `https://${host}`;                 external = true; }
+        else if (ON_PEDIA_HOST) { href = `${MAIN_SITE_URL}/site/${s.slug}`; external = true; }
+        else                 { href = `/site/${s.slug}`;                 external = false; }
         return {
             slug: s.slug,
             name: s.name || s.slug,
             color: s.primary_color || null,
             planetType: s.planet_type || null,          // type choisi (sinon auto)
             host,                                       // domaine dédié éventuel
-            href: host ? `https://${host}` : `/site/${s.slug}`,
-            external: !!host,
+            href,
+            external,
         };
     }), [subsiteList]);
 
@@ -169,8 +184,10 @@ const EcosystemShowcase = ({ hub, orbits }) => {
     const reducedMotion = usePrefersReducedMotion();
     // SPA client pur → la détection WebGL peut se faire dès l'init.
     const [canUse3D] = useState(() => supportsWebGL());
-    // mode : 'auto' (3D si possible & pas reduced-motion) · '3d' · '2d' (forcés)
-    const [mode, setMode] = useState('auto');
+    // mode : 'auto' (3D si possible & pas reduced-motion) · '3d' · '2d' (forcés).
+    // On initialise sur la vue 2D simplifiée (plus lisible d'entrée) ; l'utilisateur
+    // bascule en 3D via le bouton.
+    const [mode, setMode] = useState('2d');
 
     const show3D = canUse3D && (mode === '3d' || (mode === 'auto' && !reducedMotion));
 
@@ -233,7 +250,7 @@ const EcosystemShowcase = ({ hub, orbits }) => {
                     }}
                 >
                     {show3D
-                        ? (<><Square size={14} aria-hidden="true" /> Vue simplifiée</>)
+                        ? 'Vue simplifiée'
                         : (<><Boxes size={14} aria-hidden="true" /> Vue 3D</>)}
                 </button>
             )}

@@ -333,6 +333,13 @@ INSERT IGNORE INTO `event_email_config` (`type`) VALUES
   ('team_member.created'), ('team_member.updated'), ('team_member.deleted'),
   ('cartel_note.created'), ('cartel_note.deleted');
 
+-- Notifications email activées par défaut pour les messages publics (formulaire
+-- /contact + « Participer au projet »). Destinataire modifiable dans l'admin
+-- (Système → Journal d'événements → notifications email). Cf. migration v31.
+UPDATE `event_email_config`
+   SET `enabled` = 1, `recipient` = 'hello@atelier21.org'
+ WHERE `type` = 'contact_message.created' AND (`recipient` = '' OR `recipient` IS NULL);
+
 -- ============================================================
 -- TEAM_MEMBERS (page À propos)
 -- ============================================================

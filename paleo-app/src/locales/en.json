@@ -201,6 +201,7 @@
         "presentation": "About",
         "prestations": "Services",
         "participer": "Participate",
+        "participerProjet": "Get involved",
         "ouvrages": "Shop",
         "museum": "Museum",
         "presse": "Press",
@@ -569,7 +570,7 @@
         "legalNotices": "Legal notices",
         "privacy": "Privacy policy",
         "contact": "Contact",
-        "mainSiteLink": "Go to the Paléo-Énergétique site →",
+        "pediaSiteLink": "Go to the Paléo-Pédia site →",
         "loading": "Loading…",
         "notFound": "Subsite not found",
         "backToMain": "← Back to the main site",
@@ -715,6 +716,30 @@
         "privacy": "Privacy policy",
         "createdBy": "Platform created by"
     },
+    "participerProjet": {
+        "title": "Get involved",
+        "intro": "Are you a teacher, trainer, student, public body or transition stakeholder?",
+        "body": "We can help you get to grips with the tool, organise a demo, train your teams, build a thematic timeline or open your own dedicated educational platform.",
+        "types": {
+            "demo": "Request a demonstration",
+            "formation": "Train my team or students",
+            "partenariat": "Propose a partnership",
+            "frise": "Create a dedicated timeline / platform",
+            "autre": "Other"
+        },
+        "name": "Name",
+        "email": "Email",
+        "structure": "Organisation (school, company, public body…)",
+        "requestType": "Your request",
+        "message": "Your message",
+        "send": "Send my request",
+        "sending": "Sending…",
+        "success": "Thank you! Your request has been sent — we'll get back to you soon.",
+        "errorRequired": "Please fill in your name, email and message.",
+        "errorGeneric": "Something went wrong. Please retry or write to hello@atelier21.org.",
+        "alt": "Would you rather propose a forgotten invention?",
+        "altLink": "Propose an invention"
+    },
     "participer": {
         "title": "Call for participation",
         "intro": "As part of our participatory citizen-led research project on energy, you can download our \"call for participation\" kit to help us track down forgotten inventions, past social innovations and collective imaginaries.",
@@ -804,7 +829,13 @@
             "title": "A counter-history of energy",
             "subtitle": "Reviving forgotten techniques to reinvent our energy future.",
             "exploreTimeline": "Explore the Timeline",
-            "exploreTheme": "Explore by theme"
+            "exploreTheme": "Explore by theme",
+            "proposeInvention": "Propose an invention"
+        },
+        "collaborate": {
+            "title": "Get involved",
+            "body": "Are you a teacher, trainer, public body or transition stakeholder? Demo, training, a dedicated thematic timeline or your own educational platform: let's build it together.",
+            "cta": "Get involved"
         },
         "discoverTitle": "Discover the project",
         "cards": {

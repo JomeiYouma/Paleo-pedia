@@ -9,7 +9,7 @@ import {
   useParams,
   useLocation,
 } from 'react-router-dom';
-import { getHostSubsiteSlug } from './utils/subsiteHost';
+import { getHostSubsiteSlug, isPediaHost } from './utils/subsiteHost';
 import { AppProvider, useApp } from './context/AppContext';
 import Toast from './components/Toast';
 import Layout from './components/Layout';
@@ -33,6 +33,7 @@ import Ouvrages from './pages/Ouvrages';
 import Museum from './pages/Museum';
 import Contact from './pages/Contact';
 import Participer from './pages/Participer';
+import ParticiperProjet from './pages/ParticiperProjet';
 import Presse from './pages/Presse';
 import LandingPage from './pages/LandingPage';
 import PaleoPedia from './pages/PaleoPedia';
@@ -144,6 +145,7 @@ const mainRouter = createBrowserRouter(
         <Route path="ouvrages"     element={<Navigate to="/boutique" replace />} />
         <Route path="museum"       element={<Museum />} />
         <Route path="participer"   element={<Participer />} />
+        <Route path="participer-au-projet" element={<ParticiperProjet />} />
         <Route path="presse"       element={<Presse />} />
         {/* La page Partenaires dédiée a été retirée — son contenu est désormais
             intégré à /presentation. On redirige pour ne pas casser les liens externes. */}
@@ -257,7 +259,27 @@ const subsiteHostRouter = hostSubsiteSlug ? createBrowserRouter(
   )
 ) : null;
 
-const router = subsiteHostRouter || mainRouter;
+// Routeur du host dédié de la vitrine Pédia (paleo-pedia.org) : la Pédia est
+// servie à la racine avec son propre layout (PediaLayout). Pas de back-office
+// ni de sous-sites ici — les liens vers le hub / les sous-sites sortent en
+// absolu vers leurs domaines respectifs (cf. PaleoPedia + subsiteHost). Tout
+// chemin inconnu retombe sur l'accueil de la vitrine.
+const pediaHostRouter = isPediaHost() ? createBrowserRouter(
+  createRoutesFromElements(
+    <Route element={<RootLayout />}>
+      <Route path="/" element={<PediaLayout />}>
+        <Route index element={<PaleoPedia />} />
+        <Route path="methodologie" element={<Navigate to="/" replace />} />
+        <Route path="mentions-legales" element={<LegalNotices />} />
+        <Route path="politique-confidentialite" element={<PrivacyPolicy />} />
+        <Route path="contact" element={<Contact />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Route>
+  )
+) : null;
+
+const router = subsiteHostRouter || pediaHostRouter || mainRouter;
 
 function App() {
   return <RouterProvider router={router} />;

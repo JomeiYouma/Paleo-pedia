@@ -49,7 +49,8 @@ const Core = ({ hub, onActivate }) => {
                 onPointerOut={() => { setCursor('auto'); setMeshHover(false); }}
             >
                 <sphereGeometry args={[1.3, 48, 48]} />
-                <meshStandardMaterial color="#2b2b2e" emissive="#9a9aa0" emissiveIntensity={0.22} roughness={0.55} metalness={0.15} />
+                {/* Cœur jaune : la couleur signature Paléo-Énergétique (--color-accent #FFE700). */}
+                <meshStandardMaterial color="#FFE700" emissive="#FFE700" emissiveIntensity={0.38} roughness={0.5} metalness={0.1} />
             </mesh>
 
             {/* halo lumineux (sphère additive transparente) */}
@@ -73,14 +74,6 @@ const Core = ({ hub, onActivate }) => {
         </group>
     );
 };
-
-// ── Anneau d'orbite (fin, discret) ────────────────────────────
-const OrbitRing = ({ radius }) => (
-    <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[radius - 0.012, radius + 0.012, 96]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.12} side={THREE.DoubleSide} depthWrite={false} />
-    </mesh>
-);
 
 // ── Reliefs & décor des planètes ──────────────────────────────
 const PLANET_RADIUS = 0.62;
@@ -306,7 +299,6 @@ const Planet = ({ node, typeIndex, radius, tilt, phase0, speed, reducedMotion, o
 
     return (
         <group rotation={[tilt, 0, tilt * 0.4]}>
-            <OrbitRing radius={radius} />
             <group ref={arm} rotation={[0, phase0, 0]}>
                 <group position={[radius, 0, 0]}>
                     {/* Planète + décor : tourne sur elle-même ET cliquable */}
@@ -446,8 +438,7 @@ const Scene = ({ hub, orbits, reducedMotion }) => {
 const Ecosystem3D = ({ hub, orbits, reducedMotion = false }) => (
     <Canvas
         // Vue initiale plus dézoomée et légèrement surélevée : tout le système
-        // (planètes + ceinture) tient dans le cadre avec de la marge, et l'angle
-        // un peu plus haut donne de jolies ellipses d'orbite (≈ distance 15,8).
+        // (planètes + ceinture) tient dans le cadre avec de la marge.
         camera={{ position: [0, 5, 15], fov: 50 }}
         dpr={[1, 1.75]}
         gl={{ antialias: true }}

@@ -201,6 +201,7 @@
         "presentation": "À propos",
         "prestations": "Prestations",
         "participer": "Participer",
+        "participerProjet": "Participer au projet",
         "ouvrages": "Boutique",
         "museum": "Museum",
         "presse": "Presse",
@@ -564,6 +565,30 @@
         "privacy": "Politique de confidentialité",
         "createdBy": "Plateforme créée par"
     },
+    "participerProjet": {
+        "title": "Participer au projet",
+        "intro": "Vous êtes enseignant·e, formateur·rice, étudiant·e, collectivité ou acteur de la transition ?",
+        "body": "Nous pouvons vous accompagner pour prendre en main l'outil, organiser une démonstration, former vos équipes, construire une frise thématique ou ouvrir votre propre plateforme pédagogique dédiée.",
+        "types": {
+            "demo": "Demander une démonstration",
+            "formation": "Former mon équipe ou mes élèves",
+            "partenariat": "Proposer un partenariat",
+            "frise": "Créer une frise / plateforme dédiée",
+            "autre": "Autre"
+        },
+        "name": "Nom",
+        "email": "E-mail",
+        "structure": "Structure (école, entreprise, collectivité…)",
+        "requestType": "Votre demande",
+        "message": "Votre message",
+        "send": "Envoyer ma demande",
+        "sending": "Envoi…",
+        "success": "Merci ! Votre demande a bien été envoyée — nous revenons vers vous rapidement.",
+        "errorRequired": "Merci de renseigner votre nom, votre e-mail et votre message.",
+        "errorGeneric": "Une erreur est survenue. Réessayez ou écrivez à hello@atelier21.org.",
+        "alt": "Vous préférez proposer une invention oubliée ?",
+        "altLink": "Proposer une invention"
+    },
     "participer": {
         "title": "Appel à participation",
         "intro": "Dans le cadre de notre projet de recherche participatif et citoyen dans le domaine de l'énergie, vous pouvez télécharger notre kit « appel à participation » pour nous aider à trouver d'anciennes inventions, d'anciennes innovations sociales et des imaginaires collectifs.",
@@ -653,7 +678,13 @@
             "title": "Une contre-histoire de l'énergie",
             "subtitle": "Ressusciter les techniques disparues pour réinventer notre futur énergétique.",
             "exploreTimeline": "Explorer la Frise",
-            "exploreTheme": "Explorer une thématique"
+            "exploreTheme": "Explorer une thématique",
+            "proposeInvention": "Proposer une invention"
+        },
+        "collaborate": {
+            "title": "Participer au projet",
+            "body": "Vous êtes enseignant, formateur, collectivité ou acteur de la transition ? Démonstration, formation, frise thématique dédiée ou votre propre plateforme pédagogique : construisons-la ensemble.",
+            "cta": "Participer au projet"
         },
         "discoverTitle": "Découvrir le projet",
         "cards": {
