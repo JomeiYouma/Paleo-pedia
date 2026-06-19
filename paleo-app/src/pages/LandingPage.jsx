@@ -21,8 +21,8 @@ const LandingPage = () => {
         <div>
             {/* ── Hero Section ─────────────────────────────────────── */}
             <section className="landing-hero" style={{
-                background: PRIMARY,
-                color: 'var(--color-white)',
+                background: 'var(--color-surface)',
+                color: 'var(--color-text)',
                 padding: '96px 20px',
                 textAlign: 'center',
                 minHeight: '70vh',
@@ -66,10 +66,10 @@ const LandingPage = () => {
                 />
 
                 <div className="landing-hero__content" style={{ position: 'relative', zIndex: 3, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <h1 style={{
+                    <h1 className="landing-hero__title" style={{
                         fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
                         marginBottom: '20px',
-                        color: 'var(--color-white)',
+                        color: 'var(--color-text)',
                         maxWidth: '900px',
                         lineHeight: '1',
                         letterSpacing: '0.02em',
@@ -78,7 +78,7 @@ const LandingPage = () => {
                     </h1>
                     <p style={{
                         fontSize: '1.25rem',
-                        color: 'rgba(255,255,255,0.85)',
+                        color: 'var(--color-text-muted)',
                         maxWidth: '640px',
                         margin: '0 auto 48px auto',
                         lineHeight: '1.5',
@@ -91,7 +91,7 @@ const LandingPage = () => {
                         <Link
                             to="/app"
                             id="cta-explorer-frise"
-                            className="paleo-btn paleo-btn--yellow"
+                            className="paleo-btn"
                             style={{ padding: '14px 32px', fontSize: '0.95rem', letterSpacing: '0.6px' }}
                         >
                             {t('landing.hero.exploreTimeline')} <ArrowRight size={18} />
@@ -101,7 +101,7 @@ const LandingPage = () => {
                         <Link
                             to="/app/create"
                             id="cta-proposer-invention"
-                            className="paleo-btn paleo-btn--inverse"
+                            className="paleo-btn paleo-btn--outline"
                             style={{ padding: '14px 32px', fontSize: '0.95rem', letterSpacing: '0.6px' }}
                         >
                             <Lightbulb size={18} /> {t('landing.hero.proposeInvention', 'Proposer une invention')}
@@ -168,6 +168,30 @@ const LandingPage = () => {
                     to   { opacity: 1; }
                 }
 
+                /* ── Trame manga : halo de points jaunes derrière le TITRE ──
+                   Demi-teintes (screentone) rapprochées, en halo ovale rattaché
+                   au <h1> : il épouse le titre (même multi-lignes) et se dissout
+                   avant d'atteindre le sous-titre. Décoratif, rendu derrière le
+                   texte (z-index -1) → le noir du titre reste lisible. */
+                .landing-hero__title { position: relative; z-index: 0; }
+                .landing-hero__title::before {
+                    content: '';
+                    position: absolute;
+                    z-index: -1;
+                    top: -26px;
+                    bottom: -14px;
+                    left: -20%;
+                    right: -20%;
+                    background-image:
+                        radial-gradient(var(--color-accent) 2.6px, transparent 3.1px),
+                        radial-gradient(var(--color-accent) 2px, transparent 2.5px);
+                    background-size: 9px 9px, 9px 9px;
+                    background-position: 0 0, 4.5px 4.5px;
+                    -webkit-mask-image: radial-gradient(ellipse 74% 56% at 50% 50%, #000 0%, #000 30%, rgba(0,0,0,0.5) 62%, transparent 84%);
+                            mask-image: radial-gradient(ellipse 74% 56% at 50% 50%, #000 0%, #000 30%, rgba(0,0,0,0.5) 62%, transparent 84%);
+                    opacity: 0.85;
+                }
+
                 /* ── Décor du hero : personnages + inventions ─────── */
                 /* bottom négatif : les pieds dépassent du hero et se font recouvrir
                    par la section suivante (z-index plus élevé) */
@@ -191,16 +215,16 @@ const LandingPage = () => {
                     z-index: 1;
                 }
 
-                /* Personnages (premier plan, devant leur invention) */
+                /* Personnages : tout devant (par-dessus le texte + leur invention) */
                 .landing-hero__decor--mouchot {
                     left: 10%;
                     height: 540px;
-                    z-index: 2;
+                    z-index: 5;
                 }
                 .landing-hero__decor--maria {
                     right: 10%;
                     height: 540px;
-                    z-index: 2;
+                    z-index: 5;
                 }
 
                 /* Large desktop : on autorise un peu plus de marge */
