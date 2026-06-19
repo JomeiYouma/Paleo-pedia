@@ -145,7 +145,6 @@ const mainRouter = createBrowserRouter(
         <Route path="ouvrages"     element={<Navigate to="/boutique" replace />} />
         <Route path="museum"       element={<Museum />} />
         <Route path="participer"   element={<Participer />} />
-        <Route path="participer-au-projet" element={<ParticiperProjet />} />
         <Route path="presse"       element={<Presse />} />
         {/* La page Partenaires dédiée a été retirée — son contenu est désormais
             intégré à /presentation. On redirige pour ne pas casser les liens externes. */}
@@ -166,6 +165,7 @@ const mainRouter = createBrowserRouter(
         <Route path="mentions-legales" element={<LegalNotices />} />
         <Route path="politique-confidentialite" element={<PrivacyPolicy />} />
         <Route path="contact" element={<Contact />} />
+        <Route path="participer-au-projet" element={<ParticiperProjet />} />
       </Route>
 
       {/* ── Sous-sites (/site/:slug/*) ────────────────── */}
@@ -273,6 +273,7 @@ const pediaHostRouter = isPediaHost() ? createBrowserRouter(
         <Route path="mentions-legales" element={<LegalNotices />} />
         <Route path="politique-confidentialite" element={<PrivacyPolicy />} />
         <Route path="contact" element={<Contact />} />
+        <Route path="participer-au-projet" element={<ParticiperProjet />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Route>

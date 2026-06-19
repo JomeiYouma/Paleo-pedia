@@ -162,33 +162,6 @@ const LandingPage = () => {
             </div>
             </section>
 
-            {/* ── CTA : Participer au projet (démo / partenariat / frise dédiée) ── */}
-            <section style={{
-                position: 'relative',
-                zIndex: 2,
-                background: PRIMARY,
-                color: 'var(--color-white)',
-                padding: '76px 20px',
-                textAlign: 'center',
-            }}>
-                <div aria-hidden="true" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '6px', background: ACCENT }} />
-                <div style={{ maxWidth: '720px', margin: '0 auto' }}>
-                    <h2 style={{ fontSize: 'clamp(1.6rem, 3.4vw, 2.2rem)', margin: '0 0 16px', color: 'var(--color-white)' }}>
-                        {t('landing.collaborate.title', 'Participer au projet')}
-                    </h2>
-                    <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.85)', margin: '0 0 32px', lineHeight: '1.6' }}>
-                        {t('landing.collaborate.body', "Vous êtes enseignant, formateur, collectivité ou acteur de la transition ? Démonstration, formation, frise thématique dédiée ou votre propre plateforme pédagogique : construisons-la ensemble.")}
-                    </p>
-                    <Link
-                        to="/participer-au-projet"
-                        className="paleo-btn paleo-btn--yellow"
-                        style={{ padding: '14px 32px', fontSize: '0.95rem', letterSpacing: '0.6px' }}
-                    >
-                        {t('landing.collaborate.cta', 'Participer au projet')} <ArrowRight size={18} />
-                    </Link>
-                </div>
-            </section>
-
             <style>{`
                 @keyframes fadeIn {
                     from { opacity: 0; }

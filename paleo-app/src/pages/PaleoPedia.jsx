@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { ExternalLink, Boxes } from 'lucide-react';
-import { HOST_TO_SUBSITE_SLUG, MAIN_SITE_URL, PEDIA_SITE_URL, isPediaHost } from '../utils/subsiteHost';
+import { HOST_TO_SUBSITE_SLUG, MAIN_SITE_URL, PEDIA_SITE_URL, isPediaHost, pediaBasePath } from '../utils/subsiteHost';
 import { usePageMeta } from '../hooks/usePageMeta';
 import api from '../services/apiClient';
 import MethodoSection from '../components/pedia/MethodoSection';
@@ -173,6 +174,41 @@ const PaleoPedia = () => {
 
             {/* La méthodologie vient à la suite de l'écosystème (même page). */}
             <MethodoSection />
+
+            {/* ── CTA : participer au projet (passerelle vers l'équipe) ──── */}
+            <section aria-labelledby="cta-heading" style={{
+                marginTop: 56,
+                background: 'var(--color-primary)',
+                color: 'var(--color-white)',
+                borderRadius: 16,
+                padding: '48px 32px',
+                textAlign: 'center',
+            }}>
+                <h2 id="cta-heading" style={{ margin: '0 0 14px', fontSize: 'clamp(1.4rem, 3vw, 1.9rem)', color: 'var(--color-white)' }}>
+                    Participer au projet
+                </h2>
+                <p style={{ margin: '0 auto 28px', maxWidth: 620, color: 'rgba(255,255,255,0.82)', lineHeight: 1.6 }}>
+                    Vous êtes enseignant, formateur, collectivité ou acteur de la transition ? Démonstration, formation, frise thématique dédiée ou votre propre plateforme pédagogique : construisons-la ensemble.
+                </p>
+                <Link
+                    to={`${pediaBasePath()}/participer-au-projet`}
+                    style={{
+                        display: 'inline-block',
+                        background: 'var(--color-surface)',
+                        color: 'var(--color-primary)',
+                        textDecoration: 'none',
+                        fontFamily: 'var(--font-heading)',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        fontSize: '0.9rem',
+                        padding: '14px 28px',
+                        borderRadius: 'var(--radius-md)',
+                    }}
+                >
+                    Participer au projet →
+                </Link>
+            </section>
         </div>
     );
 };

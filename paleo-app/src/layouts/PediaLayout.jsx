@@ -38,6 +38,7 @@ const PediaHeader = () => (
             padding: '16px 28px',
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'space-between',
             gap: 16,
         }}>
             <Link
@@ -57,6 +58,26 @@ const PediaHeader = () => (
                     Paléo-Pédia
                 </span>
             </Link>
+            <nav aria-label="Navigation Paléo-Pédia">
+                <Link
+                    to={`${pediaBasePath()}/participer-au-projet`}
+                    style={{
+                        color: 'var(--color-text)',
+                        textDecoration: 'none',
+                        fontFamily: 'var(--font-heading)',
+                        fontWeight: 700,
+                        fontSize: '0.82rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.4px',
+                        padding: '8px 14px',
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid var(--color-border)',
+                        whiteSpace: 'nowrap',
+                    }}
+                >
+                    Participer au projet
+                </Link>
+            </nav>
         </div>
     </header>
 );

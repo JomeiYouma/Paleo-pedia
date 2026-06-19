@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Send, CheckCircle2, AlertCircle, Presentation, GraduationCap, Handshake, Globe2 } from 'lucide-react';
+import { Send, CheckCircle2, AlertCircle } from 'lucide-react';
 import api from '../services/apiClient';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { mainSitePath } from '../utils/subsiteHost';
 
 // Page « Participer au projet » : passerelle vers l'équipe pour les démos,
 // formations, partenariats et frises/plateformes dédiées (cf. communication de
 // lancement). Le formulaire réutilise contactMessages → l'équipe reçoit un email
 // (type contact_message.created activé en v31).
 const REQUEST_TYPES = [
-    { key: 'demo',        icon: Presentation,  label: 'Demander une démonstration' },
-    { key: 'formation',  icon: GraduationCap, label: 'Former mon équipe ou mes élèves' },
-    { key: 'partenariat', icon: Handshake,     label: 'Proposer un partenariat' },
-    { key: 'frise',       icon: Globe2,        label: 'Créer une frise / plateforme dédiée' },
+    { key: 'demo',        label: 'Demander une démonstration' },
+    { key: 'formation',  label: 'Former mon équipe ou mes élèves' },
+    { key: 'partenariat', label: 'Proposer un partenariat' },
+    { key: 'frise',       label: 'Créer une frise / plateforme dédiée' },
 ];
 
 const ParticiperProjet = () => {
@@ -75,7 +76,7 @@ const ParticiperProjet = () => {
 
     return (
         <div style={{ maxWidth: '760px', margin: '60px auto', padding: '0 20px', lineHeight: '1.7', color: 'var(--color-text)' }}>
-            <Link to="/" style={{ color: 'var(--color-text-subtle)', textDecoration: 'none', fontSize: '0.88rem' }}>
+            <Link to=".." style={{ color: 'var(--color-text-subtle)', textDecoration: 'none', fontSize: '0.88rem' }}>
                 ← {t('legal.backHome', 'Retour à l\'accueil')}
             </Link>
             <h1 style={{ fontSize: '2.5rem', margin: '16px 0 20px' }}>{t('participerProjet.title', 'Participer au projet')}</h1>
@@ -86,21 +87,6 @@ const ParticiperProjet = () => {
             <p style={{ color: 'var(--color-text-muted)', marginBottom: '28px' }}>
                 {t('participerProjet.body', "Nous pouvons vous accompagner pour prendre en main l'outil, organiser une démonstration, former vos équipes, construire une frise thématique ou ouvrir votre propre plateforme pédagogique dédiée.")}
             </p>
-
-            {/* Ce que l'on peut faire ensemble */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', marginBottom: '36px' }}>
-                {REQUEST_TYPES.map((r) => (
-                    <div key={r.key} style={{
-                        display: 'flex', alignItems: 'center', gap: '12px',
-                        background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-                        borderRadius: 'var(--radius-md)', borderLeft: '4px solid var(--color-accent)',
-                        padding: '14px 16px',
-                    }}>
-                        <r.icon size={20} color="var(--color-primary)" style={{ flexShrink: 0 }} />
-                        <span style={{ fontWeight: '600', fontSize: '0.92rem' }}>{t(`participerProjet.types.${r.key}`, r.label)}</span>
-                    </div>
-                ))}
-            </div>
 
             <form
                 onSubmit={submit}
@@ -176,7 +162,7 @@ const ParticiperProjet = () => {
 
             <p style={{ fontSize: '0.9rem', color: 'var(--color-text-subtle)', marginTop: '18px' }}>
                 {t('participerProjet.alt', 'Vous préférez proposer une invention oubliée ?')}{' '}
-                <Link to="/app/create" style={{ color: 'var(--color-text-muted)' }}>{t('participerProjet.altLink', 'Proposer une invention')}</Link>.
+                <a href={mainSitePath('/app/create')} style={{ color: 'var(--color-text-muted)' }}>{t('participerProjet.altLink', 'Proposer une invention')}</a>.
             </p>
         </div>
     );
