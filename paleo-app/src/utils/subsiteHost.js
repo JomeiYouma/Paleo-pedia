@@ -1,7 +1,11 @@
-// URL canonique du site principal (utilisée pour les liens de retour depuis
-// les sous-sites sur leur host dédié, qui ne peuvent pas pointer vers `/`).
-// À mettre à jour si on change le domaine principal.
-export const MAIN_SITE_URL = 'https://paleo-pedia.org';
+// URL canonique du site principal (le hub Paléo-Énergétique). Utilisée pour
+// les liens de retour depuis les hosts satellites (sous-sites, vitrine Pédia)
+// qui ne peuvent pas pointer vers `/`. À mettre à jour si on change le domaine.
+export const MAIN_SITE_URL = 'https://paleo-energetique.org';
+
+// URL canonique de la vitrine Paléo-Pédia, servie à la racine de son host
+// dédié (cf. isPediaHost / pediaHostRouter dans App.jsx).
+export const PEDIA_SITE_URL = 'https://paleo-pedia.org';
 
 // Map host → subsite slug. Un domaine dédié comme paleo-h2o.org affiche
 // le sous-site h2o à la racine (`/`, `/frise`, `/admin/...`) au lieu de
@@ -19,6 +23,27 @@ export function getHostSubsiteSlug() {
     return HOST_TO_SUBSITE_SLUG[window.location.hostname] || null;
 }
 
+// Host dédié de la vitrine Paléo-Pédia. Contrairement aux sous-sites (routés
+// via HOST_TO_SUBSITE_SLUG + SubsiteLayout), la Pédia a son propre layout :
+// elle est donc routée par une branche dédiée (pediaHostRouter dans App.jsx).
+export const PEDIA_HOST = 'paleo-pedia.org';
+
+// True quand la page est servie sur le host dédié de la Pédia (apex ou www).
+// Sûr côté SSR / tests : window peut être absent.
+export function isPediaHost() {
+    if (typeof window === 'undefined' || !window.location) return false;
+    const h = window.location.hostname;
+    return h === PEDIA_HOST || h === `www.${PEDIA_HOST}`;
+}
+
+// Préfixe à utiliser dans les Link/navigate internes de la vitrine Pédia :
+//   - '' (chaîne vide) sur le host dédié → la Pédia est à la racine
+//     (`${pediaBasePath()}/contact` = `/contact`, accueil = `/`)
+//   - '/pedia' sinon → la Pédia est montée en sous-chemin du site principal
+export function pediaBasePath() {
+    return isPediaHost() ? '' : '/pedia';
+}
+
 // Préfixe à utiliser dans les Link/navigate pour pointer vers un sous-site :
 //   - '' (chaîne vide) quand on est sur le host dédié de CE sous-site
 //     → permet `${base}/frise` = `/frise` et `${base || '/'}` = `/`
@@ -30,13 +55,14 @@ export function subsiteBasePath(slug) {
 
 // Lien vers une page GLOBALE du site principal (mentions légales, contact,
 // politique de confidentialité…). Ces routes n'existent que sur le routeur
-// principal : sur un host dédié (ex. paleo-h2o.org) elles tomberaient sur le
-// catch-all. On renvoie donc une URL absolue vers le site principal quand on
-// est sur un host dédié, et un chemin relatif (nav SPA) sinon.
-//   - host dédié  → 'https://paleo-pedia.org/contact'  (rendu via <a>)
-//   - host normal → '/contact'                         (rendu via <Link>)
+// principal : sur un host satellite (sous-site dédié ou vitrine Pédia) elles
+// tomberaient sur le catch-all. On renvoie donc une URL absolue vers le site
+// principal quand on est sur un host satellite, et un chemin relatif sinon.
+//   - host satellite → 'https://paleo-energetique.org/contact'  (rendu via <a>)
+//   - host principal → '/contact'                               (rendu via <Link>)
 export function mainSitePath(path) {
-    return getHostSubsiteSlug() ? `${MAIN_SITE_URL}${path}` : path;
+    const onSatelliteHost = !!getHostSubsiteSlug() || isPediaHost();
+    return onSatelliteHost ? `${MAIN_SITE_URL}${path}` : path;
 }
 
 // Inverse de getHostSubsiteSlug : pour un slug donné, renvoie l'URL absolue

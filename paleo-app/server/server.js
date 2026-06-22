@@ -158,6 +158,17 @@ app.get('/health', (_, res) => res.json({ status: 'ok', ts: new Date().toISOStri
 // Sert le build Vite et assure le fallback SPA (react-router)
 const distPath = path.join(__dirname, '..', 'dist');
 if (isProd && fs.existsSync(distPath)) {
+  // SEO multi-domaines : robots.txt / sitemap.xml dépendent du host. Le site
+  // principal (Paléo-Énergétique) et la vitrine (Paléo-Pédia) partagent cette
+  // même app mais exposent des URLs distinctes. On sert donc une variante par
+  // domaine AVANT le static (sinon express.static renverrait le même fichier
+  // à tous les hosts). req.hostname suit X-Forwarded-Host via trust proxy.
+  const PEDIA_HOSTS = new Set(['paleo-pedia.org', 'www.paleo-pedia.org']);
+  app.get('/robots.txt', (req, res) =>
+    res.sendFile(path.join(distPath, PEDIA_HOSTS.has(req.hostname) ? 'robots-pedia.txt' : 'robots.txt')));
+  app.get('/sitemap.xml', (req, res) =>
+    res.sendFile(path.join(distPath, PEDIA_HOSTS.has(req.hostname) ? 'sitemap-pedia.xml' : 'sitemap.xml')));
+
   app.use(express.static(distPath));
 
   // SEO : pages cartel → balises Open Graph injectées (image du cartel sur les

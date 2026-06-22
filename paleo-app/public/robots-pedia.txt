@@ -1,0 +1,9 @@
+# Paléo-Pédia — robots.txt
+# Vitrine publique de l'écosystème Paléo : tout le contenu est indexable.
+# /api correspond aux endpoints serveur (app mutualisée) — exclu.
+
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://paleo-pedia.org/sitemap.xml
