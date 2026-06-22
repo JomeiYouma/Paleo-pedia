@@ -134,6 +134,27 @@ app.use((req, res, next) => {
   next();
 });
 
+// ── Anciennes URLs WP (multisite décommissionné) : redirections + SEO ──────
+// Le WP de paleo-energetique.org (apex + sous-domaines) est retiré. On redirige
+// ce qui doit l'être (com + SEO) en 301, et on renvoie 410 (Gone) pour le reste :
+// le sous-domaine abandonné + les pages de spam injectées par le hack WP.
+// Basé sur req.hostname (fiable via trust proxy). Inerte sur les autres hosts.
+const LEGACY_HOST_301 = {
+  'aero.paleo-energetique.org':  'https://paleo-energetique.org/site/paleo-aerospace',
+  'cyclo.paleo-energetique.org': 'https://paleo-pedia.org',
+};
+const LEGACY_HOST_410 = new Set(['stockage.paleo-energetique.org']);
+// Spam injecté par le WP piraté : slug se terminant par "-k-<chiffres>".
+const SPAM_PATH = /-k-\d+\/?$/;
+app.use((req, res, next) => {
+  const dest = LEGACY_HOST_301[req.hostname];
+  if (dest) return res.redirect(301, dest);
+  if (LEGACY_HOST_410.has(req.hostname) || SPAM_PATH.test(req.path)) {
+    return res.status(410).type('text/plain').send('410 Gone');
+  }
+  next();
+});
+
 // ── Servir les images uploadées ───────────────────────────────
 // Neutralisation XSS : un SVG malveillant ouvert DIRECTEMENT (navigation
 // top-level vers /api/images/x.svg) pourrait exécuter du JavaScript. On pose
