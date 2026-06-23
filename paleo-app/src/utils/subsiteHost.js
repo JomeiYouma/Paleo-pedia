@@ -12,8 +12,9 @@ export const PEDIA_SITE_URL = 'https://paleo-pedia.org';
 // passer par `/site/h2o/...`. Quand le host ne correspond à aucun sous-site,
 // l'app utilise createBrowserRouter avec les routes principales (App.jsx).
 export const HOST_TO_SUBSITE_SLUG = {
-    'paleo-h2o.org':      'paleo-h2o',
-    'www.paleo-h2o.org':  'paleo-h2o',
+    'paleo-h2o.org':              'paleo-h2o',
+    'www.paleo-h2o.org':          'paleo-h2o',
+    'aero.paleo-energetique.org': 'paleo-aerospace',
 };
 
 // Retourne le slug du sous-site associé au host courant, ou null.

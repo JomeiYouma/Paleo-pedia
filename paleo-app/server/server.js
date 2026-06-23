@@ -140,7 +140,8 @@ app.use((req, res, next) => {
 // le sous-domaine abandonné + les pages de spam injectées par le hack WP.
 // Basé sur req.hostname (fiable via trust proxy). Inerte sur les autres hosts.
 const LEGACY_HOST_301 = {
-  'aero.paleo-energetique.org':  'https://paleo-energetique.org/site/paleo-aerospace',
+  // aero.paleo-energetique.org : PAS ici — c'est un host dédié qui SERT le
+  // sous-site paleo-aerospace (cf. HOST_TO_SUBSITE_SLUG), pas une redirection.
   'cyclo.paleo-energetique.org': 'https://paleo-pedia.org',
   'paleo-pedia.com':             'https://paleo-pedia.org',
   'www.paleo-pedia.com':         'https://paleo-pedia.org',
