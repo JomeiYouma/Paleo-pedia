@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useBlocker } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import {
     Users, Plus, Trash2, Upload, ShieldCheck, Globe, Lock,
@@ -47,6 +48,29 @@ const AdminPartners = () => {
     const [newMandatory, setNewMandatory] = useState(false);
     const [newOwnerSubsiteId, setNewOwnerSubsiteId] = useState('');
     const [creating, setCreating] = useState(false);
+
+    // Garde-fou « modifications non sauvegardées » : si un partenaire est en
+    // cours de saisie (nom / URL / logo) et qu'on tente de quitter la page,
+    // on confirme avant de perdre la saisie (cohérence avec Create.jsx).
+    const isDirty = !!(newName.trim() || newUrl.trim() || newLogoFile);
+    const blocker = useBlocker(
+        ({ currentLocation, nextLocation }) =>
+            isDirty && !creating && currentLocation.pathname !== nextLocation.pathname
+    );
+    useEffect(() => {
+        if (blocker.state !== 'blocked') return;
+        if (window.confirm("Un partenaire est en cours de saisie et non enregistré. Quitter sans l'ajouter ?")) {
+            blocker.proceed();
+        } else {
+            blocker.reset();
+        }
+    }, [blocker]);
+    useEffect(() => {
+        if (!isDirty) return;
+        const handler = (e) => { e.preventDefault(); e.returnValue = ''; };
+        window.addEventListener('beforeunload', handler);
+        return () => window.removeEventListener('beforeunload', handler);
+    }, [isDirty]);
 
     const load = async () => {
         setLoading(true);

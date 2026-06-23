@@ -142,6 +142,8 @@ app.use((req, res, next) => {
 const LEGACY_HOST_301 = {
   'aero.paleo-energetique.org':  'https://paleo-energetique.org/site/paleo-aerospace',
   'cyclo.paleo-energetique.org': 'https://paleo-pedia.org',
+  'paleo-pedia.com':             'https://paleo-pedia.org',
+  'www.paleo-pedia.com':         'https://paleo-pedia.org',
 };
 const LEGACY_HOST_410 = new Set(['stockage.paleo-energetique.org']);
 // Spam injecté par le WP piraté : slug se terminant par "-k-<chiffres>".

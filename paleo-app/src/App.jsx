@@ -37,6 +37,7 @@ import ParticiperProjet from './pages/ParticiperProjet';
 import Presse from './pages/Presse';
 import LandingPage from './pages/LandingPage';
 import PaleoPedia from './pages/PaleoPedia';
+import NotFound from './pages/NotFound';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import LegalNotices from './pages/LegalNotices';
 import SiteLayout from './components/SiteLayout';
@@ -153,6 +154,8 @@ const mainRouter = createBrowserRouter(
         <Route path="politique-confidentialite" element={<PrivacyPolicy />} />
         <Route path="mentions-legales" element={<LegalNotices />} />
         <Route path="cartel/:id" element={<CartelDetail />} />
+        {/* 404 brandée (header + footer du site) pour toute URL inconnue */}
+        <Route path="*" element={<NotFound />} />
       </Route>
 
       {/* ── Vitrine paleo-pedia (layout dédié : pas de connexion,
