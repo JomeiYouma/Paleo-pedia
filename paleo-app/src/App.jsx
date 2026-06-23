@@ -278,6 +278,35 @@ const pediaHostRouter = isPediaHost() ? createBrowserRouter(
         <Route path="contact" element={<Contact />} />
         <Route path="participer-au-projet" element={<ParticiperProjet />} />
       </Route>
+      {/* Admin / gestion aussi accessibles depuis le host Pédia (gérer
+          l'écosystème depuis paleo-pedia.org). Miroir du bloc /app du
+          mainRouter — garder les deux en phase si on ajoute des routes /app. */}
+      <Route path="/app" element={<Layout />}>
+        <Route index element={<Library viewMode="timeline" />} />
+        <Route path="carte"         element={<Library viewMode="map" />} />
+        <Route path="arborescence"  element={<Library viewMode="arborescence" />} />
+        <Route path="workshop/:workshopId" element={<Library viewMode="timeline" />} />
+        <Route path="create" element={<Create />} />
+        <Route path="manage"            element={<Navigate to="/app/manage/published" replace />} />
+        <Route path="manage/drafts"     element={<ManageCartels />} />
+        <Route path="manage/pending"    element={<ManageCartels />} />
+        <Route path="manage/published"  element={<ManageCartels />} />
+        <Route path="manage/archived"   element={<ManageCartels />} />
+        <Route path="manage/submissions" element={<ManageCartels />} />
+        <Route path="admin"             element={<AdminSettings />} />
+        <Route path="admin/partners"    element={<AdminPartners />} />
+        <Route path="admin/team"        element={<AdminTeam />} />
+        <Route path="admin/team-content" element={<AdminTeamContent />} />
+        <Route path="admin/press"        element={<AdminPress />} />
+        <Route path="admin/missions"     element={<AdminMissions />} />
+        <Route path="admin/prestations"  element={<AdminPrestations />} />
+        <Route path="admin/shop"         element={<AdminShop />} />
+        <Route path="admin/taxonomies"  element={<AdminCategoriesWorkshops />} />
+        <Route path="admin/logs"        element={<AdminLogs />} />
+        <Route path="admin/stats"       element={<AdminStats />} />
+        <Route path="admin/workshop/:workshopId" element={<ManageCartels />} />
+        <Route path="drafts" element={<Navigate to="/app/manage/pending" replace />} />
+      </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Route>
   )
