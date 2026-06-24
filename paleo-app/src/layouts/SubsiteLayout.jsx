@@ -215,7 +215,7 @@ const SubsiteLayout = () => {
     // (desktop) et le burger (mobile) consomment cette même liste.
     const adminItems = [
         canEditSubsite && { key: 'home',     icon: Home,      label: t('subsite.homePage', "Page d'accueil"), onClick: () => { setEditorFocus(null); setShowEditor(true); } },
-        canEditSubsite && { key: 'partners', icon: Handshake, label: t('subsite.partners', 'Partenaires'),    onClick: () => { setEditorFocus('partners'); setShowEditor(true); } },
+        canEditSubsite && { key: 'partners', icon: Handshake, label: t('subsite.partners', 'Partenaires'),    onClick: () => navigate(`${base}/admin/partners`) },
         isAdmin        && { key: 'manage',   icon: Settings2, label: t('subsite.manage', 'Gérer'),            onClick: () => navigate(`${base}/admin/published`),    active: onManage },
     ].filter(Boolean);
 

@@ -17,6 +17,7 @@ import { X } from 'lucide-react';
 import api from '../services/apiClient';
 import { BlockEditor } from './blocks/BlockEditor';
 import { fieldStyle as inputStyle, labelStyle } from '../styles/formStyles';
+import PartnerSelector from './PartnerSelector';
 
 const slugify = (str) =>
     str.toLowerCase()
@@ -61,12 +62,6 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
     const [categories,    setCategories]    = useState([]);
     const [workshops,     setWorkshops]     = useState([]);
     const [allPartners,   setAllPartners]   = useState([]);
-    const [partnerSearch,  setPartnerSearch]  = useState('');
-    const [showAddPartner, setShowAddPartner] = useState(false);
-    const [newPName, setNewPName] = useState('');
-    const [newPUrl,  setNewPUrl]  = useState('');
-    const [newPLogo, setNewPLogo] = useState(null);
-    const [addingPartner, setAddingPartner] = useState(false);
     const [saving,        setSaving]        = useState(false);
     const [error,         setError]         = useState('');
     const [slugManual,    setSlugManual]    = useState(isEdit);
@@ -92,34 +87,11 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
     }, [name, slugManual]);
 
     // ── Partenaires ────────────────────────────────────────────
-    // Rôle d'un partenaire pour ce sous-site : 'primary' (mis en avant),
-    // 'regular' (standard) ou 'none' (non affiché). Mutuellement exclusifs.
+    // Rôle d'un partenaire (Principal / Standard / —), mutuellement exclusifs.
+    // L'UI (recherche, liste, ajout inline) est dans <PartnerSelector>.
     const setPartnerRole = (id, role) => {
         setPrimaryPartnerIds(prev => role === 'primary' ? [...new Set([...prev, id])] : prev.filter(x => x !== id));
         setPartnerIds(prev        => role === 'regular' ? [...new Set([...prev, id])] : prev.filter(x => x !== id));
-    };
-
-    // Ajout inline d'un partenaire : EXCLUSIF au sous-site (owner_subsite_id),
-    // jamais obligatoire (is_mandatory non envoyé → réservé au superadmin).
-    const handleAddPartner = async () => {
-        const name = newPName.trim();
-        if (!name) return;
-        setAddingPartner(true); setError('');
-        try {
-            let logo_path = null;
-            if (newPLogo) { const up = await api.media.upload(newPLogo); logo_path = up?.url || null; }
-            const payload = { name, url: newPUrl.trim() || null, logo_path };
-            if (subsite?.id) payload.owner_subsite_id = subsite.id;
-            const created = await api.partners.create(payload);
-            const fresh = await api.partners.getAll();
-            setAllPartners(Array.isArray(fresh) ? fresh : []);
-            if (created?.id) setPartnerRole(created.id, 'regular');
-            setNewPName(''); setNewPUrl(''); setNewPLogo(null); setShowAddPartner(false);
-        } catch (e) {
-            setError(e.message || "Erreur lors de l'ajout du partenaire.");
-        } finally {
-            setAddingPartner(false);
-        }
     };
 
     // ── Save ───────────────────────────────────────────────────
@@ -166,9 +138,6 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
             setSaving(false);
         }
     };
-
-    const filteredPartners = allPartners.filter(p =>
-        (p.name || '').toLowerCase().includes(partnerSearch.trim().toLowerCase()));
 
     const color = primaryColor || '#4A90D9';
 
@@ -314,66 +283,15 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
                             {t('subsiteEditor.partnersIntro2', "Choisissez le rôle de chaque partenaire (Principal = mis en avant, Standard, ou — pour ne pas l'afficher). Vous pouvez aussi en ajouter un.")}
                         </p>
 
-                        {/* Recherche + ajout */}
-                        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                            <input
-                                value={partnerSearch}
-                                onChange={e => setPartnerSearch(e.target.value)}
-                                placeholder={t('subsiteEditor.partnersSearch', 'Rechercher un partenaire…')}
-                                style={{ ...inputStyle, flex: 1 }}
-                            />
-                            <button type="button" onClick={() => setShowAddPartner(s => !s)} style={{
-                                padding: '0 16px', borderRadius: '10px', border: `2px solid ${color}`,
-                                background: showAddPartner ? color : 'white', color: showAddPartner ? 'white' : color,
-                                fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
-                            }}>
-                                + {t('subsiteEditor.partnersNew', 'Nouveau')}
-                            </button>
-                        </div>
-
-                        {/* Formulaire d'ajout inline (partenaire exclusif au sous-site) */}
-                        {showAddPartner && (
-                            <div style={{ border: '1px dashed #ddd', borderRadius: '10px', padding: '12px', marginBottom: '12px', display: 'grid', gap: '8px' }}>
-                                <input value={newPName} onChange={e => setNewPName(e.target.value)} placeholder={t('subsiteEditor.partnersNewName', 'Nom du partenaire *')} style={inputStyle} />
-                                <input value={newPUrl} onChange={e => setNewPUrl(e.target.value)} placeholder="https://… (optionnel)" style={inputStyle} />
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 12px', border: '1px dashed #ccc', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', color: '#666' }}>
-                                    {newPLogo ? newPLogo.name : t('subsiteEditor.partnersNewLogo', 'Logo (optionnel)…')}
-                                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => setNewPLogo(e.target.files?.[0] || null)} />
-                                </label>
-                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                    <button type="button" onClick={() => setShowAddPartner(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #ddd', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>{t('subsiteEditor.cancel', 'Annuler')}</button>
-                                    <button type="button" onClick={handleAddPartner} disabled={addingPartner || !newPName.trim()} style={{ padding: '8px 18px', borderRadius: '8px', border: 'none', background: (addingPartner || !newPName.trim()) ? '#ccc' : color, color: 'white', fontWeight: '700', cursor: (addingPartner || !newPName.trim()) ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
-                                        {addingPartner ? t('subsiteEditor.partnersAdding', 'Ajout…') : t('subsiteEditor.partnersAdd', 'Ajouter')}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Liste filtrée : une ligne par partenaire avec sélecteur de rôle */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '360px', overflowY: 'auto' }}>
-                            {filteredPartners.length === 0 ? (
-                                <p style={{ color: '#999', fontSize: '0.85rem', textAlign: 'center', padding: '16px 0' }}>{t('subsiteEditor.partnersNone', 'Aucun partenaire.')}</p>
-                            ) : (
-                                filteredPartners.map(p => {
-                                    const role = primaryPartnerIds.includes(p.id) ? 'primary' : partnerIds.includes(p.id) ? 'regular' : 'none';
-                                    return (
-                                        <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid #eee', borderRadius: '10px', padding: '6px 10px' }}>
-                                            {p.logo_path ? (
-                                                <img src={p.logo_path} alt="" style={{ width: '28px', height: '28px', objectFit: 'contain', flexShrink: 0 }} />
-                                            ) : (
-                                                <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', color: '#999', fontSize: '0.8rem', flexShrink: 0 }}>{(p.name || '?').charAt(0).toUpperCase()}</div>
-                                            )}
-                                            <span style={{ flex: 1, minWidth: 0, fontSize: '0.88rem', fontWeight: '600', color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-                                            <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
-                                                <RoleBtn active={role === 'primary'} color={color} onClick={() => setPartnerRole(p.id, 'primary')}>{t('subsiteEditor.partnersPrimaryShort', 'Principal')}</RoleBtn>
-                                                <RoleBtn active={role === 'regular'} color={color} onClick={() => setPartnerRole(p.id, 'regular')}>{t('subsiteEditor.partnersRegularShort', 'Standard')}</RoleBtn>
-                                                <RoleBtn active={role === 'none'} color="#bbb" onClick={() => setPartnerRole(p.id, 'none')}>—</RoleBtn>
-                                            </div>
-                                        </div>
-                                    );
-                                })
-                            )}
-                        </div>
+                        <PartnerSelector
+                            allPartners={allPartners}
+                            onPartnersChanged={setAllPartners}
+                            primaryIds={primaryPartnerIds}
+                            regularIds={partnerIds}
+                            onSetRole={setPartnerRole}
+                            subsiteId={subsite?.id}
+                            color={color}
+                        />
                     </section>
 
                     {/* Error + actions */}
@@ -396,18 +314,6 @@ const SourceTab = ({ active, onClick, children, color }) => (
         fontFamily: 'inherit', fontSize: '0.85rem', fontWeight: '700',
         background: active ? color : '#f5f5f5',
         color: active ? 'white' : '#666',
-        border: active ? `2px solid ${color}` : '2px solid transparent',
-        transition: 'all 0.12s',
-    }}>{children}</button>
-);
-
-// Sélecteur de rôle d'un partenaire (Principal / Standard / —).
-const RoleBtn = ({ active, color, onClick, children }) => (
-    <button type="button" onClick={onClick} style={{
-        padding: '4px 10px', borderRadius: '14px', cursor: 'pointer',
-        fontFamily: 'inherit', fontSize: '0.76rem', fontWeight: '700', whiteSpace: 'nowrap',
-        background: active ? color : '#f5f5f5',
-        color: active ? 'white' : '#777',
         border: active ? `2px solid ${color}` : '2px solid transparent',
         transition: 'all 0.12s',
     }}>{children}</button>

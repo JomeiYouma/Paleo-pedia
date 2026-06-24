@@ -48,6 +48,7 @@ import SubsiteFrise from './pages/SubsiteFrise';
 import SubsitePresentation from './pages/SubsitePresentation';
 import SubsitePartners from './pages/SubsitePartners';
 import SubsiteAdmin from './pages/SubsiteAdmin';
+import SubsitePartnersAdmin from './pages/SubsitePartnersAdmin';
 import CartelDetail from './pages/CartelDetail';
 
 // Wrapper qui injecte le slug du subsite (route param OU host dédié) dans
@@ -185,6 +186,7 @@ const mainRouter = createBrowserRouter(
         <Route path="politique-confidentialite" element={<PrivacyPolicy />} />
         <Route path="contact"          element={<Contact />} />
         <Route path="admin"            element={<SubsiteAdmin />} />
+        <Route path="admin/partners"   element={<SubsitePartnersAdmin />} />
         <Route path="admin/drafts"     element={<SubsiteAdmin />} />
         <Route path="admin/pending"    element={<SubsiteAdmin />} />
         <Route path="admin/published"  element={<SubsiteAdmin />} />
@@ -247,6 +249,7 @@ const subsiteHostRouter = hostSubsiteSlug ? createBrowserRouter(
         <Route path="politique-confidentialite" element={<PrivacyPolicy />} />
         <Route path="contact"          element={<Contact />} />
         <Route path="admin"            element={<SubsiteAdmin />} />
+        <Route path="admin/partners"   element={<SubsitePartnersAdmin />} />
         <Route path="admin/drafts"     element={<SubsiteAdmin />} />
         <Route path="admin/pending"    element={<SubsiteAdmin />} />
         <Route path="admin/published"  element={<SubsiteAdmin />} />

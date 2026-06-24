@@ -40,6 +40,7 @@ const AdminPartners = () => {
     const [subsites, setSubsites] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('mandatory');
+    const [search, setSearch] = useState('');
 
     // Formulaire de création
     const [newName, setNewName] = useState('');
@@ -116,8 +117,10 @@ const AdminPartners = () => {
         if (activeTab === 'exclusive' && !isSuperadmin) {
             data = data.filter(p => p.owner_subsite_id === homeSubsiteId);
         }
+        const q = search.trim().toLowerCase();
+        if (q) data = data.filter(p => (p.name || '').toLowerCase().includes(q));
         return data.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    }, [partners, currentTab, activeTab, isSuperadmin, homeSubsiteId]);
+    }, [partners, currentTab, activeTab, isSuperadmin, homeSubsiteId, search]);
 
     const counts = useMemo(() => Object.fromEntries(
         TABS.map(t => [t.key, partners.filter(t.filter).length])
@@ -273,6 +276,12 @@ const AdminPartners = () => {
 
             {/* Liste */}
             <AdminSection>
+                <input
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Rechercher un partenaire…"
+                    style={{ ...inputStyle, marginBottom: '12px' }}
+                />
                 {loading ? (
                     <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0' }}>Chargement…</p>
                 ) : filteredPartners.length === 0 ? (
