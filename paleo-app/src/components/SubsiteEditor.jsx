@@ -11,13 +11,12 @@
  *     ne sont modifiables — cohérent avec la liste OWNER_EDITABLE du
  *     controller (paleo-app/server/controllers/subsiteController.js).
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import api from '../services/apiClient';
 import { BlockEditor } from './blocks/BlockEditor';
 import { fieldStyle as inputStyle, labelStyle } from '../styles/formStyles';
-import PartnerSelector from './PartnerSelector';
 
 const slugify = (str) =>
     str.toLowerCase()
@@ -43,7 +42,7 @@ const PLANET_TYPE_OPTIONS = [
     { key: 'lush',   label: 'Mixte (forêt + éoliennes)' },
 ];
 
-const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = true, initialFocus = null }) => {
+const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = true }) => {
     const isEdit = !!subsite;
     const { t } = useTranslation();
 
@@ -57,42 +56,21 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
     const [blocks,        setBlocks]        = useState(subsite?.content_blocks ?? []);
     const [blocksEn,      setBlocksEn]      = useState(subsite?.content_blocks_en ?? []);
     const [blockLang,     setBlockLang]     = useState('fr');
-    const [primaryPartnerIds, setPrimaryPartnerIds] = useState((subsite?.primary_partners ?? []).map(p => p.id));
-    const [partnerIds,        setPartnerIds]        = useState((subsite?.partners ?? []).map(p => p.id));
     const [categories,    setCategories]    = useState([]);
     const [workshops,     setWorkshops]     = useState([]);
-    const [allPartners,   setAllPartners]   = useState([]);
     const [saving,        setSaving]        = useState(false);
     const [error,         setError]         = useState('');
     const [slugManual,    setSlugManual]    = useState(isEdit);
-    const partnersRef = useRef(null);
 
     useEffect(() => {
         api.categories.getAll().then(d => setCategories(Array.isArray(d) ? d : []));
         api.workshops.getAll().then(d => setWorkshops(Array.isArray(d) ? d : []));
-        api.partners.getAll().then(d => setAllPartners(Array.isArray(d) ? d : []));
     }, []);
-
-    // Ouverture ciblée sur les partenaires (depuis le menu admin « Partenaires »
-    // du sous-site) : on fait défiler jusqu'à la section une fois la liste chargée.
-    useEffect(() => {
-        if (initialFocus === 'partners' && allPartners.length && partnersRef.current) {
-            partnersRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    }, [initialFocus, allPartners.length]);
 
     // Auto-slug depuis le nom
     useEffect(() => {
         if (!slugManual && name) setSlug(slugify(name));
     }, [name, slugManual]);
-
-    // ── Partenaires ────────────────────────────────────────────
-    // Rôle d'un partenaire (Principal / Standard / —), mutuellement exclusifs.
-    // L'UI (recherche, liste, ajout inline) est dans <PartnerSelector>.
-    const setPartnerRole = (id, role) => {
-        setPrimaryPartnerIds(prev => role === 'primary' ? [...new Set([...prev, id])] : prev.filter(x => x !== id));
-        setPartnerIds(prev        => role === 'regular' ? [...new Set([...prev, id])] : prev.filter(x => x !== id));
-    };
 
     // ── Save ───────────────────────────────────────────────────
     const handleSave = async () => {
@@ -112,8 +90,6 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
                 planet_type: planetType || null,
                 content_blocks: blocks,
                 content_blocks_en: blocksEn,
-                primary_partner_ids: primaryPartnerIds,
-                partner_ids: partnerIds,
             };
             if (canEditIdentity) {
                 payload.name = name;
@@ -274,24 +250,6 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
                         {blockLang === 'fr'
                             ? <BlockEditor blocks={blocks}   onChange={setBlocks} />
                             : <BlockEditor blocks={blocksEn} onChange={setBlocksEn} />}
-                    </section>
-
-                    {/* Partenaires : recherche + liste unique (rôle par partenaire) + ajout inline */}
-                    <section ref={partnersRef}>
-                        <h3 style={{ margin: '0 0 14px', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', color: '#aaa', letterSpacing: '0.5px' }}>{t('subsiteEditor.partnersHeading', 'Partenaires du sous-site')}</h3>
-                        <p style={{ margin: '0 0 10px', color: '#888', fontSize: '0.82rem' }}>
-                            {t('subsiteEditor.partnersIntro2', "Choisissez le rôle de chaque partenaire (Principal = mis en avant, Standard, ou — pour ne pas l'afficher). Vous pouvez aussi en ajouter un.")}
-                        </p>
-
-                        <PartnerSelector
-                            allPartners={allPartners}
-                            onPartnersChanged={setAllPartners}
-                            primaryIds={primaryPartnerIds}
-                            regularIds={partnerIds}
-                            onSetRole={setPartnerRole}
-                            subsiteId={subsite?.id}
-                            color={color}
-                        />
                     </section>
 
                     {/* Error + actions */}
