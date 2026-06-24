@@ -152,7 +152,7 @@ const PediaLoginModal = ({ onClose }) => {
                 {error && <p style={{ color: 'crimson', fontSize: '0.85rem', margin: '0 0 10px' }}>{error}</p>}
                 <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
                     <button type="button" onClick={onClose} style={{ ...pillStyle, flex: 1, textAlign: 'center' }}>Annuler</button>
-                    <button type="submit" disabled={busy} style={{ ...pillStyle, flex: 1, textAlign: 'center', background: 'var(--color-primary)', color: '#1a1a1a', borderColor: 'var(--color-primary)', opacity: busy ? 0.6 : 1 }}>
+                    <button type="submit" disabled={busy} style={{ ...pillStyle, flex: 1, textAlign: 'center', background: 'var(--color-primary)', color: '#fff', borderColor: 'var(--color-primary)', opacity: busy ? 0.6 : 1 }}>
                         {busy ? '…' : 'Se connecter'}
                     </button>
                 </div>
