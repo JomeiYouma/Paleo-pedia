@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { CheckCircle2, AlertCircle, AlertTriangle, X } from 'lucide-react';
 
 /**
  * Notification flottante en bas à gauche, par-dessus le contenu.
@@ -46,6 +46,7 @@ const Toast = ({ visible, message, type = 'success', onDismiss, autoDismiss = 30
     const themes = {
         success: { bg: '#e6f7ec', color: '#1f7a3f', border: '#bfe5cd', Icon: CheckCircle2 },
         error:   { bg: '#fdecec', color: '#9a1f1f', border: '#f1c2c2', Icon: AlertCircle },
+        warning: { bg: '#fff6e6', color: '#8a5a00', border: '#f3dcae', Icon: AlertTriangle },
     };
     const t = themes[snapshot.type] || themes.success;
     const Icon = t.Icon;

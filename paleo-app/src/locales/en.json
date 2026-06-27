@@ -172,7 +172,8 @@
         "bulkDeleteConfirm": "Do you really want to delete these cartels?",
         "deleteConfirm": "Delete?",
         "imageUploadError": "Image upload error: ",
-        "autoTranslateWarning": "Auto-translation unavailable: "
+        "autoTranslateWarning": "Auto-translation unavailable: ",
+        "autoTranslateSkipped": "Auto-translation unavailable — your content was saved without the translation. You can fill it in manually."
     },
     "drafts": {
         "title": "Ideas & Drafts",

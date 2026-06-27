@@ -172,7 +172,8 @@
         "bulkDeleteConfirm": "Voulez-vous vraiment supprimer ces cartels ?",
         "deleteConfirm": "Supprimer?",
         "imageUploadError": "Erreur upload image : ",
-        "autoTranslateWarning": "Traduction automatique non disponible : "
+        "autoTranslateWarning": "Traduction automatique non disponible : ",
+        "autoTranslateSkipped": "Traduction automatique indisponible — le contenu a été enregistré sans la traduction. Vous pouvez la compléter manuellement."
     },
     "drafts": {
         "title": "Idées & Brouillons",

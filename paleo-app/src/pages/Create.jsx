@@ -38,6 +38,7 @@ const Create = () => {
         homeSubsiteId,
         currentWorkshop,
         workshops = [],
+        setGlobalToast,
     } = context;
 
     const [searchParams] = useSearchParams();
@@ -506,8 +507,11 @@ const Create = () => {
                     entry.description_en = translated.description_en || entry.description_en || '';
                     entry.location_en    = translated.location_en    || entry.location_en    || '';
                 } catch (err) {
+                    // La traduction est une aide optionnelle : son échec ne doit
+                    // pas bloquer l'enregistrement. On notifie en toast non-bloquant
+                    // et on poursuit la sauvegarde avec le seul côté rempli.
                     console.error('Auto translation FR→EN failed', err);
-                    alert(t('messages.autoTranslateWarning') + err.message);
+                    setGlobalToast?.({ type: 'warning', message: t('messages.autoTranslateSkipped') });
                 }
             } else if (hasEnContent && !hasFrContent && needsFr) {
                 // EN → FR
@@ -523,7 +527,7 @@ const Create = () => {
                     entry.location    = translated.location    || entry.location    || '';
                 } catch (err) {
                     console.error('Auto translation EN→FR failed', err);
-                    alert(t('messages.autoTranslateWarning') + err.message);
+                    setGlobalToast?.({ type: 'warning', message: t('messages.autoTranslateSkipped') });
                 }
             }
         }

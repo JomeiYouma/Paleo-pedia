@@ -10,7 +10,7 @@ import { UploadController, upload } from '../controllers/uploadController.js';
 import { TranslateController } from '../controllers/translateController.js';
 import { ImportController }    from '../controllers/importController.js';
 import { ExportController }    from '../controllers/exportController.js';
-import { authenticate, requireAdmin, requireExportOrAdmin, optionalAuth } from '../middleware/auth.js';
+import { authenticate, requireAdmin, requireExportOrAdmin, requireTranslate, optionalAuth } from '../middleware/auth.js';
 import { submissionGuard } from '../middleware/submissionGuard.js';
 import { loginRateLimit } from '../middleware/loginGuard.js';
 import { uploadGuard } from '../middleware/uploadGuard.js';
@@ -93,10 +93,13 @@ router.delete('/users/:id',          authenticate, requireAdmin, UserController.
 // ajoute un rate-limit par IP pour les visiteurs anonymes.
 router.post('/upload', optionalAuth, uploadGuard, upload.single('image'), UploadController.uploadImage);
 
-// ── Traduction (admin ; /bulk ouvert aux exportateurs pour la frise traduite) ──
-router.post('/translate',        authenticate, requireAdmin, TranslateController.translate);
+// ── Traduction ───────────────────────────────────────────────
+// /translate + /translate/fields : aide à la rédaction, ouverte à tout éditeur
+//   de contenu (contributeurs et owners de sous-sites inclus).
+// /bulk : frise traduite complète, réservé aux exportateurs / superadmins.
+router.post('/translate',        authenticate, requireTranslate, TranslateController.translate);
 router.post('/translate/bulk',   authenticate, requireExportOrAdmin, TranslateController.bulkTranslate);
-router.post('/translate/fields', authenticate, requireAdmin, TranslateController.translateFields);
+router.post('/translate/fields', authenticate, requireTranslate, TranslateController.translateFields);
 
 // ── Import ZIP (admin) ───────────────────────────────────────
 router.post('/import', authenticate, requireAdmin, ImportController.middleware, ImportController.importZip);

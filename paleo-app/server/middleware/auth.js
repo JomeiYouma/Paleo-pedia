@@ -65,6 +65,25 @@ export const requireExportOrAdmin = (req, res, next) => {
 };
 
 /**
+ * Traduction FR↔EN d'un cartel ou de champs de contenu : c'est une aide à la
+ * rédaction, autorisée à quiconque peut éditer du contenu — contributeurs et
+ * owners de sous-sites inclus (qui n'ont pas can_manage_admin), exportateurs et
+ * superadmins. Sans ce garde, l'auto-traduction de Create.jsx (déclenchée pour
+ * tout owner) échouait en 403 sur les comptes de sous-site.
+ */
+export const requireTranslate = (req, res, next) => {
+  if (!req.user) return res.status(401).json({ error: 'Non authentifié' });
+  if (
+    req.user.can_manage_admin ||
+    req.user.can_export_cartel ||
+    req.user.can_create_cartel ||
+    req.user.can_publish_cartel ||
+    req.user.can_manage_team
+  ) return next();
+  return res.status(403).json({ error: 'Permission refusée : édition de contenu requise' });
+};
+
+/**
  * Auth optionnelle : tente de décoder le token JWT si présent.
  * N'échoue jamais — req.user reste null si token absent ou invalide.
  * Utiliser sur les routes publiques qui ont un comportement enrichi pour les admins.
