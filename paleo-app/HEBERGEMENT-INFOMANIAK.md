@@ -47,9 +47,12 @@ cd /srv/customer/sites/v2.atelier21.org && git pull origin main
 ```
 
 puis, selon ce qui a changé :
-- **front modifié** (src/…) → **Build** (régénère `dist/`).
-- **`server.js` seul** → **Arrêter → Démarrer** suffit (le back n'est pas « buildé »,
-  il faut juste recharger le process).
+- **front modifié** (`src/…`) → **Build** (régénère `dist/`).
+- **back modifié** (`server/…` : `server.js`, **middlewares, routes, contrôleurs**…)
+  → **Arrêter → Démarrer** (le back n'est pas « buildé », il faut recharger le process).
+- **front + back modifiés** (cas courant d'un correctif) → **Build PUIS Arrêter → Démarrer** :
+  le Build régénère `dist/` mais ne recharge **pas** le process Node, donc le redémarrage
+  reste nécessaire pour charger le nouveau back.
 
 ## Variables d'environnement — `.env`
 
