@@ -24,11 +24,17 @@ export const AppProvider = ({ children }) => {
     const isSuperadmin = !!user?.can_manage_admin;
     const isOwner      = !!user?.can_manage_team;
     const homeSubsiteId = user?.home_subsite_id ?? null;
-    // isAdmin = accès à l'UI d'administration (superadmin OU owner d'un sous-site)
-    const isAdmin = isSuperadmin || isOwner;
-    // canExport = compte « exportateur » : accède au gestionnaire de cartels en
-    // lecture seule, uniquement pour exporter / traduire les cartels publiés.
-    const canExport = !!user?.can_export_cartel;
+    // Capacités effectives (modèle v33). Superadmin et owner disposent
+    // implicitement de toutes les capacités dans leur périmètre.
+    const canManageCartels    = isSuperadmin || isOwner || !!user?.can_manage_cartels;
+    const canManageContent    = isSuperadmin || isOwner || !!user?.can_manage_content;
+    const canExportTranslated = isSuperadmin || isOwner || !!user?.can_export_translated;
+    // canExport = peut exporter (langues BDD) ; l'export traduit l'inclut.
+    const canExport           = canExportTranslated || !!user?.can_export_cartels;
+    // isAdmin = accès à l'UI d'administration (gestion cartels et/ou contenus,
+    // owner ou superadmin). Les comptes « export seul » ne sont PAS isAdmin :
+    // ils accèdent au gestionnaire en lecture seule (cf. exportOnly).
+    const isAdmin = isSuperadmin || isOwner || canManageCartels || canManageContent;
 
     const [currentWorkshopId, setCurrentWorkshopId] = useState(null);
     const currentWorkshop = (currentWorkshopId && Array.isArray(workshops))
@@ -349,7 +355,7 @@ export const AppProvider = ({ children }) => {
             // Data
             cartels, loading, hasFetched, categories, workshops, user,
             // Computed
-            isAdmin, isSuperadmin, isOwner, canExport, homeSubsiteId,
+            isAdmin, isSuperadmin, isOwner, canExport, canExportTranslated, canManageCartels, canManageContent, homeSubsiteId,
             currentWorkshopId, currentWorkshop, setWorkshopContext,
             // Auth
             login, logout,

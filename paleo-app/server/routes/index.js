@@ -10,7 +10,11 @@ import { UploadController, upload } from '../controllers/uploadController.js';
 import { TranslateController } from '../controllers/translateController.js';
 import { ImportController }    from '../controllers/importController.js';
 import { ExportController }    from '../controllers/exportController.js';
-import { authenticate, requireAdmin, requireExportOrAdmin, requireTranslate, optionalAuth } from '../middleware/auth.js';
+import {
+  authenticate, optionalAuth, requireAdmin,
+  requireManageCartels, requireExport, requireExportTranslated,
+  requireTranslateFields, requireManageContentMain,
+} from '../middleware/auth.js';
 import { submissionGuard } from '../middleware/submissionGuard.js';
 import { loginRateLimit } from '../middleware/loginGuard.js';
 import { uploadGuard } from '../middleware/uploadGuard.js';
@@ -94,19 +98,20 @@ router.delete('/users/:id',          authenticate, requireAdmin, UserController.
 router.post('/upload', optionalAuth, uploadGuard, upload.single('image'), UploadController.uploadImage);
 
 // ── Traduction ───────────────────────────────────────────────
-// /translate + /translate/fields : aide à la rédaction, ouverte à tout éditeur
-//   de contenu (contributeurs et owners de sous-sites inclus).
-// /bulk : frise traduite complète, réservé aux exportateurs / superadmins.
-router.post('/translate',        authenticate, requireTranslate, TranslateController.translate);
-router.post('/translate/bulk',   authenticate, requireExportOrAdmin, TranslateController.bulkTranslate);
-router.post('/translate/fields', authenticate, requireTranslate, TranslateController.translateFields);
+// /translate        : auto-traduction d'un cartel → capacité « gérer les cartels ».
+// /translate/fields : traduction de champs → éditeur de cartels OU de contenus.
+// /translate/bulk   : frise traduite (langue arbitraire) → capacité « exporter (autre langue) ».
+// Toutes scopées au périmètre du compte côté contrôleur.
+router.post('/translate',        authenticate, requireManageCartels,    TranslateController.translate);
+router.post('/translate/bulk',   authenticate, requireExportTranslated, TranslateController.bulkTranslate);
+router.post('/translate/fields', authenticate, requireTranslateFields,  TranslateController.translateFields);
 
 // ── Import ZIP (admin) ───────────────────────────────────────
 router.post('/import', authenticate, requireAdmin, ImportController.middleware, ImportController.importZip);
 
-// ── Export archive (admin + exportateurs) ────────────────────
-router.get('/export/image-check', authenticate, requireExportOrAdmin, ExportController.imageCheck);
-router.get('/export',             authenticate, requireExportOrAdmin, ExportController.exportArchive);
+// ── Export archive (capacité export, scopée au périmètre du compte) ──
+router.get('/export/image-check', authenticate, requireExport, ExportController.imageCheck);
+router.get('/export',             authenticate, requireExport, ExportController.exportArchive);
 
 // ── Sous-sites (public GET, admin write) ─────────────────────
 router.get   ('/subsites',       SubsiteController.getAll);
@@ -151,7 +156,7 @@ router.delete('/s/:slug/users/:id', authenticate, resolveTenant, requireTenantAc
 // d'un tenant admin) soit calculé depuis req.user.
 router.get   ('/partners',       optionalAuth, PartnerController.getAll);
 router.get   ('/partners/site',  PartnerController.getSiteSelection);
-router.put   ('/partners/site',  authenticate, requireAdmin, PartnerController.setSiteSelection);
+router.put   ('/partners/site',  authenticate, requireManageContentMain, PartnerController.setSiteSelection);
 // CREATE / UPDATE / DELETE : le superadmin passe par requireAdmin, les tenant
 // admins doivent avoir can_manage_team (contrôlé dans le contrôleur via canModifyPartner).
 // On ouvre donc aux utilisateurs authentifiés et on délègue l'authz au contrôleur.
@@ -164,9 +169,9 @@ router.delete('/partners/:id',   authenticate, PartnerController.remove);
 // Lecture publique avec optionalAuth pour permettre au superadmin de viser
 // un autre subsite via ?subsiteId=... (la cible reste main pour les anonymes).
 router.get   ('/team-members',     optionalAuth, TeamMemberController.getAll);
-router.post  ('/team-members',     authenticate, requireAdmin, TeamMemberController.create);
-router.patch ('/team-members/:id', authenticate, requireAdmin, TeamMemberController.update);
-router.delete('/team-members/:id', authenticate, requireAdmin, TeamMemberController.remove);
+router.post  ('/team-members',     authenticate, requireManageContentMain, TeamMemberController.create);
+router.patch ('/team-members/:id', authenticate, requireManageContentMain, TeamMemberController.update);
+router.delete('/team-members/:id', authenticate, requireManageContentMain, TeamMemberController.remove);
 
 // Variantes scopées par sous-site (équipe propre à un subsite).
 // Écriture autorisée à l'owner du subsite OU au superadmin (canWrite côté controller).
@@ -177,17 +182,17 @@ router.delete('/s/:slug/team-members/:id', authenticate, resolveTenant, requireT
 
 // ── Articles de presse (page publique /presse) ────────────────
 // optionalAuth pour que les admins puissent voir les articles non publiés.
-router.get   ('/press-articles',     optionalAuth,                PressArticleController.getAll);
-router.post  ('/press-articles',     authenticate, requireAdmin,  PressArticleController.create);
-router.patch ('/press-articles/:id', authenticate, requireAdmin,  PressArticleController.update);
-router.delete('/press-articles/:id', authenticate, requireAdmin,  PressArticleController.remove);
+router.get   ('/press-articles',     optionalAuth,                            PressArticleController.getAll);
+router.post  ('/press-articles',     authenticate, requireManageContentMain,  PressArticleController.create);
+router.patch ('/press-articles/:id', authenticate, requireManageContentMain,  PressArticleController.update);
+router.delete('/press-articles/:id', authenticate, requireManageContentMain,  PressArticleController.remove);
 
 // ── Missions (page publique /participer — appels à participation) ──
 // optionalAuth pour que les admins puissent voir les missions non publiées.
-router.get   ('/missions',     optionalAuth,                MissionController.getAll);
-router.post  ('/missions',     authenticate, requireAdmin,  MissionController.create);
-router.patch ('/missions/:id', authenticate, requireAdmin,  MissionController.update);
-router.delete('/missions/:id', authenticate, requireAdmin,  MissionController.remove);
+router.get   ('/missions',     optionalAuth,                            MissionController.getAll);
+router.post  ('/missions',     authenticate, requireManageContentMain,  MissionController.create);
+router.patch ('/missions/:id', authenticate, requireManageContentMain,  MissionController.update);
+router.delete('/missions/:id', authenticate, requireManageContentMain,  MissionController.remove);
 
 // ── Candidatures aux missions (formulaire public en bas de /participer) ──
 // POST public (avec honeypot dans le contrôleur), lecture admin only.
@@ -200,16 +205,16 @@ router.post('/contact-messages', ContactMessageController.create);
 router.get ('/contact-messages', authenticate, requireAdmin, ContactMessageController.list);
 
 // ── Prestations (page publique /prestations) ──────────────────
-router.get   ('/prestations',     optionalAuth,                PrestationController.getAll);
-router.post  ('/prestations',     authenticate, requireAdmin,  PrestationController.create);
-router.patch ('/prestations/:id', authenticate, requireAdmin,  PrestationController.update);
-router.delete('/prestations/:id', authenticate, requireAdmin,  PrestationController.remove);
+router.get   ('/prestations',     optionalAuth,                            PrestationController.getAll);
+router.post  ('/prestations',     authenticate, requireManageContentMain,  PrestationController.create);
+router.patch ('/prestations/:id', authenticate, requireManageContentMain,  PrestationController.update);
+router.delete('/prestations/:id', authenticate, requireManageContentMain,  PrestationController.remove);
 
 // ── Shop items (page publique /ouvrages, liens vers PrestaShop) ───
-router.get   ('/shop-items',     optionalAuth,                ShopItemController.getAll);
-router.post  ('/shop-items',     authenticate, requireAdmin,  ShopItemController.create);
-router.patch ('/shop-items/:id', authenticate, requireAdmin,  ShopItemController.update);
-router.delete('/shop-items/:id', authenticate, requireAdmin,  ShopItemController.remove);
+router.get   ('/shop-items',     optionalAuth,                            ShopItemController.getAll);
+router.post  ('/shop-items',     authenticate, requireManageContentMain,  ShopItemController.create);
+router.patch ('/shop-items/:id', authenticate, requireManageContentMain,  ShopItemController.update);
+router.delete('/shop-items/:id', authenticate, requireManageContentMain,  ShopItemController.remove);
 
 // ── Event logs + config emails (superadmin only) ─────────────
 router.get   ('/logs',                       authenticate, requireAdmin, EventLogController.list);

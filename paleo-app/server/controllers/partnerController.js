@@ -18,13 +18,23 @@ function resolvePartnerScope(req) {
 
 function canModifyPartner(req, partner) {
   if (req.user?.can_manage_admin) return true;
-  if (!req.user?.home_subsite_id) return false;
-  return partner.owner_subsite_id === req.user.home_subsite_id;
+  // Un compte ne modifie que les partenaires de SON périmètre : owner_subsite_id
+  // doit égaler son home_subsite_id (null = pool du site principal).
+  return partner.owner_subsite_id === (req.user?.home_subsite_id ?? null);
 }
 
-/** Un utilisateur doit être superadmin OU owner d'un sous-site pour créer/modifier des partenaires */
+/**
+ * Peut créer/modifier des partenaires (modèle v33) :
+ *   - superadmin
+ *   - owner d'un sous-site (can_manage_team) → ses exclusifs
+ *   - gestionnaire de contenu (can_manage_content) → son périmètre
+ *     (compte principal → pool principal ; compte sous-site → ses exclusifs)
+ * Le périmètre exact est ensuite vérifié par canModifyPartner.
+ */
 function canManagePartners(req) {
-  return !!req.user?.can_manage_admin || (!!req.user?.home_subsite_id && !!req.user?.can_manage_team);
+  if (req.user?.can_manage_admin) return true;
+  if (req.user?.can_manage_content) return true;
+  return !!req.user?.home_subsite_id && !!req.user?.can_manage_team;
 }
 
 export const PartnerController = {

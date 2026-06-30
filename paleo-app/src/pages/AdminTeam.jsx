@@ -114,7 +114,7 @@ const AdminTeam = () => {
                     email: newEmail.trim(),
                     password: newPassword,
                     role: 'contributor',
-                    can_create_cartel: true,
+                    can_manage_cartels: true,
                     home_subsite_id: null,
                 });
             } else {
@@ -300,15 +300,11 @@ const AdminTeam = () => {
             {canManageCurrent && (
                 <ExplainerBox icon={HelpCircle} title="Permissions disponibles">
                     <ul style={{ margin: '8px 0 0', paddingLeft: '18px', lineHeight: '1.7' }}>
-                        <li><strong>Créer cartels</strong> — le membre peut créer de nouveaux cartels (en brouillon par défaut).</li>
-                        <li><strong>Publier</strong> — le membre peut faire passer un cartel en statut <em>publié</em> (sinon ils restent en brouillon ou en attente).</li>
-                        {isMain && (
-                            <li><strong>Exporter cartels</strong> — accès <em>lecture seule</em> au gestionnaire : voir les cartels publiés, les sélectionner et les exporter / traduire (PDF, images, archive). Aucune autre action (ni édition, ni publication, ni modération). <em>(Compte de niveau principal — non applicable aux comptes de sous-site.)</em></li>
-                        )}
-                        <li><strong>Gérer équipe</strong> — <em>owner</em> : le membre peut inviter, modifier et supprimer d'autres comptes dans le contexte courant.</li>
-                        {isSuperadmin && (
-                            <li><strong>Créer sous-sites</strong> — superadmin uniquement : le membre peut créer de nouveaux sous-sites.</li>
-                        )}
+                        <li><strong>Gérer les cartels</strong> — créer, éditer, mettre en brouillon / archive, <em>publier</em> les cartels du périmètre, et auto-traduire l'autre langue. (Les visiteurs non connectés peuvent toujours proposer un cartel : il part en attente de validation.)</li>
+                        <li><strong>Exporter (langues du site)</strong> — accès <em>lecture seule</em> au gestionnaire pour sélectionner et exporter des cartels (PDF, images, archive) dans les langues déjà saisies (FR / EN). Limité au périmètre du compte.</li>
+                        <li><strong>Exporter (autre langue)</strong> — comme ci-dessus, plus la <em>frise traduite</em> : export traduit à la volée vers une langue cible. Inclut l'export simple.</li>
+                        <li><strong>Gérer les contenus</strong> — contenus hors cartels : partenaires et équipe « à propos » du périmètre ; au niveau principal, aussi presse, missions, prestations et boutique.</li>
+                        <li><strong>Gérer l'équipe</strong> — <em>owner</em> : le membre peut inviter, modifier et supprimer d'autres comptes dans le contexte courant.</li>
                     </ul>
                 </ExplainerBox>
             )}
@@ -347,52 +343,45 @@ const AdminTeam = () => {
                                         )}
                                     </div>
 
+                                    {/* Permissions v33 : capacités scopées au périmètre du compte.
+                                        L'export est désormais scopé côté serveur → ses toggles sont
+                                        sûrs dans tous les contextes (principal comme sous-site). */}
                                     <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
                                         <Toggle
-                                            label="Créer cartels"
-                                            hint="Peut créer de nouveaux cartels"
-                                            value={!!m.can_create_cartel}
-                                            onChange={() => handleTogglePerm(m, 'can_create_cartel')}
+                                            label="Gérer les cartels"
+                                            hint="Créer, éditer, mettre en brouillon / archive, publier les cartels du périmètre, et auto-traduire l'autre langue."
+                                            value={!!m.can_manage_cartels}
+                                            onChange={() => handleTogglePerm(m, 'can_manage_cartels')}
                                             disabled={readOnly}
                                         />
                                         <Toggle
-                                            label="Publier"
-                                            hint="Peut publier les cartels (sinon ils restent en brouillon / en attente)"
-                                            value={!!m.can_publish_cartel}
-                                            onChange={() => handleTogglePerm(m, 'can_publish_cartel')}
+                                            label="Exporter (langues du site)"
+                                            hint="Exporter une sélection de cartels (PDF, images, archive) dans les langues déjà saisies (FR / EN)."
+                                            value={!!m.can_export_cartels}
+                                            onChange={() => handleTogglePerm(m, 'can_export_cartels')}
                                             disabled={readOnly}
                                         />
-                                        {/* « Exporter cartels » est une capacité de niveau principal :
-                                            l'export / la traduction en masse ne sont pas scopés au tenant
-                                            (lecture de tous les cartels publiés). On ne l'expose donc que
-                                            dans le contexte principal — le schéma scopé (teamController)
-                                            refuse volontairement cette clé pour éviter l'élévation de
-                                            privilège par un owner de sous-site. */}
-                                        {isMain && (
-                                            <Toggle
-                                                label="Exporter cartels"
-                                                hint="Accès lecture seule au gestionnaire : voir les cartels publiés et les exporter / traduire (PDF, images, archive). Aucune autre action."
-                                                value={!!m.can_export_cartel}
-                                                onChange={() => handleTogglePerm(m, 'can_export_cartel')}
-                                                disabled={readOnly}
-                                            />
-                                        )}
                                         <Toggle
-                                            label="Gérer équipe"
-                                            hint="Owner : peut inviter et gérer les autres membres du contexte courant"
+                                            label="Exporter (autre langue)"
+                                            hint="Exporter une sélection traduite à la volée vers une langue cible (frise traduite). Inclut l'export simple."
+                                            value={!!m.can_export_translated}
+                                            onChange={() => handleTogglePerm(m, 'can_export_translated')}
+                                            disabled={readOnly}
+                                        />
+                                        <Toggle
+                                            label="Gérer les contenus"
+                                            hint="Gérer les contenus hors cartels du périmètre (partenaires, équipe « à propos » ; + presse, missions, prestations, boutique au niveau principal)."
+                                            value={!!m.can_manage_content}
+                                            onChange={() => handleTogglePerm(m, 'can_manage_content')}
+                                            disabled={readOnly}
+                                        />
+                                        <Toggle
+                                            label="Gérer l'équipe"
+                                            hint="Owner : peut inviter et gérer les autres membres du contexte courant."
                                             value={!!m.can_manage_team}
                                             onChange={() => handleTogglePerm(m, 'can_manage_team')}
                                             disabled={readOnly}
                                         />
-                                        {isSuperadmin && (
-                                            <Toggle
-                                                label="Créer sous-sites"
-                                                hint="Superadmin uniquement : peut créer de nouveaux sous-sites"
-                                                value={!!m.can_create_subsite}
-                                                onChange={() => handleTogglePerm(m, 'can_create_subsite')}
-                                                disabled={readOnly}
-                                            />
-                                        )}
                                     </div>
 
                                     {canManageCurrent && !readOnly && (

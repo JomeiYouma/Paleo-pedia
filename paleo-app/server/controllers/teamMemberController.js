@@ -37,13 +37,19 @@ function resolveScope(req) {
   return null;
 }
 
-/** True si l'utilisateur peut écrire dans le scope demandé. */
+/**
+ * True si l'utilisateur peut écrire dans le scope demandé (modèle v33).
+ *   - superadmin : partout
+ *   - route sous-site (/s/:slug) : owner OU gestionnaire de contenu rattaché à CE sous-site
+ *   - route principale : compte principal (home_subsite_id null) avec can_manage_content
+ */
 function canWrite(req) {
   if (req.user?.can_manage_admin) return true;
-  if (!req.user?.can_manage_team) return false;
-  // L'owner ne peut écrire que dans son propre subsite.
-  if (req.tenant) return req.tenant.id === req.user.home_subsite_id;
-  return false;
+  if (req.tenant) {
+    if (req.tenant.id !== req.user?.home_subsite_id) return false;
+    return !!req.user?.can_manage_team || !!req.user?.can_manage_content;
+  }
+  return req.user?.home_subsite_id == null && !!req.user?.can_manage_content;
 }
 
 export const TeamMemberController = {
@@ -55,7 +61,7 @@ export const TeamMemberController = {
       // du site principal si le subsite n'a pas encore configuré la sienne.
       // En revanche pour l'admin (lecture explicite de l'équipe du subsite),
       // on ne fait pas le fallback pour ne pas masquer l'état réel.
-      const fallback = !req.user?.can_manage_admin && !req.user?.can_manage_team;
+      const fallback = !req.user?.can_manage_admin && !req.user?.can_manage_team && !req.user?.can_manage_content;
       res.json(await TeamMemberModel.findAll({ subsiteId: scope, fallbackToMain: fallback }));
     } catch (e) {
       res.status(500).json({ error: e.message });

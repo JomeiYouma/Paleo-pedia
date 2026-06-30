@@ -35,6 +35,7 @@ const Create = () => {
         addWorkshop,
         isAdmin,
         isSuperadmin,
+        canManageCartels,
         homeSubsiteId,
         currentWorkshop,
         workshops = [],
@@ -485,10 +486,11 @@ const Create = () => {
             entry.workshopId = activeWorkshopCtx.id;
         }
 
-        // Sur création initiale d'un cartel admin, auto-traduire le côté manquant.
-        // Détection automatique de la direction : si FR rempli et EN vide → FR→EN ;
-        // si EN rempli et FR vide → EN→FR.
-        if (!editId && isAdmin) {
+        // Sur création initiale d'un cartel, auto-traduire le côté manquant.
+        // Réservé aux comptes pouvant gérer les cartels (l'endpoint /translate
+        // exige cette capacité). Détection automatique de la direction :
+        // si FR rempli et EN vide → FR→EN ; si EN rempli et FR vide → EN→FR.
+        if (!editId && canManageCartels) {
             const hasFrContent = [entry.titre, entry.description, entry.location].some(v => (v || '').trim() !== '');
             const hasEnContent = [entry.titre_en, entry.description_en, entry.location_en].some(v => (v || '').trim() !== '');
             const needsEn = [entry.titre_en, entry.description_en, entry.location_en].some(v => (v || '').trim() === '');

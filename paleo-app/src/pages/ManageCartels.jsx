@@ -131,7 +131,7 @@ const ImportModal = ({ onClose, onDone, t }) => {
 
 // ── Composant principal ──────────────────────────────────────
 const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null } = {}) => {
-    const { cartels, fetchData, isAdmin, isSuperadmin, isOwner, canExport, homeSubsiteId, categories, workshops, addWorkshop, loading: appLoading, hasFetched } = useApp();
+    const { cartels, fetchData, isAdmin, isSuperadmin, isOwner, canExport, canExportTranslated, homeSubsiteId, categories, workshops, addWorkshop, loading: appLoading, hasFetched } = useApp();
     // Compte « exportateur » : accès lecture seule au gestionnaire (cartels
     // publiés → export / traduction PDF), sans aucune action de modification.
     const exportOnly = canExport && !isAdmin;
@@ -1111,14 +1111,19 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                             <Languages size={14} /> {t('manageCartels.retranslate')} ({selectedIds.size})
                         </button>
                         )}
+                        {canExport && (
                         <DropdownButton label={t('manageCartels.export')} icon={Download} color="#555" variant="outline">
                             {close => (<>
                                 <DropItem icon={ImgIcon}   label={t('manageCartels.imagesZip')} onClick={() => handleExportImages(close)} />
                                 <DropItem icon={FileText}  label={t('manageCartels.pdfPrint')} onClick={() => handleExportPdf(close)} />
-                                <DropItem icon={Languages} label={t('translateFrise.menuLabel', 'PDF traduit (autre langue)…')} onClick={() => { close(); setShowTranslateFrise(true); }} />
+                                {/* Frise traduite → capacité « exporter (autre langue) » uniquement. */}
+                                {canExportTranslated && (
+                                  <DropItem icon={Languages} label={t('translateFrise.menuLabel', 'PDF traduit (autre langue)…')} onClick={() => { close(); setShowTranslateFrise(true); }} />
+                                )}
                                 <DropItem icon={Package}   label={t('manageCartels.fullArchive')} onClick={() => handleExportArchive(close)} />
                             </>)}
                         </DropdownButton>
+                        )}
                         {!exportOnly && (
                         <button onClick={() => { setNewWorkshopName(''); setSelectedWorkshopId(''); setShowWorkshopModal(true); }} style={{ display:'flex', alignItems:'center', gap:'5px', padding:'7px 11px', borderRadius:'8px', border:'1px solid #1f6feb', background:'white', color:'#1f6feb', cursor:'pointer', fontSize:'0.84rem', fontWeight:'600', fontFamily:'inherit' }}>
                             <FolderPlus size={14} /> {t('manageCartels.assignWorkshop')} ({selectedIds.size})
@@ -1132,8 +1137,8 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                     </div>
                 )}
 
-                {/* Export sans sélection → tout exporter */}
-                {selectedIds.size === 0 && (
+                {/* Export sans sélection → tout exporter (capacité export requise) */}
+                {selectedIds.size === 0 && canExport && (
                     <DropdownButton label={t('manageCartels.exportAll')} icon={Download} color="#555" variant="outline">
                         {close => (<>
                             <DropItem icon={Package}  label={t('manageCartels.fullArchive')} onClick={() => { close(); withBusy(t('manageCartels.preparingArchive'), () => api.io.exportArchive([])); }} />

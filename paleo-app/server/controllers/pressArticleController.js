@@ -15,7 +15,7 @@ export const PressArticleController = {
 
   async getAll(req, res) {
     try {
-      const isAdmin = !!req.user?.can_manage_admin;
+      const isAdmin = !!req.user?.can_manage_admin || !!req.user?.can_manage_content;
       const data = await PressArticleModel.findAll({ publishedOnly: !isAdmin });
       res.json(data);
     } catch (e) {

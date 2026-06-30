@@ -56,6 +56,29 @@ export function requireTenantAccess(req, res, next) {
  *   { type: 'home' }         — scope automatique sur le home_subsite_id de l'user
  *   { type: 'global' }       — pas de filtre (superadmin uniquement)
  */
+/**
+ * Périmètre d'export / lecture de cartels d'un compte authentifié (modèle v33).
+ * Renvoie une valeur compatible avec CartelModel.findAll({ subsiteFilter }) :
+ *   - superadmin              → 'none'         (tous les cartels)
+ *   - compte de sous-site     → { id: home }   (uniquement son sous-site)
+ *   - compte principal        → 'main'         (cartels sans sous-site)
+ * Garantit qu'un exportateur ne lit jamais hors de son périmètre.
+ */
+export function resolveCartelExportScope(req) {
+  if (req.user?.can_manage_admin) return 'none';
+  if (req.user?.home_subsite_id) return { id: req.user.home_subsite_id };
+  return 'main';
+}
+
+/** True si un cartel chargé tombe dans le périmètre d'export résolu ci-dessus. */
+export function cartelMatchesExportScope(cartel, scope) {
+  if (!cartel) return false;
+  if (scope === 'none') return true;
+  if (scope === 'main') return cartel.subsite_id === null;
+  if (scope && typeof scope === 'object') return cartel.subsite_id === scope.id;
+  return false;
+}
+
 export function buildSubsiteScope(req, { allowGlobal = false } = {}) {
   if (req.tenant) {
     return { type: 'subsite', id: req.tenant.id };

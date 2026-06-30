@@ -170,14 +170,24 @@ function resolveTargetSubsiteId(req) {
  * Sans cette garde, un attaquant peut POST avec `{status: 'published'}` et
  * contourner la modération (le modèle respectait `data.status ?? 'draft'`).
  */
+/**
+ * Capacité « gérer les cartels » (modèle v33) : créer/éditer/publier/archiver.
+ * Le superadmin et l'owner l'ont implicitement ; sinon il faut can_manage_cartels.
+ * Le PÉRIMÈTRE (quels cartels) est borné en amont par resolveSubsiteFilter /
+ * resolveTargetSubsiteId, donc ce booléen ne juge que la capacité, pas la cible.
+ */
+function userCanManageCartels(user) {
+  return !!user && (user.can_manage_admin || user.can_manage_team || user.can_manage_cartels);
+}
+
 function resolveCreateStatus(req, requestedStatus) {
   // Anonyme : on force pending_review, point final.
   if (!req.user) return 'pending_review';
 
-  // Authentifié mais sans permission de publier : il peut au mieux soumettre
-  // en pending_review ; on refuse 'published' et 'archived' silencieusement
-  // en les ramenant à un brouillon.
-  if (!req.user.can_publish_cartel && !req.user.can_manage_admin) {
+  // Authentifié mais sans capacité de gérer les cartels : il peut au mieux
+  // soumettre en pending_review ; on refuse 'published' et 'archived'
+  // silencieusement en les ramenant à un brouillon.
+  if (!userCanManageCartels(req.user)) {
     if (requestedStatus === 'published' || requestedStatus === 'archived') {
       return 'pending_review';
     }
@@ -253,7 +263,10 @@ export const CartelController = {
 
   async getAll(req, res) {
     try {
-      const isAdmin = req.user?.can_manage_admin || !!req.user?.home_subsite_id;
+      // Voit les cartels non publiés (tous statuts) : superadmin, owner, ou
+      // compte « gérer les cartels ». Les exportateurs purs restent sur les
+      // publiés (lecture seule). Le périmètre est borné par resolveSubsiteFilter.
+      const isAdmin = !!req.user && (req.user.can_manage_admin || req.user.can_manage_team || req.user.can_manage_cartels);
       const { category, search, limit, offset } = req.query;
 
       const filters = {
@@ -340,7 +353,7 @@ export const CartelController = {
       if (!existing) return res.status(404).json({ error: 'Cartel introuvable' });
 
       const isOwner = existing.created_by === req.user.id;
-      const isEditor = req.user.can_publish_cartel || req.user.can_manage_admin;
+      const isEditor = req.user.can_manage_admin || req.user.can_manage_cartels;
       // Owner d'un sous-site : peut modérer tout cartel rattaché à son sous-site,
       // soit directement (subsite_id) soit via l'atelier source (subsite-atelier).
       const isTenantOwnerOfThisCartel = canTenantOwnerEdit(req, existing);
@@ -399,8 +412,8 @@ export const CartelController = {
       const existing = await loadCartelInScope(req.params.id, filter);
       if (!existing) return res.status(404).json({ error: 'Cartel introuvable' });
 
-      if (status === 'published' && !req.user.can_publish_cartel) {
-        return res.status(403).json({ error: 'Permission can_publish_cartel requise' });
+      if (status === 'published' && !userCanManageCartels(req.user)) {
+        return res.status(403).json({ error: 'Permission can_manage_cartels requise' });
       }
 
       let cartel = await CartelModel.setStatus(req.params.id, status);
@@ -430,9 +443,11 @@ export const CartelController = {
       if (!existing) return res.status(404).json({ error: 'Cartel introuvable' });
 
       const isOwner = existing.created_by === req.user.id;
-      const isAdmin = req.user.can_manage_admin;
+      // Le cartel est déjà borné au périmètre du compte par loadCartelInScope ;
+      // un gestionnaire de cartels peut donc le supprimer dans ce périmètre.
+      const isEditor = req.user.can_manage_admin || req.user.can_manage_cartels;
       const isTenantOwnerOfThisCartel = canTenantOwnerEdit(req, existing);
-      if (!isOwner && !isAdmin && !isTenantOwnerOfThisCartel) {
+      if (!isOwner && !isEditor && !isTenantOwnerOfThisCartel) {
         return res.status(403).json({ error: 'Non autorisé' });
       }
 

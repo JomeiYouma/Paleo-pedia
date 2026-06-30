@@ -40,10 +40,12 @@ npm run dev
 |---------|-------|-----------|-------------|
 | GET | `/api/cartels` | — | Liste (filtres: status, visible, category, search) |
 | GET | `/api/cartels/:id` | — | Détail avec catégories |
-| POST | `/api/cartels` | can_create_cartel | Créer (draft par défaut) |
-| PATCH | `/api/cartels/:id` | can_create_cartel | Modifier |
-| PATCH | `/api/cartels/:id/status` | can_publish_cartel (pour published) | Changer le statut |
-| DELETE | `/api/cartels/:id` | owner ou admin | Supprimer |
+| POST | `/api/cartels` | — (anonyme → pending_review ; publier exige can_manage_cartels) | Créer (draft par défaut) |
+| PATCH | `/api/cartels/:id` | can_manage_cartels (ou créateur / owner) | Modifier |
+| PATCH | `/api/cartels/:id/status` | can_manage_cartels (pour published) | Changer le statut |
+| DELETE | `/api/cartels/:id` | créateur, can_manage_cartels ou owner | Supprimer |
+
+> Modèle de permissions complet : voir [`docs/PERMISSIONS.md`](../docs/PERMISSIONS.md) (v33).
 
 **Statuts disponibles** : `draft` → `pending_review` → `published` → `archived`
 
@@ -81,7 +83,7 @@ const cartel = await api.cartels.create({
 // Soumettre pour relecture
 await api.cartels.submitForReview(cartel.id)
 
-// Publier (nécessite can_publish_cartel)
+// Publier (nécessite can_manage_cartels)
 await api.cartels.publish(cartel.id)
 
 // Filtrer les cartels publiés d'une catégorie

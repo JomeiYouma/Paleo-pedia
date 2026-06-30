@@ -3,29 +3,25 @@ import { z } from 'zod';
 import { dispatchEvent } from '../services/eventDispatcher.js';
 const dispatch = (args) => { dispatchEvent(args).catch(() => {}); };
 
+// Permissions v33 (cf. migration_v33). Les anciennes clés ne sont plus acceptées.
+const PermissionShape = {
+  role:                  z.enum(['contributor', 'editor', 'admin', 'superadmin']).optional(),
+  can_manage_cartels:    z.boolean().optional(),
+  can_export_cartels:    z.boolean().optional(),
+  can_export_translated: z.boolean().optional(),
+  can_manage_content:    z.boolean().optional(),
+  can_manage_admin:      z.boolean().optional(),
+  can_manage_team:       z.boolean().optional(),
+  home_subsite_id:       z.string().nullable().optional(),
+};
+
 const CreateSchema = z.object({
-  email:               z.string().email('Email invalide'),
-  password:            z.string().min(8, 'Mot de passe : 8 caractères minimum'),
-  role:                z.enum(['contributor', 'editor', 'admin', 'superadmin']).optional(),
-  can_create_cartel:   z.boolean().optional(),
-  can_publish_cartel:  z.boolean().optional(),
-  can_manage_admin:    z.boolean().optional(),
-  can_create_subsite:  z.boolean().optional(),
-  can_manage_team:     z.boolean().optional(),
-  can_export_cartel:   z.boolean().optional(),
-  home_subsite_id:     z.string().nullable().optional(),
+  email:    z.string().email('Email invalide'),
+  password: z.string().min(8, 'Mot de passe : 8 caractères minimum'),
+  ...PermissionShape,
 }).strict();
 
-const UpdateSchema = z.object({
-  role:                z.enum(['contributor', 'editor', 'admin', 'superadmin']).optional(),
-  can_create_cartel:   z.boolean().optional(),
-  can_publish_cartel:  z.boolean().optional(),
-  can_manage_admin:    z.boolean().optional(),
-  can_create_subsite:  z.boolean().optional(),
-  can_manage_team:     z.boolean().optional(),
-  can_export_cartel:   z.boolean().optional(),
-  home_subsite_id:     z.string().nullable().optional(),
-}).strict();
+const UpdateSchema = z.object({ ...PermissionShape }).strict();
 
 const PasswordSchema = z.object({
   new_password: z.string().min(8, 'Nouveau mot de passe : 8 caractères minimum'),
@@ -88,7 +84,7 @@ export const UserController = {
       const user = await UserModel.update(req.params.id, parsed.data);
       if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
       // On capture les permissions modifiées pour faciliter l'audit
-      const trackedFields = ['role', 'can_create_cartel', 'can_publish_cartel', 'can_manage_admin', 'can_create_subsite', 'can_manage_team', 'can_export_cartel', 'home_subsite_id'];
+      const trackedFields = ['role', 'can_manage_cartels', 'can_export_cartels', 'can_export_translated', 'can_manage_content', 'can_manage_admin', 'can_manage_team', 'home_subsite_id'];
       const changed = Object.fromEntries(
         Object.entries(parsed.data).filter(([k]) => trackedFields.includes(k))
       );

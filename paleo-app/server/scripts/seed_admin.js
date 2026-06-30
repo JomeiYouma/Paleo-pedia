@@ -33,9 +33,9 @@ async function seedAdmin() {
       await UserModel.create({
         email,
         password,
-        role: 'admin',
-        can_create_cartel: true,
-        can_publish_cartel: true,
+        role: 'superadmin',
+        // Superadmin : l'administration generale donne implicitement toutes
+        // les capacites (cf. logique des gardes), inutile de les poser ici.
         can_manage_admin: true,
       });
       console.log(`✅ Admin user created (${email})`);

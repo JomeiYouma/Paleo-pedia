@@ -16,14 +16,17 @@ CREATE TABLE IF NOT EXISTS `users` (
   `id`                  CHAR(36)      NOT NULL DEFAULT (UUID()),
   `email`               VARCHAR(255)  NOT NULL,
   `password_hash`       VARCHAR(255)  NOT NULL,
-  `role`                ENUM('contributor','editor','admin','superadmin') NOT NULL DEFAULT 'contributor',
-  `can_create_cartel`   TINYINT(1)    NOT NULL DEFAULT 1,
-  `can_publish_cartel`  TINYINT(1)    NOT NULL DEFAULT 0,
-  `can_manage_admin`    TINYINT(1)    NOT NULL DEFAULT 0,
-  `can_create_subsite`  TINYINT(1)    NOT NULL DEFAULT 0,
-  `can_manage_team`     TINYINT(1)    NOT NULL DEFAULT 0,
-  `can_export_cartel`   TINYINT(1)    NOT NULL DEFAULT 0,
-  `home_subsite_id`     CHAR(36)      NULL DEFAULT NULL,
+  `role`                  ENUM('contributor','editor','admin','superadmin') NOT NULL DEFAULT 'contributor',
+  -- Modele de permissions v33 (cf. migration_v33). Capacites scopees au
+  -- perimetre du compte (home_subsite_id). Superadmin (can_manage_admin) et
+  -- owner (can_manage_team) disposent implicitement des 4 capacites.
+  `can_manage_cartels`    TINYINT(1)    NOT NULL DEFAULT 0,  -- creer/editer/publier + auto-traduire
+  `can_export_cartels`    TINYINT(1)    NOT NULL DEFAULT 0,  -- exporter (langues BDD)
+  `can_export_translated` TINYINT(1)    NOT NULL DEFAULT 0,  -- exporter (autre langue ; inclut export simple)
+  `can_manage_content`    TINYINT(1)    NOT NULL DEFAULT 0,  -- contenus hors cartels
+  `can_manage_admin`      TINYINT(1)    NOT NULL DEFAULT 0,  -- administration generale (superadmin)
+  `can_manage_team`       TINYINT(1)    NOT NULL DEFAULT 0,  -- owner / admin de sous-site
+  `home_subsite_id`       CHAR(36)      NULL DEFAULT NULL,
   `created_at`          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),

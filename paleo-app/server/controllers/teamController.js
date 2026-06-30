@@ -20,11 +20,16 @@ const CreateSchema = z.object({
   password: z.string().min(8, 'Mot de passe : 8 caractères minimum'),
 });
 
+// Permissions v33 accordables par un owner à ses membres. Volontairement SANS
+// can_manage_admin (un owner ne crée pas de superadmin) ni home_subsite_id (pas
+// de déplacement cross-sous-site) — cf. garde dans update().
 const UpdateSchema = z.object({
-  can_create_cartel:  z.boolean().optional(),
-  can_publish_cartel: z.boolean().optional(),
-  can_manage_team:    z.boolean().optional(),
-  role:               z.enum(['contributor', 'editor', 'admin', 'superadmin']).optional(),
+  can_manage_cartels:    z.boolean().optional(),
+  can_export_cartels:    z.boolean().optional(),
+  can_export_translated: z.boolean().optional(),
+  can_manage_content:    z.boolean().optional(),
+  can_manage_team:       z.boolean().optional(),
+  role:                  z.enum(['contributor', 'editor', 'admin', 'superadmin']).optional(),
 }).strict();
 
 const PasswordSchema = z.object({
@@ -68,13 +73,16 @@ export const TeamController = {
       const user = await UserModel.create({
         email,
         password,
-        role:              'contributor',
-        can_create_cartel: true,
-        can_publish_cartel: false,
-        can_manage_admin:  false,
-        can_create_subsite: false,
-        can_manage_team:   false,
-        home_subsite_id:   req.tenant.id,
+        role:                  'contributor',
+        // Défaut : peut gérer les cartels de son sous-site. Le reste se règle
+        // ensuite via les toggles. Un owner ne crée jamais de superadmin.
+        can_manage_cartels:    true,
+        can_export_cartels:    false,
+        can_export_translated: false,
+        can_manage_content:    false,
+        can_manage_admin:      false,
+        can_manage_team:       false,
+        home_subsite_id:       req.tenant.id,
       });
 
       const { password_hash, ...safe } = user;

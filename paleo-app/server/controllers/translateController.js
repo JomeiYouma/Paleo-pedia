@@ -8,6 +8,7 @@
 
 import { translateCartel, translateCartelToLanguage, translateLabelsAndCategories, translateFields } from '../services/translationService.js';
 import { CartelModel } from '../models/Cartel.js';
+import { resolveCartelExportScope, cartelMatchesExportScope } from '../middleware/tenant.js';
 
 export const TranslateController = {
   /**
@@ -68,9 +69,13 @@ export const TranslateController = {
       }
       const normalizedSource = sourceLang === 'en' ? 'en' : 'fr';
 
-      // Charger les cartels une seule fois
+      // Charger les cartels une seule fois, EN RESTANT dans le périmètre du
+      // compte (modèle v33) : on écarte silencieusement les ids hors périmètre
+      // pour ne pas exposer les cartels d'un autre sous-site.
+      const scope = resolveCartelExportScope(req);
       const cartels = (await Promise.all(ids.map(id => CartelModel.findById(id))))
-        .filter(Boolean);
+        .filter(Boolean)
+        .filter(c => cartelMatchesExportScope(c, scope));
 
       // Traduire en parallèle limité (5 à la fois pour éviter de saturer l'API)
       const translations = [];

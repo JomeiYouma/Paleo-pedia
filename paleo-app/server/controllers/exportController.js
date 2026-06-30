@@ -10,7 +10,28 @@ import JSZip from 'jszip';
 import path from 'path';
 import fs from 'fs';
 import { CartelModel } from '../models/Cartel.js';
+import { resolveCartelExportScope, cartelMatchesExportScope } from '../middleware/tenant.js';
 import { UPLOADS_DIR, LEGACY_UPLOADS_DIR } from './uploadController.js';
+
+/**
+ * Charge les cartels d'un export en RESTANT dans le périmètre du compte
+ * (modèle v33) : un exportateur de sous-site ne récupère que ses cartels,
+ * un compte principal que les cartels du principal, le superadmin tout.
+ *   - ids fournis  → on charge ces ids puis on écarte ceux hors périmètre.
+ *   - sans ids     → tous les cartels du périmètre (statut filtrable).
+ */
+async function loadCartelsInScope(req, { ids, status } = {}) {
+  const scope = resolveCartelExportScope(req);
+  if (ids && ids.length) {
+    const loaded = (await Promise.all(ids.map(id => CartelModel.findById(id)))).filter(Boolean);
+    return loaded.filter(c => cartelMatchesExportScope(c, scope));
+  }
+  return CartelModel.findAll({
+    status: status === 'all' ? undefined : status,
+    subsiteFilter: scope,
+    limit: 10000,
+  });
+}
 
 function classifyImagePath(imagePath) {
   if (!imagePath) return { type: 'no_image', filename: null };
@@ -38,14 +59,8 @@ export const ExportController = {
   async imageCheck(req, res) {
     try {
       const { ids, status = 'published' } = req.query || {};
-      let cartels;
-      if (ids) {
-        const idList = String(ids).split(',').map(s => s.trim()).filter(Boolean);
-        cartels = (await Promise.all(idList.map(id => CartelModel.findById(id)))).filter(Boolean);
-      } else {
-        const statusFilter = status === 'all' ? undefined : status;
-        cartels = await CartelModel.findAll({ status: statusFilter, limit: 10000 });
-      }
+      const idList = ids ? String(ids).split(',').map(s => s.trim()).filter(Boolean) : null;
+      const cartels = await loadCartelsInScope(req, { ids: idList, status });
       const issues = [];
       for (const c of cartels) {
         const { type, filename } = classifyImagePath(c.image_path);
@@ -70,16 +85,9 @@ export const ExportController = {
   async exportArchive(req, res) {
     try {
       const idsParam = req.query.ids;
-      let cartels;
-
-      if (idsParam) {
-        const ids = idsParam.split(',').map(s => s.trim()).filter(Boolean);
-        cartels = await Promise.all(ids.map(id => CartelModel.findById(id)));
-        cartels = cartels.filter(Boolean);
-      } else {
-        // Par défaut : tous les publiés
-        cartels = await CartelModel.findAll({ status: 'published', limit: 5000 });
-      }
+      const idList = idsParam ? idsParam.split(',').map(s => s.trim()).filter(Boolean) : null;
+      // Par défaut : tous les publiés DU PÉRIMÈTRE du compte.
+      const cartels = await loadCartelsInScope(req, { ids: idList, status: 'published' });
 
       if (!cartels.length) {
         return res.status(404).json({ error: 'Aucun cartel trouvé pour cet export.' });

@@ -77,6 +77,15 @@ TRUST_PROXY=1
 - Hôte MySQL Infomaniak : **`e44qd.myd.infomaniak.com`** (port 3306, MariaDB) — **pas** `localhost`.
 - Créer la base via Manager → Bases de données. Import via **phpMyAdmin**.
 
+### Migrations
+- Pas de table de suivi : les `server/migration_vNN_*.sql` sont appliquées **à la main**
+  via phpMyAdmin (idempotentes, cf. `INFORMATION_SCHEMA`).
+- **Avant un déploiement qui change le schéma**, appliquer le `.sql` correspondant **puis**
+  redémarrer le back. Ex. v33 (refonte permissions) : appliquer `migration_v33_permissions_v2.sql`
+  (ajout colonnes + backfill) **avant** de démarrer le code v33, sinon les `SELECT` sur les
+  nouvelles colonnes échouent. Le code v33 lit/écrit uniquement les nouvelles colonnes ; les
+  anciennes restent en base (rollback safe) jusqu'à un futur `v34` de `DROP`.
+
 ## Uploads
 
 - Dossier persistant **hors de l'arbre déployé** : **`/srv/customer/paleo-uploads`**

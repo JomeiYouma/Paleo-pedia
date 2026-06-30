@@ -25,16 +25,16 @@ const ChangePasswordSchema = z.object({
 /** Construit un payload JWT complet avec les permissions */
 function buildToken(user) {
   return signToken({
-    id:                 user.id,
-    email:              user.email,
-    role:               user.role,
-    can_create_cartel:  !!user.can_create_cartel,
-    can_publish_cartel: !!user.can_publish_cartel,
-    can_manage_admin:   !!user.can_manage_admin,
-    can_create_subsite: !!user.can_create_subsite,
-    can_manage_team:    !!user.can_manage_team,
-    can_export_cartel:  !!user.can_export_cartel,
-    home_subsite_id:    user.home_subsite_id ?? null,
+    id:                    user.id,
+    email:                 user.email,
+    role:                  user.role,
+    can_manage_cartels:    !!user.can_manage_cartels,
+    can_export_cartels:    !!user.can_export_cartels,
+    can_export_translated: !!user.can_export_translated,
+    can_manage_content:    !!user.can_manage_content,
+    can_manage_admin:      !!user.can_manage_admin,
+    can_manage_team:       !!user.can_manage_team,
+    home_subsite_id:       user.home_subsite_id ?? null,
   });
 }
 

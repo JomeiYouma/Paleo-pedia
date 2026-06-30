@@ -82,10 +82,10 @@ await section('Setup: resolve subsite + create tenant users', async () => {
 
   // Élever owner → can_manage_team via PATCH global (superadmin only)
   const promote = await req('PATCH', `/users/${ownerUserId}`, {
-    token: superToken, body: { can_manage_team: 1, can_publish_cartel: 1 }, expectStatus: 200,
+    token: superToken, body: { can_manage_team: 1, can_manage_cartels: 1 }, expectStatus: 200,
   });
   if (!promote.data.can_manage_team) return fail('can_manage_team toggle failed');
-  pass('owner promu can_manage_team + can_publish_cartel');
+  pass('owner promu can_manage_team + can_manage_cartels');
 
   // Contrib via POST /s/:slug/users (pas owner)
   const contribCreate = await req('POST', `/s/${SUBSITE_SLUG}/users`, {
@@ -262,6 +262,104 @@ await section('Upload anonyme autorisé + rate-limit (#2)', async () => {
     return fail(`upload anon attendu 201 ou 429, reçu ${r.status}`);
   }
   pass(`upload anonyme accepté (${r.status}) — rate-limit en vigueur`);
+});
+
+// ════════════════════════════════════════════════════════════════════════
+// Matrice de permissions v33 (modèle de capacités scopées)
+// ════════════════════════════════════════════════════════════════════════
+
+let mainContentUserId, exportOnlyUserId;
+const MAINCONTENT = { email: `test-content-${STAMP}@paleo.local`,    password: 'testpass123' };
+const EXPORTONLY  = { email: `test-exportonly-${STAMP}@paleo.local`, password: 'testpass123' };
+let mainCartelId, mainContentToken, exportOnlyToken;
+
+await section('v33 setup : comptes capacité (contenu principal, export seul)', async () => {
+  // Compte principal « gérer les contenus » (home_subsite_id = null)
+  const c = await req('POST', '/users', {
+    token: superToken,
+    body: { ...MAINCONTENT, can_manage_content: true, home_subsite_id: null },
+    expectStatus: 201,
+  });
+  mainContentUserId = c.data.id;
+  cleanupTasks.push(() => req('DELETE', `/users/${mainContentUserId}`, { token: superToken }));
+
+  // Compte « exporter (langues du site) » uniquement, rattaché au sous-site
+  const e = await req('POST', '/users', {
+    token: superToken,
+    body: { ...EXPORTONLY, can_export_cartels: true, home_subsite_id: subsiteId },
+    expectStatus: 201,
+  });
+  exportOnlyUserId = e.data.id;
+  cleanupTasks.push(() => req('DELETE', `/users/${exportOnlyUserId}`, { token: superToken }));
+
+  mainContentToken = (await req('POST', '/auth/login', { body: MAINCONTENT, expectStatus: 200 })).data.token;
+  exportOnlyToken  = (await req('POST', '/auth/login', { body: EXPORTONLY,  expectStatus: 200 })).data.token;
+  pass('comptes capacité créés + connectés');
+
+  // Un cartel principal publié (pour les tests de scope d'export)
+  const m = await req('POST', '/cartels', {
+    token: superToken,
+    body: { titre: `Main export test ${STAMP}`, description: 'main', status: 'published' },
+    expectStatus: 201,
+  });
+  mainCartelId = m.data.id;
+  cleanupTasks.push(() => req('DELETE', `/cartels/${mainCartelId}`, { token: superToken }));
+});
+
+await section('v33 export scopé : l\'owner ne voit que les cartels de son sous-site', async () => {
+  // image-check renvoie { total } = nb de cartels EN PÉRIMÈTRE parmi les ids.
+  const asOwner = await req('GET', `/export/image-check?ids=${ownerCartelId},${mainCartelId}`, {
+    token: ownerToken, expectStatus: 200,
+  });
+  if (asOwner.data.total !== 1) return fail(`owner devrait ne voir que SON cartel (total=1), reçu total=${asOwner.data.total}`);
+  pass('owner : cartel principal filtré hors périmètre (total=1)');
+
+  const asSuper = await req('GET', `/export/image-check?ids=${ownerCartelId},${mainCartelId}`, {
+    token: superToken, expectStatus: 200,
+  });
+  if (asSuper.data.total !== 2) return fail(`superadmin devrait voir les 2 (total=2), reçu total=${asSuper.data.total}`);
+  pass('superadmin : périmètre global (total=2)');
+});
+
+await section('v33 export : capacité requise (contrib sans export → 403)', async () => {
+  const r = await req('GET', '/export/image-check', { token: contribToken });
+  if (r.status !== 403) return fail(`contrib sans capacité export attendu 403, reçu ${r.status}`);
+  pass('contrib (aucune capacité export) bloqué sur /export/image-check');
+});
+
+await section('v33 export traduit : capacité dédiée (export-seul → 403 sur /translate/bulk)', async () => {
+  // Le garde requireExportTranslated bloque avant le contrôleur (pas besoin de clé OpenAI).
+  const r = await req('POST', '/translate/bulk', {
+    token: exportOnlyToken, body: { ids: [mainCartelId], sourceLang: 'fr', targetLanguage: 'Italiano' },
+  });
+  if (r.status !== 403) return fail(`export-seul (sans translated) attendu 403, reçu ${r.status}`);
+  pass('compte « export langues du site » bloqué sur la frise traduite');
+});
+
+await section('v33 contenu principal : content-manager OK, owner de sous-site refusé', async () => {
+  // Le content-manager principal peut créer un article de presse.
+  const ok = await req('POST', '/press-articles', {
+    token: mainContentToken, body: { title: `Press ${STAMP}`, url: 'https://example.org' },
+  });
+  if (ok.status !== 201) return fail(`content-manager principal attendu 201, reçu ${ok.status}`);
+  cleanupTasks.push(() => req('DELETE', `/press-articles/${ok.data.id}`, { token: superToken }));
+  pass('content-manager principal crée un article de presse');
+
+  // L'owner d'un sous-site n'a PAS accès au contenu de NIVEAU PRINCIPAL.
+  const denied = await req('POST', '/press-articles', {
+    token: ownerToken, body: { title: `Press hack ${STAMP}`, url: 'https://evil.org' },
+  });
+  if (denied.status !== 403) return fail(`owner de sous-site attendu 403 sur presse principale, reçu ${denied.status}`);
+  pass('owner de sous-site bloqué sur le contenu principal (403)');
+});
+
+await section('v33 traduction unitaire : capacité gérer-cartels requise', async () => {
+  // content-manager (sans can_manage_cartels) → 403 sur /translate.
+  const r = await req('POST', '/translate', {
+    token: mainContentToken, body: { titre: 'Bonjour', description: 'desc', target: 'en' },
+  });
+  if (r.status !== 403) return fail(`content-manager (sans gérer-cartels) attendu 403 sur /translate, reçu ${r.status}`);
+  pass('content-manager bloqué sur /translate (capacité gérer-cartels requise)');
 });
 
 // ────────────────────────────────────────────────────────────────────────
