@@ -82,7 +82,7 @@ await section('Setup: resolve subsite + create tenant users', async () => {
 
   // Élever owner → can_manage_team via PATCH global (superadmin only)
   const promote = await req('PATCH', `/users/${ownerUserId}`, {
-    token: superToken, body: { can_manage_team: 1, can_manage_cartels: 1 }, expectStatus: 200,
+    token: superToken, body: { can_manage_team: true, can_manage_cartels: true }, expectStatus: 200,
   });
   if (!promote.data.can_manage_team) return fail('can_manage_team toggle failed');
   pass('owner promu can_manage_team + can_manage_cartels');
@@ -194,12 +194,27 @@ await section('Fix #1 : owner peut éditer un cartel de son équipe (non créate
   pass('owner (can_manage_team) a édité un cartel d\'un équipier (fix #1)');
 });
 
-await section('Fix #1 : contrib NE peut PAS éditer le cartel de l\'owner', async () => {
+await section('v33 : membre can_manage_cartels édite les cartels de son sous-site (collaboratif)', async () => {
+  // En v33, « Gérer les cartels » couvre TOUT le périmètre (édition collaborative).
+  // Le contrib créé via POST /s/:slug/users a can_manage_cartels=true par défaut.
   const edit = await req('PATCH', `/s/${SUBSITE_SLUG}/cartels/${ownerCartelId}`, {
-    token: contribToken, body: { description: 'hijack attempt' },
+    token: contribToken, body: { description: 'edit collaboratif intra-sous-site' },
   });
-  if (edit.status !== 403) return fail(`contrib devrait avoir 403, reçu ${edit.status}`);
-  pass('contrib bloqué (403) sur cartel de l\'owner');
+  if (edit.status !== 200) return fail(`membre can_manage_cartels devrait éditer (200), reçu ${edit.status}`);
+  pass('membre can_manage_cartels édite un cartel de son sous-site');
+});
+
+await section('v33 : sans can_manage_cartels, l\'édition est refusée (capacité = vrai garde)', async () => {
+  // Révoque la capacité du contrib puis force une reconnexion (perms portées par le JWT).
+  await req('PATCH', `/s/${SUBSITE_SLUG}/users/${contribUserId}`, {
+    token: ownerToken, body: { can_manage_cartels: false }, expectStatus: 200,
+  });
+  const relog = await req('POST', '/auth/login', { body: CONTRIB, expectStatus: 200 });
+  const edit = await req('PATCH', `/s/${SUBSITE_SLUG}/cartels/${ownerCartelId}`, {
+    token: relog.data.token, body: { description: 'devrait échouer' },
+  });
+  if (edit.status !== 403) return fail(`membre sans capacité attendu 403, reçu ${edit.status}`);
+  pass('membre sans can_manage_cartels bloqué (403) — la capacité gate bien l\'édition');
 });
 
 await section('Isolation : owner bloqué sur cartel du site principal', async () => {
