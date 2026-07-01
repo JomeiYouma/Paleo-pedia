@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 import routes from './routes/index.js';
 import { UPLOADS_DIR, LEGACY_UPLOADS_DIR } from './controllers/uploadController.js';
-import { CartelModel } from './models/Cartel.js';
+import { injectSocialMeta } from './lib/socialMeta.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProd = process.env.NODE_ENV === 'production';
@@ -23,54 +23,9 @@ if (!process.env.JWT_SECRET) {
   }
 }
 
-// ── SEO : balises Open Graph pour les pages cartel ───────────
-// Un SPA pose ses balises en JS, que les crawlers des réseaux sociaux
-// n'exécutent pas. On injecte donc les balises OG (titre, description, image
-// du cartel) directement dans le HTML servi pour /cartel/:id.
-const escapeHtml = (s = '') => String(s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-
-const stripHtml = (s = '') => String(s).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-
-// URL absolue d'image depuis les formats stockés (http…, /api/images/…,
-// images/…). cf. memory « legacy image paths ».
-const absoluteImageUrl = (base, p) => {
-  if (!p) return null;
-  if (/^https?:\/\//i.test(p)) return p;
-  if (p.startsWith('/')) return base + p;
-  return base + '/api/images/' + p.replace(/^images\//, '');
-};
-
-// Injecte le <title> + les balises OG/Twitter du cartel dans index.html.
-const injectCartelMeta = (html, cartel, pageUrl, base) => {
-  const title = escapeHtml(cartel.titre || cartel.titre_en || 'Cartel');
-  const descRaw = stripHtml(cartel.description || cartel.description_en || '');
-  const desc = escapeHtml(descRaw.length > 200 ? descRaw.slice(0, 197) + '…' : descRaw);
-  const img = absoluteImageUrl(base, cartel.image_path);
-  const tags = [
-    `<title>${title} Paléo-Énergétique</title>`,
-    `<meta name="description" content="${desc}" />`,
-    `<meta property="og:type" content="article" />`,
-    `<meta property="og:site_name" content="Paléo-Énergétique" />`,
-    `<meta property="og:locale" content="fr_FR" />`,
-    `<meta property="og:title" content="${title}" />`,
-    `<meta property="og:description" content="${desc}" />`,
-    `<meta property="og:url" content="${escapeHtml(pageUrl)}" />`,
-    img ? `<meta property="og:image" content="${escapeHtml(img)}" />` : '',
-    `<meta name="twitter:card" content="${img ? 'summary_large_image' : 'summary'}" />`,
-    `<meta name="twitter:title" content="${title}" />`,
-    `<meta name="twitter:description" content="${desc}" />`,
-    img ? `<meta name="twitter:image" content="${escapeHtml(img)}" />` : '',
-  ].filter(Boolean).join('\n  ');
-  // On retire le <title> et les balises OG/Twitter/description par défaut du
-  // site (sinon doublons → un crawler peut retenir l'image générique au lieu
-  // de celle du cartel), puis on injecte celles du cartel.
-  return html
-    .replace(/<title>[\s\S]*?<\/title>/i, '')
-    .replace(/\s*<meta\b[^>]*\b(?:property="og:[^"]*"|name="twitter:[^"]*"|name="description")[^>]*>/gi, '')
-    .replace('</head>', `  ${tags}\n</head>`);
-};
+// ── SEO : balises Open Graph servies côté serveur ────────────
+// La logique (résolution cartel / sous-site / site principal + réécriture des
+// balises) vit dans lib/socialMeta.js — cf. injectSocialMeta plus bas.
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -193,29 +148,25 @@ if (isProd && fs.existsSync(distPath)) {
   app.get('/sitemap.xml', (req, res) =>
     res.sendFile(path.join(distPath, PEDIA_HOSTS.has(req.hostname) ? 'sitemap-pedia.xml' : 'sitemap.xml')));
 
-  app.use(express.static(distPath));
+  // index: false → les requêtes « de répertoire » (« / », « /frise »…) ne sont
+  // PAS court-circuitées par le index.html statique : elles tombent dans le
+  // fallback ci-dessous pour recevoir leurs balises OG contextuelles. Sinon un
+  // sous-site partagé à sa racine hériterait des balises génériques du site.
+  app.use(express.static(distPath, { index: false }));
 
-  // SEO : pages cartel → balises Open Graph injectées (image du cartel sur les
-  // réseaux sociaux). Doit précéder le fallback SPA. Repli silencieux sur
-  // index.html si le cartel est introuvable ou en cas d'erreur.
-  app.get(['/cartel/:id', '/site/:slug/cartel/:id'], async (req, res, next) => {
+  // index.html est figé après le build → lu une fois au démarrage.
+  const indexHtml = fs.readFileSync(path.join(distPath, 'index.html'), 'utf8');
+
+  // Fallback SPA : toute route non-API renvoie index.html, avec les balises
+  // Open Graph adaptées au contexte (cartel / sous-site / site principal — cf.
+  // lib/socialMeta.js). Repli silencieux sur le HTML brut en cas d'erreur.
+  app.get('*', async (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
-    const indexPath = path.join(distPath, 'index.html');
     try {
-      const html = fs.readFileSync(indexPath, 'utf8');
-      const cartel = await CartelModel.findById(req.params.id);
-      if (!cartel) return res.send(html);
-      const base = `${req.protocol}://${req.get('host')}`;
-      res.send(injectCartelMeta(html, cartel, base + req.originalUrl, base));
+      res.type('html').send(await injectSocialMeta(indexHtml, req));
     } catch {
-      res.sendFile(indexPath);
+      res.type('html').send(indexHtml);
     }
-  });
-
-  // Fallback : toute route non-API renvoie index.html
-  app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api')) return next();
-    res.sendFile(path.join(distPath, 'index.html'));
   });
 }
 

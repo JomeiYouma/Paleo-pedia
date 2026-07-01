@@ -1,3 +1,8 @@
+// ⚠️ Ce fichier est AUSSI importé côté serveur (server/lib/socialMeta.js lit
+// HOST_TO_SUBSITE_SLUG pour les balises Open Graph). Il doit donc rester pur :
+// aucun import (surtout pas d'asset/CSS Vite), et toute API navigateur gardée
+// derrière `typeof window`. Sinon le serveur Node ne démarre plus.
+
 // URL canonique du site principal (le hub Paléo-Énergétique). Utilisée pour
 // les liens de retour depuis les hosts satellites (sous-sites, vitrine Pédia)
 // qui ne peuvent pas pointer vers `/`. À mettre à jour si on change le domaine.

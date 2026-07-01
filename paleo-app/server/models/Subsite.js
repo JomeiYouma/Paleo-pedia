@@ -43,6 +43,20 @@ export const SubsiteModel = {
     }));
   },
 
+  /** Un sous-site par slug — version légère (une seule requête, sans les
+   *  partenaires). Suffit pour construire les balises Open Graph servies à
+   *  chaque chargement de page (cf. lib/socialMeta.js) sans payer les requêtes
+   *  partenaires de findBySlug. */
+  async findMetaBySlug(slug) {
+    const [[row]] = await pool.query(`${BASE_SELECT} WHERE s.slug = ?`, [slug]);
+    if (!row) return null;
+    return {
+      ...row,
+      content_blocks: parseBlocks(row.content_blocks),
+      content_blocks_en: parseBlocks(row.content_blocks_en),
+    };
+  },
+
   /** Un sous-site par slug, avec ses partenaires (picks + obligatoires + exclusifs) */
   async findBySlug(slug) {
     const [[row]] = await pool.query(`${BASE_SELECT} WHERE s.slug = ?`, [slug]);
