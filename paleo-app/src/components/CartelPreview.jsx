@@ -24,7 +24,7 @@ const parseMdLine = (text, key) => {
     return <React.Fragment key={key}>{parts}</React.Fragment>;
 };
 
-const CartelPreview = ({ data, isDraft = false, showExports = false }) => {
+const CartelPreview = ({ data, isDraft = false, showExports = false, variant = null }) => {
     const { t, i18n } = useTranslation();
     const [exporting, setExporting] = useState(false);
     const [exportLabel, setExportLabel] = useState('');
@@ -73,7 +73,7 @@ const CartelPreview = ({ data, isDraft = false, showExports = false }) => {
 
 
     return (
-        <div className="cartel-container">
+        <div className={`cartel-container${variant === 'frise' ? ' frise' : ''}`}>
             <div className="cartel-image-column">
                 {imgSrc ? (
                     <div className="cartel-image-wrapper" style={{ position: 'relative' }}>

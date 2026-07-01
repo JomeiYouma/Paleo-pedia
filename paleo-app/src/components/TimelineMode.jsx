@@ -412,14 +412,16 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
     return (
         <div style={{
             height: 'calc(100vh - 180px)',
-            // minHeight abaissé (600→500) et chrome resserré (marges/gap) pour
-            // donner plus de hauteur au cartel sur les écrans standards (~768px),
-            // où le panneau était trop court et imposait un scroll permanent.
-            minHeight: '500px',
+            // Priorité à la LISIBILITÉ du cartel : on garde ~un plein écran sur
+            // les grands moniteurs (height ci-dessus) mais on impose un plancher
+            // haut. Sur écran court, le cartel garde une hauteur confortable et
+            // la frise est simplement « descendue » sous la ligne de flottaison
+            // (on la rejoint d'un petit scroll) plutôt que de comprimer le texte.
+            minHeight: '640px',
             display: 'flex',
             flexDirection: 'column',
-            marginTop: '10px',
-            gap: '12px',
+            marginTop: '6px',
+            gap: '8px',
             padding: '0 4px',
         }}>
             {/* ════════════════════════════════════════════════════════
@@ -445,15 +447,18 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                         height: isMobile ? 'auto' : '100%',
                         flex: isMobile ? '1 1 0%' : undefined,
                         minHeight: isMobile ? 0 : undefined,
-                        maxHeight: isMobile ? 'none' : 'calc(100vh - 240px)',
+                        // Plus de plafond lié au viewport : le cartel remplit toute
+                        // la zone (qui peut dépasser l'écran), au lieu d'être rogné
+                        // à quelques lignes sur les fenêtres courtes.
+                        maxHeight: 'none',
                         width: isMobile ? '100%' : '80%',
                         maxWidth: '1200px',
                         display: 'flex',
                         flexDirection: 'column',
-                        margin: isMobile ? '4px 0 0' : '12px 0',
+                        margin: isMobile ? '4px 0 0' : '6px 0',
                     }}>
                         <div className="cartel-scroll-area" style={{ flex: 1, overflowY: 'auto' }}>
-                            <CartelPreview key={currentCartel.id} data={currentCartel} isDraft={isAdmin && currentCartel.status !== 'published'} />
+                            <CartelPreview key={currentCartel.id} data={currentCartel} isDraft={isAdmin && currentCartel.status !== 'published'} variant="frise" />
                         </div>
 
                         {/* Admin Actions — hors carte sur desktop, dans le coin sur mobile */}
@@ -515,6 +520,7 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                 borderRadius: 'var(--radius-md)',
                 overflow: 'hidden',
                 flexShrink: 0,
+                marginBottom: '24px',
             }}>
                 {/* En-tête de la frise : signe le rôle de cette zone */}
                 <div style={{

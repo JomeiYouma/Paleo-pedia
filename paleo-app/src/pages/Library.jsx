@@ -8,7 +8,6 @@ import ConfirmModal from '../components/ConfirmModal';
 import LongOperationOverlay from '../components/LongOperationOverlay';
 import { getYearForSort } from '../utils/helpers';
 import { Download, Trash2, CheckSquare, Square, Edit, LayoutList, CalendarDays, Map as MapIcon, Search, GitGraph, FolderPlus, Package, FileText, X, ImageIcon as ImgIcon, SlidersHorizontal } from 'lucide-react';
-import { useIsMobile } from '../hooks/useIsMobile';
 import { generateZip, generatePdf, generateArchive } from '../utils/zipGenerator';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -65,7 +64,9 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, fixedWorkshopId 
     const [adminListMode, setAdminListMode] = useState(false);
     const viewMode = adminListMode ? 'list' : viewModeProp;
     const [selectedCats, setSelectedCats]   = useState([]);
-    const isMobile = useIsMobile();
+    // Chips catégories repliées par défaut (desktop ET mobile) : la frise gagne
+    // la place immédiatement. Le bouton « Afficher les catégories » les déploie
+    // à la demande.
     const [filtersOpen, setFiltersOpen]     = useState(false);
     const [generatingZip, setGeneratingZip] = useState(false);
     const [busyLabel, setBusyLabel]         = useState('');
@@ -328,7 +329,11 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, fixedWorkshopId 
         :                                t('library.viewFrise',       'Frise');
 
     return (
-        <div style={{ padding: '20px 20px 0' }}>
+        // overflow-x: clip → supprime la barre de défilement horizontale parasite
+        // (quelques px de débordement) sans créer de conteneur de scroll ni casser
+        // le header sticky. « clip » plutôt que « hidden » pour ne pas promouvoir
+        // l'axe vertical en « auto ».
+        <div style={{ padding: '20px 20px 0', overflowX: 'clip' }}>
 
             {/* Progress overlay : exports lourds (ZIP/PDF/archive) + attribution
                 d'atelier en bulk. busyLabel donne le contexte à l'utilisateur. */}
@@ -385,9 +390,10 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, fixedWorkshopId 
                     </div>
                 </div>
 
-                {/* Filtres catégories — repliés derrière un bouton sur mobile
-                   pour ne pas noyer l'écran sous les chips. */}
-                {isMobile && allCategories.length > 0 && (
+                {/* Bouton Afficher/Masquer les catégories — disponible partout
+                   (desktop compris) : replier les chips rend de la hauteur à la
+                   frise. Replié par défaut sur mobile, déplié sur desktop. */}
+                {allCategories.length > 0 && (
                     <button
                         type="button"
                         onClick={() => setFiltersOpen(o => !o)}
@@ -401,11 +407,11 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, fixedWorkshopId 
                         }}
                     >
                         <SlidersHorizontal size={16} />
-                        {filtersOpen ? t('library.hideFilters', 'Masquer les filtres') : t('library.showFilters', 'Afficher les filtres')}
+                        {filtersOpen ? t('library.hideCategories', 'Masquer les catégories') : t('library.showCategories', 'Afficher les catégories')}
                         {selectedCats.length > 0 ? ` (${selectedCats.length})` : ''}
                     </button>
                 )}
-                {(!isMobile || filtersOpen) && (
+                {filtersOpen && (
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px', alignItems: 'center' }}>
                     {/* Chip catégorie fixe du sous-site (non supprimable) */}
                     {fixedCategory && (

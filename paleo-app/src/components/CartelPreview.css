@@ -21,6 +21,9 @@
     justify-content: space-between;
 }
 
+/* Pas de cadre : l'image repose directement sur le fond de la page. Les visuels
+   ayant des formats très variés, un carré gris les enfermait et rendait mal ;
+   on garde seulement le centrage + object-fit pour qu'ils flottent proprement. */
 .cartel-image-wrapper {
     flex: 1;
     min-height: 0;
@@ -29,9 +32,6 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background: var(--color-primary-soft);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
 }
 
 .cartel-img {
@@ -264,6 +264,44 @@
     background-color: var(--color-primary-hover);
 }
 
+/* ════════════════════════════════════════════════════════════════
+   VARIANTE « FRISE » — un seul cartel plein cadre à la fois.
+   On resserre le chrome (marges titre/année/pied) et on sort le bouton
+   « En savoir plus » du flux (surimpression, coin bas-droit) pour rendre
+   un maximum de hauteur au corps de texte : sur écran court, il ne restait
+   sinon que 2-3 lignes lisibles.
+   ════════════════════════════════════════════════════════════════ */
+.cartel-container.frise .cartel-card {
+    padding: 16px 24px 18px;
+    min-height: 0;
+}
+.cartel-container.frise .cartel-year {
+    margin-bottom: 2px;
+}
+.cartel-container.frise .cartel-title {
+    margin-bottom: 8px;
+}
+.cartel-container.frise .cartel-meta-row {
+    margin-bottom: 8px;
+}
+.cartel-container.frise .cartel-description {
+    padding-bottom: 6px;
+}
+.cartel-container.frise .cartel-footer {
+    margin-top: 10px;
+    padding-top: 8px;
+    padding-right: 150px; /* réserve la place du bouton flottant */
+}
+/* Bouton « En savoir plus » en surimpression sur le coin bas-droit du cartel :
+   il ne pousse plus le texte vers le bas (gain d'une ligne + espace du bouton). */
+.cartel-container.frise .cartel-qr-link {
+    position: absolute;
+    right: 16px;
+    bottom: 14px;
+    margin: 0;
+    z-index: 3;
+}
+
 /* ── Mobile (≤768px) : image et texte EMPILÉS au lieu du côte-à-côte étroit.
    Titre/année réduits, méta désempilée, description à gauche (la justification
    crée de gros trous sur écran étroit). ── */
@@ -313,5 +351,17 @@
     }
     .cartel-qr-link {
         text-align: left;
+    }
+    /* En pile (mobile), le cartel s'étire librement : le bouton reprend sa
+       place dans le flux plutôt qu'en surimpression, et le pied n'a plus
+       besoin de réserver d'espace à droite. */
+    .cartel-container.frise .cartel-qr-link {
+        position: static;
+        right: auto;
+        bottom: auto;
+        margin: 8px 0 12px;
+    }
+    .cartel-container.frise .cartel-footer {
+        padding-right: 0;
     }
 }

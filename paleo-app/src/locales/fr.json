@@ -26,7 +26,9 @@
         "deleteList": "Supprimer",
         "empty": "Aucun cartel à afficher.",
         "loading": "Chargement...",
-        "generating": "Génération en cours..."
+        "generating": "Génération en cours...",
+        "showCategories": "Afficher les catégories",
+        "hideCategories": "Masquer les catégories"
     },
     "create": {
         "pageTitle": "Créer / Modifier un cartel",
