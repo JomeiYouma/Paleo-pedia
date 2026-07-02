@@ -7,6 +7,8 @@
 >
 > 👉 Ce manuel **complète** le *Manuel d'utilisation d'un site dédié* (côté propriétaire de sous-site). Quand un sujet y est traité en détail, un renvoi vous y dirige.
 
+> 🧭 **Par où commencer ?** Pressé(e) ? Filez aux **[recettes pas-à-pas](#26-modes-opératoires-pas-à-pas-recettes)** (chapitre 26) et à la **[FAQ](#27-faq)** (chapitre 27). Pour bien démarrer, lisez d'abord : l'**[architecture des « quatre faces »](#2-vue-densemble--larchitecture-de-la-plateforme)** (chapitre 2), les **[rôles et permissions](#3-les-rôles-et-les-permissions--qui-peut-faire-quoi)** (chapitre 3) et — le point le plus délicat de la plateforme — les **[deux files de modération](#13-les-deux-files-de-modération-à-ne-jamais-confondre)** (chapitre 13).
+
 ---
 
 ## Sommaire
@@ -54,7 +56,7 @@
 - **Atelier** : un groupe de cartels, **invisible du public**, utilisé pour organiser et pour alimenter certains sous-sites. Un atelier peut être affiché en **mode immersif** (borne/expo).
 - **Catégorie** : étiquette thématique **publique** d'un cartel (avec couleur).
 - **Superadmin / Administrateur général** : la personne qui gère **toute** la plateforme. Techniquement, c'est la permission **« Gérer l'administration »**.
-- **Owner / Propriétaire de sous-site** : la personne qui administre **un** sous-site précis. Techniquement, c'est la permission **« Gérer équipe »** rattachée à un sous-site.
+- **Owner / Propriétaire de sous-site** : la personne qui administre **un** sous-site précis. Techniquement, c'est la capacité **« Gérer l'équipe »** rattachée à un sous-site.
 - **Soumettre au site principal** : proposer qu'un cartel publié sur un sous-site apparaisse **aussi** sur le site principal (après validation du superadmin).
 - **Slug** : la partie « adresse » d'un sous-site dans l'URL (`paleo-h2o` dans `…/site/paleo-h2o`).
 
@@ -68,12 +70,14 @@ Une **seule application** (un seul code, une seule base de données) sert **quat
 |---|---|---|---|
 | **Site principal** (Paléo-Énergétique) | `/` (ex. `paleo-energetique.org`) | Le site vitrine institutionnel : accueil, à propos, prestations, boutique, museum, presse, contact… + l'accès à la frise globale. | Grand public |
 | **L'application** | `/app` | La **frise** (chronologie/carte/arborescence) de tous les cartels publiés **et** l'espace d'administration (`/app/admin/…`, `/app/manage/…`). | Public (frise) + administrateurs (gestion) |
-| **Paléo-Pédia** (vitrine) | `/pedia` | Présente l'écosystème entier en une vue interactive (le « système solaire » des sous-sites). Pas de connexion ici. | Grand public |
+| **Paléo-Pédia** (vitrine) | `/pedia` (ou `paleo-pedia.org`) | Présente l'écosystème entier en une vue interactive (le « système solaire » des sous-sites). **Connexion + accès administration désormais possibles** (voir [§6](#6-la-vitrine-paléo-pédia-et-lécosystème)). | Grand public + administrateurs |
 | **Sous-sites** | `/site/:slug` (ou un domaine dédié, ex. `paleo-h2o.org`) | Des mini-sites thématiques autonomes, chacun avec sa frise, sa couleur, son équipe. | Grand public + propriétaire du sous-site |
 
 > 💡 **Une seule base, plusieurs vitrines.** Un cartel vit à un seul endroit en base, mais peut être affiché sur son sous-site **et** sur le site principal (s'il a été validé). C'est tout l'objet du circuit de soumission ([chapitre 13](#13-les-deux-files-de-modération-à-ne-jamais-confondre)).
 
-> ⚠️ **Domaine dédié : c'est un branchement technique, codé en dur.** Un sous-site peut être servi sur son **propre nom de domaine** (`paleo-h2o.org`). Pour cela, **deux choses** sont nécessaires : (1) la configuration DNS + serveur côté hébergement, et (2) **l'ajout du domaine dans le code de l'application** (une correspondance « domaine → sous-site »). Aujourd'hui, **seul `paleo-h2o.org` est branché**. Ouvrir un nouveau domaine dédié n'est donc **pas** une simple manipulation dans l'admin : cela demande **une petite intervention de développement**. Tant qu'un sous-site n'a pas de domaine dédié, il reste accessible via `…/site/<slug>`.
+> 💡 **Créer un sous-site se fait entièrement depuis l'admin** ([chapitre 8](#8-les-sous-sites-thématiques--créer-et-piloter)), sans aucune manipulation technique. Dès sa création, il est en ligne à l'adresse `…/site/<slug>`.
+>
+> ⚠️ **Si vous voulez en plus lui donner une adresse dédiée** (un nom de domaine à lui, par ex. `paleo-h2o.org` au lieu de `…/site/paleo-h2o`), là, **ça ne se règle pas dans l'admin** : il faut (1) la configuration DNS + serveur côté hébergement et (2) l'ajout de la correspondance « domaine → sous-site » dans le code de l'application. C'est donc une **petite intervention de développement**, à demander — pas une case à cocher. Aujourd'hui, deux sous-sites en bénéficient — `paleo-h2o.org` (→ `paleo-h2o`) et `aero.paleo-energetique.org` (→ `paleo-aerospace`) — et la vitrine **Paléo-Pédia** a le sien, `paleo-pedia.org`. *(Détail des domaines, redirections et SEO en [§23.4](#234-domaines-redirections-et-seo-multi-domaines).)*
 
 > 📸 **[Capture A01]** — Schéma d'ensemble : le site principal au centre, les sous-sites en orbite, la vitrine Pédia.
 
@@ -81,30 +85,36 @@ Une **seule application** (un seul code, une seule base de données) sert **quat
 
 ## 3. Les rôles et les permissions : qui peut faire quoi
 
-C'est le chapitre le plus important pour un administrateur. **Il recèle un piège à connaître.**
+C'est le chapitre le plus important pour un administrateur : tout le contrôle d'accès en découle.
 
 ### 3.1 Le principe : des permissions, pas des « rôles »
 
-Dans l'application, un compte ne porte **pas** un rôle unique du type « administrateur » qui déciderait de tout. Les droits reposent sur **cinq permissions indépendantes** (des interrupteurs oui/non), que l'on combine :
+Les droits d'un compte reposent sur des **capacités indépendantes** (des interrupteurs oui/non) que l'on combine. **Toutes sont bornées au périmètre du compte** — le **site principal**, ou **un sous-site précis** (voir le rattachement plus bas). Un même interrupteur ne donne jamais de pouvoir *hors* de ce périmètre.
 
-| Permission (interrupteur) | Ce qu'elle autorise | Défaut à la création |
+| Capacité (interrupteur) | Ce qu'elle autorise (dans le périmètre du compte) | Défaut à la création |
 |---|---|---|
-| **Créer cartels** | Créer de nouveaux cartels. | ✅ Activée |
-| **Publier** | Publier un cartel (sinon il reste en brouillon / en attente). | ❌ |
-| **Gérer équipe** | = **Propriétaire (owner)** : inviter et gérer les membres de **son** contexte (son sous-site, ou le site principal). | ❌ |
-| **Gérer l'administration** | = **Superadmin / administrateur général** : accès à **toute** l'administration de la plateforme. | ❌ |
-| **Créer sous-sites** | Créer de nouveaux sous-sites. | ❌ |
+| **Gérer les cartels** | Créer, éditer, mettre en brouillon / archive, **publier** les cartels, et **auto-traduire** l'autre langue. | ✅ Activée |
+| **Exporter (langues du site)** | Accès **lecture seule** au gestionnaire : sélectionner et **exporter** les cartels (PDF, images, archive) **dans les langues déjà saisies** (FR / EN). Aucune autre action. | ❌ |
+| **Exporter (autre langue)** | Comme ci-dessus, **plus** la **frise et le PDF traduits à la volée** vers une langue cible. **Inclut** l'export simple. | ❌ |
+| **Gérer les contenus** | Contenus **hors cartels** : partenaires et équipe « À propos » ; **au niveau principal** seulement, aussi presse, missions, prestations, boutique. | ❌ |
+| **Gérer l'équipe** | = **Propriétaire (owner)** : inviter et gérer les comptes de son périmètre, et **leur accorder des capacités**. | ❌ |
 
-À cela s'ajoute un rattachement : le **site de rattachement** du compte. S'il est vide, le compte appartient au **site principal** ; sinon il appartient à **un sous-site précis**.
+À cela s'ajoutent deux éléments qui ne figurent **pas** parmi les interrupteurs ci-dessus :
 
-> ⚠️ **Piège technique à connaître (pour ne pas être induit en erreur).** Il existe bien dans la base un champ « rôle » historique (contributeur / éditeur / admin / superadmin), **mais il n'est utilisé nulle part pour décider des droits** et n'apparaît dans **aucun écran**. Ne vous y fiez jamais : **seuls les cinq interrupteurs ci-dessus comptent.**
+- **Administration générale** = **superadmin**. Ce n'est pas une case à cocher dans la liste ci-dessus : un superadmin porte un **badge « Superadmin »** et dispose de **toutes** les capacités **partout** (tous les sous-sites), plus ce qui n'appartient qu'à lui : **créer / supprimer des sous-sites**, **valider les soumissions**, régler la plateforme, gérer les comptes, les clés API, les emails, l'import.
+- Le **site de rattachement** du compte. S'il est vide, le compte appartient au **site principal** ; sinon il appartient à **un sous-site précis**. C'est lui qui définit le **périmètre** de toutes les capacités ci-dessus.
+
+> 💡 **Superadmin et owner ont implicitement toutes les capacités dans leur périmètre.** Inutile de leur cocher « Gérer les cartels » ou « Exporter » un par un : *Administration générale* (partout) et *Gérer l'équipe* (sur son sous-site) les incluent déjà. On ne coche les interrupteurs individuels que pour un compte **sans** ces deux statuts.
+
+> ℹ️ **Le champ « rôle ».** La base contient un champ « rôle » historique (contributeur / éditeur / admin / superadmin) qui **n'a aucun effet** sur les droits et n'apparaît dans **aucun écran**. Seules **les capacités ci-dessus (plus le statut superadmin)** déterminent ce qu'un compte peut faire.
 
 ### 3.2 Les deux figures à retenir
 
 - **Administrateur général (superadmin)** = l'interrupteur **« Gérer l'administration »** est activé. Il voit et gère **tout** : tous les sous-sites, tous les cartels, la file de validation, les réglages, les clés API, les comptes, les emails. Son site de rattachement est en général le **site principal**.
-- **Propriétaire de sous-site (owner)** = l'interrupteur **« Gérer équipe »** est activé **et** il est rattaché à **un sous-site**. Son pouvoir est strictement **borné à son sous-site** : il gère ses cartels, sa page d'accueil, son équipe, ses partenaires. Il ne voit pas la file de validation et ne peut pas toucher aux autres sous-sites.
+- **Propriétaire de sous-site (owner)** = l'interrupteur **« Gérer l'équipe »** est activé **et** il est rattaché à **un sous-site**. Son pouvoir est strictement **borné à son sous-site** : il gère ses cartels, sa page d'accueil, ses partenaires, son équipe et ses contenus. Il ne voit pas la file de validation et ne peut pas toucher aux autres sous-sites.
+- **Compte exportateur** = une **capacité d'export** est activée — **« Exporter (langues du site) »** et/ou **« Exporter (autre langue) »** — souvent **seule**, sans aucun autre droit. C'est un accès **lecture seule** au gestionnaire, limité aux **cartels publiés**, qui ne permet **que** de les exporter (et, avec la seconde capacité, de les exporter traduits à la volée). Cas d'usage : un prestataire d'impression ou d'exposition qui doit récupérer les cartels **sans rien pouvoir modifier**. Voir [§12.6](#126-le-compte-exportateur-accès-lecture-seule).
 
-> 💡 En une phrase : **« Gérer l'administration » = pouvoir global ; « Gérer équipe » + un sous-site = pouvoir local.**
+> 💡 En une phrase : **« Administration générale » = pouvoir global ; « Gérer l'équipe » + un sous-site = pouvoir local sur ce sous-site ; une capacité « Exporter » seule = lecture seule pour l'export.**
 
 Le **personnel commercial** n'a pas de rôle technique distinct : on lui crée un compte avec les permissions adaptées (souvent superadmin s'il doit tout montrer/gérer, ou un accès en lecture/création selon le besoin).
 
@@ -114,7 +124,9 @@ Le **personnel commercial** n'a pas de rôle technique distinct : on lui crée u
 |---|:---:|:---:|:---:|:---:|
 | Consulter les pages publiques | ✅ | ✅ | ✅ | ✅ |
 | Proposer un cartel | ✅ *(en attente)* | ✅ *(selon droits)* | ✅ | ✅ |
-| Publier un cartel | ❌ | ✅ *(si « Publier »)* | ✅ *(les siens)* | ✅ |
+| Créer / éditer / publier un cartel | ❌ | ✅ *(si « Gérer les cartels »)* | ✅ *(les siens)* | ✅ |
+| Exporter des cartels publiés *(lecture seule)* | ❌ | ✅ *(si une capacité « Exporter »)* | ✅ | ✅ |
+| Gérer les contenus hors cartels *(partenaires, équipe « À propos »…)* | ❌ | ✅ *(si « Gérer les contenus »)* | ✅ *(le sien)* | ✅ |
 | Gérer la page d'accueil / l'équipe d'**un** sous-site | ❌ | ❌ | ✅ *(le sien)* | ✅ *(tous)* |
 | Gérer **tous** les sous-sites, en créer | ❌ | ❌ | ❌ | ✅ |
 | Valider les soumissions sous-site → site principal | ❌ | ❌ | ❌ | ✅ |
@@ -130,7 +142,7 @@ Le **personnel commercial** n'a pas de rôle technique distinct : on lui crée u
 
 ### 4.1 Se connecter
 
-1. Sur n'importe quelle page du site (principal ou sous-site), cliquez sur **« Connexion »** en haut à droite (icône cadenas).
+1. Sur n'importe quelle page du site (principal, sous-site **ou la vitrine Paléo-Pédia**), cliquez sur **« Connexion »** en haut à droite (icône cadenas). *(Sur la Pédia, le bouton s'intitule **« Se connecter »** et ouvre une petite fenêtre dédiée — voir [§6.1](#61-connexion-et-administration-depuis-la-pédia).)*
 2. La fenêtre **« Connexion / Accès administrateur »** s'ouvre. Saisissez votre **e-mail** et votre **mot de passe**.
 3. En cas de succès, vous êtes redirigé(e) vers l'espace d'administration (`/app/admin`). En cas d'échec, le message est volontairement neutre : **« Identifiants incorrects »** (il ne dit jamais si c'est l'email ou le mot de passe qui est faux — c'est une protection contre les tentatives de devinette).
 
@@ -170,13 +182,13 @@ Le menu de navigation du site principal (libellés exacts) : **Accueil · Frise 
 
 ### 5.2 Le pied de page (footer)
 
-Présent sur **toutes** les pages (choix volontaire d'accessibilité). Il contient le nom **Paléo-Énergétique**, la signature *« Une contre-histoire de l'énergie pour inspirer le futur. »*, une colonne de liens (La Frise Chronologique, Appel à participation, Presse, Partenaires, Nous contacter, Mentions légales, Politique de confidentialité) et **© {année} Atelier 21**. Le footer est **figé dans le code** (non modifiable depuis l'admin).
+Présent sur **toutes** les pages (choix volontaire d'accessibilité). Il contient le nom **Paléo-Énergétique**, la signature *« Une autre histoire de l'énergie pour inspirer le futur. »*, une colonne de liens (La Frise Chronologique, Appel à participation, Presse, Partenaires, Nous contacter, Mentions légales, Politique de confidentialité) et **© {année} Atelier 21**. Le footer est **figé dans le code** (non modifiable depuis l'admin).
 
 ### 5.3 Les pages, une par une
 
 | Page | Adresse | Ce qu'elle montre | Modifiable depuis l'admin ? |
 |---|---|---|---|
-| **Accueil** | `/` | Bannière « Une contre-histoire de l'énergie » + 2 boutons (Explorer la Frise / Explorer une thématique) + 3 cartes (La Démarche, Rétrofutur Museum, Nos Prestations). Le bouton « Explorer une thématique » ouvre une fenêtre listant les **sous-sites** (ou, à défaut, les **catégories**). | **Non** pour les textes (figés). La liste des thématiques est **dynamique**. |
+| **Accueil** | `/` | **Hero** « Une autre histoire de l'énergie » (fond clair, illustrations des personnages **Mouchot** & **Maria** et de leurs inventions, liseré accent jaune en bas) + sous-titre *« Ressusciter les techniques disparues pour réinventer notre futur énergétique. »* + **2 boutons** : **« Explorer la Frise »** (→ la frise) et **« Proposer une invention »** (→ le formulaire de cartel, ouvert aux visiteurs). Puis **3 cartes** (La Démarche → `/presentation`, Rétrofutur Museum → `/museum`, Nos Prestations → `/prestations`). | **Non** pour les textes (figés). Les 3 cartes pointent vers des pages existantes. |
 | **À propos** | `/presentation` | Histoire, mission, exemples, citation, **l'équipe**, **les partenaires**, liens « Pour aller plus loin ». | **Oui partiellement** : l'**équipe** via *Admin → Équipe (page À propos)* ([§16.2](#162-équipe-de-la-page--à-propos-)) ; les **partenaires** via *Admin → Partenaires* ([chapitre 18](#18-partenaires-bibliothèque-centralisée)). Le reste est figé. |
 | **Prestations** | `/prestations` | Cartes de prestations (offres) avec plaquettes consultables en ligne. | **Oui**, entièrement : *Admin → Prestations* ([§16.4](#164-prestations)). |
 | **Boutique** | `/boutique` | Vitrine de livres / jeux / autres, **avec liens vers la boutique externe** (PrestaShop). | **Oui** : *Admin → Boutique* ([§16.5](#165-boutique-liens-externes)). |
@@ -187,7 +199,7 @@ Présent sur **toutes** les pages (choix volontaire d'accessibilité). Il contie
 | **Mentions légales** | `/mentions-legales` | Éditeur, hébergement, propriété intellectuelle, accès aux sites dédiés, données. | **Non** (figé). La date « dernière mise à jour » affiche toujours la date du jour. |
 | **Politique de confidentialité** | `/politique-confidentialite` | Données collectées, finalités, durées, cookies, droits RGPD, CNIL. | **Non** (figé). |
 
-> 📸 **[Capture A03]** — La page d'accueil et la fenêtre « Explorer une thématique ».
+> 📸 **[Capture A03]** — Le hero de la page d'accueil (« Une autre histoire de l'énergie », personnages Mouchot & Maria, boutons « Explorer la Frise » et « Proposer une invention »).
 
 ### 5.4 Les deux formulaires que le public peut envoyer
 
@@ -210,7 +222,12 @@ Pour **les deux**, voici exactement ce qui se passe à l'envoi (détail au [chap
 À connaître pour ne pas avoir de mauvaise surprise côté visibilité :
 - **Plan du site (sitemap) figé.** Le fichier `sitemap.xml` est **maintenu à la main** et ne liste que **les 10 pages principales** du site institutionnel. Il **n'inclut ni les sous-sites, ni les fiches de cartels**. Si vous ajoutez une nouvelle page principale importante, pensez à l'y ajouter (intervention technique).
 - **Robots.** Les moteurs de recherche sont autorisés sur les pages publiques mais **bloqués sur `/app` et l'API** (logique : l'application et ses données ne sont pas du contenu à indexer).
-- **Partage social des fiches de cartels.** Quand on partage le lien d'une fiche de cartel, le serveur génère un **aperçu social** (titre + image + description tronquée). En revanche, les fiches de cartels **ne sont pas dans le sitemap** : elles ne sont donc pas activement « poussées » au référencement individuel.
+- **Aperçus sociaux par contexte (Open Graph).** Les réseaux sociaux (LinkedIn, Facebook, WhatsApp…) n'exécutent **pas** le JavaScript de l'app : le serveur leur **injecte donc des balises d'aperçu adaptées au lien partagé**. Selon ce que l'on partage :
+>   - un lien de **sous-site** (ex. `paleo-h2o.org/frise`) → l'**identité du sous-site** (son nom, sa description, son logo) ;
+>   - un lien vers une **fiche de cartel** → le **titre, l'image et un extrait du cartel**, signés par son sous-site ;
+>   - le **site principal** → l'aperçu par défaut « Paléo-Énergétique ».
+>
+>   *(C'est ce qui évite qu'un lien de sous-site affiche « Paléo-Énergétique » dans l'aperçu.)* En revanche, ces pages **ne sont pas dans le sitemap** : elles ne sont pas activement « poussées » au référencement individuel.
 - **Anciens liens `#/…`.** L'app rattrape automatiquement les anciennes adresses au format `…/#/page` (anciens favoris, liens externes, **QR codes imprimés**) et les convertit vers la nouvelle forme propre. Ne cassez pas ce comportement : il fait que les QR codes déjà imprimés continuent de fonctionner.
 - **Pas d'application installable (PWA).** Le site n'est pas une application installable sur téléphone ; c'est un site web classique.
 
@@ -218,7 +235,7 @@ Pour **les deux**, voici exactement ce qui se passe à l'envoi (détail au [chap
 
 ## 6. La vitrine Paléo-Pédia et l'écosystème
 
-La page **`/pedia`** est une vitrine à part, avec son propre habillage (marque « Paléo-Pédia », **pas de bouton de connexion**, palette neutre).
+La page **`/pedia`** (servie aussi à la racine de son domaine dédié `paleo-pedia.org`) est une vitrine à part, avec son propre habillage (marque « Paléo-Pédia », palette neutre).
 
 Elle présente **l'écosystème entier** de façon visuelle :
 - Une **vue 3D interactive** (un « système solaire ») si le navigateur du visiteur le permet : un **soleil central** = le site principal, et une **planète** par sous-site (avec un **type de planète** réglable, voir [§8.2](#82-créer-un-sous-site-la-fenêtre-déditeur)).
@@ -232,6 +249,20 @@ Elle présente **l'écosystème entier** de façon visuelle :
 > 💡 **Usage commercial :** Paléo-Pédia est la meilleure page pour **montrer la cohérence de l'écosystème** d'un coup d'œil.
 
 > 📸 **[Capture A04]** — La vue 3D « système solaire » de Paléo-Pédia.
+
+### 6.1 Connexion et administration depuis la Pédia
+
+Contrairement à ce qui était le cas au lancement, la Pédia **expose désormais un accès à la connexion et à l'administration** : il est logique de pouvoir piloter l'écosystème depuis sa vitrine. Dans la barre du haut :
+
+- Un lien **« Participer au projet »** (vers la page `…/participer-au-projet`, voir ci-dessous).
+- Un bouton **« Se connecter »** qui ouvre une **petite fenêtre de connexion** (e-mail + mot de passe). En cas de succès, vous êtes redirigé vers l'espace d'administration (`/app/admin`).
+- Une fois connecté, le bouton « Se connecter » laisse place à **« Admin »** (vers `/app/admin`) et **« Déconnexion »**.
+
+> ⚠️ **La session est liée au domaine.** Se connecter sur `paleo-pedia.org` crée une session **propre à ce domaine** : elle n'est pas partagée avec `paleo-energetique.org`. Si vous administrez depuis les deux, vous vous connectez sur chacun.
+
+**La page « Participer au projet ».** Auparavant rattachée au site principal, elle a été **déplacée sur la Pédia** (`…/participer-au-projet`). C'est un **formulaire** destiné aux enseignants, formateurs, collectivités et acteurs de la transition (démonstration, formation, frise thématique dédiée, plateforme dédiée). Les demandes aboutissent au **même endroit que les messages de contact** (enregistrées + journalisées, voir [chapitre 20](#20-les-formulaires-reçus-du-public-contact-candidatures)). *(À ne pas confondre avec la page **Participer** du site principal — `/participer` — qui porte les missions et les candidatures.)*
+
+> 📸 **[Capture A17]** — La barre de la Pédia avec « Se connecter » (et, une fois connecté, « Admin » / « Déconnexion »).
 
 ---
 
@@ -262,8 +293,6 @@ La **frise** est la vitrine principale des cartels. Elle existe sur le site prin
 - Un **graphe de forces** : gros nœuds = catégories, petits nœuds = cartels (un cartel multi-catégories est relié à plusieurs). Nœuds déplaçables, zoom/pan.
 - Un **panneau « Paramètres »** (engrenage) permet de : dimensionner les catégories selon leur nombre de cartels, masquer les titres, activer un **mode couleurs**, régler la distance des liens.
 - Cliquer un cartel ouvre un **panneau latéral** avec son aperçu.
-
-> 💡 **Petit easter egg.** Dans l'arborescence, une combinaison de touches discrète (`Alt + A` + la touche « volume + ») active un « mode son » qui fait onduler et pulser le graphe au rythme du son ambiant (micro requis). Sans conséquence ; à connaître si quelqu'un le découvre par hasard lors d'une démo.
 
 ### 7.2 Le mode « Liste » (administrateurs)
 
@@ -326,15 +355,21 @@ Depuis *Admin → Administration*, section **« Sous-sites thématiques »**, cl
 | **Couleur primaire** | La couleur de signature, appliquée partout sur le sous-site. Défaut `#4A90D9`. | ✅ (superadmin et owner). |
 | **Type de planète** | L'apparence dans l'écosystème 3D de Paléo-Pédia : *Automatique, Éoliennes, Forêt, Panneaux solaires, Minéral/rocheux, Glacé (avec anneau), Mixte*. | ✅ (superadmin et owner). |
 | **Contenu de la page d'accueil** | Éditeur de blocs, bilingue (onglets **Français / English**). | ✅ (superadmin et owner). |
-| **Partenaires du sous-site** | Sélection des partenaires mis en avant (principaux) et standards. | ✅ (superadmin et owner). |
+| **Compte propriétaire** *(optionnel)* | **E-mail + mot de passe** d'un compte **propriétaire (owner)** créé en même temps que le sous-site (permission « Gérer l'équipe » activée d'office). Vous pouvez laisser vide et créer l'owner plus tard via *Gestion d'équipe*. | — *(sert seulement à la création)*. |
 
-> ⚠️ **Ce qui est figé à vie : la source (catégorie/atelier).** Le nom et le slug, eux, restent modifiables — mais **seulement par un superadmin**. Un propriétaire ne peut changer ni le nom, ni le slug, ni la source ; il gère la couleur, la planète, le contenu et les partenaires.
+> 💡 **Créer l'owner à la volée.** La fenêtre propose une section **« Compte propriétaire (optionnel) »** : renseignez-y un e-mail et un mot de passe (8+ caractères) pour créer **immédiatement** le compte qui gérera le sous-site, sans repasser par *Gestion d'équipe*. **Conseil :** utilisez une **adresse choisie par les personnes qui géreront ce sous-site** (pas une adresse générique) — elle servira à les recontacter (voir [§15.2](#152-inviter-un-membre)). Si le sous-site se crée mais que le compte échoue (e-mail déjà utilisé…), un message vous le signale : le sous-site **n'est pas recréé**, corrigez l'e-mail et revalidez, ou ajoutez l'owner plus tard.
+
+> ⚠️ **Ce qui est figé à vie : la source (catégorie/atelier).** Le nom et le slug, eux, restent modifiables — mais **seulement par un superadmin**. Un propriétaire ne peut changer ni le nom, ni le slug, ni la source ; il gère la couleur, la planète et le contenu.
+
+> 💡 **Les partenaires ne se règlent plus dans cette fenêtre.** La sélection des partenaires d'un sous-site se fait désormais sur une **page dédiée** (côté propriétaire), distincte de l'éditeur d'accueil. Détail dans le *Manuel d'utilisation d'un site dédié* ; côté bibliothèque centrale, voir [chapitre 18](#18-partenaires-bibliothèque-centralisée).
 
 > ⚠️ **Domaine dédié.** Il **n'y a pas de champ « nom de domaine »** dans cette fenêtre. Brancher un domaine dédié demande une intervention technique (voir [§2](#2-vue-densemble--larchitecture-de-la-plateforme)).
 
 ### 8.3 Modifier ou supprimer un sous-site
 
-Dans la même section : **Ouvrir**, **Modifier**, **Supprimer** (avec confirmation). À la suppression, les cartels ne sont pas détruits, et les comptes rattachés retombent sur le site principal.
+Dans la même section : **Ouvrir**, **Modifier**, **Supprimer** (avec confirmation). À la suppression, les cartels **ne sont pas détruits** et les comptes rattachés retombent sur le site principal.
+
+> ⚠️ **Que deviennent les cartels d'un sous-site supprimé ? (effet à connaître)** Ils ne sont pas effacés, mais leur rattachement au sous-site est retiré : ils **deviennent des cartels du site principal**. Conséquence directe : **tous ceux qui étaient publiés rejoignent immédiatement la frise principale**, **sans repasser par la file de validation** ([chapitre 13](#13-les-deux-files-de-modération-à-ne-jamais-confondre)). Si ce n'est pas voulu, **archivez-les ou repassez-les en brouillon avant** de supprimer le sous-site.
 
 > 💡 En tant que superadmin, vous pouvez tout faire sur n'importe quel sous-site (accueil, équipe, cartels) sans en être le propriétaire.
 
@@ -531,6 +566,19 @@ Un bouton **« Voir les cartels problématiques »** filtre la liste sur ces car
 
 > 📸 **[Capture A05]** — L'écran Gestion : onglets, filtres, barre d'actions groupées, onglet « Soumissions » (superadmin), et la fenêtre d'audit des images.
 
+### 12.6 Le compte exportateur (accès lecture seule)
+
+Un compte dont seule une **capacité d'export** est activée — **« Exporter (langues du site) »** et/ou **« Exporter (autre langue) »** (voir [§3.1](#31-le-principe--des-permissions-pas-des--rôles-)) — ouvre l'écran Gestion dans une version **bridée, en lecture seule**. C'est l'accès idéal pour un **prestataire d'impression** ou un **partenaire d'exposition** qui doit récupérer les cartels sans pouvoir les modifier.
+
+Concrètement, par rapport à un administrateur :
+- **Un seul onglet visible : « Publiés ».** Les onglets *Idées & Brouillons*, *En attente*, *Archives* et *Soumissions* sont masqués.
+- **Aucune action d'écriture** : pas de *Nouveau cartel*, pas d'*Importer*, pas d'*Éditer*, pas de *Publier / Archiver / Supprimer*, pas d'*Associer à un atelier*, **pas de *Retraduire*** (qui enregistre en base). Les boutons « Éditer » des fenêtres d'aperçu sont également retirés.
+- **Ce qui reste disponible** : la **recherche**, les **filtres**, les **aperçus** (impression A4 et web) et l'**export** (les 4 formats — voir [chapitre 21](#21-exports-imports-qr-codes-et-impression)). Avec la capacité **« Exporter (autre langue) »**, l'export peut être **traduit à la volée** vers une langue cible — cette traduction sert uniquement au fichier exporté, elle **n'est pas enregistrée** en base.
+
+> 💡 Un compte exportateur n'a **pas** besoin de « Gérer les cartels » ni de « Administration générale ». On lui crée généralement un compte avec **uniquement** une des capacités « Exporter » cochée (« langues du site » suffit si l'on n'exporte que du FR/EN déjà saisi ; « autre langue » si l'on veut aussi des exports traduits à la volée).
+
+> 📸 **[Capture A15]** — Le gestionnaire vu par un compte exportateur (onglet « Publiés » seul, barre d'actions réduite à l'export et la traduction).
+
 ---
 
 ## 13. Les DEUX files de modération (à ne jamais confondre)
@@ -578,6 +626,8 @@ C'est le point le plus délicat de toute la plateforme. Il existe **deux circuit
 > - **Désactivé** (par défaut) : la modification passe directement.
 > - **Stricte** : le cartel est **retiré du site principal** et remis en file jusqu'à nouvelle validation. *(Une variante « souple » est annoncée mais pas encore disponible.)*
 
+> 💡 **Une validation acquise reste acquise.** Une fois un cartel de sous-site **validé** sur le principal, ce statut **ne se perd pas tout seul**. S'il est ensuite **dépublié ou archivé**, il disparaît de la frise principale (qui n'affiche que les cartels **publiés**) — mais s'il est **republié**, il **réapparaît directement sur le principal, sans repasser par la file**. Pour le retirer réellement du principal, utilisez le bouton de **retrait** (globe/horloge) ou, côté superadmin, **Rejeter** la soumission. *(Le mode « Stricte » ci-dessus est l'exception : une **modification de contenu** le renvoie, elle, en file.)*
+
 ### 13.3 Tableau comparatif
 
 | | **File n°1 — Visiteurs** | **File n°2 — Sous-sites → principal** |
@@ -595,7 +645,7 @@ C'est le point le plus délicat de toute la plateforme. Il existe **deux circuit
 
 ## 14. Le hub d'administration (« Administration »)
 
-À `/app/admin` se trouve la page **« Administration »** (sous-titre *« Paramètres globaux de l'application »*), **réservée aux administrateurs**. C'est le **tableau de bord** des réglages et l'accès à toutes les pages de gestion. Un bouton **« Sauvegarder »** en haut enregistre les réglages directs (toast *« Paramètres enregistrés »*).
+À `/app/admin` se trouve la page **« Administration »** (sous-titre *« Paramètres globaux de l'application »*), **réservée aux administrateurs**. C'est le **tableau de bord** des réglages et l'accès à toutes les pages de gestion. Un bouton **« Sauvegarder »** en haut enregistre les réglages directs (toast *« Paramètres enregistrés »*). Si vous quittez la page avec des **réglages non enregistrés**, une fenêtre vous propose **Annuler / Quitter sans sauvegarder / Enregistrer & quitter**.
 
 ### 14.1 Groupe « Contenus »
 
@@ -638,11 +688,15 @@ En haut, des **chips** : un **superadmin** voit **[Site principal]** + **tous le
 
 Bloc **« Inviter un membre »** : un **Email** + un **Mot de passe (8+ caractères)** → **« Inviter »**. Le compte peut se connecter tout de suite. Par défaut, il peut **seulement créer des cartels**.
 
+> 💡 **Quelle adresse e-mail choisir ?** Pour un compte destiné à un **propriétaire de sous-site**, utilisez de préférence une adresse **choisie par les personnes qui géreront réellement ce compte** (leur adresse d'équipe / de structure), plutôt qu'une adresse générique. C'est cette adresse qui permettra ensuite de **les recontacter** au sujet de leur sous-site.
+
+> 👉 **Vous venez de créer un propriétaire de sous-site ?** Transmettez-lui le *Manuel d'utilisation d'un site dédié* : il y trouvera tout ce qu'il peut faire sur son sous-site (page d'accueil, partenaires, cartels, soumission au principal).
+
 > 💡 **Réinitialiser ou changer un mot de passe.** Chaque carte membre porte un bouton **clé 🔑 « Réinitialiser le mot de passe »** : vous définissez un nouveau mot de passe (à transmettre par un canal sûr). De son côté, la personne peut **changer elle-même** son mot de passe via le menu utilisateur (en haut à droite) → **« Mot de passe »**. Choisissez un mot de passe initial que vous pourrez communiquer en sécurité.
 
 ### 15.3 Régler les permissions d'un membre
 
-Chaque membre est une carte avec des interrupteurs : **Créer cartels**, **Publier**, **Gérer équipe** (= owner), **Créer sous-sites** (superadmins seulement). Un bouton corbeille supprime (avec confirmation).
+Chaque membre est une carte avec des interrupteurs : **Gérer les cartels**, **Exporter (langues du site)**, **Exporter (autre langue)** (lecture seule pour l'export — voir [§12.6](#126-le-compte-exportateur-accès-lecture-seule)), **Gérer les contenus**, **Gérer l'équipe** (= owner). Un bouton corbeille supprime (avec confirmation). *(La création / suppression de sous-sites et la validation des soumissions relèvent du superadmin, pas d'un interrupteur de cette carte.)*
 
 > 💡 **Pas de sélecteur de « rôle »** : uniquement les interrupteurs ([§3.1](#31-le-principe--des-permissions-pas-des--rôles-)). Un superadmin affiche un badge **« Superadmin »**.
 
@@ -735,6 +789,8 @@ Page **« Gestion des partenaires »** (`/app/admin/partners`). Bibliothèque **
 - **Basculer** Obligatoire / Optionnel (superadmin), **Supprimer**.
 
 > 💡 **Affichage sur le site principal :** c'est dans *Admin → Administration → Partenaires* que vous choisissez les partenaires de la page « À propos », répartis en **★ Principaux** (mis en avant) et **Standards**.
+
+> 👉 **Côté sous-site, la sélection se fait ailleurs.** Un propriétaire ne choisit **plus** ses partenaires depuis l'éditeur du sous-site (voir [§8.2](#82-créer-un-sous-site-la-fenêtre-déditeur)) : il dispose d'une **page dédiée** sur son sous-site (recherche dans le catalogue, rôle **Principal / Standard / —**, et ajout d'un partenaire **exclusif** à son sous-site). Cette bibliothèque centrale reste la source : les catégories *Obligatoires / Pool public / Exclusifs* y sont définies. Le détail de la page propriétaire figure dans le *Manuel d'utilisation d'un site dédié*.
 
 > 📸 **[Capture A10]** — La bibliothèque de partenaires.
 
@@ -863,6 +919,8 @@ Page **« Statistiques »** (`/app/admin/stats`). Croise plusieurs dimensions. L
 
 > 💡 **Usage commercial :** idéal pour illustrer la richesse de la base lors d'une présentation.
 
+> ℹ️ **Pas d'export des statistiques.** Les graphiques ne sont **pas téléchargeables** (ni image ni tableau) : pour une présentation, faites une **capture d'écran**.
+
 > 📸 **[Capture A13]** — La page Statistiques.
 
 ---
@@ -894,7 +952,34 @@ Dans *Admin → Réglages*, **stockées en base** :
 - Les **clés API** ne doivent pas être divulguées.
 - **Aucun cookie de mesure d'audience ni traceur tiers** (cf. politique de confidentialité) — seul un jeton de session est stocké dans le navigateur.
 
-> 💡 **En production, l'app est hébergée chez o2switch.** Les détails (chemins, variables, liens d'uploads) relèvent de la documentation de déploiement technique.
+### 23.4 Domaines, redirections et SEO multi-domaines
+
+Une **seule application** sert **plusieurs domaines** : le serveur aiguille selon le **nom d'hôte** (host) de la requête.
+
+**Les domaines servis :**
+
+| Domaine | Sert |
+|---|---|
+| `paleo-energetique.org` (+ `www`) | Le **site principal** (hub). |
+| `paleo-pedia.org` (+ `www`) | La **vitrine Paléo-Pédia**, à la racine. |
+| `paleo-h2o.org` | Le **sous-site** `paleo-h2o` (host dédié). |
+| `aero.paleo-energetique.org` | Le **sous-site** `paleo-aerospace` (host dédié). |
+
+**Les anciennes adresses (héritage du WordPress retiré) :**
+- **Redirections permanentes (301)** vers `paleo-pedia.org` : `cyclo.paleo-energetique.org`, `paleo-pedia.com` (+ `www`). *(Elles préservent le référencement déjà acquis.)*
+- **« 410 Gone »** (la page n'existe plus, définitivement) : `stockage.paleo-energetique.org` ainsi que toutes les **URLs de spam** injectées par l'ancien WordPress piraté (adresses se terminant par `-k-<chiffres>`).
+
+**robots.txt et sitemap.xml par domaine.** Le site principal et la Pédia exposent des fichiers **distincts** : une requête sur un domaine Pédia reçoit `robots-pedia.txt` / `sitemap-pedia.xml`, les autres reçoivent les versions standard. *(Rappel [§5.5](#55-référencement-seo-et-particularités-techniques-des-pages) : ces sitemaps sont maintenus à la main et ne listent pas les fiches de cartels.)*
+
+**Page 404 « brandée ».** Une adresse inconnue n'affiche pas une erreur brute : elle ouvre une **page « introuvable » habillée** (avec l'en-tête et le pied de page du site courant) qui invite à revenir à l'accueil ou à la frise.
+
+> 📸 **[Capture A16]** — La page 404 brandée.
+
+> ⚠️ **Tous ces branchements sont codés côté serveur** (correspondances domaine → sous-site, redirections 301/410, variantes robots/sitemap). Les modifier — ou ajouter un domaine — demande une **intervention de développement**, pas un réglage dans l'admin.
+
+### 23.5 Hébergement
+
+> 💡 **En production, la v2 est hébergée chez Infomaniak** : un site **Node.js** unique sert tous les domaines ci-dessus. Cet hébergement a **remplacé l'ancien o2switch**. Les détails (chemins, variables d'environnement, déploiement Git, liens d'uploads) relèvent de la documentation technique de déploiement (`HEBERGEMENT-INFOMANIAK.md`).
 
 ---
 
@@ -955,7 +1040,7 @@ Réglés sur le serveur, hors interface :
 - **Session :** `JWT_EXPIRES_IN` (défaut `7d`), `JWT_SECRET`.
 - **Base de données :** **MySQL** (`DATABASE_URL` ou `DB_HOST/PORT/NAME/USER/PASSWORD`).
 - **Images :** `UPLOADS_DIR` (dossier de stockage).
-- **Réseau :** `ALLOWED_ORIGIN` (CORS), `TRUST_PROXY` (défaut 1 — **indispensable** pour que les quotas par IP fonctionnent derrière le proxy o2switch).
+- **Réseau :** `ALLOWED_ORIGIN` (CORS), `TRUST_PROXY` (défaut 1 — **indispensable** pour que les quotas par IP et le routage par domaine fonctionnent derrière le proxy de l'hébergeur, désormais Infomaniak).
 - **Healthcheck :** une adresse `/health` renvoie l'état du serveur (utile à la supervision).
 
 ### 24.6 Limites diverses & particularités serveur
@@ -967,6 +1052,9 @@ Réglés sur le serveur, hors interface :
 - **Redirection HTTP → HTTPS** active en production.
 - **En-têtes de sécurité** posés sur toutes les réponses : `X-Content-Type-Options` (nosniff), `X-Frame-Options` (anti-clickjacking), `Referrer-Policy`, `Permissions-Policy`, et `Strict-Transport-Security` (HSTS) en production. Pas de CSP stricte **globale** — choix délibéré pour ne pas casser la 3D, les cartes et les embeds (YouTube, Calaméo, Sketchfab) ; une CSP « sandbox » cible toutefois les SVG servis.
 - **Connexion protégée** contre la force brute (limite de tentatives par IP) ; **inscription publique désactivée** (les comptes se créent uniquement par invitation).
+- **Routage multi-domaines** (voir [§23.4](#234-domaines-redirections-et-seo-multi-domaines)) : hosts dédiés `paleo-h2o.org` & `aero.paleo-energetique.org` (sous-sites) et `paleo-pedia.org` (vitrine) ; redirections **301** des anciens domaines WordPress (`cyclo.*`, `paleo-pedia.com`) vers `paleo-pedia.org` ; **410 Gone** pour `stockage.*` et les URLs de spam (`-k-<chiffres>`).
+- **robots.txt / sitemap.xml servis par domaine** : variante Pédia (`robots-pedia.txt` / `sitemap-pedia.xml`) sur les hosts Pédia, variante standard ailleurs.
+- **Route d'export ouverte aux comptes « exportateur »** : un compte avec une seule capacité *Exporter* peut exporter des cartels publiés (traduits à la volée avec « autre langue ») **sans** droits d'administration, et **strictement dans son périmètre** (les ids hors périmètre sont écartés). Voir [§12.6](#126-le-compte-exportateur-accès-lecture-seule).
 
 ### 24.7 Stockage dans le navigateur (vie privée)
 
@@ -982,12 +1070,17 @@ L'app stocke quelques informations **localement dans le navigateur** (jamais de 
 
 - **Deux files de modération distinctes.** « En attente » = visiteurs ; « Soumissions » = sous-sites → principal ([chapitre 13](#13-les-deux-files-de-modération-à-ne-jamais-confondre)).
 - **Publier un cartel de sous-site = le proposer au principal** (automatique). Pour l'éviter, garder en brouillon ou retirer.
-- **Permissions, pas rôles.** Cinq interrupteurs ; le « rôle » historique ne sert à rien ([§3.1](#31-le-principe--des-permissions-pas-des--rôles-)).
+- **Permissions, pas rôles.** Des **capacités scopées** au périmètre du compte (Gérer les cartels · Exporter langues du site · Exporter autre langue · Gérer les contenus · Gérer l'équipe) + le statut **superadmin** ; le « rôle » historique ne sert à rien ([§3.1](#31-le-principe--des-permissions-pas-des--rôles-)).
+- **Superadmin et owner incluent tout leur périmètre.** Pas besoin de leur cocher les capacités une à une.
+- **Compte exportateur = lecture seule.** Une capacité *Exporter* seule donne accès au gestionnaire en lecture seule (cartels publiés, export ± traduit à la volée) — utile pour un prestataire, sans aucun pouvoir de modification ([§12.6](#126-le-compte-exportateur-accès-lecture-seule)).
 - **Les changements de droits s'appliquent à la reconnexion** (jeton 7 jours).
 - **Mots de passe :** réinitialisation par un admin (*Gestion d'équipe*, bouton clé) et changement en libre-service (menu utilisateur → « Mot de passe »). Pas de « mot de passe oublié » par email ([§4.3](#43-sécurité-des-accès--à-dire-aux-utilisateurs)).
 - **Emails désactivés par défaut.** Activer les notifications utiles + configurer le SMTP, sinon **personne n'est prévenu** ([chapitre 19](#19-notifications-email--journal-dévénements)).
 - **Source d'un sous-site figée à la création** ; nom/slug modifiables par le superadmin seulement.
-- **Domaine dédié = intervention technique** (codé en dur), pas un réglage dans l'admin ([§2](#2-vue-densemble--larchitecture-de-la-plateforme)).
+- **Supprimer un sous-site fait basculer ses cartels sur le principal.** Les cartels publiés d'un sous-site supprimé rejoignent la **frise principale sans validation** ([§8.3](#83-modifier-ou-supprimer-un-sous-site)). Archivez-les avant si besoin.
+- **Une validation au principal est persistante.** Dépublier puis republier un cartel déjà validé le **remet sur le principal sans repasser par la file** ([§13.2](#132-file-n2--les-soumissions-des-sous-sites-vers-le-site-principal)).
+- **Domaine dédié = intervention technique** (codé en dur), pas un réglage dans l'admin. **Deux** sous-sites en ont un (`paleo-h2o.org`, `aero.paleo-energetique.org`) + la Pédia (`paleo-pedia.org`) ([§2](#2-vue-densemble--larchitecture-de-la-plateforme), [§23.4](#234-domaines-redirections-et-seo-multi-domaines)).
+- **On peut administrer depuis la Pédia.** `paleo-pedia.org` expose la connexion + l'admin ; la session y est **propre au domaine** ([§6.1](#61-connexion-et-administration-depuis-la-pédia)).
 - **« Équipe (page À propos) » ≠ « Gestion d'équipe (comptes) ».**
 - **Boutique = liens externes**, pas de paiement sur le site.
 - **PDF traduit non enregistré** ; retraduction FR↔EN enregistrée (écrase l'existant).
@@ -1005,8 +1098,10 @@ L'app stocke quelques informations **localement dans le navigateur** (jamais de 
 ### Recette A — Créer un nouveau sous-site
 1. *Admin → Administration → Sous-sites thématiques → « Nouveau sous-site »*.
 2. Renseignez **Nom**, vérifiez le **Slug**, choisissez la **Source** (catégorie ou atelier — **figée ensuite**).
-3. Réglez **couleur**, **type de planète**, composez la **page d'accueil** (FR puis English), choisissez les **partenaires**. Validez.
-4. Créez son **propriétaire** : *Gestion d'équipe (comptes)* → sélectionner le sous-site → inviter, puis activer **« Gérer équipe »**.
+3. Réglez **couleur**, **type de planète**, composez la **page d'accueil** (FR puis English).
+4. *(Optionnel mais pratique)* Dans la section **« Compte propriétaire »**, saisissez l'**e-mail + mot de passe** de l'owner pour le créer **en même temps** (voir [§8.2](#82-créer-un-sous-site-la-fenêtre-déditeur)). Validez.
+5. *(Si vous ne l'avez pas fait à l'étape 4)* Créez son **propriétaire** : *Gestion d'équipe (comptes)* → sélectionner le sous-site → inviter, puis activer **« Gérer l'équipe »**.
+6. *(Optionnel)* Les **partenaires** du sous-site se règlent ensuite sur leur **page dédiée**, côté propriétaire (voir le *Manuel d'utilisation d'un site dédié*).
 
 ### Recette B — Valider une soumission d'un sous-site vers le principal
 1. *Gestion → onglet **Soumissions*** (superadmin).
@@ -1070,7 +1165,13 @@ Dans *Gestion d'équipe (comptes)*, cliquez le bouton **clé** sur la carte du m
 Les droits sont rafraîchis **à la reconnexion** (jeton 7 jours). Faites-la se déconnecter/reconnecter.
 
 **Comment ouvrir un sous-site sur son propre nom de domaine ?**
-Cela demande une **intervention technique** (DNS + ajout du domaine dans le code) : ce n'est pas un réglage de l'admin. Voir [§2](#2-vue-densemble--larchitecture-de-la-plateforme).
+Cela demande une **intervention technique** (DNS + ajout du domaine dans le code) : ce n'est pas un réglage de l'admin. Aujourd'hui, deux sous-sites en ont un (`paleo-h2o.org`, `aero.paleo-energetique.org`). Voir [§2](#2-vue-densemble--larchitecture-de-la-plateforme) et [§23.4](#234-domaines-redirections-et-seo-multi-domaines).
+
+**À quoi sert un compte « exportateur » ?**
+À donner un accès **lecture seule** au gestionnaire (cartels publiés uniquement), limité à l'**export** et à la **(re)traduction**, sans aucun droit de modification, de publication ou de modération. Idéal pour un prestataire d'impression ou d'exposition. Voir [§12.6](#126-le-compte-exportateur-accès-lecture-seule).
+
+**Peut-on administrer depuis la Pédia (`paleo-pedia.org`) ?**
+Oui. La vitrine expose un bouton **« Se connecter »** puis, une fois connecté, un accès **« Admin »**. La session est **propre au domaine** : se connecter sur la Pédia ne connecte pas automatiquement sur `paleo-energetique.org`. Voir [§6.1](#61-connexion-et-administration-depuis-la-pédia).
 
 **Puis-je changer la source (catégorie/atelier) d'un sous-site ?**
 Non, elle est **figée à la création**. Le nom et le slug sont modifiables **par un superadmin**.
@@ -1102,8 +1203,10 @@ Parce que la version anglaise de ce champ est vide : l'app **retombe sur le fran
 - **Sous-site / site dédié** — mini-site thématique autonome.
 - **Paléo-Pédia** — la vitrine `/pedia` présentant l'écosystème.
 - **Superadmin / Administrateur général** — permission « Gérer l'administration » : pouvoir global.
-- **Owner / Propriétaire** — permission « Gérer équipe » + un sous-site : pouvoir local.
-- **Permission** — l'un des cinq interrupteurs qui déterminent les droits.
+- **Owner / Propriétaire** — capacité « Gérer l'équipe » + un sous-site : pouvoir local.
+- **Capacité (permission)** — l'un des interrupteurs qui déterminent les droits (Gérer les cartels, Exporter langues du site, Exporter autre langue, Gérer les contenus, Gérer l'équipe). **Toujours bornée au périmètre** (site principal ou un sous-site) du compte.
+- **Périmètre** — l'ensemble sur lequel portent les capacités d'un compte : le site principal (rattachement vide) ou un sous-site précis.
+- **Compte exportateur** — compte en lecture seule (une capacité *Exporter* seule) limité à l'**export** des cartels publiés de son périmètre (traduit à la volée avec « autre langue »), sans pouvoir de modification.
 - **Statut** — état d'un cartel : Brouillon, En attente, Publié, Archivé.
 - **File n°1 (« En attente »)** — modération des propositions de visiteurs.
 - **File n°2 (« Soumissions »)** — validation des cartels sous-site → site principal.
@@ -1114,6 +1217,8 @@ Parce que la version anglaise de ce champ est vide : l'app **retombe sur le fran
 - **SMTP** — le serveur qui envoie réellement les emails (configuré côté hébergement).
 - **QR code** — code imprimé sur un cartel renvoyant vers sa fiche ou un lien externe.
 - **Slug** — la partie « adresse » d'un sous-site dans l'URL.
+- **Host / domaine dédié** — nom de domaine propre servant directement un sous-site (`paleo-h2o.org`, `aero.paleo-energetique.org`) ou la vitrine (`paleo-pedia.org`), au lieu de passer par `…/site/<slug>` ou `/pedia`.
+- **Redirection 301 / 410** — réponses serveur pour les anciennes adresses : **301** = déplacé définitivement (renvoi vers la nouvelle URL, ex. anciens domaines WordPress → `paleo-pedia.org`) ; **410** = supprimé définitivement (page de spam ou domaine abandonné).
 - **Honeypot** — champ piège invisible qui bloque les robots dans les formulaires.
 
 ---

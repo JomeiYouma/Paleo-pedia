@@ -1,4 +1,8 @@
-# Déploiement Paleo Cartels — o2switch
+# Déploiement Paleo Cartels — o2switch (⚠️ document historique)
+
+> 🗄️ **o2switch n'est plus l'hébergement en service (confirmé le 2026-07-02).** La production tourne sur **Infomaniak** ; voir **[HEBERGEMENT-INFOMANIAK.md](HEBERGEMENT-INFOMANIAK.md)** pour le déploiement actuel.
+>
+> **À conserver — à remodeler pour Infomaniak.** Ce guide décrit l'ancien hébergement o2switch / cPanel / Passenger (chemins `/home/madore/…`, pas de remote git), mais sa structure reste utile : **checklist de redéploiement, points critiques à vérifier, postmortems d'incidents** (image_path 2026-04-21, logs/emails v8 2026-04-29). Objectif : le transformer en **runbook de redéploiement Infomaniak** (séquence git pull → build/redémarrage, vérifs post-déploiement, incidents), en complément de `HEBERGEMENT-INFOMANIAK.md` qui décrit le **setup**. En attendant ce remodelage, **ne pas suivre les procédures o2switch ci-dessous telles quelles**.
 
 Guide complet de redéploiement et points critiques à vérifier. Mis à jour après les incidents image_path (2026-04-21) et logs/emails v8 (2026-04-29).
 

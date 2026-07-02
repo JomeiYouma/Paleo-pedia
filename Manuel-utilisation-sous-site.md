@@ -17,7 +17,7 @@
 6. [Langues & traductions (FR/EN)](#6-langues--traductions-fren)
 7. [Proposer un cartel (visiteurs et admins)](#7-proposer-un-cartel-visiteurs-et-admins)
 8. [Éditer la page d'accueil de votre site dédié](#8-éditer-la-page-daccueil-de-votre-site-dédié)
-9. [Gérer l'équipe « À propos »](#9-gérer-léquipe--à-propos-)
+9. [Gérer les partenaires de votre site dédié](#9-gérer-les-partenaires-de-votre-site-dédié)
 10. [Gérer les cartels (modération)](#10-gérer-les-cartels-modération)
 11. [Le circuit « soumettre au site principal »](#11-le-circuit--soumettre-au-site-principal-)
 12. [Modes opératoires pas-à-pas (recettes)](#12-modes-opératoires-pas-à-pas-recettes)
@@ -29,6 +29,7 @@
 
 ## 1. Vocabulaire essentiel
 
+- **Site dédié (ou « sous-site »)** : votre mini-site thématique au sein de l'écosystème Paléo. Le *manuel d'administration* le nomme « **sous-site** » : c'est exactement la même chose.
 - **Cartel** : la fiche d'un objet / d'une invention (titre, année, lieu, image, description, catégories…). C'est l'unité de base affichée sur la frise.
 - **Frise** : la collection des cartels publiés de votre site dédié, présentée sous forme de chronologie. Trois modes d'affichage existent : **Frise** (chronologie), **Carte** (géographique) et **Arborescence**.
 - **Statut d'un cartel** : son état dans le cycle de vie.
@@ -50,7 +51,7 @@ Un **site dédié** est un mini-site thématique autonome, en orbite autour du s
 - sa propre **page d'accueil** personnalisable,
 - sa propre **couleur** de signature (appliquée partout : menu, boutons, liserés…),
 - sa propre **frise** de cartels (la collection d'inventions/objets que vous présentez),
-- sa propre page **Partenaires** et sa propre page **équipe « À propos »**,
+- sa propre page **Partenaires**,
 - éventuellement son **propre nom de domaine** (par ex. `paleo-h2o.org`).
 
 Un site dédié reste connecté au site principal : certains de vos cartels peuvent, si vous le souhaitez, être **proposés pour apparaître aussi sur le site principal** (voir [chapitre 11](#11-le-circuit--soumettre-au-site-principal-)).
@@ -59,7 +60,7 @@ Un site dédié reste connecté au site principal : certains de vos cartels peuv
 
 | Type de source | Comment les cartels arrivent dans le site dédié |
 |---|---|
-| **Source « Catégorie »** | Les cartels sont ceux **explicitement rattachés** au site dédié. Vous choisissez vous-même, un par un, les cartels qui y figurent : c'est vous qui composez la sélection à la main. |
+| **Source « Catégorie »** | Les cartels sont ceux **explicitement rattachés** au site dédié. Concrètement, **chaque cartel que vous créez et publiez sur votre site dédié y est rattaché automatiquement** (voir la [recette A](#12-modes-opératoires-pas-à-pas-recettes)) : c'est ainsi que vous composez la sélection, il n'y a pas d'étape séparée de « rattachement ». |
 | **Source « Atelier »** | Les cartels sont **tous ceux rattachés à un même atelier** (un atelier est un groupe de cartels). La liste se met à jour **toute seule** : ajouter ou retirer un cartel de l'atelier l'ajoute ou le retire aussitôt du site dédié. |
 
 > 📸 **[Capture S01]** — Vue d'ensemble d'un site dédié (page d'accueil affichée dans le navigateur, avec l'URL visible dans la barre d'adresse).
@@ -74,9 +75,9 @@ Un site dédié reste connecté au site principal : certains de vos cartels peuv
 |---|:---:|:---:|:---:|
 | Consulter les pages publiques | ✅ | ✅ | ✅ |
 | Proposer un cartel | ✅ *(passe « en attente »)* | ✅ *(publie directement)* | ✅ |
-| Modifier la page d'accueil (couleur, contenu, partenaires) | ❌ | ✅ | ✅ |
+| Modifier la page d'accueil (couleur, contenu) | ❌ | ✅ | ✅ |
 | Modifier le **nom**, le **slug**, la **source** du site dédié | ❌ | ❌ | ✅ |
-| Gérer l'équipe « À propos » | ❌ | ✅ | ✅ |
+| Gérer les **partenaires** du site dédié | ❌ | ✅ | ✅ |
 | Créer / éditer / publier / archiver / supprimer les cartels du site dédié | ❌ | ✅ | ✅ |
 | Soumettre un cartel au site principal | ❌ | ✅ *(ses cartels publiés)* | ✅ |
 | **Approuver / rejeter** les soumissions vers le site principal | ❌ | ❌ | ✅ |
@@ -86,6 +87,8 @@ Un site dédié reste connecté au site principal : certains de vos cartels peuv
 > 💡 Les comptes utilisateurs (création d'un nouvel owner, mot de passe…) sont gérés par l'**administrateur général**. Si vous avez besoin d'un accès pour un collaborateur, demandez-lui.
 
 > ⚠️ **Partage des accès — important.** Vos identifiants de connexion sont **strictement personnels** et réservés aux membres de **votre structure**. Les partager se fait **à vos seuls risques et périls**, et il est **formellement interdit** de les communiquer à toute personne **extérieure à votre structure** (voir les mentions légales).
+
+> 👉 **Ce qui n'est PAS de votre ressort** (→ administrateur général) : le **nom**, le **slug** et la **source** de votre site dédié ; la **création de comptes** ; le **branchement d'un nom de domaine** dédié ; et la **validation** des cartels que vous soumettez au site principal. Pour ces points, adressez-vous à l'administrateur général de la plateforme.
 
 ---
 
@@ -109,12 +112,12 @@ De gauche à droite :
 - **Menu de navigation** : *Accueil · Frise · Présentation · Partenaires*.
 - **Sélecteur de langue** (Français / Anglais) — voir [chapitre 6](#6-langues--traductions-fren).
 - **« Proposer un cartel »** — visible par **tout le monde**.
-- **« Page d'accueil »** — *(connecté en tant que propriétaire)* éditer le contenu de l'accueil, la couleur, les partenaires.
-- **« Équipe »** — *(propriétaire)* gérer les membres de la page « À propos ».
-- **« Gérer »** — *(propriétaire)* gérer les cartels (modération).
+- **« Administration »** — *(connecté en tant que propriétaire)* un **menu compact** qui regroupe vos outils d'admin : **Page d'accueil** (éditer le contenu et la couleur), **Partenaires** (voir [chapitre 9](#9-gérer-les-partenaires-de-votre-site-dédié)) et **Gérer** (les cartels, voir [chapitre 10](#10-gérer-les-cartels-modération)).
 - **Icône de déconnexion**.
 
-> 📸 **[Capture S03]** — La barre du haut **vue connecté en propriétaire**, avec les boutons « Proposer un cartel », « Page d'accueil », « Équipe », « Gérer » bien visibles.
+> 💡 **Barre adaptative.** Si la largeur de l'écran ne suffit pas, la navigation et le menu se replient automatiquement dans un **menu « burger »** (icône ☰) qui reprend les mêmes entrées.
+
+> 📸 **[Capture S03]** — La barre du haut **vue connecté en propriétaire**, avec le bouton « Proposer un cartel » et le **menu « Administration » déroulé** (Page d'accueil · Partenaires · Gérer).
 
 > 💡 **Repère visuel :** un fil d'Ariane (chemin de navigation) s'affiche en haut des pages profondes pour savoir où vous êtes et revenir en arrière.
 
@@ -144,15 +147,15 @@ Le visiteur peut filtrer, rechercher, et cliquer un cartel pour ouvrir sa fiche 
 > 📸 **[Capture S05]** — La frise d'un site dédié avec plusieurs cartels.
 > 📸 **[Capture S06]** — Le même contenu en mode **Carte**.
 
-### 5.3 Présentation (page « À propos »)
+### 5.3 Présentation (la démarche du projet)
 
-Le lien **« Présentation »** du menu ouvre la page « À propos » **de votre site dédié** : elle affiche l'**équipe** que vous gérez (voir [chapitre 9](#9-gérer-léquipe--à-propos-)), répartie en Principaux / Secondaires / Communauté. Si votre site dédié n'a déclaré aucun membre, la page retombe automatiquement sur l'équipe du site principal.
+Le lien **« Présentation »** du menu ouvre une page qui expose la **démarche / méthodologie du projet Paléo** — la même que celle présentée sur la vitrine Paléo-Pédia : recenser, documenter et remettre en lumière les techniques énergétiques anciennes ou méconnues. Le titre de la page reprend le nom de votre site dédié (« *<Nom du site> — Démarche* »). C'est une page **commune à l'écosystème** : son contenu n'est pas spécifique à votre site dédié et ne se modifie pas depuis votre espace.
 
 > 💡 Le pied de page propose aussi **Mentions légales**, **Politique de confidentialité** et **Contact** : ces pages sont **communes à tout l'écosystème** (site principal). Elles s'ouvrent correctement, y compris depuis un site dédié sur son propre nom de domaine.
 
 ### 5.4 Partenaires
 
-Liste des partenaires associés à votre site dédié, séparés en **Partenaires principaux** (mis en premier) et **Partenaires**. Chaque partenaire affiche son logo (ou son initiale) et un lien vers son site si renseigné. *(Vous choisissez ces partenaires depuis l'éditeur de page d'accueil — voir [§8.4](#84-partenaires).)*
+Liste des partenaires associés à votre site dédié, séparés en **Partenaires principaux** (mis en premier) et **Partenaires**. Chaque partenaire affiche son logo (ou son initiale) et un lien vers son site si renseigné. *(Vous choisissez ces partenaires depuis leur page dédiée — voir [chapitre 9](#9-gérer-les-partenaires-de-votre-site-dédié).)*
 
 > 📸 **[Capture S07]** — Page Partenaires d'un site dédié.
 
@@ -176,7 +179,7 @@ En haut à droite, deux boutons **FR / EN**. Le choix est **mémorisé dans le n
 
 ### 6.2 Comment le contenu bilingue est stocké
 
-Chaque **cartel** possède deux versions de ses textes clés : **titre, description et lieu**, en français et en anglais. De même, chaque **membre d'équipe** dispose d'un **rôle (EN)** et d'une **bio (EN)**.
+Chaque **cartel** possède deux versions de ses textes clés : **titre, description et lieu**, en français et en anglais.
 
 > 💡 **Règle de repli (fallback) :** si un visiteur est en anglais mais que la version EN d'un champ est vide, c'est le **texte français qui s'affiche** (jamais de blanc). Rien ne « casse » donc si une traduction manque — mais le visiteur anglophone voit alors du français à cet endroit.
 
@@ -186,8 +189,6 @@ Chaque **cartel** possède deux versions de ses textes clés : **titre, descript
 |---|---|
 | Interface (menus, boutons, libellés) | ✅ Oui, automatiquement |
 | Cartels : **titre, description, lieu** | ✅ Oui (un champ FR + un champ EN) |
-| Équipe « À propos » : **rôle, bio** | ✅ Oui (champs EN dédiés) |
-| **Nom** d'un membre d'équipe | ❌ Non (un seul nom) |
 | **Blocs de la page d'accueil** (titres, textes, citations…) | ✅ Oui (onglet **Français / English** dans l'éditeur — repli FR si l'EN est vide) |
 | **Nom / thématique** du site dédié | ❌ Non |
 
@@ -198,15 +199,14 @@ Chaque **cartel** possède deux versions de ses textes clés : **titre, descript
 Plusieurs outils d'IA vous aident à remplir la version anglaise. **Un visiteur non connecté n'y a jamais accès.**
 
 - **À la création d'un cartel** : si vous remplissez le français et laissez l'anglais vide, l'anglais est **généré automatiquement** (et inversement). *(Uniquement à la création, pas à chaque modification.)*
-- **Bouton « Traduire » par cartel** (écran « Gérer ») : (re)traduit un cartel dans l'autre langue à la demande.
+- **Bouton « Retraduire » par cartel** (écran « Gérer ») : (re)traduit un cartel dans l'autre langue à la demande.
 - **Retraduire en lot** : sélectionnez plusieurs cartels → tout est retraduit d'un coup.
-- **Équipe** : un bouton **Traduire** dans le formulaire d'un membre pré-remplit *Rôle (EN)* et *Bio (EN)* à partir du français.
 
 > 💡 Une **détection de langue** à la saisie vous alerte si vous tapez de l'anglais dans le champ français (ou l'inverse) et propose de basculer.
 
 ### 6.5 Repérer les cartels sans version anglaise
 
-Dans l'écran **« Gérer »**, un cartel dépourvu de traduction anglaise affiche un petit badge orange **« Pas de traduction EN »**. Utilisez le bouton **Traduire** pour combler le manque.
+Dans l'écran **« Gérer »**, un cartel dépourvu de traduction anglaise affiche un petit badge orange **« Pas de traduction EN »**. Utilisez le bouton **Retraduire** pour combler le manque.
 
 ### 6.6 Exporter un PDF traduit (dans n'importe quelle langue)
 
@@ -216,7 +216,7 @@ Dans **Gérer → Exporter → « PDF traduit (autre langue) »**, vous pouvez g
 - L'IA traduit les contenus **depuis la langue actuellement affichée** (FR ou EN) puis génère le PDF.
 - ⚠️ C'est un **export ponctuel** : la traduction sert uniquement au PDF, elle **n'est pas enregistrée** dans la base. Idéal pour une exposition multilingue.
 
-> ⚠️ **Relisez toujours** les traductions automatiques avant diffusion (surtout les bios et descriptions). L'IA est un excellent point de départ, pas un traducteur infaillible.
+> ⚠️ **Relisez toujours** les traductions automatiques avant diffusion (surtout les descriptions). L'IA est un excellent point de départ, pas un traducteur infaillible.
 
 ---
 
@@ -265,9 +265,9 @@ Cliquez **« Page d'accueil »** dans la barre du haut. Une fenêtre d'édition 
 
 > ⚠️ **Les modifications sont publiées immédiatement** dès que vous enregistrez (pas de brouillon pour la page d'accueil).
 
-En tant que propriétaire, vous pouvez modifier **trois choses** : la **couleur**, le **contenu** (blocs) et les **partenaires**. *(Le nom, le slug et la source ne sont modifiables que par l'administrateur général et n'apparaissent donc pas ici.)*
+En tant que propriétaire, vous pouvez modifier **deux choses** : la **couleur** et le **contenu** (blocs). *(Le nom, le slug et la source ne sont modifiables que par l'administrateur général et n'apparaissent donc pas ici. Les **partenaires** se gèrent désormais sur leur **propre page** — voir [chapitre 9](#9-gérer-les-partenaires-de-votre-site-dédié).)*
 
-> 📸 **[Capture S11]** — La fenêtre d'édition de la page d'accueil, ouverte (vue propriétaire : sections Couleur, Contenu, Partenaires).
+> 📸 **[Capture S11]** — La fenêtre d'édition de la page d'accueil, ouverte (vue propriétaire : sections Couleur et Contenu).
 
 ### 8.1 La couleur
 
@@ -306,53 +306,45 @@ La page d'accueil se compose en empilant des **blocs**. En bas de la section, cl
 
 Pour les blocs **Image** et **Galerie**, le bouton *Upload* ouvre votre explorateur de fichiers ; l'image est envoyée puis son lien est inséré automatiquement. Pendant l'envoi, le bouton affiche « … ».
 
-### 8.4 Partenaires
-
-Sélectionnez les partenaires de votre site dédié en cliquant sur leurs noms, répartis en deux groupes :
-- **Partenaires principaux** (mis en premier en haut de la page Partenaires).
-- **Partenaires** (groupe standard).
-
-Un partenaire ne peut être que dans un seul groupe à la fois. *(Le catalogue des partenaires lui-même est géré au niveau de la plateforme.)*
-
-### 8.5 Enregistrer
+### 8.4 Enregistrer
 
 Cliquez le bouton de validation en bas de la fenêtre. Les changements sont **publiés immédiatement**.
 
 ---
 
-## 9. Gérer l'équipe « À propos »
+## 9. Gérer les partenaires de votre site dédié
 
-Cliquez **« Équipe »** dans la barre du haut. Cette page gère les personnes affichées sur la page publique **« À propos »** de votre site dédié.
+Les partenaires de votre site dédié se gèrent sur une **page dédiée** (auparavant, c'était une section de l'éditeur d'accueil). Ouvrez-la depuis le menu **« Administration » → « Partenaires »** de la barre du haut (adresse `…/admin/partners`).
 
-> ⚠️ **Ne pas confondre :** cette page gère **l'affichage** des membres (photos, bios). Elle ne crée **pas** de comptes de connexion. Les comptes utilisateurs sont gérés par l'administrateur général.
+> 💡 **Où s'affichent-ils ?** Sur la **page Partenaires publique** de votre site dédié (voir [§5.4](#54-partenaires)), répartis en *Partenaires principaux* (mis en avant) et *Partenaires*.
 
-### 9.1 Les trois catégories (onglets)
+### 9.1 Choisir le rôle de chaque partenaire
 
-| Onglet | Usage | Affichage public |
-|---|---|---|
-| **Principaux** | Équipe cœur. | Grandes cartes verticales centrées (photo + rôle + bio + liens). |
-| **Secondaires** | Contributeur·ices proches. | Cartes horizontales compactes (mêmes infos). |
-| **Communauté** | Chercheur·euses associé·es. | Simple liste nom + rôle, sans photo. |
+La page liste le **catalogue de partenaires** disponibles. Pour chacun (logo ou initiale + nom), trois boutons de **rôle** :
 
-### 9.2 Ajouter / éditer un membre
+| Rôle | Effet |
+|---|---|
+| **Principal** | Le partenaire est **mis en avant** (affiché en premier sur la page Partenaires). |
+| **Standard** | Le partenaire est affiché dans le groupe standard. |
+| **—** | Le partenaire **n'est pas affiché** sur votre site dédié. |
 
-Cliquez **« Ajouter un membre »**, puis remplissez :
-- **Nom** *(obligatoire)*, **Rôle**, **Bio**.
-- **Photo** (bouton d'upload ; on peut la remplacer ou la retirer).
-- Liens : **LinkedIn**, **Site web**, **Autre lien**.
-- **Version anglaise** : *Role (EN)* et *Bio (EN)*. Deux boutons de traduction automatique sont proposés : **« Auto-traduire FR → EN »** (remplit l'anglais à partir du français) et **« Auto-traduire EN → FR »** (remplit le français à partir de l'anglais) — vous pouvez donc saisir dans la langue que vous préférez puis générer l'autre. *(Le nom du membre n'est pas traduit.)*
+- Un champ **« Rechercher un partenaire… »** filtre la liste (pratique quand le catalogue est long).
+- Cliquez **« Enregistrer »** (bouton à la couleur de votre site) pour valider : un **« Enregistré ✓ »** confirme la sauvegarde.
 
-Validez avec **« Ajouter »** (ou **« Enregistrer »** en édition).
+> 📸 **[Capture S20]** — La page Partenaires du site dédié : la recherche et la liste, avec les boutons de rôle **Principal / Standard / —** par partenaire.
 
-> 📸 **[Capture S14]** — La page Équipe avec les trois onglets et le formulaire d'ajout d'un membre ouvert.
+### 9.2 Ajouter un partenaire propre à votre site dédié
 
-### 9.3 Réordonner, déplacer, supprimer
+Si un partenaire ne figure pas dans le catalogue, ajoutez-le avec le bouton **« + Nouveau »** :
+- **Nom du partenaire** *(obligatoire)*.
+- **URL** du site du partenaire *(optionnel)*.
+- **Logo** *(optionnel, image à téléverser)*.
 
-Sur chaque membre listé :
-- **▲ / ▼** : changer l'ordre d'affichage.
-- **Menu déroulant** de catégorie : déplacer le membre vers *Principaux*, *Secondaires* ou *Communauté*.
-- **Crayon** : éditer.
-- **Corbeille** : supprimer (avec confirmation).
+Validez avec **« Ajouter »**. Le partenaire est créé **exclusivement pour votre site dédié** (il n'apparaît pas chez les autres) et reçoit aussitôt le rôle **Standard** — vous pourrez le passer en *Principal* si besoin. N'oubliez pas **« Enregistrer »** ensuite.
+
+> 📸 **[Capture S21]** — Le formulaire d'ajout d'un partenaire (Nom, URL, Logo).
+
+> 💡 **Catalogue partagé vs partenaire exclusif.** Le **catalogue** (partenaires communs, réservoir partagé) est géré au niveau de la plateforme par l'administrateur général : vous n'y touchez pas. En revanche, un partenaire que **vous** ajoutez via « + Nouveau » est **rattaché à votre seul site dédié**.
 
 ---
 
@@ -389,7 +381,7 @@ Au survol d'une ligne, des **boutons-icônes** apparaissent (une infobulle s'aff
 1. **Aperçu** — aperçu du cartel au **format impression A4**, tel qu'il sera imprimé.
 2. **Aperçu web** — le cartel **tel que le voient les visiteurs** en ligne (badge « Brouillon » s'il n'est pas encore publié).
 3. **Éditer** — ouvre le **formulaire** du cartel (titre, image, description, etc.).
-4. **Traduire** — lance une **traduction automatique**. Elle part de la **langue actuellement affichée sur le site** et remplit l'autre langue : site en **français** → traduit **FR → EN** ; site en **anglais** → traduit **EN → FR**. *(Pour traduire dans l'autre sens, changez d'abord la langue du site via le sélecteur FR/EN, puis relancez.)*
+4. **Retraduire** — lance une **traduction automatique**. Elle part de la **langue actuellement affichée sur le site** et remplit l'autre langue : site en **français** → traduit **FR → EN** ; site en **anglais** → traduit **EN → FR**. *(Pour traduire dans l'autre sens, changez d'abord la langue du site via le sélecteur FR/EN, puis relancez.)*
 5. **Ajouter une note** — **note interne** rattachée au cartel, visible des administrateurs uniquement — **jamais publique** (suivi de modération).
 
 **Groupe « Statut » (faire évoluer le cycle de vie)** — les boutons affichés dépendent de l'état du cartel.
@@ -491,17 +483,16 @@ Vos cartels vivent d'abord sur **votre** site dédié. Vous pouvez proposer qu'i
 3. Quand il est prêt : bouton **Publier**.
 
 ### Recette C — Modifier la page d'accueil
-1. Cliquez **« Page d'accueil »**.
-2. Ajustez la **couleur**, ajoutez/réordonnez des **blocs**, sélectionnez les **partenaires**.
+1. Menu **« Administration » → « Page d'accueil »**.
+2. Ajustez la **couleur**, ajoutez/réordonnez des **blocs**.
 3. Validez → publication immédiate.
 4. Fermez la fenêtre et vérifiez le rendu sur l'accueil.
 
-### Recette D — Ajouter un membre à la page « À propos »
-1. Cliquez **« Équipe »**.
-2. Choisissez l'onglet (*Principaux*, *Secondaires* ou *Communauté*).
-3. **« Ajouter un membre »** → remplissez Nom (+ rôle, bio, photo, liens).
-4. *(Optionnel)* Bouton **Traduire** pour la version anglaise.
-5. **« Ajouter »**. Réordonnez avec ▲ / ▼ si besoin.
+### Recette D — Gérer les partenaires de votre site dédié
+1. Menu **« Administration » → « Partenaires »**.
+2. Pour chaque partenaire, choisissez le **rôle** : **Principal**, **Standard** ou **—** (masqué). Filtrez avec la **recherche** si la liste est longue.
+3. *(Optionnel)* **« + Nouveau »** pour ajouter un partenaire propre à votre site (Nom obligatoire, URL et logo facultatifs).
+4. Cliquez **« Enregistrer »** (un **« Enregistré ✓ »** confirme).
 
 ### Recette E — Faire apparaître un cartel sur le site principal
 1. Assurez-vous que le cartel est **publié** (il est alors normalement déjà soumis automatiquement).
@@ -550,9 +541,10 @@ Vos cartels vivent d'abord sur **votre** site dédié. Vous pouvez proposer qu'i
 - **Source « Atelier » = mise à jour automatique.** Si votre site dédié est alimenté par un atelier, ajouter ou retirer un cartel de cet atelier modifie aussitôt votre frise.
 - **Cartels du site principal = lecture seule** dans votre vue (badge « consultation »).
 - **Suppression locale.** Supprimer un cartel depuis votre site dédié n'affecte pas le site principal.
-- **Réordonnancement des blocs et des membres : flèches ▲▼ uniquement** (pas de glisser-déposer).
+- **Réordonnancement des blocs : flèches ▲▼ uniquement** (pas de glisser-déposer).
+- **Partenaires : page dédiée.** Ils ne se règlent plus dans l'éditeur d'accueil mais via **Administration → Partenaires** (voir [chapitre 9](#9-gérer-les-partenaires-de-votre-site-dédié)).
 - **Contact des visiteurs jamais public**, mais précieux pour les recontacter : encouragez-le.
-- **Traduction automatique** : pratique, mais relisez toujours le résultat (surtout les bios et descriptions), et pensez à combler les cartels marqués **« Pas de traduction EN »**.
+- **Traduction automatique** : pratique, mais relisez toujours le résultat (surtout les descriptions), et pensez à combler les cartels marqués **« Pas de traduction EN »**.
 
 ---
 
@@ -573,8 +565,8 @@ Parce que vous n'avez pas (encore) saisi de **version anglaise des blocs**. Ouvr
 **Comment proposer mes cartels en espagnol/allemand/… pour une expo ?**
 Utilisez l'export **« PDF traduit (autre langue) »** (voir [§6.6](#66-exporter-un-pdf-traduit-dans-nimporte-quelle-langue) et la recette J). C'est un PDF ponctuel, non enregistré.
 
-**Quelle différence entre « Équipe » et la gestion des comptes ?**
-« Équipe » gère **l'affichage** des personnes sur la page « À propos ». Les **comptes de connexion** sont gérés par l'administrateur général.
+**Où gère-t-on les partenaires de mon site dédié ?**
+Depuis le menu **Administration → Partenaires** (voir [chapitre 9](#9-gérer-les-partenaires-de-votre-site-dédié)) : choisissez le rôle de chacun (Principal / Standard / —), filtrez avec la recherche, et ajoutez au besoin un partenaire propre à votre site avec **« + Nouveau »**.
 
 **J'ai supprimé un cartel par erreur.**
 La suppression est définitive côté site dédié. Avant de supprimer, préférez **Archiver** (réversible). En cas de doute, contactez l'administrateur général (une archive/export peut exister).
@@ -598,6 +590,7 @@ Oui, à l'upload, pour optimiser le chargement, sans démarche de votre part.
 - **Statut** — état d'un cartel : Brouillon, En attente, Publié, Archivé.
 - **Soumettre au site principal** — proposer qu'un cartel publié apparaisse aussi sur le site principal (sur validation).
 - **Bloc** — élément de contenu de la page d'accueil (titre, texte, image, etc.).
+- **Partenaire (principal / standard)** — organisation affichée sur la page Partenaires du site dédié ; *Principal* = mis en avant, *Standard* = groupe courant, *—* = non affiché.
 - **Repli / fallback** — affichage du texte français quand la version anglaise d'un champ est vide.
 - **QR code** — code-barres 2D imprimé sur un cartel, renvoyant vers sa fiche en ligne.
 

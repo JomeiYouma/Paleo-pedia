@@ -17,7 +17,7 @@
 6. [Languages & translations (FR/EN)](#6-languages--translations-fren)
 7. [Submitting a cartel (visitors and admins)](#7-submitting-a-cartel-visitors-and-admins)
 8. [Editing your dedicated site's home page](#8-editing-your-dedicated-sites-home-page)
-9. [Managing the "About" team](#9-managing-the-about-team)
+9. [Managing your dedicated site's partners](#9-managing-your-dedicated-sites-partners)
 10. [Managing cartels (moderation)](#10-managing-cartels-moderation)
 11. [The "submit to the main site" workflow](#11-the-submit-to-the-main-site-workflow)
 12. [Step-by-step recipes](#12-step-by-step-recipes)
@@ -29,6 +29,7 @@
 
 ## 1. Key vocabulary
 
+- **Dedicated site (or "subsite")**: your thematic mini-site within the Paléo ecosystem. The *administration manual* calls it a "**subsite**" — it is exactly the same thing.
 - **Cartel**: the record for an object / invention (title, year, location, image, description, categories…). It is the basic unit shown on the timeline.
 - **Timeline (Frise)**: the collection of your dedicated site's published cartels, shown as a chronology. Three display modes exist: **Timeline** (chronology), **Map** (geographic) and **Tree** (Arborescence).
 - **Cartel status**: its state in the life cycle.
@@ -50,7 +51,7 @@ A **dedicated site** is a standalone thematic mini-site orbiting the main site (
 - its own customisable **home page**,
 - its own signature **colour** (applied everywhere: menu, buttons, accents…),
 - its own **timeline** of cartels (the collection of inventions/objects you showcase),
-- its own **Partners** page and its own **"About" team** page,
+- its own **Partners** page,
 - optionally its **own domain name** (e.g. `paleo-h2o.org`).
 
 A dedicated site stays connected to the main site: some of your cartels can, if you wish, be **proposed to also appear on the main site** (see [chapter 11](#11-the-submit-to-the-main-site-workflow)).
@@ -59,7 +60,7 @@ A dedicated site stays connected to the main site: some of your cartels can, if 
 
 | Source type | How cartels end up in the dedicated site |
 |---|---|
-| **"Category" source** | The cartels are those **explicitly attached** to the dedicated site. You decide, one by one, which cartels appear there: you build the selection by hand. |
+| **"Category" source** | The cartels are those **explicitly attached** to the dedicated site. In practice, **every cartel you create and publish on your dedicated site is attached to it automatically** (see [recipe A](#12-step-by-step-recipes)): that is how you build the selection — there is no separate "attach" step. |
 | **"Workshop" source** | The cartels are **all those attached to a given workshop** (a workshop is a group of cartels). The list updates **on its own**: adding or removing a cartel from the workshop adds or removes it from the dedicated site right away. |
 
 > 📸 **[Screenshot S01]** — Overview of a dedicated site (home page shown in the browser, with the URL visible in the address bar).
@@ -74,9 +75,9 @@ A dedicated site stays connected to the main site: some of your cartels can, if 
 |---|:---:|:---:|:---:|
 | View the public pages | ✅ | ✅ | ✅ |
 | Submit a cartel | ✅ *(goes "pending")* | ✅ *(publishes directly)* | ✅ |
-| Edit the home page (colour, content, partners) | ❌ | ✅ | ✅ |
+| Edit the home page (colour, content) | ❌ | ✅ | ✅ |
 | Change the **name**, the **slug**, the **source** of the dedicated site | ❌ | ❌ | ✅ |
-| Manage the "About" team | ❌ | ✅ | ✅ |
+| Manage the dedicated site's **partners** | ❌ | ✅ | ✅ |
 | Create / edit / publish / archive / delete the dedicated site's cartels | ❌ | ✅ | ✅ |
 | Submit a cartel to the main site | ❌ | ✅ *(its published cartels)* | ✅ |
 | **Approve / reject** submissions to the main site | ❌ | ❌ | ✅ |
@@ -86,6 +87,8 @@ A dedicated site stays connected to the main site: some of your cartels can, if 
 > 💡 User accounts (creating a new owner, passwords…) are managed by the **general administrator**. If you need access for a collaborator, ask them.
 
 > ⚠️ **Sharing access — important.** Your login credentials are **strictly personal** and reserved for members of **your organisation**. Sharing them is done **entirely at your own risk**, and it is **strictly forbidden** to give them to anyone **outside your organisation** (see the legal notice).
+
+> 👉 **What is NOT your responsibility** (→ general administrator): the **name**, **slug** and **source** of your dedicated site; **account creation**; connecting a dedicated **domain name**; and the **validation** of cartels you submit to the main site. For these, contact the platform's general administrator.
 
 ---
 
@@ -109,12 +112,12 @@ From left to right:
 - **Navigation menu**: *Home · Timeline · Presentation · Partners*.
 - **Language switcher** (French / English) — see [chapter 6](#6-languages--translations-fren).
 - **"Submit a cartel"** — visible to **everyone**.
-- **"Home page"** — *(signed in as owner)* edit the home content, the colour, the partners.
-- **"Team"** — *(owner)* manage the members of the "About" page.
-- **"Manage"** — *(owner)* manage the cartels (moderation).
+- **"Administration"** — *(signed in as owner)* a **compact menu** that groups your admin tools: **Home page** (edit the content and colour), **Partners** (see [chapter 9](#9-managing-your-dedicated-sites-partners)) and **Manage** (the cartels, see [chapter 10](#10-managing-cartels-moderation)).
 - **Sign-out icon**.
 
-> 📸 **[Screenshot S03]** — The top bar **as seen when signed in as an owner**, with the "Submit a cartel", "Home page", "Team", "Manage" buttons clearly visible.
+> 💡 **Adaptive bar.** If the screen width is not enough, the navigation and the menu automatically collapse into a **"burger" menu** (☰ icon) with the same entries.
+
+> 📸 **[Screenshot S03]** — The top bar **as seen when signed in as an owner**, with the "Submit a cartel" button and the **"Administration" menu open** (Home page · Partners · Manage).
 
 > 💡 **Visual cue:** a breadcrumb trail appears at the top of deep pages so you know where you are and can step back.
 
@@ -144,15 +147,15 @@ The visitor can filter, search, and click a cartel to open its detailed record.
 > 📸 **[Screenshot S05]** — A dedicated site's timeline with several cartels.
 > 📸 **[Screenshot S06]** — The same content in **Map** mode.
 
-### 5.3 Presentation (the "About" page)
+### 5.3 Presentation (the project's approach)
 
-The **"Presentation"** menu link opens **your dedicated site's** "About" page: it shows the **team** you manage (see [chapter 9](#9-managing-the-about-team)), split into Main / Secondary / Community. If your dedicated site has no members declared, the page automatically falls back to the main site's team.
+The **"Presentation"** menu link opens a page that lays out the **approach / methodology of the Paléo project** — the same one shown on the Paléo-Pédia showcase: to record, document and bring back to light old or little-known energy techniques. The page title reuses your dedicated site's name ("*<Site name> — Approach*"). It is a page **shared across the ecosystem**: its content is not specific to your dedicated site and is not edited from your space.
 
 > 💡 The footer also offers **Legal notice**, **Privacy policy** and **Contact**: these pages are **shared across the whole ecosystem** (main site). They open correctly, including from a dedicated site on its own domain name.
 
 ### 5.4 Partners
 
-A list of the partners associated with your dedicated site, split into **Main partners** (shown first) and **Partners**. Each partner shows its logo (or its initial) and a link to its website if provided. *(You choose these partners from the home page editor — see [§8.4](#84-partners).)*
+A list of the partners associated with your dedicated site, split into **Main partners** (shown first) and **Partners**. Each partner shows its logo (or its initial) and a link to its website if provided. *(You choose these partners from their dedicated page — see [chapter 9](#9-managing-your-dedicated-sites-partners).)*
 
 > 📸 **[Screenshot S07]** — A dedicated site's Partners page.
 
@@ -176,7 +179,7 @@ In the top right, two **FR / EN** buttons. The choice is **stored in the visitor
 
 ### 6.2 How bilingual content is stored
 
-Each **cartel** has two versions of its key texts: **title, description and location**, in French and in English. Likewise, each **team member** has a **Role (EN)** and a **Bio (EN)**.
+Each **cartel** has two versions of its key texts: **title, description and location**, in French and in English.
 
 > 💡 **Fallback rule:** if a visitor is in English but the EN version of a field is empty, the **French text is shown** (never a blank). So nothing "breaks" if a translation is missing — but an English-speaking visitor then sees French at that spot.
 
@@ -186,8 +189,6 @@ Each **cartel** has two versions of its key texts: **title, description and loca
 |---|---|
 | Interface (menus, buttons, labels) | ✅ Yes, automatically |
 | Cartels: **title, description, location** | ✅ Yes (a FR field + an EN field) |
-| "About" team: **role, bio** | ✅ Yes (dedicated EN fields) |
-| A team member's **name** | ❌ No (a single name) |
 | **Home page blocks** (titles, texts, quotes…) | ✅ Yes (**French / English** tab in the editor — falls back to FR if EN is empty) |
 | Dedicated site **name / theme** | ❌ No |
 
@@ -198,15 +199,14 @@ Each **cartel** has two versions of its key texts: **title, description and loca
 Several AI tools help you fill in the English version. **A visitor not signed in never has access to them.**
 
 - **When creating a cartel**: if you fill in the French and leave the English empty, the English is **generated automatically** (and vice versa). *(Only on creation, not on every edit.)*
-- **Per-cartel "Translate" button** (the "Manage" screen): (re)translates a cartel into the other language on demand.
+- **Per-cartel "Re-translate" button** (the "Manage" screen): (re)translates a cartel into the other language on demand.
 - **Re-translate in bulk**: select several cartels → everything is re-translated at once.
-- **Team**: a **Translate** button in a member's form pre-fills *Role (EN)* and *Bio (EN)* from the French.
 
 > 💡 A **language detection** as you type warns you if you type English in the French field (or vice versa) and offers to switch.
 
 ### 6.5 Spotting cartels with no English version
 
-In the **"Manage"** screen, a cartel without an English translation shows a small orange **"No EN translation"** badge. Use the **Translate** button to fill the gap.
+In the **"Manage"** screen, a cartel without an English translation shows a small orange **"No EN translation"** badge. Use the **Re-translate** button to fill the gap.
 
 ### 6.6 Exporting a translated PDF (in any language)
 
@@ -216,7 +216,7 @@ In **Manage → Export → "Translated PDF (other language)"**, you can generate
 - The AI translates the content **from the currently displayed language** (FR or EN) then generates the PDF.
 - ⚠️ This is a **one-off export**: the translation is only used for the PDF, it is **not saved** in the database. Ideal for a multilingual exhibition.
 
-> ⚠️ **Always proofread** automatic translations before distribution (especially bios and descriptions). The AI is an excellent starting point, not an infallible translator.
+> ⚠️ **Always proofread** automatic translations before distribution (especially descriptions). The AI is an excellent starting point, not an infallible translator.
 
 ---
 
@@ -265,9 +265,9 @@ Click **"Home page"** in the top bar. An editing window opens.
 
 > ⚠️ **Changes are published immediately** as soon as you save (no draft for the home page).
 
-As an owner, you can edit **three things**: the **colour**, the **content** (blocks) and the **partners**. *(The name, slug and source can only be changed by the general administrator and therefore do not appear here.)*
+As an owner, you can edit **two things**: the **colour** and the **content** (blocks). *(The name, slug and source can only be changed by the general administrator and therefore do not appear here. The **partners** are now managed on their **own page** — see [chapter 9](#9-managing-your-dedicated-sites-partners).)*
 
-> 📸 **[Screenshot S11]** — The home page editing window, open (owner view: Colour, Content, Partners sections).
+> 📸 **[Screenshot S11]** — The home page editing window, open (owner view: Colour and Content sections).
 
 ### 8.1 The colour
 
@@ -306,53 +306,45 @@ The home page is composed by stacking **blocks**. At the bottom of the section, 
 
 For the **Image** and **Gallery** blocks, the *Upload* button opens your file explorer; the image is uploaded and its link inserted automatically. During upload, the button shows "…".
 
-### 8.4 Partners
-
-Select your dedicated site's partners by clicking their names, split into two groups:
-- **Main partners** (shown first at the top of the Partners page).
-- **Partners** (standard group).
-
-A partner can only be in one group at a time. *(The partner catalogue itself is managed at the platform level.)*
-
-### 8.5 Save
+### 8.4 Save
 
 Click the confirm button at the bottom of the window. Changes are **published immediately**.
 
 ---
 
-## 9. Managing the "About" team
+## 9. Managing your dedicated site's partners
 
-Click **"Team"** in the top bar. This page manages the people shown on your dedicated site's public **"About"** page.
+Your dedicated site's partners are managed on a **dedicated page** (it used to be a section of the home page editor). Open it from the **"Administration" → "Partners"** menu in the top bar (address `…/admin/partners`).
 
-> ⚠️ **Don't confuse them:** this page manages the **display** of members (photos, bios). It does **not** create sign-in accounts. User accounts are managed by the general administrator.
+> 💡 **Where do they show?** On your dedicated site's public **Partners page** (see [§5.4](#54-partners)), split into *Main partners* (highlighted) and *Partners*.
 
-### 9.1 The three categories (tabs)
+### 9.1 Choosing each partner's role
 
-| Tab | Use | Public display |
-|---|---|---|
-| **Main** | Core team. | Large centred vertical cards (photo + role + bio + links). |
-| **Secondary** | Close contributors. | Compact horizontal cards (same info). |
-| **Community** | Associated researchers. | Simple name + role list, no photo. |
+The page lists the available **partner catalogue**. For each one (logo or initial + name), three **role** buttons:
 
-### 9.2 Add / edit a member
+| Role | Effect |
+|---|---|
+| **Main** | The partner is **highlighted** (shown first on the Partners page). |
+| **Standard** | The partner is shown in the standard group. |
+| **—** | The partner is **not shown** on your dedicated site. |
 
-Click **"Add a member"**, then fill in:
-- **Name** *(required)*, **Role**, **Bio**.
-- **Photo** (upload button; you can replace or remove it).
-- Links: **LinkedIn**, **Website**, **Other link**.
-- **English version**: *Role (EN)* and *Bio (EN)*. Two automatic-translation buttons are available: **"Auto-translate FR → EN"** (fills the English from the French) and **"Auto-translate EN → FR"** (fills the French from the English) — so you can type in whichever language you prefer, then generate the other. *(The member's name is not translated.)*
+- A **"Search a partner…"** field filters the list (handy when the catalogue is long).
+- Click **"Save"** (button in your site's colour) to confirm: a **"Saved ✓"** confirms it.
 
-Confirm with **"Add"** (or **"Save"** when editing).
+> 📸 **[Screenshot S20]** — The dedicated site's Partners page: the search and the list, with the **Main / Standard / —** role buttons per partner.
 
-> 📸 **[Screenshot S14]** — The Team page with the three tabs and the add-member form open.
+### 9.2 Adding a partner specific to your dedicated site
 
-### 9.3 Reorder, move, delete
+If a partner is not in the catalogue, add it with the **"+ New"** button:
+- **Partner name** *(required)*.
+- The partner's **URL** *(optional)*.
+- **Logo** *(optional, an image to upload)*.
 
-On each listed member:
-- **▲ / ▼**: change the display order.
-- **Category dropdown**: move the member to *Main*, *Secondary* or *Community*.
-- **Pencil**: edit.
-- **Trash**: delete (with confirmation).
+Confirm with **"Add"**. The partner is created **exclusively for your dedicated site** (it does not appear on the others) and is immediately given the **Standard** role — you can then switch it to *Main* if needed. Don't forget to **"Save"** afterwards.
+
+> 📸 **[Screenshot S21]** — The form for adding a partner (Name, URL, Logo).
+
+> 💡 **Shared catalogue vs exclusive partner.** The **catalogue** (common partners, shared pool) is managed at the platform level by the general administrator: you don't touch it. A partner that **you** add via "+ New", however, is **attached to your dedicated site only**.
 
 ---
 
@@ -389,7 +381,7 @@ When you hover a row, **icon buttons** appear (a tooltip shows on hover). The av
 1. **Preview** — preview of the cartel in **A4 print format**, as it will be printed.
 2. **Web preview** — the cartel **as visitors see it** online ("Draft" badge if not yet published).
 3. **Edit** — opens the cartel **form** (title, image, description, etc.).
-4. **Translate** — runs an **automatic translation**. It starts from the **language currently displayed on the site** and fills the other one: site in **French** → translates **FR → EN**; site in **English** → translates **EN → FR**. *(To translate the other way, switch the site language with the FR/EN switcher first, then run it again.)*
+4. **Re-translate** — runs an **automatic translation**. It starts from the **language currently displayed on the site** and fills the other one: site in **French** → translates **FR → EN**; site in **English** → translates **EN → FR**. *(To translate the other way, switch the site language with the FR/EN switcher first, then run it again.)*
 5. **Add a note** — **internal note** attached to the cartel, visible to administrators only — **never public** (moderation tracking).
 
 **"Status" group (move it through its life cycle)** — the buttons shown depend on the cartel's state.
@@ -491,17 +483,16 @@ Your cartels live first on **your** dedicated site. You can propose that they **
 3. When it's ready: the **Publish** button.
 
 ### Recipe C — Edit the home page
-1. Click **"Home page"**.
-2. Adjust the **colour**, add/reorder **blocks**, select the **partners**.
+1. **"Administration" → "Home page"** menu.
+2. Adjust the **colour**, add/reorder **blocks**.
 3. Confirm → immediate publication.
 4. Close the window and check the result on the home page.
 
-### Recipe D — Add a member to the "About" page
-1. Click **"Team"**.
-2. Choose the tab (*Main*, *Secondary* or *Community*).
-3. **"Add a member"** → fill in Name (+ role, bio, photo, links).
-4. *(Optional)* The **Translate** button for the English version.
-5. **"Add"**. Reorder with ▲ / ▼ if needed.
+### Recipe D — Manage your dedicated site's partners
+1. **"Administration" → "Partners"** menu.
+2. For each partner, choose the **role**: **Main**, **Standard** or **—** (hidden). Use the **search** if the list is long.
+3. *(Optional)* **"+ New"** to add a partner specific to your site (Name required, URL and logo optional).
+4. Click **"Save"** (a **"Saved ✓"** confirms it).
 
 ### Recipe E — Make a cartel appear on the main site
 1. Make sure the cartel is **published** (it is then normally already submitted automatically).
@@ -550,9 +541,10 @@ Your cartels live first on **your** dedicated site. You can propose that they **
 - **"Workshop" source = automatic updates.** If your dedicated site is fed by a workshop, adding or removing a cartel from that workshop changes your timeline right away.
 - **Main site cartels = read-only** in your view ("view only" badge).
 - **Local deletion.** Deleting a cartel from your dedicated site does not affect the main site.
-- **Reordering blocks and members: ▲▼ arrows only** (no drag-and-drop).
+- **Reordering blocks: ▲▼ arrows only** (no drag-and-drop).
+- **Partners: a dedicated page.** They are no longer set in the home page editor but via **Administration → Partners** (see [chapter 9](#9-managing-your-dedicated-sites-partners)).
 - **Visitors' contact is never public**, but valuable for getting back to them: encourage it.
-- **Automatic translation**: handy, but always proofread the result (especially bios and descriptions), and remember to fill in cartels flagged **"No EN translation"**.
+- **Automatic translation**: handy, but always proofread the result (especially descriptions), and remember to fill in cartels flagged **"No EN translation"**.
 
 ---
 
@@ -573,8 +565,8 @@ Because you haven't (yet) entered an **English version of the blocks**. Open "Ho
 **How do I offer my cartels in Spanish/German/… for an exhibition?**
 Use the **"Translated PDF (other language)"** export (see [§6.6](#66-exporting-a-translated-pdf-in-any-language) and recipe J). It is a one-off PDF, not saved.
 
-**What's the difference between "Team" and account management?**
-"Team" manages the **display** of people on the "About" page. **Sign-in accounts** are managed by the general administrator.
+**Where do I manage my dedicated site's partners?**
+From the **Administration → Partners** menu (see [chapter 9](#9-managing-your-dedicated-sites-partners)): choose each one's role (Main / Standard / —), filter with the search, and add a partner specific to your site with **"+ New"** if needed.
 
 **I deleted a cartel by mistake.**
 Deletion is permanent on the dedicated site side. Before deleting, prefer **Archive** (reversible). If in doubt, contact the general administrator (an archive/export may exist).
@@ -598,6 +590,7 @@ Yes, on upload, to optimise loading, with no action on your part.
 - **Status** — a cartel's state: Draft, Pending, Published, Archived.
 - **Submit to the main site** — propose that a published cartel also appears on the main site (subject to validation).
 - **Block** — a content element of the home page (title, text, image, etc.).
+- **Partner (main / standard)** — an organisation shown on the dedicated site's Partners page; *Main* = highlighted, *Standard* = regular group, *—* = not shown.
 - **Fallback** — showing the French text when the English version of a field is empty.
 - **QR code** — a 2D barcode printed on a cartel, pointing to its online record.
 
