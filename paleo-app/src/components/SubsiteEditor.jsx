@@ -62,6 +62,14 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
     const [error,         setError]         = useState('');
     const [slugManual,    setSlugManual]    = useState(isEdit);
 
+    // Compte propriétaire (owner) créé en même temps que le sous-site — optionnel,
+    // création seulement. `createdSubsite` sert de garde : si le sous-site est
+    // créé mais que le compte échoue (ex. e-mail déjà pris), on ne recrée pas le
+    // sous-site en réessayant, on ne retente que le compte.
+    const [ownerEmail,     setOwnerEmail]     = useState('');
+    const [ownerPassword,  setOwnerPassword]  = useState('');
+    const [createdSubsite, setCreatedSubsite] = useState(null);
+
     useEffect(() => {
         api.categories.getAll().then(d => setCategories(Array.isArray(d) ? d : []));
         api.workshops.getAll().then(d => setWorkshops(Array.isArray(d) ? d : []));
@@ -74,42 +82,82 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
 
     // ── Save ───────────────────────────────────────────────────
     const handleSave = async () => {
-        // Pour la création on exige tous les champs d'identité + la source.
-        // En édition owner (canEditIdentity = false), nom/slug/source restent
-        // ceux du subsite courant et ne sont pas envoyés (le controller les
-        // ignorerait de toute façon via OWNER_EDITABLE).
-        if (!isEdit) {
-            if (!name || !slug)                                              { setError(t('subsiteEditor.errNameSlug', 'Nom et slug sont requis.')); return; }
-            if (sourceType === 'category' && !categoryId)                    { setError(t('subsiteEditor.errCategory', 'Choisissez une catégorie.')); return; }
-            if (sourceType === 'workshop' && !workshopId)                    { setError(t('subsiteEditor.errWorkshop', 'Choisissez un atelier.'));  return; }
+        // Un compte propriétaire est demandé dès qu'un des deux champs est rempli.
+        const wantsOwner = !isEdit && (ownerEmail.trim() || ownerPassword);
+
+        // Pour la création on exige tous les champs d'identité + la source — sauf
+        // si le sous-site a déjà été créé et qu'on ne retente que le compte owner.
+        // En édition owner (canEditIdentity = false), nom/slug/source restent ceux
+        // du subsite courant et ne sont pas envoyés (le controller les ignorerait
+        // de toute façon via OWNER_EDITABLE).
+        if (!isEdit && !createdSubsite) {
+            if (!name || !slug)                           { setError(t('subsiteEditor.errNameSlug', 'Nom et slug sont requis.')); return; }
+            if (sourceType === 'category' && !categoryId) { setError(t('subsiteEditor.errCategory', 'Choisissez une catégorie.')); return; }
+            if (sourceType === 'workshop' && !workshopId) { setError(t('subsiteEditor.errWorkshop', 'Choisissez un atelier.'));  return; }
         }
+        if (wantsOwner) {
+            if (!ownerEmail.trim() || !ownerPassword) { setError(t('subsiteEditor.errOwnerBoth', 'Pour créer le compte propriétaire, renseignez son e-mail ET son mot de passe (ou laissez les deux vides).')); return; }
+            if (ownerPassword.length < 8)             { setError(t('subsiteEditor.errOwnerPw', 'Le mot de passe du propriétaire doit faire au moins 8 caractères.')); return; }
+        }
+
         setSaving(true); setError('');
+        let created = createdSubsite; // sous-site déjà créé lors d'une tentative précédente ?
         try {
-            const payload = {
-                primary_color: primaryColor,
-                planet_type: planetType || null,
-                content_blocks: blocks,
-                content_blocks_en: blocksEn,
-            };
-            if (canEditIdentity) {
-                payload.name = name;
-                payload.slug = slug;
-            }
-            // La source n'est paramétrable qu'à la création — figée ensuite.
-            if (!isEdit) {
-                if (sourceType === 'workshop') payload.workshop_id = workshopId;
-                else                            payload.category_id = categoryId;
+            if (isEdit) {
+                const payload = {
+                    primary_color: primaryColor,
+                    planet_type: planetType || null,
+                    content_blocks: blocks,
+                    content_blocks_en: blocksEn,
+                };
+                if (canEditIdentity) { payload.name = name; payload.slug = slug; }
+                await api.subsites.update(subsite.slug, payload);
+                onSaved?.();
+                onClose();
+                return;
             }
 
-            if (isEdit) {
-                await api.subsites.update(subsite.slug, payload);
-            } else {
-                await api.subsites.create(payload);
+            // ── Création ──────────────────────────────────────────────
+            if (!created) {
+                const payload = {
+                    name, slug,
+                    primary_color: primaryColor,
+                    planet_type: planetType || null,
+                    content_blocks: blocks,
+                    content_blocks_en: blocksEn,
+                };
+                // La source n'est paramétrable qu'à la création — figée ensuite.
+                if (sourceType === 'workshop') payload.workshop_id = workshopId;
+                else                            payload.category_id = categoryId;
+
+                created = await api.subsites.create(payload);
+                setCreatedSubsite(created);
+                onSaved?.(); // rafraîchit la liste dès que le sous-site existe
             }
-            onSaved?.();
+
+            // Compte propriétaire optionnel, rattaché au nouveau sous-site.
+            if (wantsOwner) {
+                await api.users.create({
+                    email: ownerEmail.trim(),
+                    password: ownerPassword,
+                    role: 'contributor',
+                    can_manage_cartels: true,
+                    can_manage_team: true, // = owner de ce sous-site
+                    home_subsite_id: created.id,
+                });
+            }
             onClose();
         } catch (e) {
-            setError(e.message);
+            // Sous-site déjà créé mais le compte a échoué (ex. e-mail déjà pris) :
+            // on ne recrée pas le sous-site, on invite à corriger et réessayer.
+            if (!isEdit && created) {
+                setError(t('subsiteEditor.errOwnerAfterCreate', {
+                    name: created.name, reason: e.message,
+                    defaultValue: `Le sous-site « ${created.name} » a bien été créé, mais le compte propriétaire n'a pas pu l'être : ${e.message}. Vous pouvez l'ajouter via « Gestion d'équipe », ou corriger l'e-mail ci-dessous et réessayer.`,
+                }));
+            } else {
+                setError(e.message);
+            }
         } finally {
             setSaving(false);
         }
@@ -197,6 +245,33 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
                             </div>
                         </div>
                     </section>
+                    )}
+
+                    {/* Compte propriétaire (owner) — création seulement, optionnel */}
+                    {!isEdit && canEditIdentity && (
+                        <section>
+                            <h3 style={{ margin: '0 0 8px', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', color: '#aaa', letterSpacing: '0.5px' }}>
+                                {t('subsiteEditor.ownerHeading', 'Compte propriétaire (optionnel)')}
+                            </h3>
+                            <p style={{ margin: '0 0 12px', fontSize: '0.78rem', color: '#999', lineHeight: 1.4 }}>
+                                {t('subsiteEditor.ownerHint', "Crée tout de suite le compte qui gérera ce sous-site (permission « Gérer l'équipe »). Vous pourrez aussi l'ajouter plus tard via « Gestion d'équipe ». Conseil : utilisez une adresse e-mail choisie par les personnes qui géreront ce sous-site — elle servira à les recontacter.")}
+                            </p>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <div>
+                                    <label style={labelStyle}>{t('subsiteEditor.ownerEmail', 'E-mail du propriétaire')}</label>
+                                    <input type="email" value={ownerEmail} onChange={e => setOwnerEmail(e.target.value)} placeholder="equipe@exemple.org" style={inputStyle} autoComplete="off" />
+                                </div>
+                                <div>
+                                    <label style={labelStyle}>{t('subsiteEditor.ownerPassword', 'Mot de passe (8+ car.)')}</label>
+                                    <input type="text" value={ownerPassword} onChange={e => setOwnerPassword(e.target.value)} placeholder="à transmettre à l'équipe" style={{ ...inputStyle, fontFamily: 'monospace' }} autoComplete="new-password" />
+                                </div>
+                            </div>
+                            {createdSubsite && (
+                                <p style={{ margin: '8px 0 0', fontSize: '0.78rem', color: '#c0392b', lineHeight: 1.4 }}>
+                                    {t('subsiteEditor.ownerRetry', "Le sous-site est déjà créé. Corrigez l'e-mail si besoin puis validez : seul le compte propriétaire sera (re)tenté, le sous-site ne sera pas recréé.")}
+                                </p>
+                            )}
+                        </section>
                     )}
 
                     {/* Couleur (mode owner) : section dédiée si l'identité est masquée */}
