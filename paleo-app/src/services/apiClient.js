@@ -260,6 +260,12 @@ export const contactMessages = {
   getAll:  ()           => get('/contact-messages'),
 };
 
+// ── Inscription newsletter (relais Sendy) ─────────────────────
+// POST public (no auth). Le serveur relaie vers l'API /subscribe de Sendy.
+export const newsletter = {
+  subscribe: (data)     => post('/newsletter/subscribe', data),
+};
+
 // ── Prestations (page publique /prestations) ──────────────────
 // Lecture publique (filtrée à publié pour les non-admins, tout pour les
 // admins). Écriture réservée au superadmin.
@@ -428,5 +434,5 @@ export const logs = {
   bulkSetRecipient: (recipient) => patch('/logs/email-config', { recipient }),
 };
 
-const api = { auth, cartels, stats, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners, teamMembers, pressArticles, missions, missionApplications, contactMessages, prestations, shopItems, logs };
+const api = { auth, cartels, stats, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners, teamMembers, pressArticles, missions, missionApplications, contactMessages, newsletter, prestations, shopItems, logs };
 export default api;

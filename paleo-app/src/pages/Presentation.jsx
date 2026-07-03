@@ -324,14 +324,14 @@ const Presentation = () => {
                 les personnages quand le footer arrive en bas du viewport,
                 pour qu'ils s'élèvent avec lui plutôt que d'être coupés. */}
             <img
-                src="/photos/mouchot.png"
+                src="/photos/mouchot.webp"
                 alt=""
                 aria-hidden="true"
                 className="presentation-decor presentation-decor--left"
                 style={{ transform: `translateY(-${footerOverlap}px) rotate(7deg)` }}
             />
             <img
-                src="/photos/maria.png"
+                src="/photos/maria.webp"
                 alt=""
                 aria-hidden="true"
                 className="presentation-decor presentation-decor--right"
@@ -381,10 +381,10 @@ const Presentation = () => {
                 margin: '0 0 30px',
             }}>
                 {[
-                    { src: '/photos/about-1.png', alt: t('pages.presentation.img1Alt') },
-                    { src: '/photos/about-2.jpg', alt: t('pages.presentation.img2Alt') },
-                    { src: '/photos/about-3.jpg', alt: t('pages.presentation.img3Alt') },
-                    { src: '/photos/about-4.jpg', alt: t('pages.presentation.img4Alt') },
+                    { src: '/photos/about-1.webp', alt: t('pages.presentation.img1Alt') },
+                    { src: '/photos/about-2.webp', alt: t('pages.presentation.img2Alt') },
+                    { src: '/photos/about-3.webp', alt: t('pages.presentation.img3Alt') },
+                    { src: '/photos/about-4.webp', alt: t('pages.presentation.img4Alt') },
                 ].map((img, i) => (
                     <figure key={i} style={{ margin: 0 }}>
                         <img

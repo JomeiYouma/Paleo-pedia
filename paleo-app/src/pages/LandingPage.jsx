@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, BookOpen, Map, PenTool, Lightbulb } from 'lucide-react';
 import { usePageMeta } from '../hooks/usePageMeta';
+import NewsletterSignup from '../components/NewsletterSignup';
 
 const PRIMARY = 'var(--color-primary)';
 const ACCENT  = 'var(--color-accent)';
@@ -39,13 +40,13 @@ const LandingPage = () => {
 
                 {/* ── Décor : Mouchot + son invention (gauche) ─────── */}
                 <img
-                    src="/photos/mouchot_inov.png"
+                    src="/photos/mouchot_inov.webp"
                     alt=""
                     aria-hidden="true"
                     className="landing-hero__decor landing-hero__decor--mouchot-inov"
                 />
                 <img
-                    src="/photos/mouchot.png"
+                    src="/photos/mouchot.webp"
                     alt=""
                     aria-hidden="true"
                     className="landing-hero__decor landing-hero__decor--mouchot"
@@ -53,13 +54,13 @@ const LandingPage = () => {
 
                 {/* ── Décor : Maria + son invention (droite) ───────── */}
                 <img
-                    src="/photos/maria_inov.png"
+                    src="/photos/maria_inov.webp"
                     alt=""
                     aria-hidden="true"
                     className="landing-hero__decor landing-hero__decor--maria-inov"
                 />
                 <img
-                    src="/photos/maria.png"
+                    src="/photos/maria.webp"
                     alt=""
                     aria-hidden="true"
                     className="landing-hero__decor landing-hero__decor--maria"
@@ -125,7 +126,7 @@ const LandingPage = () => {
 
                     {[
                         { Icon: BookOpen, title: t('landing.cards.approach.title'),    desc: t('landing.cards.approach.desc'),    link: '/presentation', cta: t('landing.cards.approach.cta') },
-                        { Icon: Map,      title: t('landing.cards.museum.title'),      desc: t('landing.cards.museum.desc'),      link: '/museum',       cta: t('landing.cards.museum.cta') },
+                        { Icon: Map,      title: t('landing.cards.museum.title'),      desc: t('landing.cards.museum.desc'),      link: '/retrofutur-museum', cta: t('landing.cards.museum.cta') },
                         { Icon: PenTool,  title: t('landing.cards.prestations.title'), desc: t('landing.cards.prestations.desc'), link: '/prestations',  cta: t('landing.cards.prestations.cta') },
                     ].map(({ Icon, title, desc, link, cta }) => (
                         <Link
@@ -161,6 +162,9 @@ const LandingPage = () => {
                 </div>
             </div>
             </section>
+
+            {/* ── Inscription newsletter (relais Sendy) ───────────────── */}
+            <NewsletterSignup />
 
             <style>{`
                 @keyframes fadeIn {

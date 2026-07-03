@@ -34,11 +34,11 @@ const SiteFooter = () => {
                 <div>
                     <h4 style={{ margin: '0 0 10px 0' }}>{t('footer.linksHeading')}</h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                        <a href={PEDIA_SITE_URL} style={{ color: '#666', textDecoration: 'none', fontWeight: 600 }}>← Paléo-Pédia</a>
+                        {/* Paléo-Pédia est un autre domaine : on ouvre dans un
+                            nouvel onglet pour ne pas faire « sortir » du site. */}
+                        <a href={PEDIA_SITE_URL} target="_blank" rel="noopener noreferrer" style={{ color: '#666', textDecoration: 'none', fontWeight: 600 }}>← Paléo-Pédia</a>
                         <a href="/app"     style={{ color: '#666', textDecoration: 'none' }}>{t('footer.timelineLink')}</a>
                         <a href="/participer" style={{ color: '#666', textDecoration: 'none' }}>{t('footer.participate')}</a>
-                        <a href="/presse" style={{ color: '#666', textDecoration: 'none' }}>{t('footer.press')}</a>
-                        <a href="/partenaires" style={{ color: '#666', textDecoration: 'none' }}>{t('footer.partners')}</a>
                         <a href="/contact" style={{ color: '#666', textDecoration: 'none' }}>{t('footer.contactUs')}</a>
                         <a href="/mentions-legales" style={{ color: '#666', textDecoration: 'none' }}>{t('footer.legalNotices')}</a>
                         <a href="/politique-confidentialite" style={{ color: '#666', textDecoration: 'none' }}>{t('footer.privacy')}</a>

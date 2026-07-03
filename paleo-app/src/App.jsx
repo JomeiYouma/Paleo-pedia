@@ -145,7 +145,10 @@ const mainRouter = createBrowserRouter(
         <Route path="boutique"     element={<Ouvrages />} />
         {/* Ancienne URL conservée pour ne pas casser les liens externes */}
         <Route path="ouvrages"     element={<Navigate to="/boutique" replace />} />
-        <Route path="museum"       element={<Museum />} />
+        {/* URL historique du musée (site WordPress) restaurée pour ne pas
+            casser les liens externes existants. */}
+        <Route path="retrofutur-museum" element={<Museum />} />
+        <Route path="museum"       element={<Navigate to="/retrofutur-museum" replace />} />
         <Route path="participer"   element={<Participer />} />
         <Route path="presse"       element={<Presse />} />
         {/* La page Partenaires dédiée a été retirée — son contenu est désormais

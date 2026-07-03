@@ -344,28 +344,57 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, fixedWorkshopId 
                 total={progress.total}
             />
 
-            <Breadcrumb
-                crumbs={[{ label: t('nav.library', 'Bibliothèque'), href: '/app' }]}
-                current={viewModeLabel}
-            />
+            {/* Fil d'Ariane masqué en mode Frise pour rendre de la hauteur à la
+                frise (retour Simon), conservé sur Carte / Arborescence / Liste. */}
+            {viewMode !== 'timeline' && (
+                <Breadcrumb
+                    crumbs={[{ label: t('nav.library', 'Bibliothèque'), href: '/app' }]}
+                    current={viewModeLabel}
+                />
+            )}
 
             <div style={{ marginBottom: '20px' }}>
                 {/* Barre de contrôles */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
-                    {/* Recherche */}
-                    <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
-                        <input
-                            type="text"
-                            placeholder={t('library.searchPlaceholder', 'Rechercher (titre, année, lieu...)')}
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                            style={{ width: '100%', padding: '8px 40px 8px 36px', borderRadius: '20px', border: '1px solid #ddd', fontSize: '0.9rem', boxSizing: 'border-box' }}
-                        />
-                        <Search size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#aaa' }} />
-                        {filteredCartels.length > 0 && (
-                            <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: '#eee', color: '#666', padding: '2px 8px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: '700' }}>
-                                {filteredCartels.length}
-                            </span>
+                    {/* Recherche + bouton catégories, regroupés à gauche (retour Simon :
+                        « déplacer Afficher les catégories à côté de la barre de recherche »). */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', flex: '1 1 auto' }}>
+                        <div style={{ position: 'relative', flex: '0 1 400px', minWidth: '200px' }}>
+                            <input
+                                type="text"
+                                placeholder={t('library.searchPlaceholder', 'Rechercher (titre, année, lieu...)')}
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                style={{ width: '100%', padding: '8px 40px 8px 36px', borderRadius: '20px', border: '1px solid #ddd', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                            />
+                            <Search size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#aaa' }} />
+                            {filteredCartels.length > 0 && (
+                                <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: '#eee', color: '#666', padding: '2px 8px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: '700' }}>
+                                    {filteredCartels.length}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Afficher/Masquer les catégories — placé à côté de la recherche.
+                           Replier les chips rend de la hauteur à la frise. */}
+                        {allCategories.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setFiltersOpen(o => !o)}
+                                aria-expanded={filtersOpen}
+                                style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                    padding: '9px 16px', borderRadius: '20px',
+                                    border: `1px solid ${selectedCats.length ? 'var(--color-pink-darker)' : 'var(--color-border, #ddd)'}`,
+                                    background: 'transparent', color: 'var(--color-text, #444)',
+                                    fontSize: '0.88rem', fontWeight: '700', cursor: 'pointer',
+                                    whiteSpace: 'nowrap', flexShrink: 0,
+                                }}
+                            >
+                                <SlidersHorizontal size={16} />
+                                {filtersOpen ? t('library.hideCategories', 'Masquer les catégories') : t('library.showCategories', 'Afficher les catégories')}
+                                {selectedCats.length > 0 ? ` (${selectedCats.length})` : ''}
+                            </button>
                         )}
                     </div>
 
@@ -390,27 +419,6 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, fixedWorkshopId 
                     </div>
                 </div>
 
-                {/* Bouton Afficher/Masquer les catégories — disponible partout
-                   (desktop compris) : replier les chips rend de la hauteur à la
-                   frise. Replié par défaut sur mobile, déplié sur desktop. */}
-                {allCategories.length > 0 && (
-                    <button
-                        type="button"
-                        onClick={() => setFiltersOpen(o => !o)}
-                        aria-expanded={filtersOpen}
-                        style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '8px',
-                            padding: '9px 16px', marginBottom: '10px', borderRadius: '20px',
-                            border: `1px solid ${selectedCats.length ? 'var(--color-pink-darker)' : 'var(--color-border, #ddd)'}`,
-                            background: 'transparent', color: 'var(--color-text, #444)',
-                            fontSize: '0.88rem', fontWeight: '700', cursor: 'pointer',
-                        }}
-                    >
-                        <SlidersHorizontal size={16} />
-                        {filtersOpen ? t('library.hideCategories', 'Masquer les catégories') : t('library.showCategories', 'Afficher les catégories')}
-                        {selectedCats.length > 0 ? ` (${selectedCats.length})` : ''}
-                    </button>
-                )}
                 {filtersOpen && (
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px', alignItems: 'center' }}>
                     {/* Chip catégorie fixe du sous-site (non supprimable) */}

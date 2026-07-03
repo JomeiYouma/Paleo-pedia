@@ -495,7 +495,7 @@
         "section3Item1": "Vous recontacter au sujet de votre proposition (clarification, validation, refus motivé).",
         "section3Item2": "Modérer les soumissions et lutter contre le spam.",
         "section3Item3": "Permettre la connexion et la gestion des contenus pour les utilisateurs inscrits.",
-        "section3Html": "Nous ne procédons à <strong>aucun profilage</strong>, ne vous envoyons pas de newsletter et ne transmettons vos données à <strong>aucun tiers</strong>.",
+        "section3Html": "Nous ne procédons à <strong>aucun profilage</strong> et ne transmettons vos données à <strong>aucun tiers</strong>. Si vous vous inscrivez à notre newsletter, votre adresse e-mail sert <strong>uniquement</strong> à vous l'envoyer : elle est gérée via notre propre outil d'emailing auto-hébergé (Sendy), et vous pouvez vous désinscrire à tout moment via le lien présent dans chaque message.",
         "section4Title": "4. Durée de conservation",
         "section4Item1": "Coordonnées d'un proposant non-connecté : conservées tant que la proposition est en file de modération, puis purgées sous 12 mois après publication ou rejet.",
         "section4Item2": "Adresses IP : conservées 12 mois maximum.",
@@ -567,6 +567,19 @@
         "legalNotices": "Mentions légales",
         "privacy": "Politique de confidentialité",
         "createdBy": "Plateforme créée par"
+    },
+    "newsletter": {
+        "title": "Restez informé·e",
+        "subtitle": "Recevez de temps en temps les inventions exhumées, les nouveaux cartels et les temps forts du projet. Pas de spam, désinscription en un clic.",
+        "placeholder": "Votre adresse e-mail",
+        "submit": "S'inscrire",
+        "submitting": "Inscription…",
+        "success": "Merci pour votre inscription à la newsletter !",
+        "already": "Vous êtes déjà inscrit·e — merci !",
+        "errorRequired": "Veuillez saisir votre adresse e-mail.",
+        "errorGeneric": "Inscription impossible pour le moment. Réessayez plus tard.",
+        "privacyNote": "En vous inscrivant, vous acceptez de recevoir nos e-mails. Voir notre",
+        "privacyLink": "politique de confidentialité"
     },
     "participerProjet": {
         "title": "Participer au projet",

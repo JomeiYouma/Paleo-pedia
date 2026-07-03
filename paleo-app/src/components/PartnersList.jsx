@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { ExternalLink } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import api from '../services/apiClient';
 
@@ -89,7 +88,6 @@ const PartnersList = () => {
                 )}
             </div>
             <div style={{ textAlign: 'center', fontFamily: 'var(--font-heading)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.4px', fontSize: accent ? '0.95rem' : '0.85rem', color: 'var(--color-text)' }}>{p.name}</div>
-            {p.url && <ExternalLink size={14} color="var(--color-text-subtle)" />}
         </a>
     );
 

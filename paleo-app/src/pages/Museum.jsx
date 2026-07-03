@@ -13,7 +13,7 @@ const Museum = () => {
     usePageMeta({
         title: t('museum.title'),
         description: t('museum.bannerAlt') + " — visites en semaine sur rendez-vous, expérience immersive où chaque visiteur·euse produit l'énergie qui éclaire le musée.",
-        path: '/museum',
+        path: '/retrofutur-museum',
     });
     return (
         <>
@@ -173,26 +173,6 @@ const Museum = () => {
                 style={{ color: 'var(--color-text-muted)' }}
                 dangerouslySetInnerHTML={{ __html: t('museum.supportHtml') }}
             />
-
-            {/* ── CTAs participation ───────────────────────────────────── */}
-            <div style={{
-                marginTop: '50px',
-                background: 'var(--color-surface-2)',
-                padding: '30px',
-                borderRadius: 'var(--radius-md)',
-                textAlign: 'center',
-            }}>
-                <h3 style={{ fontSize: '1.5rem', marginTop: 0, marginBottom: '12px' }}>{t('museum.contributeTitle')}</h3>
-                <p>{t('museum.contributeBody')}</p>
-                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginTop: '14px' }}>
-                    <Link to="/participer" className="paleo-btn">
-                        {t('museum.contributeCallBtn')}
-                    </Link>
-                    <Link to="/app/create" className="paleo-btn paleo-btn--outline">
-                        {t('museum.contributeProposeBtn')}
-                    </Link>
-                </div>
-            </div>
         </div>
         </>
     );

@@ -16,7 +16,7 @@ import PasswordModal from './PasswordModal';
 const SITE_NAV = [
     { path: '/',             labelKey: 'header.home' },
     { path: '/app',          labelKey: 'header.timeline' },
-    { path: '/museum',       labelKey: 'header.museum' },
+    { path: '/retrofutur-museum', labelKey: 'header.museum' },
     { path: '/presentation', labelKey: 'header.presentation' },
     { path: '/prestations',  labelKey: 'header.prestations' },
     { path: '/participer',   labelKey: 'header.participer' },

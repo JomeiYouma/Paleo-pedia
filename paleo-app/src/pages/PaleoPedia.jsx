@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { ExternalLink, Boxes } from 'lucide-react';
+import { ExternalLink, Boxes, Plus } from 'lucide-react';
 import { HOST_TO_SUBSITE_SLUG, MAIN_SITE_URL, PEDIA_SITE_URL, isPediaHost, pediaBasePath } from '../utils/subsiteHost';
 import { usePageMeta } from '../hooks/usePageMeta';
 import api from '../services/apiClient';
 import MethodoSection from '../components/pedia/MethodoSection';
+import NewsletterSignup from '../components/NewsletterSignup';
 
 // Vitrine "paleo-pedia" : page d'entrée qui présente l'écosystème Paléo
 // (programme central + sous-sites thématiques). Servie pour l'instant sur
@@ -101,27 +102,45 @@ const PaleoPedia = () => {
         return () => { alive = false; };
     }, []);
 
-    const orbits = useMemo(() => subsiteList.map(s => {
-        const host = SLUG_TO_HOST[s.slug] || null;
-        // Cible du lien :
-        //   - domaine dédié     → https://<host> (externe, quel que soit le contexte)
-        //   - sinon, host Pédia → /site/<slug> du site principal en ABSOLU (autre
-        //     domaine → externe : la route /site/:slug n'existe pas sur ce host)
-        //   - sinon (host principal) → /site/<slug> en relatif (navigation SPA)
-        let href, external;
-        if (host)            { href = `https://${host}`;                 external = true; }
-        else if (ON_PEDIA_HOST) { href = `${MAIN_SITE_URL}/site/${s.slug}`; external = true; }
-        else                 { href = `/site/${s.slug}`;                 external = false; }
-        return {
-            slug: s.slug,
-            name: s.name || s.slug,
-            color: s.primary_color || null,
-            planetType: s.planet_type || null,          // type choisi (sinon auto)
-            host,                                       // domaine dédié éventuel
-            href,
-            external,
-        };
-    }), [subsiteList]);
+    const orbits = useMemo(() => {
+        const subs = subsiteList.map(s => {
+            const host = SLUG_TO_HOST[s.slug] || null;
+            // Cible du lien :
+            //   - domaine dédié     → https://<host> (externe, quel que soit le contexte)
+            //   - sinon, host Pédia → /site/<slug> du site principal en ABSOLU (autre
+            //     domaine → externe : la route /site/:slug n'existe pas sur ce host)
+            //   - sinon (host principal) → /site/<slug> en relatif (navigation SPA)
+            let href, external;
+            if (host)            { href = `https://${host}`;                 external = true; }
+            else if (ON_PEDIA_HOST) { href = `${MAIN_SITE_URL}/site/${s.slug}`; external = true; }
+            else                 { href = `/site/${s.slug}`;                 external = false; }
+            return {
+                slug: s.slug,
+                name: s.name || s.slug,
+                color: s.primary_color || null,
+                planetType: s.planet_type || null,      // type choisi (sinon auto)
+                host,                                    // domaine dédié éventuel
+                href,
+                external,
+            };
+        });
+
+        // Nœud d'appel « Votre site ! » (retour Simon) : il s'affiche comme un
+        // domaine de plus de l'écosystème (planète en 3D, pastille en 2D) mais
+        // mène au FORMULAIRE de participation, pas à un vrai sous-site. Ajouté
+        // en dernier → planète la plus externe, la « place à prendre ».
+        subs.push({
+            slug: '__your_site__',
+            name: 'Votre site !',
+            color: '#B0B7C3',                            // gris doux : une place à remplir (hex requis côté 3D)
+            planetType: 'icy',                           // planète à anneau, sans décor : visuellement « spéciale »
+            host: null,
+            href: `${pediaBasePath()}/participer-au-projet`,
+            external: false,
+            isCta: true,
+        });
+        return subs;
+    }, [subsiteList]);
 
     return (
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 64px' }}>
@@ -131,6 +150,26 @@ const PaleoPedia = () => {
                 margin: '0 auto 44px',
                 textAlign: 'center',
             }}>
+                {/* Attribution : d'où vient le projet (retour Simon — « savoir
+                    d'où ça vient »). Mise en avant au-dessus du titre. */}
+                <p style={{
+                    margin: '0 0 12px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.6px',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    color: 'var(--color-text-muted)',
+                }}>
+                    Un projet de{' '}
+                    <a
+                        href="https://atelier21.org"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: 'var(--color-primary)', textDecoration: 'none' }}
+                    >
+                        l'Atelier 21
+                    </a>
+                </p>
                 <h1 id="intro-heading" style={{
                     margin: '0 0 18px',
                     fontSize: 'clamp(1.6rem, 3.6vw, 2.2rem)',
@@ -209,6 +248,9 @@ const PaleoPedia = () => {
                     Participer au projet →
                 </Link>
             </section>
+
+            {/* ── Inscription newsletter (même liste Sendy que l'accueil) ─── */}
+            <NewsletterSignup privacyPath={`${pediaBasePath()}/politique-confidentialite`} />
         </div>
     );
 };
@@ -353,7 +395,7 @@ const EcosystemDiagram2D = ({ hub, orbits }) => {
                         transform: 'translate(-50%, -50%)',
                     }}
                 >
-                    <OrbitNode href={orbit.href} external={orbit.external} name={orbit.name} color={orbit.color} />
+                    <OrbitNode href={orbit.href} external={orbit.external} name={orbit.name} color={orbit.color} isCta={orbit.isCta} />
                 </div>
             ))}
         </div>
@@ -404,8 +446,10 @@ const HubNode = ({ host, description, href, external }) => (
 );
 
 // Orbite : pastille claire, texte foncé. Contraste #1a1a1a sur #ffffff = 17.4:1.
-// Le liseré reprend la couleur du sous-site (cohérent avec la 3D).
-const OrbitNode = ({ href, external, name, color }) => (
+// Le liseré reprend la couleur du sous-site (cohérent avec la 3D). Le nœud
+// d'appel « Votre site ! » (isCta) est dessiné en liseré pointillé avec un « + »
+// pour se lire comme une place à prendre plutôt qu'un site existant.
+const OrbitNode = ({ href, external, name, color, isCta }) => (
     <a
         href={href}
         {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
@@ -415,8 +459,8 @@ const OrbitNode = ({ href, external, name, color }) => (
             gap: 8,
             padding: '14px 20px',
             borderRadius: 999,
-            background: 'var(--color-surface)',
-            border: `1px solid ${color || 'var(--color-border)'}`,
+            background: isCta ? 'var(--color-primary-soft)' : 'var(--color-surface)',
+            border: isCta ? '1.5px dashed var(--color-primary)' : `1px solid ${color || 'var(--color-border)'}`,
             color: 'var(--color-text)',
             textDecoration: 'none',
             fontWeight: 600,
@@ -431,11 +475,12 @@ const OrbitNode = ({ href, external, name, color }) => (
             e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.10)';
         }}
         onMouseLeave={e => {
-            e.currentTarget.style.background = 'var(--color-surface)';
+            e.currentTarget.style.background = isCta ? 'var(--color-primary-soft)' : 'var(--color-surface)';
             e.currentTarget.style.transform = '';
             e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)';
         }}
     >
+        {isCta && <Plus size={15} aria-hidden="true" />}
         {name}
         {external && <ExternalLink size={14} aria-hidden="true" />}
     </a>

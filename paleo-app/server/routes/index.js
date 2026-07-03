@@ -27,6 +27,7 @@ import { PressArticleController } from '../controllers/pressArticleController.js
 import { MissionController } from '../controllers/missionController.js';
 import { MissionApplicationController } from '../controllers/missionApplicationController.js';
 import { ContactMessageController } from '../controllers/contactMessageController.js';
+import { NewsletterController } from '../controllers/newsletterController.js';
 import { PrestationController } from '../controllers/prestationController.js';
 import { ShopItemController } from '../controllers/shopItemController.js';
 import { EventLogController } from '../controllers/eventLogController.js';
@@ -203,6 +204,11 @@ router.get ('/mission-applications', authenticate, requireAdmin, MissionApplicat
 // POST public (avec honeypot), lecture admin only.
 router.post('/contact-messages', ContactMessageController.create);
 router.get ('/contact-messages', authenticate, requireAdmin, ContactMessageController.list);
+
+// ── Inscription newsletter (relais Sendy, formulaire public) ──
+// POST public avec honeypot ; relaie vers l'API /subscribe de Sendy
+// (config via SENDY_URL + SENDY_LIST_ID). Aucune donnée stockée localement.
+router.post('/newsletter/subscribe', NewsletterController.subscribe);
 
 // ── Prestations (page publique /prestations) ──────────────────
 router.get   ('/prestations',     optionalAuth,                            PrestationController.getAll);

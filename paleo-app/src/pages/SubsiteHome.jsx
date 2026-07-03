@@ -50,13 +50,13 @@ const SubsiteHome = () => {
             }}>
                 {/* ── Décor : Mouchot + son invention (gauche) ─────── */}
                 <img
-                    src="/photos/mouchot_inov.png"
+                    src="/photos/mouchot_inov.webp"
                     alt=""
                     aria-hidden="true"
                     className="subsite-hero__decor subsite-hero__decor--mouchot-inov"
                 />
                 <img
-                    src="/photos/mouchot.png"
+                    src="/photos/mouchot.webp"
                     alt=""
                     aria-hidden="true"
                     className="subsite-hero__decor subsite-hero__decor--mouchot"
@@ -64,13 +64,13 @@ const SubsiteHome = () => {
 
                 {/* ── Décor : Maria + son invention (droite) ───────── */}
                 <img
-                    src="/photos/maria_inov.png"
+                    src="/photos/maria_inov.webp"
                     alt=""
                     aria-hidden="true"
                     className="subsite-hero__decor subsite-hero__decor--maria-inov"
                 />
                 <img
-                    src="/photos/maria.png"
+                    src="/photos/maria.webp"
                     alt=""
                     aria-hidden="true"
                     className="subsite-hero__decor subsite-hero__decor--maria"

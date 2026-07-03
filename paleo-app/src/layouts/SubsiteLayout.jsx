@@ -577,7 +577,9 @@ const SubsiteLayout = () => {
                             <FooterLink to={`${base}/mentions-legales`}>{t('subsite.legalNotices', 'Mentions légales')}</FooterLink>
                             <FooterLink to={`${base}/politique-confidentialite`}>{t('subsite.privacy', 'Politique de confidentialité')}</FooterLink>
                             <FooterLink to={`${base}/contact`}>{t('subsite.contact', 'Contact')}</FooterLink>
-                            <a href={PEDIA_SITE_URL} style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem', textDecoration: 'none', marginTop: '8px' }}>
+                            {/* Paléo-Pédia est un autre domaine → nouvel onglet (cohérent
+                                avec le footer du site principal, retour Simon). */}
+                            <a href={PEDIA_SITE_URL} target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem', textDecoration: 'none', marginTop: '8px' }}>
                                 {t('subsite.pediaSiteLink', 'Accéder au site Paléo-Pédia →')}
                             </a>
                         </nav>

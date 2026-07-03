@@ -325,9 +325,9 @@ const Planet = ({ node, typeIndex, radius, tilt, phase0, speed, reducedMotion, o
                             onClick={(e) => e.stopPropagation()}
                             onMouseEnter={() => setLabelHover(true)}
                             onMouseLeave={() => setLabelHover(false)}
-                            style={{ ...labelStyle(color), opacity: hovered ? 1 : 0.4, transition: 'opacity 0.2s' }}
+                            style={{ ...(node.isCta ? LABEL_STYLE_CTA : labelStyle(color)), opacity: hovered ? 1 : 0.4, transition: 'opacity 0.2s' }}
                         >
-                            {node.name}
+                            {node.isCta ? `＋ ${node.name}` : node.name}
                         </a>
                     </Html>
                 </group>
@@ -470,6 +470,17 @@ const LABEL_STYLE_CORE = {
     background: 'rgba(255,255,255,0.95)',
     color: '#1a1a1a',
     fontWeight: 700,
+};
+
+// Label du nœud d'appel « Votre site ! » : pastille claire à liseré pointillé
+// (inverse des labels de sous-sites, sombres) → se distingue comme une
+// invitation, cohérent avec la pastille pointillée du diagramme 2D.
+const LABEL_STYLE_CTA = {
+    ...LABEL_BASE,
+    background: 'rgba(255,255,255,0.95)',
+    color: '#1a1a1a',
+    fontWeight: 700,
+    border: '1.5px dashed #333333',
 };
 
 const labelStyle = (color) => ({

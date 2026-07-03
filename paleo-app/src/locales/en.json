@@ -493,7 +493,7 @@
         "section3Item1": "To get back to you about your submission (clarification, approval, motivated rejection).",
         "section3Item2": "To moderate submissions and fight spam.",
         "section3Item3": "To enable login and content management for registered users.",
-        "section3Html": "We do <strong>no profiling</strong>, we do not send you a newsletter and we share your data with <strong>no third party</strong>.",
+        "section3Html": "We do <strong>no profiling</strong> and we share your data with <strong>no third party</strong>. If you subscribe to our newsletter, your e-mail address is used <strong>solely</strong> to send it to you: it is managed through our own self-hosted mailing tool (Sendy), and you can unsubscribe at any time via the link in every message.",
         "section4Title": "4. Retention period",
         "section4Item1": "Contact details from an unauthenticated submitter: kept while the submission is in the moderation queue, then purged within 12 months after publication or rejection.",
         "section4Item2": "IP addresses: kept 12 months maximum.",
@@ -718,6 +718,19 @@
         "legalNotices": "Legal notices",
         "privacy": "Privacy policy",
         "createdBy": "Platform created by"
+    },
+    "newsletter": {
+        "title": "Stay in the loop",
+        "subtitle": "Get the occasional dispatch: unearthed inventions, new cartels and project highlights. No spam, unsubscribe in one click.",
+        "placeholder": "Your e-mail address",
+        "submit": "Subscribe",
+        "submitting": "Subscribing…",
+        "success": "Thanks for subscribing to our newsletter!",
+        "already": "You're already subscribed — thank you!",
+        "errorRequired": "Please enter your e-mail address.",
+        "errorGeneric": "Couldn't subscribe right now. Please try again later.",
+        "privacyNote": "By subscribing you agree to receive our e-mails. See our",
+        "privacyLink": "privacy policy"
     },
     "participerProjet": {
         "title": "Get involved",

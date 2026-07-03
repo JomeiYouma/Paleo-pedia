@@ -295,6 +295,30 @@ const Participer = () => {
                 {t('participer.intro')}
             </p>
 
+            {/* ── CTA principal : proposer une invention ───────────────────
+                Remonté au-dessus des missions (retour Simon) : c'est l'action
+                primaire de la page, elle ne doit pas être enterrée sous la liste. */}
+            <div style={{
+                background: 'var(--color-surface)',
+                padding: '32px',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--color-border)',
+                borderTop: '4px solid var(--color-accent)',
+                boxShadow: 'var(--shadow-sm)',
+                textAlign: 'center',
+                display: 'flex', flexDirection: 'column', gap: '14px', alignItems: 'center',
+                marginBottom: '50px',
+            }}>
+                <Search size={28} color="var(--color-primary)" />
+                <h2 style={{ margin: 0, fontSize: '1.4rem' }}>{t('participer.alreadyIdeaTitle')}</h2>
+                <p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: '0.95rem', maxWidth: '560px' }}>
+                    {t('participer.alreadyIdeaBody')}
+                </p>
+                <Link to="/app/create" className="paleo-btn">
+                    <Send size={16} /> {t('participer.proposeBtn')}
+                </Link>
+            </div>
+
             {/* ── Missions (appels à participation thématiques) ────────── */}
             {hasMissions && (
                 <div style={{ marginBottom: '50px' }}>
@@ -320,57 +344,32 @@ const Participer = () => {
                 </div>
             )}
 
-            {/* ── Deux CTA côte à côte : invention OU mission ──────────── */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: hasMissions ? 'repeat(auto-fit, minmax(280px, 1fr))' : '1fr',
-                gap: '20px',
-                marginBottom: '50px',
-            }}>
-                {/* CTA Invention */}
+            {/* ── CTA mission : postuler à une mission ──────────────────
+                Placé sous les missions (dont il dépend). Le CTA « invention »
+                a été remonté au-dessus des missions. Affiché seulement si des
+                missions existent. */}
+            {hasMissions && (
                 <div style={{
                     background: 'var(--color-surface)',
                     padding: '32px',
                     borderRadius: 'var(--radius-md)',
                     border: '1px solid var(--color-border)',
-                    borderTop: '4px solid var(--color-accent)',
+                    borderTop: '4px solid var(--color-primary)',
                     boxShadow: 'var(--shadow-sm)',
                     textAlign: 'center',
                     display: 'flex', flexDirection: 'column', gap: '14px', alignItems: 'center',
+                    marginBottom: '50px',
                 }}>
-                    <Search size={28} color="var(--color-primary)" />
-                    <h2 style={{ margin: 0, fontSize: '1.4rem' }}>{t('participer.alreadyIdeaTitle')}</h2>
+                    <Target size={28} color="var(--color-primary)" />
+                    <h2 style={{ margin: 0, fontSize: '1.4rem' }}>{t('participer.applyMissionTitle')}</h2>
                     <p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>
-                        {t('participer.alreadyIdeaBody')}
+                        {t('participer.applyMissionBody')}
                     </p>
-                    <Link to="/app/create" className="paleo-btn" style={{ marginTop: 'auto' }}>
-                        <Send size={16} /> {t('participer.proposeBtn')}
-                    </Link>
+                    <button type="button" onClick={() => openApplyForm()} className="paleo-btn">
+                        <Send size={16} /> {t('participer.applyMissionBtn')}
+                    </button>
                 </div>
-
-                {/* CTA Mission — affiché uniquement si des missions existent */}
-                {hasMissions && (
-                    <div style={{
-                        background: 'var(--color-surface)',
-                        padding: '32px',
-                        borderRadius: 'var(--radius-md)',
-                        border: '1px solid var(--color-border)',
-                        borderTop: '4px solid var(--color-primary)',
-                        boxShadow: 'var(--shadow-sm)',
-                        textAlign: 'center',
-                        display: 'flex', flexDirection: 'column', gap: '14px', alignItems: 'center',
-                    }}>
-                        <Target size={28} color="var(--color-primary)" />
-                        <h2 style={{ margin: 0, fontSize: '1.4rem' }}>{t('participer.applyMissionTitle')}</h2>
-                        <p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>
-                            {t('participer.applyMissionBody')}
-                        </p>
-                        <button type="button" onClick={() => openApplyForm()} className="paleo-btn" style={{ marginTop: 'auto' }}>
-                            <Send size={16} /> {t('participer.applyMissionBtn')}
-                        </button>
-                    </div>
-                )}
-            </div>
+            )}
 
             {/* ── Formulaire de candidature (inline, après les CTA) ───── */}
             <div ref={applyFormRef}>

@@ -4,7 +4,6 @@
  */
 import React from 'react';
 import { useSubsite } from '../layouts/SubsiteLayout';
-import { ExternalLink } from 'lucide-react';
 
 const SubsitePartners = () => {
     const subsite = useSubsite();
@@ -45,7 +44,6 @@ const SubsitePartners = () => {
                 </div>
             )}
             <span style={{ fontWeight: '700', fontSize: '0.95rem', textAlign: 'center' }}>{p.name}</span>
-            {p.url && <ExternalLink size={13} color="#ccc" />}
         </a>
     );
 
