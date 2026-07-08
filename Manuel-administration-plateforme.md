@@ -283,6 +283,7 @@ La **frise** est la vitrine principale des cartels. Elle existe sur le site prin
 - Quand plusieurs cartels partagent la même année, ils sont **décalés en hauteur** pour rester lisibles.
 - **Tri chronologique intelligent** : l'app comprend les années écrites en toutes lettres ou en chiffres romains (« XXe siècle », « 21st century »), les dates **avant J.-C.** (négatives), et les qualificatifs *début / milieu / fin*. Une année illisible est renvoyée **en fin de frise**.
 - **Position partageable** : l'adresse mémorise le cartel affiché (paramètre `?at=…`). Partager le lien rouvre la frise **sur ce cartel précis**.
+- **Ouverture sur un cartel au hasard** : à chaque arrivée « fraîche » sur la frise (sans lien `?at=` ni retour d'édition), l'app ouvre sur un **cartel tiré au sort** — pour inviter à la découverte. Sont **exclus du tirage** les cartels de catégorie **« imaginaire »** et ceux **postérieurs à l'an 2000**. À la **première ouverture de la session**, un **halo jaune** (pulsé) attire discrètement l'œil sur les flèches ◀ ▶ et le texte d'aide ; il s'éteint dès la première navigation. Le bouton **« Explorer la Frise »** (accueil du site principal ou d'un sous-site) **relance ce tirage à chaque clic**, même si la frise a déjà été vue.
 
 **Particularités du mode Carte :**
 - Les cartels au **même point géographique** sont **regroupés** ; un badge indique leur nombre, et au survol une bulle affiche « N inventions ».
@@ -732,12 +733,18 @@ Page **« Prestations »** (`/app/admin/prestations`).
 - **Champs** : **Titre** (obligatoire), **Icône**, **Intro**, **Description**, **Liste à puces**, **Image illustrative**, **Bandeau logos partenaires** (« Ils nous ont fait confiance »), **Plaquette** (URL Calaméo ou PDF) + **Libellé**, versions EN, case **publié**.
 > 💡 Une plaquette **Calaméo** s'affiche intégrée (bouton plein écran) ; sinon un bouton ouvre le PDF.
 
-### 16.5 Boutique (liens externes)
+### 16.5 Boutique (liens de paiement Stripe)
 
-Page **« Boutique (liens externes) »** (`/app/admin/shop`).
-> ⚠️ **Aucun panier ni paiement sur le site.** Chaque produit est une **fiche-lien** vers la boutique externe **PrestaShop**.
+Page **« Boutique (liens Stripe) »** (`/app/admin/shop`).
+> ⚠️ **Aucun panier ni paiement sur le site.** Chaque produit renvoie vers un ou plusieurs **liens de paiement Stripe** (`buy.stripe.com`). C'est **Stripe** qui encaisse ; le site ne stocke **aucune donnée bancaire**.
 - **Trois catégories** : **Livres**, **Jeux de cartes**, **Autres**.
-- **Champs** : **Titre** (obligatoire), **Sous-titre / éditeur**, **Prix indicatif** (texte libre), **URL PrestaShop**, **Description**, **Visuel**, versions EN, case **publié**. Sans URL, la fiche s'affiche mais le bouton « Acheter » est masqué.
+- **Structure à trois niveaux** (du plus général au plus précis) :
+  1. **Article** — le produit : **Titre** (obligatoire), **Sous-titre / éditeur**, **Description**, **Visuel**, versions **EN**, case **publié**.
+  2. **Variantes** — les déclinaisons du produit (ex. **Papier** / **E-book**). Chaque variante a un **nom** (FR + EN optionnel). Ajout / suppression libre.
+  3. **Options de paiement** — dans chaque variante, un ou plusieurs modes (ex. **Point Relais**, **à domicile**, **à l'étranger**), chacun avec **son prix** et **son propre lien Stripe**. Une option **sans lien est ignorée**.
+- **Affichage public** (page `/boutique`) : l'interface **s'adapte** au nombre de variantes/options — si tout est unique → un seul bouton **« Acheter »** ; si chaque variante n'a qu'une option → un bouton par variante ; sinon un **sélecteur de variante** puis les boutons d'options.
+- **Livraison** : la page publique indique que les envois sont assurés par **Mondial Relay** (Point Relais, casier ou domicile). Les **frais de port sont inclus dans le prix de chaque option** (un lien Stripe = un tarif tout compris), et **offerts** pour les versions numériques.
+- 💡 **En pratique** : créez dans Stripe **un lien de paiement par combinaison** variante × mode d'envoi (ex. « Papier — Point Relais 4,15 € », « Papier — domicile 7,49 € », « E-book 9,99 € »), puis collez chaque lien dans l'option correspondante.
 
 ### 16.6 Articles de presse
 
@@ -835,12 +842,14 @@ Tous **désactivés par défaut**. Les principaux :
 | `cartel.submission_pending` | Un **visiteur anonyme** propose un cartel (file n°1). |
 | `cartel.subsite_submitted` | Un **sous-site demande** la publication sur le principal (file n°2). |
 | `cartel.subsite_approved` / `cartel.subsite_rejected` | Le superadmin **approuve / rejette** une soumission sous-site. |
+| `cartel.subsite_withdrawn` | Un sous-site **retire** sa soumission (ou retire du principal un cartel déjà approuvé). |
 | `cartel.published` / `cartel.subsite_published` | Un cartel est publié (principal / sous-site). |
 | `cartel.created` / `draft_created` / `updated` / `deleted` | Cycle de vie d'un cartel (souvent bavard). |
 | `mission_application.created` | Une **candidature** est reçue (`/participer`). |
 | `contact_message.created` | Un **message de contact** est reçu (`/contact`). |
+| `shop_item.*` | Cycle de vie des **articles de la boutique** (créé / modifié / supprimé). |
 | `user.*` | Cycle de vie des **comptes**. |
-| `subsite.*`, `partner.*`, `category.*`, `workshop.*` | Cycle de vie de la configuration. |
+| `subsite.*`, `partner.*` (dont `partner.site_selection_updated`), `category.*`, `workshop.*` | Cycle de vie de la configuration. |
 
 > 💡 **Recommandation :** activez au minimum `contact_message.created`, `mission_application.created`, `cartel.submission_pending` et `cartel.subsite_submitted` vers une adresse relevée — ce sont les événements qui demandent une **action humaine**.
 
