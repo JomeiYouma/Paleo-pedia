@@ -11,6 +11,26 @@ import { rememberReturn } from '../utils/navigation';
 import { getHostSubsiteSlug, subsiteBasePath } from '../utils/subsiteHost';
 import { useIsMobile } from '../hooks/useIsMobile';
 
+// ── Cartel « au hasard » à l'arrivée sur la frise ────────────────
+// Récupère tous les noms de catégorie d'un cartel (FR + EN + objets).
+const cartelCategoryNames = (c) => {
+    const out = [];
+    if (Array.isArray(c.categories))    out.push(...c.categories);
+    if (Array.isArray(c.categories_en)) out.push(...c.categories_en);
+    if (Array.isArray(c.category_objects)) {
+        c.category_objects.forEach((o) => {
+            if (o?.name)    out.push(o.name);
+            if (o?.name_en) out.push(o.name_en);
+        });
+    }
+    return out;
+};
+const isImaginaire = (c) =>
+    cartelCategoryNames(c).some((n) => typeof n === 'string' && /imaginaire|imaginary/i.test(n));
+// Éligible au tirage aléatoire : ni « imaginaire », ni postérieur à l'an 2000.
+const eligibleForRandom = (c) =>
+    !isImaginaire(c) && typeof c.year === 'number' && c.year <= 2000;
+
 const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
@@ -34,6 +54,17 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const isMobile = useIsMobile();
     const [confirmState, setConfirmState] = useState(null);
+
+    // Halo d'accueil : n'apparaît qu'à la 1re ouverture de CETTE frise dans la
+    // session (flèches + texte d'aide se mettent à luire en jaune un instant).
+    const [glowFirstOpen, setGlowFirstOpen] = useState(false);
+    // Garde-fou : ne ROULER le tirage aléatoire qu'une fois par montage
+    // (l'effet de résolution se ré-exécute à chaque changement de validCartels).
+    const randomPickedRef = useRef(false);
+    // Id du cartel tiré au hasard, gardé STICKY : on le ré-applique à chaque
+    // ré-exécution tant que l'utilisateur n'a pas navigué (sinon le double-invoke
+    // StrictMode en dev réécrasait la sélection par l'index 0).
+    const randomTargetIdRef = useRef(null);
 
     // Filter valid cartels with years AND calculate stacking
     const validCartels = useMemo(() => {
@@ -78,6 +109,11 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
     // (on n'y réagit pas ensuite, pour ne pas boucler avec nos propres écritures).
     const initialAtRef = useRef(new URLSearchParams(location.search).get('at'));
 
+    // Arrivée via le bouton « Explorer la frise » (Link state.random) → on FORCE
+    // le tirage aléatoire à chaque clic, même si la frise a déjà été vue dans la
+    // session. Capturé une seule fois au montage.
+    const forceRandomRef = useRef(!!location.state?.random);
+
     // Vrai dès que l'utilisateur se déplace : on cesse alors de ré-appliquer la
     // cible initiale (?at=) à chaque re-rendu de la liste.
     const userMovedRef = useRef(false);
@@ -96,13 +132,44 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
         };
         if (targetId && pick(targetId)) return;
         if (!userMovedRef.current && initialAtRef.current && pick(initialAtRef.current)) return;
+
+        // Ouverture sur un cartel AU HASARD (hors « imaginaire » et hors
+        // postérieur à l'an 2000) + halo d'accueil. Déclenché soit à la 1re
+        // ouverture de la session (par frise), soit à chaque clic sur
+        // « Explorer la frise » (forceRandomRef), même si déjà vue.
+        // On ne ROULE le tirage qu'une fois ; l'id retenu devient STICKY.
+        if (!userMovedRef.current && !randomPickedRef.current) {
+            randomPickedRef.current = true;
+            const seenKey = `paleo_frise_seen:${subsiteSlug || 'main'}`;
+            let alreadySeen = false;
+            try { alreadySeen = sessionStorage.getItem(seenKey) === '1'; } catch { /* privé/off */ }
+            if (forceRandomRef.current || !alreadySeen) {
+                try { sessionStorage.setItem(seenKey, '1'); } catch { /* ignore */ }
+                const pool = validCartels.filter(eligibleForRandom);
+                if (pool.length) {
+                    randomTargetIdRef.current = pool[Math.floor(Math.random() * pool.length)].id;
+                    setGlowFirstOpen(true);
+                }
+            }
+        }
+        // Cible aléatoire STICKY : prioritaire tant que l'utilisateur n'a pas
+        // navigué (survit aux ré-exécutions de validCartels et au double-invoke).
+        if (!userMovedRef.current && randomTargetIdRef.current != null && pick(randomTargetIdRef.current)) return;
+
         if (lastSelectedIdRef.current && pick(lastSelectedIdRef.current)) return;
         setSelectedIndex(0);
-    }, [targetId, validCartels]);
+    }, [targetId, validCartels, subsiteSlug]);
+
+    // Le halo boucle (CSS) jusqu'à la 1re navigation de l'utilisateur, qui le
+    // coupe via goTo() — pas d'auto-extinction temporisée.
 
     // Déplacement utilisateur (flèches, clic marqueur, boutons) → marque
     // userMoved (fige le ?at= sticky) puis met à jour la sélection.
-    const goTo = (next) => { userMovedRef.current = true; setSelectedIndex(next); };
+    const goTo = (next) => {
+        userMovedRef.current = true;
+        if (glowFirstOpen) setGlowFirstOpen(false); // 1re interaction → coupe le halo
+        setSelectedIndex(next);
+    };
 
     // Boutons préc./suiv. — positionnés (desktop, sur les flancs) ou en flux
     // (mobile, dans une barre sous la carte pour ne pas chevaucher le texte).
@@ -115,14 +182,17 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
         boxShadow: 'var(--shadow-sm)', opacity: disabled ? 0.4 : 1, color: 'var(--color-primary)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
     });
+    const glowClass = glowFirstOpen ? 'paleo-onboard-glow' : undefined;
     const prevBtn = (positioned) => (
         <button onClick={() => goTo(prev => Math.max(0, prev - 1))} disabled={selectedIndex === 0}
+            className={glowClass}
             aria-label="Cartel précédent" style={navBtnStyle(positioned, 'left', selectedIndex === 0)}>
             <ChevronLeft size={26} />
         </button>
     );
     const nextBtn = (positioned) => (
         <button onClick={() => goTo(prev => Math.min(validCartels.length - 1, prev + 1))} disabled={selectedIndex === validCartels.length - 1}
+            className={glowClass}
             aria-label="Cartel suivant" style={navBtnStyle(positioned, 'right', selectedIndex === validCartels.length - 1)}>
             <ChevronRight size={26} />
         </button>
@@ -538,7 +608,8 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
                     letterSpacing: '0.5px',
                 }}>
                     <span>Frise chronologique</span>
-                    <span style={{ color: 'rgba(255,255,255,0.65)', fontWeight: '400', textTransform: 'none', letterSpacing: 'normal', fontSize: '0.78rem' }}>
+                    <span className={glowClass ? 'paleo-onboard-text-glow' : undefined}
+                        style={{ color: glowFirstOpen ? '#fff' : 'rgba(255,255,255,0.65)', fontWeight: '400', textTransform: 'none', letterSpacing: 'normal', fontSize: '0.78rem', transition: 'color 0.4s ease' }}>
                         {t('timeline.scroll_instruction', "Zoomez avec la molette et déplacez-vous pour explorer le temps. (Flèches ← → pour naviguer)")}
                     </span>
                 </div>

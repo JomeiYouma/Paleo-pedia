@@ -91,6 +91,7 @@ const LandingPage = () => {
                     <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', justifyContent: 'center' }}>
                         <Link
                             to="/app"
+                            state={{ random: true }}
                             id="cta-explorer-frise"
                             className="paleo-btn"
                             style={{ padding: '14px 32px', fontSize: '0.95rem', letterSpacing: '0.6px' }}

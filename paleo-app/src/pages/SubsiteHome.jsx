@@ -85,6 +85,7 @@ const SubsiteHome = () => {
                     </p>
                     <Link
                         to={friseHref}
+                        state={{ random: true }}
                         className="paleo-btn paleo-btn--yellow"
                         style={{ padding: '14px 32px', fontSize: '0.95rem', letterSpacing: '0.6px' }}
                     >

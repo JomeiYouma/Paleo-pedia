@@ -198,6 +198,22 @@ button {
   to   { opacity: 0; }
 }
 
+/* ── Halo d'accueil (frise) — 1re ouverture de session ──────────
+   Attire l'œil sur les flèches de navigation et le texte d'aide.
+   Halo JAUNE (#FFE700), doux, 3 pulsations puis extinction. */
+@keyframes paleo-onboard-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 231, 0, 0); }
+  50%      { box-shadow: 0 0 18px 4px rgba(255, 231, 0, 0.9); }
+}
+@keyframes paleo-onboard-text-glow {
+  0%, 100% { text-shadow: none; }
+  50%      { text-shadow: 0 0 10px rgba(255, 231, 0, 0.95), 0 0 4px rgba(255, 231, 0, 0.8); }
+}
+/* Boucle tant que le halo est actif ; il s'arrête à la 1re navigation
+   (la classe est retirée côté React). */
+.paleo-onboard-glow      { animation: paleo-onboard-glow 1.6s ease-in-out infinite; }
+.paleo-onboard-text-glow { animation: paleo-onboard-text-glow 1.6s ease-in-out infinite; }
+
 /* ── Arborescence Mode Override (frise SVG) ───────────────────── */
 .arborescence-label {
   fill: #000000 !important;
@@ -369,5 +385,15 @@ button {
   }
   .paleo-toast {
     animation: none !important;
+  }
+  /* Pas de pulsation, mais on garde un repli STATIQUE (halo/lueur fixe)
+     pour signaler quand même les commandes à la 1re ouverture. */
+  .paleo-onboard-glow {
+    animation: none !important;
+    box-shadow: 0 0 12px 2px rgba(255, 231, 0, 0.7) !important;
+  }
+  .paleo-onboard-text-glow {
+    animation: none !important;
+    text-shadow: 0 0 8px rgba(255, 231, 0, 0.85);
   }
 }
