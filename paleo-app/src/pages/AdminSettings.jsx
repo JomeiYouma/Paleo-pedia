@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import { useNavigate, useBlocker } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
-    Shield, Users, Key, Save, RefreshCw,
+    Shield, Users, Key,
     ToggleLeft, ToggleRight, AlertCircle, CheckCircle2, Check,
     Globe, Plus, Trash2, Edit, ExternalLink, ChevronDown, ChevronUp,
     FolderOpen, Activity, Target,
@@ -22,12 +22,21 @@ const Field = ({ label, hint, children }) => (
     </div>
 );
 
-const NumberInput = ({ value, onChange, min = 0, max = 9999, suffix }) => (
+// `onCommit(clampedNumber)` est appelé au blur : c'est le moment de la
+// sauvegarde automatique (on ne persiste pas à chaque frappe). La valeur est
+// bornée à [min, max] avant d'être remontée, pour ne jamais enregistrer un
+// champ vide/hors limites.
+const NumberInput = ({ value, onChange, onCommit, min = 0, max = 9999, suffix }) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <input
             type="number"
             value={value}
             onChange={e => onChange(e.target.value)}
+            onBlur={e => {
+                const clamped = Math.min(max, Math.max(min, Number(e.target.value) || min));
+                if (clamped !== Number(value)) onChange(clamped);
+                onCommit?.(clamped);
+            }}
             min={min}
             max={max}
             style={{
@@ -95,13 +104,16 @@ const Group = ({ title, color, children }) => (
 );
 
 // ── Champ "clé API" (réutilisé pour OpenAI et DeepL) ─────────
-const ApiKeyField = ({ label, hint, placeholder, value, onChange, show, onToggleShow, onSave, saving, loading, detect }) => (
+// La clé est enregistrée automatiquement au blur via `onCommit` (plus de
+// bouton « Enregistrer » : on ne persiste jamais une clé à moitié collée).
+const ApiKeyField = ({ label, hint, placeholder, value, onChange, onCommit, show, onToggleShow, detect }) => (
     <Field label={label} hint={hint}>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
             <input
                 type={show ? 'text' : 'password'}
                 value={value}
                 onChange={e => onChange(e.target.value)}
+                onBlur={() => onCommit?.(value)}
                 placeholder={placeholder}
                 style={{
                     flex: 1,
@@ -130,26 +142,6 @@ const ApiKeyField = ({ label, hint, placeholder, value, onChange, show, onToggle
                 }}
             >
                 {show ? 'Masquer' : 'Afficher'}
-            </button>
-            <button
-                type="button"
-                onClick={onSave}
-                disabled={saving || loading}
-                style={{
-                    padding: '10px 14px',
-                    borderRadius: 'var(--radius-md)',
-                    border: 'none',
-                    background: saving ? 'var(--color-border-strong)' : 'var(--color-theme-people)',
-                    color: 'var(--color-white)',
-                    cursor: saving || loading ? 'not-allowed' : 'pointer',
-                    fontSize: '0.78rem',
-                    fontWeight: '700',
-                    fontFamily: 'var(--font-heading)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                }}
-            >
-                {saving ? 'Envoi…' : 'Enregistrer'}
             </button>
         </div>
         {value && detect && (
@@ -201,7 +193,6 @@ const AdminSettings = () => {
     const navigate = useNavigate();
 
     const [loading, setLoading]     = useState(true);
-    const [saving, setSaving]       = useState(false);
     const [toast, setToast]         = useState(null);
 
     // Sous-sites
@@ -213,7 +204,6 @@ const AdminSettings = () => {
     const [sitePrimaryPartnerIds, setSitePrimaryPartnerIds] = useState([]);
     const [sitePartnerIds, setSitePartnerIds] = useState([]);
     const [partnersExpanded, setPartnersExpanded] = useState(false);
-    const [savingPartners, setSavingPartners] = useState(false);
 
     const loadSubsites = () => api.subsites.getAll().then(d => setSubsites(Array.isArray(d) ? d : [])).catch(() => {});
     useEffect(() => { loadSubsites(); }, []);
@@ -237,9 +227,10 @@ const AdminSettings = () => {
     // Politique de re-validation quand un sous-site modifie un cartel déjà
     // publié sur le principal : 'off' | 'strict' ('soft' prévu mais pas livré).
     const [revalPolicy,   setRevalPolicy]   = useState('off');
-    // Snapshot des valeurs sauvegardées : sert à détecter les modifications non
-    // enregistrées (garde-fou de navigation « quitter sans sauvegarder »).
-    const [baseline, setBaseline] = useState(null);
+    // Dernières valeurs persistées des champs sauvegardés au blur (nombres +
+    // clés API) : permet d'ignorer un blur qui ne change rien — pas de requête
+    // ni de toast inutile.
+    const savedRef = useRef({});
 
     // ── Chargement initial ───────────────────────────────────
     useEffect(() => {
@@ -247,11 +238,16 @@ const AdminSettings = () => {
             setLoading(true);
             try {
                 const s = await api.settings.getAll();
+                const maxTotal0      = parseInt(s.max_submissions_per_ip_total, 10)  || 10;
+                const maxWindow0     = parseInt(s.max_submissions_per_ip_window, 10) || 3;
+                const windowMinutes0 = parseInt(s.submission_window_minutes, 10)     || 60;
                 setAllowAnon(s.allow_anonymous_submit === 'true');
-                setMaxTotal(parseInt(s.max_submissions_per_ip_total, 10) || 10);
-                setMaxWindow(parseInt(s.max_submissions_per_ip_window, 10) || 3);
-                setWindowMinutes(parseInt(s.submission_window_minutes, 10) || 60);
+                setMaxTotal(maxTotal0);
+                setMaxWindow(maxWindow0);
+                setWindowMinutes(windowMinutes0);
                 setRevalPolicy(s.subsite_edit_revalidation || 'off');
+                // Référence des valeurs sauvegardées, pour ignorer un blur sans changement.
+                savedRef.current = { maxTotal: maxTotal0, maxWindow: maxWindow0, windowMinutes: windowMinutes0 };
                 try {
                     setSitePrimaryPartnerIds(JSON.parse(s.site_primary_partner_ids || '[]'));
                     setSitePartnerIds(JSON.parse(s.site_partner_ids || '[]'));
@@ -268,16 +264,8 @@ const AdminSettings = () => {
                     ]);
                     setOpenaiKey(k1.openai_key || '');
                     setDeeplKey(k2.deepl_key   || '');
-                    // Référence « état sauvegardé » pour détecter les modifs non enregistrées.
-                    setBaseline({
-                        allowAnon:     s.allow_anonymous_submit === 'true',
-                        maxTotal:      parseInt(s.max_submissions_per_ip_total, 10) || 10,
-                        maxWindow:     parseInt(s.max_submissions_per_ip_window, 10) || 3,
-                        windowMinutes: parseInt(s.submission_window_minutes, 10) || 60,
-                        revalPolicy:   s.subsite_edit_revalidation || 'off',
-                        openaiKey:     k1.openai_key || '',
-                        deeplKey:      k2.deepl_key  || '',
-                    });
+                    savedRef.current.openaiKey = k1.openai_key || '';
+                    savedRef.current.deeplKey  = k2.deepl_key  || '';
                 } catch { /* pas critique */ }
             } catch (e) {
                 showToast('error', i18n.t('errors.loadingPrefix', { msg: e.message }));
@@ -293,98 +281,71 @@ const AdminSettings = () => {
         setTimeout(() => setToast(null), 4000);
     };
 
-    // ── Sauvegarde ───────────────────────────────────────────
-    const handleSave = async () => {
-        setSaving(true);
+    // ── Sauvegarde automatique ───────────────────────────────
+    // Chaque réglage est persisté dès qu'on le modifie (toggle/radio) ou qu'on
+    // quitte le champ (nombres, clés API). Plus de bouton « Enregistrer » global :
+    // `persist` envoie le patch minimal et confirme par un toast « Enregistré ».
+    const persist = async (patch, successMsg) => {
         try {
-            const payload = {
-                allow_anonymous_submit:        String(allowAnon),
-                max_submissions_per_ip_total:  String(maxTotal),
-                max_submissions_per_ip_window: String(maxWindow),
-                submission_window_minutes:     String(windowMinutes),
-                subsite_edit_revalidation:     revalPolicy,
-                openai_key: openaiKey,
-                deepl_key:  deeplKey,
-            };
-
-            await api.settings.update(payload);
-            // La sauvegarde réussie devient la nouvelle référence « propre ».
-            setBaseline({ allowAnon, maxTotal, maxWindow, windowMinutes, revalPolicy, openaiKey, deeplKey });
-            showToast('success', i18n.t('toasts.settingsSaved'));
+            await api.settings.update(patch);
+            showToast('success', successMsg || i18n.t('toasts.saved'));
+            return true;
         } catch (e) {
             showToast('error', i18n.t('common.error', { msg: e.message }));
-        } finally {
-            setSaving(false);
+            return false;
         }
     };
 
-    const toggleSitePrimaryPartner = (id) => {
-        setSitePrimaryPartnerIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-        setSitePartnerIds(prev => prev.filter(x => x !== id));
+    // Champ texte/nombre sauvegardé au blur : on ignore le blur si rien n'a changé.
+    const commitField = async (serverKey, refKey, value) => {
+        if (savedRef.current[refKey] === value) return;
+        if (await persist({ [serverKey]: String(value) })) savedRef.current[refKey] = value;
     };
 
-    const toggleSitePartner = (id) => {
-        setSitePartnerIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-        setSitePrimaryPartnerIds(prev => prev.filter(x => x !== id));
+    // Toggle / radio : état optimiste + persistance immédiate, retour arrière si échec.
+    const setAllowAnonSaved = async (v) => {
+        setAllowAnon(v);
+        if (!(await persist({ allow_anonymous_submit: String(v) }))) setAllowAnon(!v);
     };
 
-    const handleSaveMainSitePartners = async () => {
-        setSavingPartners(true);
-        try {
-            const payload = {
-                site_primary_partner_ids: JSON.stringify(sitePrimaryPartnerIds),
-                site_partner_ids: JSON.stringify(sitePartnerIds),
-            };
-
-            try {
-                await api.settings.update(payload);
-            } catch {
-                await api.partners.setSiteSelection({
-                    primary_partner_ids: sitePrimaryPartnerIds,
-                    partner_ids: sitePartnerIds,
-                });
-            }
-
-            showToast('success', i18n.t('toasts.mainSitePartnersSaved'));
-        } catch (e) {
-            showToast('error', i18n.t('errors.savingPartnersPrefix', { msg: e.message }));
-        } finally {
-            setSavingPartners(false);
-        }
+    const setRevalPolicySaved = async (v) => {
+        const prev = revalPolicy;
+        setRevalPolicy(v);
+        if (!(await persist({ subsite_edit_revalidation: v }))) setRevalPolicy(prev);
     };
 
-    // ── Garde-fou « modifications non enregistrées » ─────────
-    // Vrai dès qu'un réglage diffère de la dernière sauvegarde.
-    const isDirty = !!baseline && (
-        allowAnon     !== baseline.allowAnon ||
-        maxTotal      !== baseline.maxTotal ||
-        maxWindow     !== baseline.maxWindow ||
-        windowMinutes !== baseline.windowMinutes ||
-        revalPolicy   !== baseline.revalPolicy ||
-        openaiKey     !== baseline.openaiKey ||
-        deeplKey      !== baseline.deeplKey
+    const persistPartners = (primaryIds, regularIds) => persist(
+        {
+            site_primary_partner_ids: JSON.stringify(primaryIds),
+            site_partner_ids:         JSON.stringify(regularIds),
+        },
+        i18n.t('toasts.mainSitePartnersSaved'),
     );
 
-    // 1) Fermeture / refresh d'onglet : confirmation native du navigateur.
-    useEffect(() => {
-        if (!isDirty || saving) return;
-        const handler = (e) => { e.preventDefault(); e.returnValue = ''; };
-        window.addEventListener('beforeunload', handler);
-        return () => window.removeEventListener('beforeunload', handler);
-    }, [isDirty, saving]);
+    // Un partenaire ne peut être que dans une seule liste. On calcule les deux
+    // listes suivantes puis on persiste ; retour arrière si l'appel échoue.
+    const toggleSitePrimaryPartner = async (id) => {
+        const prevPrimary = sitePrimaryPartnerIds, prevRegular = sitePartnerIds;
+        const nextPrimary = prevPrimary.includes(id) ? prevPrimary.filter(x => x !== id) : [...prevPrimary, id];
+        const nextRegular = prevRegular.filter(x => x !== id);
+        setSitePrimaryPartnerIds(nextPrimary);
+        setSitePartnerIds(nextRegular);
+        if (!(await persistPartners(nextPrimary, nextRegular))) {
+            setSitePrimaryPartnerIds(prevPrimary);
+            setSitePartnerIds(prevRegular);
+        }
+    };
 
-    // 2) Navigation interne (Link, navigate, retour) : bloquée tant que l'utilisateur
-    //    n'a pas tranché via la modale. Nécessite le data router (cf. App.jsx).
-    const blocker = useBlocker(useCallback(
-        ({ currentLocation, nextLocation }) =>
-            isDirty && !saving && currentLocation.pathname !== nextLocation.pathname,
-        [isDirty, saving],
-    ));
-
-    // « Enregistrer & quitter » depuis la modale : on sauvegarde puis on poursuit.
-    const handleSaveAndLeave = async () => {
-        await handleSave();
-        blocker.proceed?.();
+    const toggleSitePartner = async (id) => {
+        const prevPrimary = sitePrimaryPartnerIds, prevRegular = sitePartnerIds;
+        const nextRegular = prevRegular.includes(id) ? prevRegular.filter(x => x !== id) : [...prevRegular, id];
+        const nextPrimary = prevPrimary.filter(x => x !== id);
+        setSitePartnerIds(nextRegular);
+        setSitePrimaryPartnerIds(nextPrimary);
+        if (!(await persistPartners(nextPrimary, nextRegular))) {
+            setSitePrimaryPartnerIds(prevPrimary);
+            setSitePartnerIds(prevRegular);
+        }
     };
 
     if (!isAdmin) {
@@ -435,78 +396,21 @@ const AdminSettings = () => {
                 </div>
             )}
 
-            {/* ── Modale : modifications non enregistrées ───── */}
-            {blocker.state === 'blocked' && (
-                <div role="dialog" aria-modal="true" aria-labelledby="unsaved-title" style={{
-                    position: 'fixed', inset: 0, zIndex: 10000,
-                    background: 'rgba(0,0,0,0.45)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
-                }}>
-                    <div style={{
-                        background: 'var(--color-surface)', borderRadius: '14px',
-                        maxWidth: '460px', width: '100%', padding: '24px 24px 20px',
-                        boxShadow: 'var(--shadow-lg)', borderTop: '5px solid var(--color-warning, #e0a000)',
-                    }}>
-                        <h3 id="unsaved-title" style={{ margin: '0 0 10px', fontSize: '1.12rem' }}>Modifications non enregistrées</h3>
-                        <p style={{ margin: '0 0 18px', fontSize: '0.92rem', lineHeight: 1.5, color: 'var(--color-text-muted)' }}>
-                            Attention : vous allez quitter cette page sans avoir sauvegardé vos changements. Que souhaitez-vous faire ?
-                        </p>
-                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                            <button type="button" onClick={() => blocker.reset?.()}
-                                style={{ border: '1px solid var(--color-border)', background: 'var(--color-surface-2)', borderRadius: '10px', padding: '10px 16px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', color: 'var(--color-text)' }}>
-                                Annuler
-                            </button>
-                            <button type="button" onClick={() => blocker.proceed?.()}
-                                style={{ border: 'none', background: 'var(--color-error)', color: '#fff', borderRadius: '10px', padding: '10px 16px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem' }}>
-                                Quitter sans sauvegarder
-                            </button>
-                            <button type="button" onClick={handleSaveAndLeave} disabled={saving}
-                                style={{ border: 'none', background: 'var(--color-primary)', color: '#fff', borderRadius: '10px', padding: '10px 16px', cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: '0.85rem' }}>
-                                {saving ? 'Sauvegarde…' : 'Enregistrer & quitter'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* ── En-tête (sticky : le bouton « Sauvegarder » reste toujours visible) ── */}
+            {/* ── En-tête ─────────────────────────────────────── */}
+            {/* Plus de bouton « Sauvegarder » : chaque réglage est enregistré
+                automatiquement (toggle/radio au clic, champs au blur). */}
             <div style={{
-                position: 'sticky', top: 0, zIndex: 50,
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 gap: '16px', flexWrap: 'wrap',
                 marginBottom: '24px', padding: '12px 0',
-                background: 'var(--color-surface)',
                 borderBottom: '1px solid var(--color-border)',
             }}>
                 <div>
                     <h1 style={{ margin: 0, fontSize: '2rem' }}>Administration</h1>
-                    <p style={{ margin: '4px 0 0', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Paramètres globaux de l'application</p>
+                    <p style={{ margin: '4px 0 0', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
+                        Paramètres globaux — <strong>enregistrés automatiquement</strong> à chaque modification.
+                    </p>
                 </div>
-                <button
-                    onClick={handleSave}
-                    disabled={saving || loading}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        background: saving ? 'var(--color-border-strong)' : 'var(--color-primary)',
-                        color: 'var(--color-white)',
-                        border: 'none',
-                        borderRadius: 'var(--radius-md)',
-                        padding: '12px 22px',
-                        cursor: saving ? 'not-allowed' : 'pointer',
-                        fontWeight: '700',
-                        fontSize: '0.85rem',
-                        fontFamily: 'var(--font-heading)',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                    }}
-                >
-                    {saving
-                        ? <><RefreshCw size={15} style={{ animation: 'spin 1s linear infinite' }} /> Sauvegarde…</>
-                        : <><Save size={15} /> Sauvegarder</>
-                    }
-                </button>
             </div>
 
             {loading ? (
@@ -776,21 +680,6 @@ const AdminSettings = () => {
                                                         </div>
                                                     </div>
 
-                                                    <button
-                                                        type="button"
-                                                        onClick={handleSaveMainSitePartners}
-                                                        disabled={savingPartners}
-                                                        style={{
-                                                            border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 18px',
-                                                            background: savingPartners ? 'var(--color-border-strong)' : 'var(--color-theme-system)', color: 'var(--color-white)',
-                                                            fontWeight: '700', cursor: savingPartners ? 'not-allowed' : 'pointer',
-                                                            fontFamily: 'var(--font-heading)', fontSize: '0.82rem',
-                                                            textTransform: 'uppercase', letterSpacing: '0.5px',
-                                                            display: 'flex', alignItems: 'center', gap: '6px',
-                                                        }}
-                                                    >
-                                                        <Save size={14} /> Enregistrer la sélection
-                                                    </button>
                                                 </>
                                             )}
                                         </div>
@@ -885,7 +774,7 @@ const AdminSettings = () => {
                                                 key={opt.key}
                                                 type="button"
                                                 disabled={opt.disabled}
-                                                onClick={() => !opt.disabled && setRevalPolicy(opt.key)}
+                                                onClick={() => !opt.disabled && setRevalPolicySaved(opt.key)}
                                                 aria-pressed={active}
                                                 style={{
                                                     textAlign: 'left',
@@ -952,7 +841,7 @@ const AdminSettings = () => {
                                 label="Autoriser les soumissions anonymes"
                                 hint="Si désactivé, seuls les utilisateurs connectés pourront proposer des cartels."
                             >
-                                <Toggle value={allowAnon} onChange={setAllowAnon} />
+                                <Toggle value={allowAnon} onChange={setAllowAnonSaved} />
                             </Field>
 
                             {allowAnon && (
@@ -972,6 +861,7 @@ const AdminSettings = () => {
                                         <NumberInput
                                             value={maxTotal}
                                             onChange={v => setMaxTotal(Number(v))}
+                                            onCommit={n => commitField('max_submissions_per_ip_total', 'maxTotal', n)}
                                             min={1}
                                             max={500}
                                             suffix="cartels max"
@@ -984,10 +874,10 @@ const AdminSettings = () => {
                                         </p>
                                         <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
                                             <Field label="Soumissions autorisées par fenêtre" hint="Nombre max de cartels sur la période définie ci-dessous.">
-                                                <NumberInput value={maxWindow} onChange={v => setMaxWindow(Number(v))} min={1} max={50} suffix="cartels" />
+                                                <NumberInput value={maxWindow} onChange={v => setMaxWindow(Number(v))} onCommit={n => commitField('max_submissions_per_ip_window', 'maxWindow', n)} min={1} max={50} suffix="cartels" />
                                             </Field>
                                             <Field label="Durée de la fenêtre" hint="Période glissante de contrôle.">
-                                                <NumberInput value={windowMinutes} onChange={v => setWindowMinutes(Number(v))} min={1} max={1440} suffix="minutes" />
+                                                <NumberInput value={windowMinutes} onChange={v => setWindowMinutes(Number(v))} onCommit={n => commitField('submission_window_minutes', 'windowMinutes', n)} min={1} max={1440} suffix="minutes" />
                                             </Field>
                                         </div>
 
@@ -1063,11 +953,9 @@ const AdminSettings = () => {
                                 placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:fx"
                                 value={deeplKey}
                                 onChange={setDeeplKey}
+                                onCommit={v => commitField('deepl_key', 'deeplKey', v)}
                                 show={showDeeplKey}
                                 onToggleShow={() => setShowDeeplKey(!showDeeplKey)}
-                                onSave={handleSave}
-                                saving={saving}
-                                loading={loading}
                                 detect={(k) => {
                                     if (k.endsWith(':fx')) return 'Format DeepL Free détecté';
                                     if (k.startsWith('sk-') || k.startsWith('proj-')) return 'Attention : ressemble à une clé OpenAI — à coller dans le champ ci-dessous';
@@ -1081,11 +969,9 @@ const AdminSettings = () => {
                                 placeholder="sk-…"
                                 value={openaiKey}
                                 onChange={setOpenaiKey}
+                                onCommit={v => commitField('openai_key', 'openaiKey', v)}
                                 show={showOpenaiKey}
                                 onToggleShow={() => setShowOpenaiKey(!showOpenaiKey)}
-                                onSave={handleSave}
-                                saving={saving}
-                                loading={loading}
                                 detect={(k) => {
                                     if (k.startsWith('sk-') || k.startsWith('proj-')) return 'Format OpenAI détecté';
                                     if (k.endsWith(':fx')) return 'Attention : ressemble à une clé DeepL — à coller dans le champ ci-dessus';
@@ -1094,7 +980,7 @@ const AdminSettings = () => {
                             />
 
                             <p style={{ margin: '8px 0 0', fontSize: '0.82rem', color: 'var(--color-text-muted)' }}>
-                                Cliquez sur « Enregistrer » après collage pour confirmer la prise en compte.
+                                La clé est enregistrée automatiquement dès que vous quittez le champ.
                             </p>
                         </Section>
 

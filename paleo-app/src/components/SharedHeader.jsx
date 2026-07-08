@@ -8,7 +8,7 @@ import {
 import LanguageSwitcher from './LanguageSwitcher';
 import { useNavigate } from 'react-router-dom';
 import { subsites as subsitesApi, auth as authApi } from '../services/apiClient';
-import { getSubsiteHostUrl } from '../utils/subsiteHost';
+import { getSubsiteHostUrl, mainSitePath } from '../utils/subsiteHost';
 import { useTranslation } from 'react-i18next';
 import PasswordModal from './PasswordModal';
 
@@ -307,21 +307,30 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                                 });
                                             })()}
                                             <div style={{ borderTop: '1px solid #f0f0f0', margin: '6px 0' }} />
-                                            <Link
-                                                to="/"
-                                                onClick={() => setIsMenuOpen(false)}
-                                                style={{
+                                            {(() => {
+                                                // « Retour au site » = accueil du site principal (le hub).
+                                                // Sur un host satellite (vitrine Pédia, sous-site dédié) où
+                                                // les routes /app sont montées, `/` résout vers la vitrine/le
+                                                // sous-site : on sort donc en absolu vers le hub via
+                                                // mainSitePath('/'), comme SubsiteLayout. Sinon, <Link> interne.
+                                                const backHref = mainSitePath('/');
+                                                const backStyle = {
                                                     display: 'block', padding: '10px 14px', borderRadius: 'var(--radius-md)',
                                                     textDecoration: 'none', color: 'var(--color-text-muted)',
                                                     fontSize: '0.85rem', fontWeight: '700',
                                                     fontFamily: 'var(--font-heading)',
                                                     textTransform: 'uppercase', letterSpacing: '0.3px',
-                                                }}
-                                                onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-soft)'}
-                                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                                            >
-                                                ← {t('header.backToSite', 'Retour au site')}
-                                            </Link>
+                                                };
+                                                const hoverIn  = e => e.currentTarget.style.background = 'var(--color-primary-soft)';
+                                                const hoverOut = e => e.currentTarget.style.background = 'transparent';
+                                                return backHref.startsWith('http')
+                                                    ? <a href={backHref} onClick={() => setIsMenuOpen(false)} style={backStyle} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+                                                          ← {t('header.backToSite', 'Retour au site')}
+                                                      </a>
+                                                    : <Link to="/" onClick={() => setIsMenuOpen(false)} style={backStyle} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+                                                          ← {t('header.backToSite', 'Retour au site')}
+                                                      </Link>;
+                                            })()}
                                         </>
                                     ) : (
                                         <>
