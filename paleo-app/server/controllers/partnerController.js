@@ -64,6 +64,11 @@ export const PartnerController = {
         primaryPartnerIds: primary_partner_ids,
         partnerIds: partner_ids,
       });
+      dispatch({
+        type: 'partner.site_selection_updated', req,
+        summary: `${primary_partner_ids.length} à la une · ${partner_ids.length} affichés`,
+        payload: { primary_partner_ids, partner_ids },
+      });
       res.json(data);
     } catch (e) {
       res.status(500).json({ error: e.message });

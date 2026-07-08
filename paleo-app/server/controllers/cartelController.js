@@ -566,6 +566,12 @@ export const CartelController = {
       }
 
       const cartel = await CartelModel.clearSubmissionToMain(req.params.id);
+      dispatch({
+        type: 'cartel.subsite_withdrawn', req,
+        targetId: cartel.id, subsiteId: cartel.subsite_id ?? null,
+        summary: cartel.titre || '(sans titre)',
+        payload: { previousStatus: existing.status, wasApproved: !!existing.visible_on_main },
+      });
       res.json(cartel);
     } catch (err) {
       res.status(500).json({ error: err.message });
