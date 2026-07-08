@@ -41,6 +41,7 @@ const SiteFooter = () => {
                         <a href="/participer" style={{ color: '#666', textDecoration: 'none' }}>{t('footer.participate')}</a>
                         <a href="/contact" style={{ color: '#666', textDecoration: 'none' }}>{t('footer.contactUs')}</a>
                         <a href="/mentions-legales" style={{ color: '#666', textDecoration: 'none' }}>{t('footer.legalNotices')}</a>
+                        <a href="/conditions-generales-vente" style={{ color: '#666', textDecoration: 'none' }}>{t('footer.termsOfSale')}</a>
                         <a href="/politique-confidentialite" style={{ color: '#666', textDecoration: 'none' }}>{t('footer.privacy')}</a>
                     </div>
                 </div>

@@ -14,10 +14,44 @@ import {
 
 // ── Onglets / catégories ─────────────────────────────────────
 const TABS = [
-    { key: 'book',  label: 'Livres',         description: "Ouvrages — chaque card pointe vers la page produit du PrestaShop." },
-    { key: 'game',  label: 'Jeux de cartes', description: 'Jeux et autres supports ludiques distribués via le PrestaShop.' },
+    { key: 'book',  label: 'Livres',         description: "Ouvrages — chaque article renvoie vers un ou plusieurs liens de paiement Stripe." },
+    { key: 'game',  label: 'Jeux de cartes', description: 'Jeux et autres supports ludiques vendus via des liens de paiement Stripe.' },
     { key: 'other', label: 'Autres',         description: "Autres produits ou ressources qui ne rentrent pas dans Livres ou Jeux." },
 ];
+
+// ── Variantes & options de paiement (liens Stripe) ───────────
+// Un article → variantes (ex. Papier / E-book) → options de paiement
+// (ex. modes d'envoi), avec un lien Stripe par option.
+const EMPTY_OPTION  = { label: '', label_en: '', price: '', url: '' };
+const newVariant    = () => ({ label: '', label_en: '', options: [{ ...EMPTY_OPTION }] });
+
+// Normalise les options d'une variante (repli sur l'ancien lien unique `url`).
+const initOptions = (v) => {
+    if (Array.isArray(v?.options) && v.options.length) {
+        return v.options.map(o => ({
+            label: o.label || '', label_en: o.label_en || '',
+            price: o.price || '', url: o.url || '',
+        }));
+    }
+    if (v?.url) return [{ label: '', label_en: '', price: v.price || '', url: v.url }];
+    return [{ ...EMPTY_OPTION }];
+};
+
+// Amorce la liste de variantes à l'ouverture du formulaire :
+// variantes existantes, sinon repli sur l'ancien lien unique, sinon une ligne vide.
+const initVersions = (initial) => {
+    if (Array.isArray(initial?.versions) && initial.versions.length) {
+        return initial.versions.map(v => ({
+            label:    v.label    || '',
+            label_en: v.label_en || '',
+            options:  initOptions(v),
+        }));
+    }
+    if (initial?.external_url) {
+        return [{ label: '', label_en: '', options: [{ label: '', label_en: '', price: initial.price_text || '', url: initial.external_url }] }];
+    }
+    return [newVariant()];
+};
 
 // ── Formulaire ───────────────────────────────────────────────
 const ShopItemForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregistrer' }) => {
@@ -28,11 +62,19 @@ const ShopItemForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregi
     const [description, setDescription] = useState(initial?.description || '');
     const [descriptionEn, setDescriptionEn] = useState(initial?.description_en || '');
     const [imagePath, setImagePath] = useState(initial?.image_path || '');
-    const [externalUrl, setExternalUrl] = useState(initial?.external_url || '');
-    const [priceText, setPriceText] = useState(initial?.price_text || '');
+    const [versions, setVersions] = useState(() => initVersions(initial));
     const [isPublished, setIsPublished] = useState(initial ? initial.is_published !== 0 : true);
     const [uploading, setUploading] = useState(false);
     const [uploadError, setUploadError] = useState('');
+
+    // Variantes (niveau 1)
+    const setVariant    = (vi, patch) => setVersions(vs => vs.map((v, i) => (i === vi ? { ...v, ...patch } : v)));
+    const addVariant    = ()          => setVersions(vs => [...vs, newVariant()]);
+    const removeVariant = (vi)        => setVersions(vs => (vs.length > 1 ? vs.filter((_, i) => i !== vi) : vs));
+    // Options de paiement (niveau 2, imbriqué dans une variante)
+    const setOption     = (vi, oi, patch) => setVersions(vs => vs.map((v, i) => (i !== vi ? v : { ...v, options: v.options.map((o, j) => (j === oi ? { ...o, ...patch } : o)) })));
+    const addOption     = (vi)        => setVersions(vs => vs.map((v, i) => (i !== vi ? v : { ...v, options: [...v.options, { ...EMPTY_OPTION }] })));
+    const removeOption  = (vi, oi)    => setVersions(vs => vs.map((v, i) => (i !== vi ? v : { ...v, options: v.options.length > 1 ? v.options.filter((_, j) => j !== oi) : v.options })));
 
     const handleImage = async (file) => {
         if (!file) return;
@@ -59,8 +101,20 @@ const ShopItemForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregi
             description: description.trim() || null,
             description_en: descriptionEn.trim() || null,
             image_path: imagePath || null,
-            external_url: externalUrl.trim() || null,
-            price_text: priceText.trim() || null,
+            versions: versions
+                .map(v => ({
+                    label:    v.label.trim(),
+                    label_en: v.label_en.trim(),
+                    options: v.options
+                        .map(o => ({
+                            label:    o.label.trim(),
+                            label_en: o.label_en.trim(),
+                            price:    o.price.trim(),
+                            url:      o.url.trim(),
+                        }))
+                        .filter(o => o.url),
+                }))
+                .filter(v => v.options.length),
             is_published: isPublished,
         });
     };
@@ -73,27 +127,118 @@ const ShopItemForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregi
                     placeholder="Rétrofutur : une autre histoire des innovations énergétiques" />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '10px' }}>
-                <div>
-                    <label style={labelStyle}>Sous-titre / éditeur (optionnel)</label>
-                    <input value={subtitle} onChange={e => setSubtitle(e.target.value)} style={inputStyle}
-                        placeholder="Éditions Buchet/Chastel" />
-                </div>
-                <div>
-                    <label style={labelStyle}>Prix indicatif</label>
-                    <input value={priceText} onChange={e => setPriceText(e.target.value)} style={inputStyle}
-                        placeholder="28 €  ou  5,99 € – 30 €" />
-                </div>
+            <div>
+                <label style={labelStyle}>Sous-titre / éditeur (optionnel)</label>
+                <input value={subtitle} onChange={e => setSubtitle(e.target.value)} style={inputStyle}
+                    placeholder="Éditions Buchet/Chastel" />
             </div>
 
+            {/* ── Variantes & options de paiement Stripe ──────────────── */}
             <div>
-                <label style={labelStyle}>URL PrestaShop *</label>
-                <input value={externalUrl} onChange={e => setExternalUrl(e.target.value)} style={inputStyle}
-                    type="url"
-                    placeholder="https://shop.atelier21.org/product/…" />
-                <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: 'var(--color-text-subtle)' }}>
-                    Lien vers la fiche produit. Sans URL, la card s'affiche mais le bouton « Acheter » est masqué.
+                <label style={labelStyle}>Variantes & options de paiement Stripe</label>
+                <p style={{ margin: '0 0 10px', fontSize: '0.78rem', color: 'var(--color-text-subtle)', lineHeight: '1.5' }}>
+                    Un article se décline en <strong>variantes</strong> (ex. Papier / E-book), et chaque
+                    variante en <strong>options de paiement</strong> (ex. modes d'envoi), avec un lien
+                    Stripe par option. Sur la page produit : si tout est unique → un bouton « Acheter » ;
+                    sinon l'affichage s'adapte (choix de la variante puis de l'option). Laissez le nom
+                    d'une option vide s'il n'y en a qu'une. Une option sans lien est ignorée.
                 </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {versions.map((v, vi) => (
+                        <div key={vi} style={{
+                            border: '1px solid var(--color-border)',
+                            borderRadius: 'var(--radius-md)',
+                            padding: '12px',
+                            background: 'var(--color-surface-2)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '10px',
+                        }}>
+                            {/* En-tête + nom de la variante */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <span style={{ fontSize: '0.74rem', fontFamily: 'var(--font-heading)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-primary)' }}>
+                                    Variante {vi + 1}
+                                </span>
+                                {versions.length > 1 && (
+                                    <button type="button" onClick={() => removeVariant(vi)}
+                                        style={{ ...ghostBtnStyle, padding: '3px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }} title="Supprimer cette variante">
+                                        <Trash2 size={13} /> Variante
+                                    </button>
+                                )}
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                <div>
+                                    <label style={labelStyle}>Nom de la variante (FR)</label>
+                                    <input value={v.label} onChange={e => setVariant(vi, { label: e.target.value })}
+                                        style={inputStyle} placeholder="Papier" />
+                                </div>
+                                <div>
+                                    <label style={labelStyle}>Nom (EN, optionnel)</label>
+                                    <input value={v.label_en} onChange={e => setVariant(vi, { label_en: e.target.value })}
+                                        style={inputStyle} placeholder="Paperback" />
+                                </div>
+                            </div>
+
+                            {/* Options de paiement (un lien Stripe par option) */}
+                            <div style={{ borderLeft: '2px solid var(--color-border)', paddingLeft: '10px', marginLeft: '2px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-heading)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text-muted)' }}>
+                                    Options de paiement — un lien Stripe par option
+                                </span>
+                                {v.options.map((o, oi) => (
+                                    <div key={oi} style={{
+                                        border: '1px solid var(--color-border)',
+                                        borderRadius: 'var(--radius-md)',
+                                        padding: '10px',
+                                        background: 'var(--color-surface)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '8px',
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <span style={{ fontSize: '0.7rem', color: 'var(--color-text-subtle)', fontWeight: '700' }}>
+                                                Option {oi + 1}
+                                            </span>
+                                            {v.options.length > 1 && (
+                                                <button type="button" onClick={() => removeOption(vi, oi)}
+                                                    style={{ ...ghostBtnStyle, padding: '2px 6px' }} title="Supprimer cette option">
+                                                    <Trash2 size={12} />
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr', gap: '8px' }}>
+                                            <div>
+                                                <label style={labelStyle}>Nom (FR)</label>
+                                                <input value={o.label} onChange={e => setOption(vi, oi, { label: e.target.value })}
+                                                    style={inputStyle} placeholder="Point Relais" />
+                                            </div>
+                                            <div>
+                                                <label style={labelStyle}>Nom (EN, opt.)</label>
+                                                <input value={o.label_en} onChange={e => setOption(vi, oi, { label_en: e.target.value })}
+                                                    style={inputStyle} placeholder="Pickup point" />
+                                            </div>
+                                            <div>
+                                                <label style={labelStyle}>Prix</label>
+                                                <input value={o.price} onChange={e => setOption(vi, oi, { price: e.target.value })}
+                                                    style={inputStyle} placeholder="4,15 €" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label style={labelStyle}>Lien de paiement Stripe</label>
+                                            <input value={o.url} onChange={e => setOption(vi, oi, { url: e.target.value })}
+                                                style={inputStyle} type="url" placeholder="https://buy.stripe.com/…" />
+                                        </div>
+                                    </div>
+                                ))}
+                                <button type="button" onClick={() => addOption(vi)} style={{ ...ghostBtnStyle, padding: '5px 10px', alignSelf: 'flex-start' }}>
+                                    <Plus size={13} /> Ajouter une option
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <button type="button" onClick={addVariant} style={{ ...ghostBtnStyle, marginTop: '10px' }}>
+                    <Plus size={14} /> Ajouter une variante
+                </button>
             </div>
 
             <div>
@@ -335,12 +480,13 @@ const AdminShop = () => {
         <div style={{ maxWidth: '900px', margin: '0 auto', padding: '28px 24px 80px' }}>
             <AdminToast toast={toast} />
 
-            <AdminPageHeader icon={ShoppingBag} title="Boutique (liens externes)" />
+            <AdminPageHeader icon={ShoppingBag} title="Boutique (liens Stripe)" />
 
             <ExplainerBox title="À quoi sert cette page ?">
-                Gérer les liens vers le <strong>PrestaShop externe</strong> affichés sur la page publique
-                /boutique. Le site ne gère pas de panier ni de paiement : chaque card est un lien enrichi
-                (visuel, titre, prix indicatif) qui renvoie vers la fiche produit hébergée chez PrestaShop.
+                Gérer les articles affichés sur la page publique /boutique. Le site ne gère ni panier ni
+                paiement : chaque article renvoie vers un ou plusieurs <strong>liens de paiement Stripe</strong>.
+                Un article peut proposer plusieurs <strong>versions</strong> (ex. Papier / E-book), chacune
+                avec son nom, son prix et son propre lien.
                 <ul style={{ margin: '8px 0 0', paddingLeft: '18px', lineHeight: '1.7' }}>
                     <li><strong>Livres</strong> — ouvrages Rétrofutur (FR/EN/JP…)</li>
                     <li><strong>Jeux de cartes</strong> — supports ludiques</li>
@@ -369,7 +515,7 @@ const AdminShop = () => {
             {showForm && (
                 <AdminSection>
                     <p style={{ margin: '0 0 14px', fontWeight: '800', fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-primary)', fontFamily: 'var(--font-heading)' }}>
-                        Nouveau lien — {currentTab.label}
+                        Nouvel article — {currentTab.label}
                     </p>
                     <ShopItemForm
                         onCancel={() => setShowForm(false)}
@@ -406,6 +552,12 @@ const AdminShop = () => {
                                     </div>
                                 );
                             }
+                            const vers = Array.isArray(it.versions) ? it.versions : [];
+                            const totalLinks = vers.reduce((n, v) => n + (Array.isArray(v.options) ? v.options.length : (v.url ? 1 : 0)), 0);
+                            const firstUrl = vers[0]?.options?.[0]?.url || vers[0]?.url || '';
+                            const versSummary = vers
+                                .map(v => [v.label, v.price].filter(Boolean).join(' '))
+                                .filter(Boolean).join(' — ');
                             return (
                                 <div key={it.id} style={{
                                     display: 'flex', alignItems: 'center', gap: '12px',
@@ -427,18 +579,31 @@ const AdminShop = () => {
                                             {it.title}
                                             {!it.is_published && <span style={{ marginLeft: '8px', fontSize: '0.74rem', color: 'var(--color-warning)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>· masqué</span>}
                                         </div>
-                                        {(it.subtitle || it.price_text) && (
-                                            <div style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)' }}>
-                                                {it.subtitle}{it.subtitle && it.price_text ? ' · ' : ''}{it.price_text}
+                                        {it.subtitle && (
+                                            <div style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {it.subtitle}
                                             </div>
                                         )}
-                                        {it.external_url ? (
-                                            <a href={it.external_url} target="_blank" rel="noopener noreferrer"
-                                                style={{ fontSize: '0.78rem', color: 'var(--color-text-subtle)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                                <ExternalLink size={11} /> {it.external_url.replace(/^https?:\/\//, '').slice(0, 38)}…
-                                            </a>
+                                        {vers.length > 0 ? (
+                                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                                {(vers.length > 1 || totalLinks > 1) && (
+                                                    <span style={{ fontWeight: '700', color: 'var(--color-primary)' }}>
+                                                        {vers.length > 1 ? `${vers.length} variantes` : '1 variante'} · {totalLinks} lien{totalLinks > 1 ? 's' : ''} ·
+                                                    </span>
+                                                )}
+                                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {versSummary || firstUrl.replace(/^https?:\/\//, '').slice(0, 40)}
+                                                </span>
+                                                {firstUrl && (
+                                                    <a href={firstUrl} target="_blank" rel="noopener noreferrer"
+                                                        title="Ouvrir le lien de paiement"
+                                                        style={{ color: 'var(--color-text-subtle)', display: 'inline-flex' }}>
+                                                        <ExternalLink size={11} />
+                                                    </a>
+                                                )}
+                                            </div>
                                         ) : (
-                                            <span style={{ fontSize: '0.78rem', color: 'var(--color-warning)' }}>URL manquante</span>
+                                            <span style={{ fontSize: '0.78rem', color: 'var(--color-warning)' }}>Aucun lien de paiement</span>
                                         )}
                                     </div>
 

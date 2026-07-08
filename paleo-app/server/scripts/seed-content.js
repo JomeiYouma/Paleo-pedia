@@ -259,6 +259,7 @@ async function seedShop() {
                 price_text:   it.price_text   ?? null,
                 display_order: it.display_order ?? 0,
                 is_published:  it.is_published !== false,
+                ...(Array.isArray(it.versions) ? { versions: it.versions } : {}),
             };
             await upsert(ShopItemModel, 'shop_items', 'title', it.title, payload, it.title, 'shop');
         }

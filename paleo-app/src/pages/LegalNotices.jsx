@@ -38,8 +38,8 @@ const LegalNotices = () => {
             <h2 style={{ marginTop: '24px', fontSize: '1.15rem' }}>{t('legal.hosting.title')}</h2>
             <p>
                 {t('legal.hosting.body')}<br />
-                <a href="https://www.o2switch.fr" target="_blank" rel="noreferrer" style={{ color: 'var(--color-primary)' }}>
-                    o2switch.fr
+                <a href="https://www.infomaniak.com" target="_blank" rel="noreferrer" style={{ color: 'var(--color-primary)' }}>
+                    infomaniak.com
                 </a>
             </p>
 

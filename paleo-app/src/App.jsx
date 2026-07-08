@@ -40,6 +40,7 @@ import PaleoPedia from './pages/PaleoPedia';
 import NotFound from './pages/NotFound';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import LegalNotices from './pages/LegalNotices';
+import TermsOfSale from './pages/TermsOfSale';
 import SiteLayout from './components/SiteLayout';
 import PediaLayout from './layouts/PediaLayout';
 import SubsiteLayout from './layouts/SubsiteLayout';
@@ -157,6 +158,7 @@ const mainRouter = createBrowserRouter(
         <Route path="contact"      element={<Contact />} />
         <Route path="politique-confidentialite" element={<PrivacyPolicy />} />
         <Route path="mentions-legales" element={<LegalNotices />} />
+        <Route path="conditions-generales-vente" element={<TermsOfSale />} />
         <Route path="cartel/:id" element={<CartelDetail />} />
         {/* 404 brandée (header + footer du site) pour toute URL inconnue */}
         <Route path="*" element={<NotFound />} />

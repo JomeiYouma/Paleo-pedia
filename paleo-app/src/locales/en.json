@@ -134,6 +134,7 @@
         "dontCloseTab": "Please do not close this tab or leave the page until the operation is complete."
     },
     "toasts": {
+        "saved": "Saved",
         "settingsSaved": "Settings saved!",
         "mainSitePartnersSaved": "Main-site partners saved.",
         "subsiteSaved": "Subsite saved!",
@@ -433,7 +434,8 @@
         },
         "ouvrages": {
             "title": "Our shop",
-            "intro": "Discover our books and games compiling hundreds of forgotten inventions and offering an alternative reading of technical history. Purchases are made on our external shop.",
+            "intro": "Discover our books and games compiling hundreds of forgotten inventions and offering an alternative reading of technical history. Payment is made securely online via Stripe.",
+            "shippingNote": "Shipping handled by Mondial Relay: pickup point, locker or home delivery. Shipping costs vary depending on the delivery method chosen (and are free for digital versions).",
             "categoryBook": "Books",
             "categoryGame": "Card games",
             "categoryOther": "Other",
@@ -519,7 +521,7 @@
         },
         "hosting": {
             "title": "3. Hosting",
-            "body": "The website is hosted by o2switch, SAS with €100,000 capital, RCS Clermont-Ferrand 510 909 80, Chemin des Pardiaux, 63000 Clermont-Ferrand, France."
+            "body": "The website is hosted by Infomaniak Network SA, Rue Eugène-Marziano 25, 1227 Les Acacias (Geneva), Switzerland."
         },
         "ip": {
             "title": "4. Intellectual property",
@@ -539,6 +541,115 @@
             "body": "Personal data processing is detailed on a dedicated page:",
             "linkLabel": "privacy policy"
         }
+    },
+    "cgv": {
+        "title": "Terms and Conditions of Sale",
+        "backHome": "Back to home",
+        "lastUpdate": "Last updated",
+        "privacyLinkLabel": "See the privacy policy",
+        "intro": "These Terms and Conditions of Sale (T&Cs) govern the sale of products offered in the Paléo-Énergétique shop. Any order implies full and unreserved acceptance of these T&Cs. This English version is a courtesy translation; the French version prevails.",
+        "sections": [
+            {
+                "title": "1. Purpose and acceptance",
+                "paragraphs": [
+                    "These T&Cs apply to all sales of products (books, games and other items) concluded through the Paléo-Énergétique shop. Placing an order implies the customer's full and unreserved acceptance of these terms.",
+                    "The customer declares that they have the legal capacity to contract. Products are intended for personal use, unrelated to any professional activity."
+                ]
+            },
+            {
+                "title": "2. Seller identity",
+                "paragraphs": [
+                    "Products are sold by the association Atelier 21, a non-profit association governed by the French law of 1 July 1901, with registered office at 5 allée Paris-Ivry, 75013 Paris, France.",
+                    "Association registered under SIREN number 789 002 813, represented by its president, Cédric Carles.",
+                    "Contact: hello@atelier21.org — phone: +33 6 48 25 18 56."
+                ]
+            },
+            {
+                "title": "3. Products",
+                "paragraphs": [
+                    "The products offered are described with their essential characteristics on the Shop page. Some books are available in several versions (for example paper or digital). Photographs and illustrations are provided for guidance only and have no contractual value.",
+                    "Offers are valid while stocks last."
+                ]
+            },
+            {
+                "title": "4. Prices",
+                "paragraphs": [
+                    "Product prices are shown in euros. They are exclusive of delivery costs, which are indicated separately according to the chosen shipping method and added to the order total.",
+                    "The applicable price is the one displayed when the order is validated. The association reserves the right to change its prices at any time; products are invoiced on the basis of the rates in force at the time of the order."
+                ]
+            },
+            {
+                "title": "5. Ordering",
+                "paragraphs": [
+                    "Orders are placed from the Shop page by selecting the product, version and delivery method. The customer is then redirected to a secure payment page. The sale is deemed concluded upon payment confirmation.",
+                    "The association reserves the right to cancel or refuse any order that is abnormal or made in bad faith."
+                ]
+            },
+            {
+                "title": "6. Payment",
+                "paragraphs": [
+                    "Payment is made online, securely, via the Stripe platform (payment by bank card). Bank details are processed directly by Stripe and are neither collected nor stored by the association.",
+                    "The order is only validated once payment has actually been collected."
+                ]
+            },
+            {
+                "title": "7. Delivery",
+                "paragraphs": [
+                    "Physical products are shipped within France and abroad by the carrier Mondial Relay, according to the shipping method chosen by the customer:",
+                    "• Pickup point or locker: €4.15",
+                    "• Home delivery: €7.49",
+                    "• International delivery: €12.50",
+                    "Digital versions (e-books) incur no delivery costs and are made available electronically.",
+                    "Shipping takes place after payment confirmation. In accordance with Article L216-1 of the French Consumer Code, in the absence of a stated deadline, products are delivered within a maximum of thirty (30) days from the conclusion of the order. In the event of delay, the customer may, under the conditions provided by law, request cancellation of the sale and a refund."
+                ]
+            },
+            {
+                "title": "8. Right of withdrawal",
+                "paragraphs": [
+                    "In accordance with Articles L221-18 et seq. of the French Consumer Code, the customer has a period of fourteen (14) days from receipt of the products to exercise their right of withdrawal, without having to give reasons.",
+                    "To exercise it, the customer notifies their decision by an unambiguous statement, by email to hello@atelier21.org or by post to the registered office address. Products must be returned in their original condition, complete, within fourteen (14) days of this notification. Return costs remain the customer's responsibility.",
+                    "The association refunds all sums paid, excluding return costs, at the latest fourteen (14) days after recovery of the products or proof of their return shipment."
+                ]
+            },
+            {
+                "title": "9. Exception to the right of withdrawal (digital content)",
+                "paragraphs": [
+                    "In accordance with Article L221-28 of the French Consumer Code, the right of withdrawal cannot be exercised for the supply of digital content not provided on a tangible medium (e-books) whose execution has begun after the customer's prior express consent and express waiver of their right of withdrawal."
+                ]
+            },
+            {
+                "title": "10. Legal guarantees",
+                "paragraphs": [
+                    "All products benefit from the legal guarantee of conformity (Articles L217-3 et seq. of the French Consumer Code) and the guarantee against hidden defects (Articles 1641 et seq. of the French Civil Code). When acting under the legal guarantee of conformity, the customer has a period of two years from delivery of the goods and may choose between repair or replacement of the product, subject to the conditions provided by law."
+                ]
+            },
+            {
+                "title": "11. Liability",
+                "paragraphs": [
+                    "The association cannot be held liable for misuse of the products by the customer, or in the event of force majeure. Products comply with French legislation in force; it is the responsibility of the customer receiving them outside France to check import possibilities under the law of their country."
+                ]
+            },
+            {
+                "title": "12. Personal data",
+                "paragraphs": [
+                    "The personal data collected when placing an order is necessary for its processing and for delivery of the products. It is processed in accordance with applicable regulations and the site's privacy policy."
+                ],
+                "privacyLink": true
+            },
+            {
+                "title": "13. Intellectual property",
+                "paragraphs": [
+                    "The content of the products (books, games) as well as that of the site are protected by intellectual property law. They remain the property of the association Atelier 21 or their respective authors. Any reproduction, in whole or in part, without prior authorisation is prohibited."
+                ]
+            },
+            {
+                "title": "14. Applicable law and disputes",
+                "paragraphs": [
+                    "These T&Cs are governed by French law. In the event of a dispute, the customer is invited to contact the association first in order to seek an amicable solution.",
+                    "In accordance with Article L612-1 of the French Consumer Code, the consumer has the right to use, free of charge, a consumer mediator with a view to the amicable resolution of any dispute with the seller. Failing an amicable resolution, the French courts have jurisdiction."
+                ]
+            }
+        ]
     },
     "admin": {
         "title": "Cartel Management",
@@ -716,6 +827,7 @@
         "partners": "Partners",
         "contactUs": "Contact us",
         "legalNotices": "Legal notices",
+        "termsOfSale": "Terms and conditions of sale",
         "privacy": "Privacy policy",
         "createdBy": "Platform created by"
     },

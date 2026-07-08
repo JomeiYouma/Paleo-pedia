@@ -486,6 +486,7 @@ CREATE TABLE IF NOT EXISTS `shop_items` (
   `image_path`     VARCHAR(500)  NULL DEFAULT NULL,
   `external_url`   VARCHAR(500)  NULL DEFAULT NULL,
   `price_text`     VARCHAR(50)   NULL DEFAULT NULL,
+  `versions`       LONGTEXT      NULL DEFAULT NULL,
   `display_order`  INT           NOT NULL DEFAULT 0,
   `is_published`   TINYINT(1)    NOT NULL DEFAULT 1,
   `created_at`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
