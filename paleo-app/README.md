@@ -33,7 +33,7 @@ npm run dev            # front (Vite) + back (node --watch) en parallèle
 
 - `npm run dev` — front + back ensemble (via `concurrently`).
 - `npm run dev:frontend` / `npm run dev:backend` — séparément.
-- `npm run build` — build Vite dans `dist/` (purge `dist/images`, servi par symlink en prod).
+- `npm run build` — build Vite dans `dist/` (les images uploadées sont servies depuis `UPLOADS_DIR`, hors de l'app).
 - `npm start` — lance le serveur en `NODE_ENV=production` (sert l'API + `dist/`).
 - `npm run lint` — ESLint.
 
@@ -88,8 +88,8 @@ Le modèle d'autorisation repose sur des **capacités scopées au périmètre** 
 ## Documentation
 
 - **[docs/PERMISSIONS.md](docs/PERMISSIONS.md)** — modèle de permissions v33.
-- **[HEBERGEMENT-INFOMANIAK.md](HEBERGEMENT-INFOMANIAK.md)** — déploiement de production (Infomaniak).
+- **[HEBERGEMENT-INFOMANIAK.md](HEBERGEMENT-INFOMANIAK.md)** — **setup** de production (Infomaniak : domaines, DNS, SSL, base).
+- **[DEPLOY.md](DEPLOY.md)** — **runbook de redéploiement** Infomaniak (git pull → build → redémarrage, migrations, pièges).
 - **[server/README.md](server/README.md)**, **[server/EMAILS.md](server/EMAILS.md)** — doc serveur & emails.
-- `DEPLOY.md` — **guide historique o2switch/cPanel** (voir l'en-tête du fichier).
 - À la racine du dépôt : les **manuels** administrateur (`Manuel-administration-plateforme.md`)
   et sous-site (`Manuel-utilisation-sous-site.md` / `Subsite-user-guide.md`).
