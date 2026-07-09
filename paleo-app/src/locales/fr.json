@@ -442,6 +442,12 @@
             "categoryGame": "Jeux de cartes",
             "categoryOther": "Autres",
             "buy": "Acheter",
+            "from": "dès",
+            "seeProduct": "Voir le produit",
+            "version": "Version",
+            "delivery": "Envoi / option",
+            "notFound": "Produit introuvable.",
+            "soon": "Bientôt disponible.",
             "loading": "Chargement…",
             "empty": "Aucun produit publié pour le moment."
         },
@@ -549,106 +555,74 @@
         "backHome": "Retour à l'accueil",
         "lastUpdate": "Dernière mise à jour",
         "privacyLinkLabel": "Consulter la politique de confidentialité",
-        "intro": "Les présentes Conditions Générales de Vente (CGV) régissent la vente des produits proposés sur la boutique du site Paléo-Énergétique. Toute commande implique l'acceptation pleine et entière des présentes CGV.",
+        "seller": "Association à but non lucratif (loi 1901) — SIRET 789 002 813 00036 — 100, rue de Charenton, 75012 Paris, France — Tél. : +33 (0) 9 54 06 66 75 — www.atelier21.org",
+        "intro": "Toute commande passée sur la boutique du site Paléo-Énergétique implique l'acceptation des présentes conditions générales de vente :",
         "sections": [
             {
-                "title": "1. Objet et acceptation",
+                "title": "Champ d'application",
                 "paragraphs": [
-                    "Les présentes CGV s'appliquent à toutes les ventes de produits (ouvrages, jeux et autres articles) conclues via la boutique du site Paléo-Énergétique. Le fait de passer commande implique l'adhésion entière et sans réserve du client aux présentes conditions.",
-                    "Le client déclare avoir la capacité juridique de contracter. Les produits sont destinés à un usage personnel, sans lien direct avec une activité professionnelle."
+                    "Les présentes Conditions Générales de Vente (CGV) s'appliquent à toute commande de produits (ouvrages, jeux et autres articles) passée sur la boutique du site Paléo-Énergétique auprès de l'Association Atelier 21 (ci-après \"l'Association\"), par toute personne effectuant un achat (ci-après le \"Client\"). Elles prévalent sur tout autre document, sauf dérogation écrite et expresse."
                 ]
             },
             {
-                "title": "2. Identité du vendeur",
+                "title": "Commande",
                 "paragraphs": [
-                    "Les produits sont vendus par l'association Atelier 21, association déclarée régie par la loi du 1er juillet 1901, dont le siège est situé 5 allée Paris-Ivry, 75013 Paris.",
-                    "Association immatriculée sous le numéro SIREN 789 002 813, représentée par son président, Cédric Carles.",
-                    "Contact : hello@atelier21.org — téléphone : +33 6 48 25 18 56."
+                    "La commande s'effectue depuis la page Boutique, en sélectionnant le produit, la variante (par exemple papier ou numérique) et l'option d'envoi souhaités. Le Client est alors redirigé vers une page de paiement sécurisée. La vente est réputée conclue à la confirmation du paiement. L'Association se réserve le droit d'annuler ou de refuser toute commande présentant un caractère anormal ou de mauvaise foi."
                 ]
             },
             {
-                "title": "3. Produits",
+                "title": "Prix et paiement",
                 "paragraphs": [
-                    "Les produits proposés sont décrits avec leurs caractéristiques essentielles sur la page Boutique. Certains ouvrages sont disponibles en plusieurs versions (par exemple papier ou numérique). Les photographies et illustrations sont fournies à titre indicatif et n'ont pas de valeur contractuelle.",
-                    "Les offres sont valables dans la limite des stocks disponibles."
+                    "Les prix des produits sont indiqués en euros. Ils s'entendent hors frais de livraison, ces derniers étant précisés séparément selon l'option d'envoi choisie et ajoutés au montant de la commande, récapitulé avant paiement.",
+                    "Le paiement s'effectue en ligne, en une fois, de manière sécurisée via la plateforme Stripe (carte bancaire). Les données bancaires sont traitées directement par Stripe et ne sont ni collectées ni conservées par l'Association. La commande n'est validée qu'après encaissement effectif du paiement."
                 ]
             },
             {
-                "title": "4. Prix",
+                "title": "Livraison",
                 "paragraphs": [
-                    "Les prix des produits sont indiqués en euros. Ils s'entendent hors frais de livraison, ces derniers étant précisés séparément selon le mode d'envoi choisi et ajoutés au montant de la commande.",
-                    "Le prix applicable est celui affiché au moment de la validation de la commande. L'association se réserve le droit de modifier ses prix à tout moment, les produits étant facturés sur la base des tarifs en vigueur au moment de la commande."
+                    "Les produits physiques sont expédiés en France et à l'étranger par le transporteur Mondial Relay, selon l'option d'envoi choisie par le Client : Point Relais ou casier (Locker) 4,15 € ; à domicile 7,49 € ; à l'étranger 12,50 €. Les versions numériques (e-books) ne donnent lieu à aucun frais de livraison et sont mises à disposition par voie électronique.",
+                    "L'expédition intervient après confirmation du paiement. Conformément à l'article L216-1 du Code de la consommation, à défaut d'indication d'un délai, les produits sont livrés dans un délai maximal de trente (30) jours à compter de la conclusion de la commande."
                 ]
             },
             {
-                "title": "5. Commande",
+                "title": "Droit de rétractation",
                 "paragraphs": [
-                    "La commande s'effectue depuis la page Boutique, en sélectionnant le produit, la version et le mode de livraison souhaités. Le client est ensuite redirigé vers une page de paiement sécurisée. La vente est réputée conclue à la confirmation du paiement.",
-                    "L'association se réserve le droit d'annuler ou de refuser toute commande présentant un caractère anormal ou de mauvaise foi."
+                    "Conformément aux articles L221-18 et suivants du Code de la consommation, le Client dispose d'un délai de quatorze (14) jours à compter de la réception des produits pour exercer son droit de rétractation, sans avoir à motiver sa décision. Il notifie sa décision par une déclaration dénuée d'ambiguïté (courriel à hello@atelier21.org ou courrier à l'adresse du siège). Les produits sont retournés dans leur état d'origine, complets, dans les quatorze (14) jours suivant cette notification ; les frais de retour restent à la charge du Client. L'Association rembourse les sommes versées, hors frais de retour, au plus tard quatorze (14) jours après la récupération des produits ou la preuve de leur réexpédition.",
+                    "Conformément à l'article L221-28 du Code de la consommation, ce droit ne s'applique pas aux contenus numériques (e-books) dont l'exécution a commencé après accord préalable exprès du Client et renoncement exprès de sa part à son droit de rétractation."
                 ]
             },
             {
-                "title": "6. Paiement",
+                "title": "Garanties légales",
                 "paragraphs": [
-                    "Le paiement s'effectue en ligne, de manière sécurisée, via la plateforme Stripe (paiement par carte bancaire). Les données bancaires sont traitées directement par Stripe et ne sont ni collectées ni conservées par l'association.",
-                    "La commande n'est validée qu'après encaissement effectif du paiement."
+                    "Tous les produits bénéficient de la garantie légale de conformité (articles L217-3 et suivants du Code de la consommation) et de la garantie contre les vices cachés (articles 1641 et suivants du Code civil). Le Client peut à ce titre choisir entre la réparation ou le remplacement du produit, sous réserve des conditions prévues par la loi."
                 ]
             },
             {
-                "title": "7. Livraison",
+                "title": "Confidentialité et protection des données",
                 "paragraphs": [
-                    "Les produits physiques sont expédiés en France et à l'étranger par le transporteur Mondial Relay, selon le mode d'envoi choisi par le client :",
-                    "• Point Relais ou casier (Locker) : 4,15 €",
-                    "• Livraison à domicile : 7,49 €",
-                    "• Livraison à l'étranger : 12,50 €",
-                    "Les versions numériques (e-books) ne donnent lieu à aucun frais de livraison et sont mises à disposition par voie électronique.",
-                    "L'expédition intervient après confirmation du paiement. Conformément à l'article L216-1 du Code de la consommation, à défaut d'indication d'un délai, les produits sont livrés dans un délai maximal de trente (30) jours à compter de la conclusion de la commande. En cas de retard, le client peut, dans les conditions prévues par la loi, demander la résolution de la vente et le remboursement."
-                ]
-            },
-            {
-                "title": "8. Droit de rétractation",
-                "paragraphs": [
-                    "Conformément aux articles L221-18 et suivants du Code de la consommation, le client dispose d'un délai de quatorze (14) jours à compter de la réception des produits pour exercer son droit de rétractation, sans avoir à motiver sa décision.",
-                    "Pour l'exercer, le client notifie sa décision par une déclaration dénuée d'ambiguïté, par courriel à hello@atelier21.org ou par courrier à l'adresse du siège. Les produits doivent être retournés dans leur état d'origine, complets, dans un délai de quatorze (14) jours suivant cette notification. Les frais de retour restent à la charge du client.",
-                    "L'association rembourse l'intégralité des sommes versées, hors frais de retour, au plus tard quatorze (14) jours après la récupération des produits ou la preuve de leur réexpédition."
-                ]
-            },
-            {
-                "title": "9. Exception au droit de rétractation (contenus numériques)",
-                "paragraphs": [
-                    "Conformément à l'article L221-28 du Code de la consommation, le droit de rétractation ne peut être exercé pour la fourniture de contenus numériques non fournis sur un support matériel (e-books) dont l'exécution a commencé après accord préalable exprès du client et renoncement exprès de sa part à son droit de rétractation."
-                ]
-            },
-            {
-                "title": "10. Garanties légales",
-                "paragraphs": [
-                    "Tous les produits bénéficient de la garantie légale de conformité (articles L217-3 et suivants du Code de la consommation) et de la garantie contre les vices cachés (articles 1641 et suivants du Code civil). Lorsqu'il agit en garantie légale de conformité, le client dispose d'un délai de deux ans à compter de la délivrance du bien et peut choisir entre la réparation ou le remplacement du produit, sous réserve des conditions prévues par la loi."
-                ]
-            },
-            {
-                "title": "11. Responsabilité",
-                "paragraphs": [
-                    "La responsabilité de l'association ne saurait être engagée en cas de mauvaise utilisation des produits par le client, ni en cas de survenance d'un événement de force majeure. Les produits sont conformes à la législation française en vigueur ; il appartient au client destinataire hors de France de vérifier les possibilités d'importation au regard du droit de son pays."
-                ]
-            },
-            {
-                "title": "12. Données personnelles",
-                "paragraphs": [
-                    "Les données personnelles collectées dans le cadre d'une commande sont nécessaires à son traitement et à la livraison des produits. Elles sont traitées conformément à la réglementation applicable et à la politique de confidentialité du site."
+                    "L'Association s'engage à ne divulguer aucune information confidentielle relative au Client. Les données à caractère personnel recueillies dans le cadre d'une commande sont nécessaires à son traitement, à la livraison des produits et au suivi de la relation ; elles sont collectées et traitées par l'Association et conservées le temps nécessaire à ces finalités et à ses obligations légales.",
+                    "Conformément au Règlement Général sur la Protection des Données (RGPD), le Client peut exercer ses droits d'accès, de rectification ou de suppression sur l'ensemble des données le concernant en adressant un courriel à : hello@atelier21.org"
                 ],
                 "privacyLink": true
             },
             {
-                "title": "13. Propriété intellectuelle",
+                "title": "Propriété intellectuelle",
                 "paragraphs": [
-                    "Les contenus des produits (ouvrages, jeux) ainsi que ceux du site sont protégés par le droit de la propriété intellectuelle. Ils demeurent la propriété de l'association Atelier 21 ou de leurs auteurs respectifs. Toute reproduction, totale ou partielle, sans autorisation préalable est interdite."
+                    "Les contenus des produits (ouvrages, jeux) ainsi que ceux du site sont protégés par le droit de la propriété intellectuelle. Ils demeurent la propriété de l'Association Atelier 21 ou de leurs auteurs respectifs. Toute reproduction, totale ou partielle, sans autorisation préalable, est interdite."
                 ]
             },
             {
-                "title": "14. Droit applicable et litiges",
+                "title": "Responsabilité et force majeure",
                 "paragraphs": [
-                    "Les présentes CGV sont soumises au droit français. En cas de litige, le client est invité à contacter préalablement l'association afin de rechercher une solution amiable.",
-                    "Conformément à l'article L612-1 du Code de la consommation, le consommateur a le droit de recourir gratuitement à un médiateur de la consommation en vue de la résolution amiable de tout litige qui l'opposerait au vendeur. À défaut de résolution amiable, les tribunaux français sont compétents."
+                    "La responsabilité de l'Association ne saurait être engagée du fait d'un dysfonctionnement du service postal ou du transporteur (retard d'acheminement ou perte), ni en cas de mauvaise utilisation des produits par le Client, ni en cas de survenance d'un événement de force majeure. Les produits sont conformes à la législation française en vigueur ; il appartient au Client destinataire hors de France de vérifier les possibilités d'importation au regard du droit de son pays.",
+                    "En tout état de cause, quels que soient les fondements de sa réclamation, la responsabilité éventuelle de l'Association est limitée à un montant n'excédant pas la somme effectivement payée par le Client au titre de la commande concernée."
+                ]
+            },
+            {
+                "title": "Litiges et droit applicable",
+                "paragraphs": [
+                    "Le présent contrat, de même que les présentes conditions générales de vente qui en font partie intégrante, est régi par le droit français. En cas de litige, le Client est invité à contacter préalablement l'Association afin de rechercher une solution amiable.",
+                    "Conformément à l'article L612-1 du Code de la consommation, le Client consommateur peut recourir gratuitement à un médiateur de la consommation en vue de la résolution amiable du litige. À défaut de résolution amiable, les tribunaux français compétents pourront être saisis."
                 ]
             }
         ]

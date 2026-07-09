@@ -1,167 +1,73 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ExternalLink, ShoppingBag, Truck } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ShoppingBag, Truck, ArrowRight } from 'lucide-react';
 import api from '../services/apiClient';
 import { pickLang } from '../utils/i18nHelpers';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { productHandle, minPriceLabel, totalOptions } from '../utils/shopHelpers';
 
-// Page publique « Ouvrages » — vitrine de liens de paiement Stripe.
+// Page publique « Boutique » — vitrine de produits (liens de paiement Stripe).
+// La grille affiche des TEASERS ; chaque teaser mène à la page produit dédiée
+// (/boutique/<slug>-<id>), où se fait la sélection version/option + achat.
 // Items rendus depuis /api/shop-items, groupés par catégorie (book / game / other).
 
-// Normalise un article en variantes → options d'affichage :
-//   [{ label, label_en, price, options: [{ label, label_en, price, url }] }]
-// Repli sur l'ancien format plat (version.url) puis sur external_url.
-const toVariants = (item) => {
-    const raw = (Array.isArray(item.versions) && item.versions.length)
-        ? item.versions
-        : (item.external_url ? [{ label: '', label_en: '', price: item.price_text || '', url: item.external_url }] : []);
-    return raw
-        .map(v => {
-            const options = (Array.isArray(v.options) && v.options.length)
-                ? v.options
-                : (v.url ? [{ label: '', label_en: '', price: v.price || '', url: v.url }] : []);
-            return { label: v.label || '', label_en: v.label_en || '', price: v.price || '', options };
-        })
-        .filter(v => v.options.length);
-};
-
-const priceStyle = { fontSize: '1rem', fontWeight: '700', color: 'var(--color-primary)', fontFamily: 'var(--font-heading)' };
-
-// ── Card individuelle ────────────────────────────────────────
+// ── Teaser produit (grille) — carte cliquable vers la page produit ──
 const ItemCard = ({ item, lang, t }) => {
-    const title       = pickLang(item, 'title',       lang) || item.title;
-    const subtitle    = pickLang(item, 'subtitle',    lang) || item.subtitle;
-    const description = pickLang(item, 'description', lang) || item.description;
-
-    // Variantes (ex. Papier / E-book) → options de paiement (ex. modes d'envoi).
-    const variants = toVariants(item);
-    const nV = variants.length;
-    const [vi, setVi] = useState(0);
-    const activeIdx = Math.min(vi, Math.max(0, nV - 1));
-    const active = variants[activeIdx] || null;
-    const isEn = lang === 'en';
-    const lbl = (x) => (isEn && x?.label_en ? x.label_en : (x?.label || ''));
-    const allSingle   = nV > 0 && variants.every(v => v.options.length === 1);
-    const trulySingle = nV === 1 && variants[0].options.length === 1;
-
-    // Bouton « Acheter » simple (prix à gauche, CTA à droite).
-    const buyButton = (o) => (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-            {o.price && <span style={priceStyle}>{o.price}</span>}
-            <a href={o.url} target="_blank" rel="noopener noreferrer" className="paleo-btn"
-                style={{ padding: '10px 18px', fontSize: '0.82rem', marginLeft: 'auto' }}>
-                {t('pages.ouvrages.buy')} <ExternalLink size={14} />
-            </a>
-        </div>
-    );
-    // Bouton « nom — prix » (une option ou une variante à option unique).
-    const linkButton = (o, key, name) => (
-        <a key={key} href={o.url} target="_blank" rel="noopener noreferrer" className="paleo-btn"
-            style={{ padding: '10px 16px', fontSize: '0.82rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-            <span>{name}{o.price ? ` — ${o.price}` : ''}</span>
-            <ExternalLink size={14} style={{ flexShrink: 0 }} />
-        </a>
-    );
+    const title     = pickLang(item, 'title',    lang) || item.title;
+    const subtitle  = pickLang(item, 'subtitle', lang) || item.subtitle;
+    const priceHint = minPriceLabel(item);
+    const multi     = totalOptions(item) > 1;
 
     return (
-    <article style={{
-        background: 'var(--color-surface)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 'var(--radius-md)',
-        padding: '20px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '14px',
-        boxShadow: 'var(--shadow-sm)',
-    }}>
+    <Link
+        to={`/boutique/${productHandle(item)}`}
+        className="paleo-card-link"
+        style={{
+            textDecoration: 'none', color: 'inherit',
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-md)',
+            padding: '16px',
+            display: 'flex', flexDirection: 'column', gap: '12px',
+            boxShadow: 'var(--shadow-sm)',
+        }}
+    >
         {item.image_path ? (
-            <img
-                src={item.image_path}
-                alt={title}
-                style={{
-                    width: '100%',
-                    aspectRatio: '3 / 4',
-                    objectFit: 'cover',
-                    borderRadius: 'var(--radius-md)',
-                    background: 'var(--color-primary-soft)',
-                }}
-            />
+            <img src={item.image_path} alt={title} style={{
+                width: '100%', aspectRatio: '3 / 4', objectFit: 'cover',
+                borderRadius: 'var(--radius-md)', background: 'var(--color-primary-soft)',
+            }} />
         ) : (
             <div style={{
-                width: '100%',
-                aspectRatio: '3 / 4',
-                background: 'var(--color-primary-soft)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--color-text-subtle)',
-                borderRadius: 'var(--radius-md)',
+                width: '100%', aspectRatio: '3 / 4', background: 'var(--color-primary-soft)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--color-text-subtle)', borderRadius: 'var(--radius-md)',
             }}>
                 <ShoppingBag size={32} />
             </div>
         )}
         <div style={{ flex: 1 }}>
-            <h3 style={{ margin: '0 0 6px', fontSize: '1.05rem', lineHeight: '1.25' }}>
+            <h3 style={{ margin: '0 0 6px', fontSize: '1.05rem', lineHeight: '1.25', color: 'var(--color-text)' }}>
                 {title}
             </h3>
             {subtitle && (
-                <p style={{ margin: '0 0 8px', fontSize: '0.85rem', color: 'var(--color-text-muted)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--color-text-muted)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
                     {subtitle}
                 </p>
             )}
-            {description && (
-                <p style={{ margin: '8px 0 0', fontSize: '0.92rem', color: 'var(--color-text-muted)', lineHeight: '1.55' }}>
-                    {description}
-                </p>
-            )}
         </div>
-        {nV === 0 ? null : trulySingle ? (
-            // Tout unique : prix + bouton « Acheter ».
-            buyButton(active.options[0])
-        ) : allSingle ? (
-            // Chaque variante a une seule option : un bouton par variante (nom — prix).
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {variants.map((v, i) => linkButton(v.options[0], i, lbl(v) || t('pages.ouvrages.buy')))}
-            </div>
-        ) : (
-            // Au moins une variante a plusieurs options : sélecteur de variante (si >1) + options.
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {nV > 1 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                        {variants.map((v, i) => {
-                            const on = i === activeIdx;
-                            return (
-                                <button
-                                    key={i}
-                                    type="button"
-                                    onClick={() => setVi(i)}
-                                    aria-pressed={on}
-                                    style={{
-                                        padding: '7px 12px', fontSize: '0.8rem', borderRadius: 'var(--radius-md)',
-                                        cursor: 'pointer', fontFamily: 'inherit', fontWeight: on ? 700 : 500,
-                                        border: on ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
-                                        background: on ? 'var(--color-primary)' : 'var(--color-surface)',
-                                        color: on ? 'var(--color-white)' : 'var(--color-text-muted)',
-                                    }}
-                                >
-                                    {lbl(v) || `${t('pages.ouvrages.buy')} ${i + 1}`}
-                                </button>
-                            );
-                        })}
-                    </div>
-                )}
-                {active && (
-                    active.options.length === 1
-                        ? buyButton(active.options[0])
-                        : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                {active.options.map((o, i) => linkButton(o, i, lbl(o) || t('pages.ouvrages.buy')))}
-                            </div>
-                        )
-                )}
-            </div>
-        )}
-    </article>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+            {priceHint && (
+                <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-primary)', fontFamily: 'var(--font-heading)' }}>
+                    {multi ? `${t('pages.ouvrages.from', 'dès')} ` : ''}{priceHint}
+                </span>
+            )}
+            <span className="paleo-btn" style={{ padding: '9px 16px', fontSize: '0.82rem', marginLeft: 'auto', pointerEvents: 'none' }}>
+                {t('pages.ouvrages.seeProduct', 'Voir le produit')} <ArrowRight size={14} />
+            </span>
+        </div>
+    </Link>
     );
 };
 

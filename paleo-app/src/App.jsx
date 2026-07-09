@@ -30,6 +30,7 @@ import AdminStats from './pages/AdminStats';
 import Presentation from './pages/Presentation';
 import Prestations from './pages/Prestations';
 import Ouvrages from './pages/Ouvrages';
+import ProductPage from './pages/ProductPage';
 import Museum from './pages/Museum';
 import Contact from './pages/Contact';
 import Participer from './pages/Participer';
@@ -144,6 +145,7 @@ const mainRouter = createBrowserRouter(
         <Route path="presentation" element={<Presentation />} />
         <Route path="prestations"  element={<Prestations />} />
         <Route path="boutique"     element={<Ouvrages />} />
+        <Route path="boutique/:handle" element={<ProductPage />} />
         {/* Ancienne URL conservée pour ne pas casser les liens externes */}
         <Route path="ouvrages"     element={<Navigate to="/boutique" replace />} />
         {/* URL historique du musée (site WordPress) restaurée pour ne pas

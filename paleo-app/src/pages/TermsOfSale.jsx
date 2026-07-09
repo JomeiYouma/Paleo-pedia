@@ -13,6 +13,7 @@ const TermsOfSale = () => {
     const { t } = useTranslation();
     const sections = t('cgv.sections', { returnObjects: true });
     const list = Array.isArray(sections) ? sections : [];
+    const seller = t('cgv.seller', { defaultValue: '' });
     return (
         <div style={{
             maxWidth: '760px', margin: '0 auto',
@@ -28,7 +29,13 @@ const TermsOfSale = () => {
                 {t('cgv.lastUpdate')} : {new Date().toLocaleDateString()}
             </p>
 
-            <p style={{ marginTop: '20px' }}>{t('cgv.intro')}</p>
+            {seller && (
+                <p style={{ marginTop: '12px', fontSize: '0.85rem', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+                    {seller}
+                </p>
+            )}
+
+            <p style={{ marginTop: '18px' }}>{t('cgv.intro')}</p>
 
             {list.map((s, i) => (
                 <section key={i}>

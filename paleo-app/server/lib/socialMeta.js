@@ -17,10 +17,13 @@
  */
 import { SubsiteModel } from '../models/Subsite.js';
 import { CartelModel } from '../models/Cartel.js';
+import { ShopItemModel } from '../models/ShopItem.js';
 // Single source of truth du mapping host → slug de sous-site (cf. App.jsx qui
 // s'en sert pour le routing). Le fichier est pur (aucun import, gardes window)
 // donc importable tel quel côté Node.
 import { HOST_TO_SUBSITE_SLUG } from '../../src/utils/subsiteHost.js';
+// Helper pur (front + serveur) : extrait l'UUID d'un handle produit "<slug>-<uuid>".
+import { idFromHandle } from '../../src/utils/shopHelpers.js';
 
 const SITE_NAME = 'Paléo-Énergétique';
 // Repli d'image quand ni le cartel ni le sous-site n'exposent de visuel propre.
@@ -100,6 +103,29 @@ const cartelTags = (cartel, pageUrl, base) => {
   ];
 };
 
+// Balises d'un produit de la boutique (titre, description, visuel, type product).
+const shopItemTags = (item, pageUrl, base) => {
+  const title = escapeHtml(item.title || 'Produit');
+  const desc = escapeHtml(truncate(stripHtml(item.description || item.subtitle || ''))
+    || 'Boutique du programme de recherche Paléo-Énergétique.');
+  const img = absoluteImageUrl(base, item.image_path || DEFAULT_IMAGE);
+  return [
+    `<title>${title} ${escapeHtml(SITE_NAME)}</title>`,
+    `<meta name="description" content="${desc}" />`,
+    `<meta property="og:type" content="product" />`,
+    `<meta property="og:site_name" content="${escapeHtml(SITE_NAME)}" />`,
+    `<meta property="og:locale" content="fr_FR" />`,
+    `<meta property="og:title" content="${title}" />`,
+    `<meta property="og:description" content="${desc}" />`,
+    `<meta property="og:url" content="${escapeHtml(pageUrl)}" />`,
+    img ? `<meta property="og:image" content="${escapeHtml(img)}" />` : '',
+    `<meta name="twitter:card" content="${img ? 'summary_large_image' : 'summary'}" />`,
+    `<meta name="twitter:title" content="${title}" />`,
+    `<meta name="twitter:description" content="${desc}" />`,
+    img ? `<meta name="twitter:image" content="${escapeHtml(img)}" />` : '',
+  ];
+};
+
 // Balises d'un sous-site (nom, description, logo/visuel). Le nom du sous-site
 // prime sur celui du réseau : c'est LUI qui doit apparaître dans l'aperçu.
 const subsiteTags = (subsite, pageUrl, base) => {
@@ -145,6 +171,14 @@ export const subsiteSlugForRequest = (req) => {
 export async function injectSocialMeta(html, req) {
   const base = `${req.protocol}://${req.get('host')}`;
   const pageUrl = base + req.originalUrl;
+
+  // 0) Page produit de la boutique (/boutique/<slug>-<uuid>) → infos du produit.
+  const shopMatch = req.path.match(/^\/boutique\/([^/]+)\/?$/);
+  if (shopMatch) {
+    const item = await ShopItemModel.findById(idFromHandle(shopMatch[1]));
+    if (item && item.is_published) return replaceHead(html, shopItemTags(item, pageUrl, base));
+    // produit introuvable/masqué → on continue (défaut).
+  }
 
   // 1) Page détail d'un cartel → infos du cartel.
   const cartelMatch = req.path.match(/(?:^|\/)cartel\/([^/]+)\/?$/);
