@@ -7,7 +7,7 @@
 >
 > 👉 Ce manuel **complète** le *Manuel d'utilisation d'un site dédié* (côté propriétaire de sous-site). Quand un sujet y est traité en détail, un renvoi vous y dirige.
 
-> 🧭 **Par où commencer ?** Pressé(e) ? Filez aux **[recettes pas-à-pas](#26-modes-opératoires-pas-à-pas-recettes)** (chapitre 26) et à la **[FAQ](#27-faq)** (chapitre 27). Pour bien démarrer, lisez d'abord : l'**[architecture des « quatre faces »](#2-vue-densemble--larchitecture-de-la-plateforme)** (chapitre 2), les **[rôles et permissions](#3-les-rôles-et-les-permissions--qui-peut-faire-quoi)** (chapitre 3) et — le point le plus délicat de la plateforme — les **[deux files de modération](#13-les-deux-files-de-modération-à-ne-jamais-confondre)** (chapitre 13).
+> 🧭 **Par où commencer ?** Pressé(e) ? Filez aux **recettes pas-à-pas** (document séparé — *Manuel d’administration — Recettes*) et à la **[FAQ](#27-faq)** (chapitre 27). Pour bien démarrer, lisez d'abord : l'**[architecture des « quatre faces »](#2-vue-densemble--larchitecture-de-la-plateforme)** (chapitre 2), les **[rôles et permissions](#3-les-rôles-et-les-permissions--qui-peut-faire-quoi)** (chapitre 3) et — le point le plus délicat de la plateforme — les **[deux files de modération](#13-les-deux-files-de-modération-à-ne-jamais-confondre)** (chapitre 13).
 
 ---
 
@@ -248,7 +248,6 @@ Elle présente **l'écosystème entier** de façon visuelle :
 
 > 💡 **Usage commercial :** Paléo-Pédia est la meilleure page pour **montrer la cohérence de l'écosystème** d'un coup d'œil.
 
-> 📸 **[Capture A04]** — La vue 3D « système solaire » de Paléo-Pédia.
 
 ### 6.1 Connexion et administration depuis la Pédia
 
@@ -1104,55 +1103,7 @@ L'app stocke quelques informations **localement dans le navigateur** (jamais de 
 
 ## 26. Modes opératoires pas-à-pas (recettes)
 
-### Recette A — Créer un nouveau sous-site
-1. *Admin → Administration → Sous-sites thématiques → « Nouveau sous-site »*.
-2. Renseignez **Nom**, vérifiez le **Slug**, choisissez la **Source** (catégorie ou atelier — **figée ensuite**).
-3. Réglez **couleur**, **type de planète**, composez la **page d'accueil** (FR puis English).
-4. *(Optionnel mais pratique)* Dans la section **« Compte propriétaire »**, saisissez l'**e-mail + mot de passe** de l'owner pour le créer **en même temps** (voir [§8.2](#82-créer-un-sous-site-la-fenêtre-déditeur)). Validez.
-5. *(Si vous ne l'avez pas fait à l'étape 4)* Créez son **propriétaire** : *Gestion d'équipe (comptes)* → sélectionner le sous-site → inviter, puis activer **« Gérer l'équipe »**.
-6. *(Optionnel)* Les **partenaires** du sous-site se règlent ensuite sur leur **page dédiée**, côté propriétaire (voir le *Manuel d'utilisation d'un site dédié*).
-
-### Recette B — Valider une soumission d'un sous-site vers le principal
-1. *Gestion → onglet **Soumissions*** (superadmin).
-2. Vérifiez (Aperçu / Aperçu web).
-3. **Approuver** (apparaît sur le principal, reste sur le sous-site) ou **Rejeter** (reste sur le sous-site).
-
-### Recette C — Modérer une proposition de visiteur
-1. *Gestion → onglet **En attente***.
-2. **Aperçu** / **Éditer** pour vérifier/corriger.
-3. **Publier** pour accepter, **Supprimer** pour refuser.
-
-### Recette D — Recevoir par email les demandes du public
-1. Faites configurer le **SMTP** par l'hébergeur ([§24.5](#245-paramètres-dhébergement-fichier-de-configuration-serveur)).
-2. *Admin → Journal d'événements → Configuration emails*.
-3. Activez **Email** + **Destinataire** pour `contact_message.created`, `mission_application.created`, `cartel.submission_pending`, `cartel.subsite_submitted` (ou « Appliquer à tous »). **Enregistrer**.
-
-### Recette E — Préparer une borne d'exposition (mode immersif)
-1. *Gestion* → sélectionnez les cartels de l'expo → **Associer à un atelier** (nouvel atelier).
-2. *Admin → Catégories & ateliers* → éditez l'atelier → cochez **Immersif**.
-3. Récupérez l'URL publique (**« Voir Version Publique »** → `/app/workshop/<id>`) et ouvrez-la sur la borne en plein écran.
-
-### Recette F — Mettre à jour une page publique
-- **Équipe** → *Admin → Équipe (page À propos)* · **Partenaires** → *Admin → Partenaires* · **Prestations / Boutique / Presse / Missions** → la page correspondante ([chapitre 16](#16-les-pages-de-contenu-éditorial)). Remplissez la **version anglaise** et cochez **publié**.
-
-### Recette G — Configurer la traduction automatique
-1. *Admin → Réglages → Clés API*. Collez **DeepL** (FR↔EN) et/ou **OpenAI** (autres langues). **Enregistrer**.
-2. Testez avec un cartel : bouton **Retraduire**.
-
-### Recette H — Imprimer pour une exposition
-1. *Gestion → Publiés*, sélectionnez → **Exporter → PDF impression** (ou JPEG ZIP). Chaque cartel porte un **QR code**.
-
-### Recette I — Exposition à l'étranger (PDF dans une autre langue)
-1. Vérifiez qu'une **clé OpenAI** est configurée.
-2. Sélectionnez → **Exporter → « PDF traduit (autre langue)… »** → saisissez la langue → générez → **relisez** (non enregistré).
-
-### Recette J — Sauvegarder / migrer les cartels
-1. *Gestion* → **Exporter tout** → **Archive complète**.
-2. Pour réimporter : **Importer** le ZIP → cartels en **Brouillon** → republier + ré-associer les catégories.
-
-### Recette K — Nettoyer les images cassées
-1. Ouvrez *Gestion* : la fenêtre d'audit s'affiche s'il y a des problèmes.
-2. **« Voir les cartels problématiques »** → corrigez (rééditez l'image) les cas *Fichier introuvable* / *Chemin legacy*.
+> 📄 Les **recettes pas-à-pas** (créer un sous-site, valider une soumission, modérer, préparer une borne d'exposition, configurer emails & traduction automatique, exporter / sauvegarder, nettoyer les images cassées…) font l'objet d'un **document séparé** : *Manuel d'administration — Recettes*.
 
 ---
 

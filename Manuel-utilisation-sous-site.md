@@ -90,6 +90,8 @@ Un site dédié reste connecté au site principal : certains de vos cartels peuv
 
 > 👉 **Ce qui n'est PAS de votre ressort** (→ administrateur général) : le **nom**, le **slug** et la **source** de votre site dédié ; la **création de comptes** ; le **branchement d'un nom de domaine** dédié ; et la **validation** des cartels que vous soumettez au site principal. Pour ces points, adressez-vous à l'administrateur général de la plateforme.
 
+> 💡 **Vos droits peuvent être plus fins.** Selon ce que l'administrateur général a accordé à votre compte, certaines capacités listées ici peuvent être **désactivées** — en particulier **l'export de la base**, **l'export PDF traduit** et la **retraduction automatique**. Si un bouton décrit dans ce guide n'apparaît pas chez vous, c'est probablement que la capacité correspondante ne vous a pas été attribuée : demandez-la à l'administrateur général.
+
 ---
 
 ## 4. Se connecter et se repérer
@@ -129,7 +131,7 @@ C'est ce que voit n'importe quel visiteur. Familiarisez-vous avec ces pages : ce
 
 ### 5.1 Accueil
 
-- Une **bannière** (hero) avec le nom du site dédié, la thématique, et un bouton **« Explorer la frise »**.
+- Une **bannière** (hero) avec le nom du site dédié, la thématique, et un bouton **« Explorer la frise »** (qui ouvre la frise en mettant en avant un cartel au hasard — voir §5.2).
 - En dessous, vos **blocs de contenu** libres (textes, images, citations, boutons…), que vous composez vous-même (voir [chapitre 8](#8-éditer-la-page-daccueil-de-votre-site-dédié)).
 
 > 📸 **[Capture S04]** — Page d'accueil complète d'un site dédié (bannière + quelques blocs de contenu).
@@ -143,6 +145,8 @@ La même collection de cartels, sous trois angles :
 - **Arborescence** : vue structurée par regroupements.
 
 Le visiteur peut filtrer, rechercher, et cliquer un cartel pour ouvrir sa fiche détaillée.
+
+> 💡 **Ouverture guidée.** À la première ouverture de la frise (une fois par session), un **cartel au hasard** est mis en avant par un **halo animé** (avec des flèches et un court texte d'aide) pour inviter à explorer. Le bouton **« Explorer la frise »** de l'accueil déclenche à coup sûr cette mise en avant.
 
 > 📸 **[Capture S05]** — La frise d'un site dédié avec plusieurs cartels.
 > 📸 **[Capture S06]** — Le même contenu en mode **Carte**.
@@ -175,7 +179,7 @@ Le site est **bilingue français / anglais**. Comprendre comment les langues et 
 
 En haut à droite, deux boutons **FR / EN**. Le choix est **mémorisé dans le navigateur** du visiteur (il le retrouve à sa prochaine visite). Changer de langue bascule à la fois **l'interface** (menus, boutons, libellés) et **le contenu des cartels** dans la langue choisie.
 
-> 📸 **[Capture S19]** — Le sélecteur FR / EN dans la barre du haut.
+> 📸 **[Capture S09]** — Le sélecteur FR / EN dans la barre du haut.
 
 ### 6.2 Comment le contenu bilingue est stocké
 
@@ -210,7 +214,7 @@ Dans l'écran **« Gérer »**, un cartel dépourvu de traduction anglaise affic
 
 ### 6.6 Exporter un PDF traduit (dans n'importe quelle langue)
 
-Dans **Gérer → Exporter → « PDF traduit (autre langue) »**, vous pouvez générer un PDF des cartels dans **une langue de votre choix** — pas seulement l'anglais : espagnol, allemand, italien, japonais, etc.
+Dans **Gérer → Exporter → « PDF traduit (autre langue) »**, vous pouvez générer un PDF des cartels dans **une langue de votre choix** — pas seulement l'anglais : espagnol, allemand, italien, japonais, etc. *(Disponible si votre compte a la capacité « exporter » — voir [chapitre 3](#3-les-rôles--qui-peut-faire-quoi).)*
 
 - Vous saisissez la **langue cible** (champ libre, avec des suggestions courantes).
 - L'IA traduit les contenus **depuis la langue actuellement affichée** (FR ou EN) puis génère le PDF.
@@ -242,8 +246,8 @@ Le bouton **« Proposer un cartel »** ouvre le formulaire de création. **Le co
 | **Notes admin internes** | — *(admins, en édition)* | Échanges internes entre administrateurs, jamais publics. |
 | **Contact** | ❌ | E-mail ou téléphone, **stocké en base** pour vous recontacter au sujet du cartel (précisions, sources). **Jamais affiché publiquement.** Connecté(e) : laissez vide si vous êtes l'auteur·rice — on retrouve alors l'**e-mail de votre compte** ; renseignez-le si vous saisissez le cartel pour quelqu'un d'autre. |
 
-> 📸 **[Capture S09]** — Formulaire « Proposer un cartel » rempli, vu **en tant que propriétaire** (champs Ateliers et page interne visibles).
-> 📸 **[Capture S10]** — Le même formulaire **vu par un visiteur non connecté** (champs admin absents).
+> 📸 **[Capture S10]** — Formulaire « Proposer un cartel » rempli, vu **en tant que propriétaire** (champs Ateliers et page interne visibles).
+> 📸 **[Capture S11]** — Le même formulaire **vu par un visiteur non connecté** (champs admin absents).
 
 ### 7.2 Différences selon le rôle
 
@@ -267,7 +271,7 @@ Cliquez **« Page d'accueil »** dans la barre du haut. Une fenêtre d'édition 
 
 En tant que propriétaire, vous pouvez modifier **deux choses** : la **couleur** et le **contenu** (blocs). *(Le nom, le slug et la source ne sont modifiables que par l'administrateur général et n'apparaissent donc pas ici. Les **partenaires** se gèrent désormais sur leur **propre page** — voir [chapitre 9](#9-gérer-les-partenaires-de-votre-site-dédié).)*
 
-> 📸 **[Capture S11]** — La fenêtre d'édition de la page d'accueil, ouverte (vue propriétaire : sections Couleur et Contenu).
+> 📸 **[Capture S12]** — La fenêtre d'édition de la page d'accueil, ouverte (vue propriétaire : sections Couleur et Contenu).
 
 ### 8.1 La couleur
 
@@ -295,8 +299,8 @@ La page d'accueil se compose en empilant des **blocs**. En bas de la section, cl
 - **Supprimer** : icône **corbeille rouge** à droite du bloc (suppression immédiate, mais rien n'est enregistré tant que vous n'avez pas validé la fenêtre).
 - **Version anglaise** : en haut de la section, un sélecteur **Français / English** (le nombre de blocs de chaque langue est indiqué entre parenthèses). Composez les blocs FR sous l'onglet *Français* et, si vous le souhaitez, une version anglaise distincte sous l'onglet *English*. Les visiteurs anglophones voient la version anglaise ; **si elle est vide, ils voient automatiquement la version française** (aucun risque de page blanche).
 
-> 📸 **[Capture S12]** — L'éditeur de blocs avec quelques blocs (un Titre, un Texte, une Image), montrant les flèches ▲▼ et la corbeille.
-> 📸 **[Capture S13]** — La rangée des 9 boutons d'ajout de blocs.
+> 📸 **[Capture S13]** — L'éditeur de blocs avec quelques blocs (un Titre, un Texte, une Image), montrant les flèches ▲▼ et la corbeille.
+> 📸 **[Capture S14]** — La rangée des 9 boutons d'ajout de blocs.
 
 > 💡 La couleur de votre site dédié teinte automatiquement les titres, citations, boutons et séparateurs. **Il n'y a pas d'aperçu en temps réel** dans l'éditeur : enregistrez puis vérifiez le rendu sur la page d'accueil.
 
@@ -331,7 +335,7 @@ La page liste le **catalogue de partenaires** disponibles. Pour chacun (logo ou 
 - Un champ **« Rechercher un partenaire… »** filtre la liste (pratique quand le catalogue est long).
 - Cliquez **« Enregistrer »** (bouton à la couleur de votre site) pour valider : un **« Enregistré ✓ »** confirme la sauvegarde.
 
-> 📸 **[Capture S20]** — La page Partenaires du site dédié : la recherche et la liste, avec les boutons de rôle **Principal / Standard / —** par partenaire.
+> 📸 **[Capture S15]** — La page Partenaires du site dédié : la recherche et la liste, avec les boutons de rôle **Principal / Standard / —** par partenaire.
 
 ### 9.2 Ajouter un partenaire propre à votre site dédié
 
@@ -342,7 +346,7 @@ Si un partenaire ne figure pas dans le catalogue, ajoutez-le avec le bouton **«
 
 Validez avec **« Ajouter »**. Le partenaire est créé **exclusivement pour votre site dédié** (il n'apparaît pas chez les autres) et reçoit aussitôt le rôle **Standard** — vous pourrez le passer en *Principal* si besoin. N'oubliez pas **« Enregistrer »** ensuite.
 
-> 📸 **[Capture S21]** — Le formulaire d'ajout d'un partenaire (Nom, URL, Logo).
+> 📸 **[Capture S16]** — Le formulaire d'ajout d'un partenaire (Nom, URL, Logo).
 
 > 💡 **Catalogue partagé vs partenaire exclusif.** Le **catalogue** (partenaires communs, réservoir partagé) est géré au niveau de la plateforme par l'administrateur général : vous n'y touchez pas. En revanche, un partenaire que **vous** ajoutez via « + Nouveau » est **rattaché à votre seul site dédié**.
 
@@ -352,7 +356,7 @@ Validez avec **« Ajouter »**. Le partenaire est créé **exclusivement pour vo
 
 Cliquez **« Gérer »** dans la barre du haut. Vous arrivez sur l'écran d'administration des cartels, **verrouillé sur votre site dédié** (vous ne voyez que vos cartels, plus les cartels du site principal de votre thématique en consultation seule).
 
-> 📸 **[Capture S15]** — L'écran « Gérer » avec le bandeau d'introduction et la liste des cartels.
+> 📸 **[Capture S17]** — L'écran « Gérer » avec le bandeau d'introduction et la liste des cartels.
 
 Un **bandeau d'introduction** rappelle les règles : vos cartels sont modifiables ; les cartels du site principal de votre catégorie sont en lecture seule ; vos suppressions n'affectent que votre site dédié.
 
@@ -374,7 +378,7 @@ Au survol d'une ligne, des **boutons-icônes** apparaissent (une infobulle s'aff
 - **(A) Cartels venant du site principal (Paléo-Énergétique)** — affichés chez vous **pour information** (badge « Site principal · consultation »). Ils sont **non modifiables** : seuls **Aperçu** et **Aperçu web** sont proposés.
 - **(B) Cartels de votre site dédié** — **tous** les boutons sont disponibles (légende numérotée ci-dessous).
 
-> 📸 **[Capture S16]** — Gros plan sur les deux rangées d'actions : **(A)** un cartel du site principal (2 boutons seulement) et **(B)** un cartel du site dédié (boutons 1 à 9 annotés).
+> 📸 **[Capture S18]** — Gros plan sur les deux rangées d'actions : **(A)** un cartel du site principal (2 boutons seulement) et **(B)** un cartel du site dédié (boutons 1 à 9 annotés).
 
 **Groupe « Édition » (consulter / modifier le contenu)**
 
@@ -428,11 +432,13 @@ Cochez la case de plusieurs cartels — ou **« Tout sélectionner »** — pour
 
 Sans aucune sélection, un bouton **« Exporter tout »** propose directement l'archive complète de tous les cartels.
 
+> 💡 **Selon vos droits.** Le menu **Exporter** (et donc le *PDF traduit*) n'apparaît que si votre compte dispose de la capacité **« exporter »** ; le *PDF traduit* dépend en plus de la capacité **« exporter (autre langue) »**. Sans elles, ces options sont simplement absentes — demandez-les à l'administrateur général.
+
 > 💡 Les boutons de la barre groupée dépendent du contexte : par exemple **Publier (N)** n'apparaît **pas** dans l'onglet *Publiés* (les cartels y sont déjà publiés).
 
 > 💡 Les actions groupées qui **modifient** (Publier, Retraduire, Associer à un atelier, Supprimer) **ignorent automatiquement** les cartels du site principal (« consultation », en lecture seule) : seuls vos cartels sont concernés. L'**export**, lui, les inclut (sans risque).
 
-> 📸 **[Capture S17]** — La barre d'outils de la gestion : en haut la **recherche** et les filtres (*Toutes catégories*, *Tous les ateliers*, *Filtres complexes*) ; le compteur **« N sélectionnés »** et le bouton **Colonnes** ; la **barre d'actions groupées** (Retraduire, Exporter, Associer à un atelier, Supprimer) avec le menu **Exporter** ouvert sur ses 4 formats ; et à gauche les **cases de sélection** de chaque ligne (§10.3 et §10.4).
+> 📸 **[Capture S19]** — La barre d'outils de la gestion : en haut la **recherche** et les filtres (*Toutes catégories*, *Tous les ateliers*, *Filtres complexes*) ; le compteur **« N sélectionnés »** et le bouton **Colonnes** ; la **barre d'actions groupées** (Retraduire, Exporter, Associer à un atelier, Supprimer) avec le menu **Exporter** ouvert sur ses 4 formats ; et à gauche les **cases de sélection** de chaque ligne (§10.3 et §10.4).
 
 ### 10.5 Impression et QR codes
 
@@ -454,7 +460,7 @@ Vos cartels vivent d'abord sur **votre** site dédié. Vous pouvez proposer qu'i
 | **Horloge** (rose) | Soumis, **en attente** de validation. | Retirer la soumission. |
 | **Globe** (vert) | **Validé** : visible sur le site principal. | Retirer du site principal. |
 
-> 📸 **[Capture S18]** — Les boutons d'état de soumission sur un cartel publié.
+> 📸 **[Capture S20]** — Les boutons d'état de soumission sur un cartel publié.
 
 ### 11.2 Le déroulé complet
 

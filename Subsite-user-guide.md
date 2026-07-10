@@ -90,6 +90,8 @@ A dedicated site stays connected to the main site: some of your cartels can, if 
 
 > 👉 **What is NOT your responsibility** (→ general administrator): the **name**, **slug** and **source** of your dedicated site; **account creation**; connecting a dedicated **domain name**; and the **validation** of cartels you submit to the main site. For these, contact the platform's general administrator.
 
+> 💡 **Your rights may be more limited.** Depending on what the general administrator granted your account, some capabilities listed here may be **disabled** — in particular **database export**, **translated PDF export** and **automatic re-translation**. If a button described in this guide doesn't appear for you, the matching capability probably wasn't granted: ask the general administrator.
+
 ---
 
 ## 4. Signing in and finding your way around
@@ -129,7 +131,7 @@ This is what any visitor sees. Get familiar with these pages: they are the ones 
 
 ### 5.1 Home
 
-- A **hero banner** with the dedicated site name, the theme, and an **"Explore the timeline"** button.
+- A **hero banner** with the dedicated site name, the theme, and an **"Explore the timeline"** button (which opens the timeline highlighting a random cartel — see §5.2).
 - Below it, your free **content blocks** (text, images, quotes, buttons…), which you compose yourself (see [chapter 8](#8-editing-your-dedicated-sites-home-page)).
 
 > 📸 **[Screenshot S04]** — Full dedicated site home page (banner + a few content blocks).
@@ -143,6 +145,8 @@ The same collection of cartels, from three angles:
 - **Tree**: structured view by grouping.
 
 The visitor can filter, search, and click a cartel to open its detailed record.
+
+> 💡 **Guided opening.** The first time the timeline is opened (once per session), a **random cartel** is highlighted with an **animated halo** (with arrows and a short hint) to invite exploration. The home page's **"Explore the timeline"** button always triggers this highlight.
 
 > 📸 **[Screenshot S05]** — A dedicated site's timeline with several cartels.
 > 📸 **[Screenshot S06]** — The same content in **Map** mode.
@@ -175,7 +179,7 @@ The site is **bilingual French / English**. Understanding how languages and tran
 
 In the top right, two **FR / EN** buttons. The choice is **stored in the visitor's browser** (they get it back on their next visit). Switching language changes both the **interface** (menus, buttons, labels) and the **content of the cartels** into the chosen language.
 
-> 📸 **[Screenshot S19]** — The FR / EN switcher in the top bar.
+> 📸 **[Screenshot S09]** — The FR / EN switcher in the top bar.
 
 ### 6.2 How bilingual content is stored
 
@@ -210,7 +214,7 @@ In the **"Manage"** screen, a cartel without an English translation shows a smal
 
 ### 6.6 Exporting a translated PDF (in any language)
 
-In **Manage → Export → "Translated PDF (other language)"**, you can generate a PDF of the cartels in **a language of your choice** — not just English: Spanish, German, Italian, Japanese, etc.
+In **Manage → Export → "Translated PDF (other language)"**, you can generate a PDF of the cartels in **a language of your choice** — not just English: Spanish, German, Italian, Japanese, etc. *(Available if your account has the "export" capability — see [chapter 3](#3-roles-who-can-do-what).)*
 
 - You type the **target language** (a free field, with common suggestions).
 - The AI translates the content **from the currently displayed language** (FR or EN) then generates the PDF.
@@ -242,8 +246,8 @@ The **"Submit a cartel"** button opens the creation form. **The behaviour depend
 | **Internal admin notes** | — *(admins, when editing)* | Internal exchanges between administrators, never public. |
 | **Contact** | ❌ | Email or phone, **stored in the database** so you can be reached about the cartel (clarifications, sources). **Never shown publicly.** Signed in: leave empty if you are the author — your **account email** is then used; fill it in if you're entering the cartel on someone else's behalf. |
 
-> 📸 **[Screenshot S09]** — The "Submit a cartel" form filled in, seen **as an owner** (Workshops and internal page fields visible).
-> 📸 **[Screenshot S10]** — The same form **seen by a visitor not signed in** (admin fields absent).
+> 📸 **[Screenshot S10]** — The "Submit a cartel" form filled in, seen **as an owner** (Workshops and internal page fields visible).
+> 📸 **[Screenshot S11]** — The same form **seen by a visitor not signed in** (admin fields absent).
 
 ### 7.2 Differences by role
 
@@ -267,7 +271,7 @@ Click **"Home page"** in the top bar. An editing window opens.
 
 As an owner, you can edit **two things**: the **colour** and the **content** (blocks). *(The name, slug and source can only be changed by the general administrator and therefore do not appear here. The **partners** are now managed on their **own page** — see [chapter 9](#9-managing-your-dedicated-sites-partners).)*
 
-> 📸 **[Screenshot S11]** — The home page editing window, open (owner view: Colour and Content sections).
+> 📸 **[Screenshot S12]** — The home page editing window, open (owner view: Colour and Content sections).
 
 ### 8.1 The colour
 
@@ -295,8 +299,8 @@ The home page is composed by stacking **blocks**. At the bottom of the section, 
 - **Delete**: the **red trash** icon to the right of the block (immediate deletion, but nothing is saved until you confirm the window).
 - **English version**: at the top of the section, a **French / English** switcher (the number of blocks for each language is shown in parentheses). Compose the FR blocks under the *French* tab and, if you wish, a separate English version under the *English* tab. English-speaking visitors see the English version; **if it is empty, they automatically see the French version** (no risk of a blank page).
 
-> 📸 **[Screenshot S12]** — The block editor with a few blocks (a Title, a Text, an Image), showing the ▲▼ arrows and the trash icon.
-> 📸 **[Screenshot S13]** — The row of the 9 block-adding buttons.
+> 📸 **[Screenshot S13]** — The block editor with a few blocks (a Title, a Text, an Image), showing the ▲▼ arrows and the trash icon.
+> 📸 **[Screenshot S14]** — The row of the 9 block-adding buttons.
 
 > 💡 Your dedicated site's colour automatically tints titles, quotes, buttons and separators. **There is no live preview** in the editor: save, then check the result on the home page.
 
@@ -331,7 +335,7 @@ The page lists the available **partner catalogue**. For each one (logo or initia
 - A **"Search a partner…"** field filters the list (handy when the catalogue is long).
 - Click **"Save"** (button in your site's colour) to confirm: a **"Saved ✓"** confirms it.
 
-> 📸 **[Screenshot S20]** — The dedicated site's Partners page: the search and the list, with the **Main / Standard / —** role buttons per partner.
+> 📸 **[Screenshot S15]** — The dedicated site's Partners page: the search and the list, with the **Main / Standard / —** role buttons per partner.
 
 ### 9.2 Adding a partner specific to your dedicated site
 
@@ -342,7 +346,7 @@ If a partner is not in the catalogue, add it with the **"+ New"** button:
 
 Confirm with **"Add"**. The partner is created **exclusively for your dedicated site** (it does not appear on the others) and is immediately given the **Standard** role — you can then switch it to *Main* if needed. Don't forget to **"Save"** afterwards.
 
-> 📸 **[Screenshot S21]** — The form for adding a partner (Name, URL, Logo).
+> 📸 **[Screenshot S16]** — The form for adding a partner (Name, URL, Logo).
 
 > 💡 **Shared catalogue vs exclusive partner.** The **catalogue** (common partners, shared pool) is managed at the platform level by the general administrator: you don't touch it. A partner that **you** add via "+ New", however, is **attached to your dedicated site only**.
 
@@ -352,7 +356,7 @@ Confirm with **"Add"**. The partner is created **exclusively for your dedicated 
 
 Click **"Manage"** in the top bar. You land on the cartel administration screen, **locked to your dedicated site** (you only see your cartels, plus the main site's cartels for your theme in view-only mode).
 
-> 📸 **[Screenshot S15]** — The "Manage" screen with the intro banner and the cartel list.
+> 📸 **[Screenshot S17]** — The "Manage" screen with the intro banner and the cartel list.
 
 An **intro banner** recalls the rules: your cartels are editable; the main site's cartels for your category are read-only; your deletions only affect your dedicated site.
 
@@ -374,7 +378,7 @@ When you hover a row, **icon buttons** appear (a tooltip shows on hover). The av
 - **(A) Cartels from the main site (Paléo-Énergétique)** — shown here **for reference** ("Main site · view only" badge). They are **not editable**: only **Preview** and **Web preview** are offered.
 - **(B) Cartels from your dedicated site** — **all** buttons are available (numbered legend below).
 
-> 📸 **[Screenshot S16]** — Close-up on the two action rows: **(A)** a main-site cartel (only 2 buttons) and **(B)** a dedicated-site cartel (buttons 1 to 9 annotated).
+> 📸 **[Screenshot S18]** — Close-up on the two action rows: **(A)** a main-site cartel (only 2 buttons) and **(B)** a dedicated-site cartel (buttons 1 to 9 annotated).
 
 **"Editing" group (view / edit the content)**
 
@@ -422,21 +426,23 @@ Tick the checkbox of several cartels — or **"Select all"** — to reveal an ac
 | Format | Content |
 |---|---|
 | **Cartels JPEG (ZIP)** | One high-resolution image per cartel, in a ZIP archive. |
-| **Print PDF** | The cartels in printable A4 format (with QR code — see §10.5). |
+| **PDF print** | The cartels in printable A4 format (with QR code — see §10.5). |
 | **Translated PDF (other language)** | A PDF of the cartels translated into the language of your choice — see [§6.6](#66-exporting-a-translated-pdf-in-any-language). |
 | **Full archive (JSON + Images)** | A complete backup (data + images) that can be re-imported. |
 
 With no selection at all, an **"Export all"** button directly offers the full archive of every cartel.
 
+> 💡 **Depending on your rights.** The **Export** menu (and therefore the *Translated PDF*) only appears if your account has the **"export"** capability; the *Translated PDF* additionally requires the **"export (other language)"** capability. Without them, these options are simply absent — ask the general administrator.
+
 > 💡 The buttons in the bulk bar depend on context: for example **Publish (N)** does **not** appear in the *Published* tab (those cartels are already published).
 
 > 💡 Bulk actions that **modify** (Publish, Re-translate, Assign to a workshop, Delete) **automatically skip** main-site cartels ("view only", read-only): only your own cartels are affected. **Export**, however, includes them (no risk).
 
-> 📸 **[Screenshot S17]** — The management toolbar: at the top the **search** and the filters (*All categories*, *All workshops*, *Complex filters*); the **"N selected"** counter and the **Columns** button; the **bulk action bar** (Re-translate, Export, Assign to a workshop, Delete) with the **Export** menu open on its 4 formats; and on the left the per-row **selection checkboxes** (§10.3 and §10.4).
+> 📸 **[Screenshot S19]** — The management toolbar: at the top the **search** and the filters (*All categories*, *All workshops*, *Complex filters*); the **"N selected"** counter and the **Columns** button; the **bulk action bar** (Re-translate, Export, Assign to a workshop, Delete) with the **Export** menu open on its 4 formats; and on the left the per-row **selection checkboxes** (§10.3 and §10.4).
 
 ### 10.5 Printing and QR codes
 
-The **Print PDF** and **JPEG** exports produce the cartels in a printable format, with a **QR code** pointing to the cartel's online record (external link if provided, otherwise the internal record). Ideal for an exhibition or physical signage.
+The **PDF print** and **JPEG** exports produce the cartels in a printable format, with a **QR code** pointing to the cartel's online record (external link if provided, otherwise the internal record). Ideal for an exhibition or physical signage.
 
 ---
 
@@ -454,7 +460,7 @@ Your cartels live first on **your** dedicated site. You can propose that they **
 | **Clock** (pink) | Submitted, **awaiting** validation. | Withdraw the submission. |
 | **Globe** (green) | **Validated**: visible on the main site. | Withdraw from the main site. |
 
-> 📸 **[Screenshot S18]** — The submission-state buttons on a published cartel.
+> 📸 **[Screenshot S20]** — The submission-state buttons on a published cartel.
 
 ### 11.2 The full flow
 
