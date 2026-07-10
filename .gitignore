@@ -5,3 +5,7 @@
 # les copie ensuite dans seed-content/ et/ou paleo-uploads/ aux bons endroits).
 upload-dev/
 upload_dev/
+
+# Production interne, non déployée sur les plateformes : storyboards / scripts
+# de tournage des capsules vidéo. Restent sur le disque mais hors du dépôt.
+Script-video-*.md
