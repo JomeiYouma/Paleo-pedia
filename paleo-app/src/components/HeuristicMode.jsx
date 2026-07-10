@@ -284,7 +284,7 @@ const ArborescenceMode = ({ cartels = [] }) => {
             <div style={{ position: 'absolute', bottom: 20, right: 20, zIndex: 10, display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 <div style={{ background: 'white', padding: '10px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.9em' }}>
-                        <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '50%', background: '#C2185B' }}></span> Catégorie
+                        <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '50%', background: '#C2185B' }}></span> {t('heuristic.categoryLabel', 'Catégorie')}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.9em' }}>
                         <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '50%', background: '#F48FB1' }}></span> Cartel

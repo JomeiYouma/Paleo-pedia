@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle2, AlertCircle, AlertTriangle, X } from 'lucide-react';
 
 /**
@@ -13,6 +14,8 @@ const ENTER_MS = 220;
 const EXIT_MS = 180;
 
 const Toast = ({ visible, message, type = 'success', onDismiss, autoDismiss = 3000 }) => {
+    // `t` local (thème) plus bas → on aliase le hook i18n en `translate`.
+    const { t: translate } = useTranslation();
     // shouldRender reste true pendant le fade-out, sinon le composant disparaîtrait sec
     const [shouldRender, setShouldRender] = useState(false);
     const [phase, setPhase] = useState('exiting');
@@ -82,7 +85,7 @@ const Toast = ({ visible, message, type = 'success', onDismiss, autoDismiss = 30
             <span style={{ flex: 1, wordBreak: 'break-word' }}>{snapshot.message}</span>
             <button
                 onClick={onDismiss}
-                aria-label="Fermer"
+                aria-label={translate('action.close', 'Fermer')}
                 style={{
                     border: 'none', background: 'transparent', color: t.color,
                     cursor: 'pointer', padding: 2, display: 'flex',

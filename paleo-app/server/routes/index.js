@@ -221,6 +221,9 @@ router.get   ('/shop-items',     optionalAuth,                            ShopIt
 router.post  ('/shop-items',     authenticate, requireManageContentMain,  ShopItemController.create);
 router.patch ('/shop-items/:id', authenticate, requireManageContentMain,  ShopItemController.update);
 router.delete('/shop-items/:id', authenticate, requireManageContentMain,  ShopItemController.remove);
+// Clic sur un lien de paiement Stripe : beacon public (sans auth), journalisé
+// via l'event dispatcher (type shop_item.checkout_click, email optionnel).
+router.post  ('/shop-items/:id/checkout-click',                           ShopItemController.recordCheckoutClick);
 
 // ── Event logs + config emails (superadmin only) ─────────────
 router.get   ('/logs',                       authenticate, requireAdmin, EventLogController.list);
@@ -228,5 +231,8 @@ router.get   ('/logs/types',                 authenticate, requireAdmin, EventLo
 router.get   ('/logs/email-config',          authenticate, requireAdmin, EventLogController.listEmailConfig);
 router.patch ('/logs/email-config',           authenticate, requireAdmin, EventLogController.bulkUpdateRecipient);
 router.patch ('/logs/email-config/:type',    authenticate, requireAdmin, EventLogController.updateEmailConfig);
+// Récap quotidien des clics boutique (config dans settings, superadmin only).
+router.get   ('/logs/click-digest',          authenticate, requireAdmin, EventLogController.getClickDigest);
+router.patch ('/logs/click-digest',          authenticate, requireAdmin, EventLogController.updateClickDigest);
 
 export default router;

@@ -74,7 +74,7 @@ export default function PartnerSelector({
             {showAdd && (
                 <div style={{ border: '1px dashed #ddd', borderRadius: '10px', padding: '12px', marginBottom: '12px', display: 'grid', gap: '8px' }}>
                     <input value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('subsiteEditor.partnersNewName', 'Nom du partenaire *')} style={inputStyle} />
-                    <input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder="https://… (optionnel)" style={inputStyle} />
+                    <input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder={t('subsiteEditor.partnersNewUrl', 'https://… (optionnel)')} style={inputStyle} />
                     <label style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 12px', border: '1px dashed #ccc', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', color: '#666' }}>
                         {newLogo ? newLogo.name : t('subsiteEditor.partnersNewLogo', 'Logo (optionnel)…')}
                         <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => setNewLogo(e.target.files?.[0] || null)} />

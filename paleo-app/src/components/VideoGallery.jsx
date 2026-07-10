@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Play } from 'lucide-react';
 
 /**
@@ -12,6 +13,7 @@ import { Play } from 'lucide-react';
  * Props : videos = [{ id: '<youtubeId>', title: '<titre>' }, …]
  */
 const VideoGallery = ({ videos = [] }) => {
+    const { t } = useTranslation();
     const [current, setCurrent] = useState(0);
     const [autoplay, setAutoplay] = useState(false);
 
@@ -43,7 +45,7 @@ const VideoGallery = ({ videos = [] }) => {
 
             {/* Vignettes des autres vidéos */}
             {videos.length > 1 && (
-                <div role="list" aria-label="Choisir une vidéo" style={{
+                <div role="list" aria-label={t('videoGallery.choose', 'Choisir une vidéo')} style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
                     gap: '12px',

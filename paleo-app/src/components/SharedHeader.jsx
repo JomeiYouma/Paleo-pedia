@@ -611,7 +611,7 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                                     onMouseLeave={e => e.currentTarget.style.background = 'none'}
                                                 >
                                                     <KeyRound size={14} />
-                                                    Mot de passe
+                                                    {t('sharedHeader.passwordLabel', 'Mot de passe')}
                                                 </button>
                                                 <button
                                                     onClick={() => {
@@ -810,7 +810,7 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                             </div>
                             <button
                                 onClick={() => { setShowLogin(false); setLoginError(''); }}
-                                aria-label="Fermer"
+                                aria-label={t('action.close', 'Fermer')}
                                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}
                             >
                                 <X size={22} />
@@ -831,7 +831,7 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                 />
                             </div>
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: 'var(--color-text-muted)', marginBottom: '6px', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mot de passe</label>
+                                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: 'var(--color-text-muted)', marginBottom: '6px', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('sharedHeader.passwordLabel', 'Mot de passe')}</label>
                                 <input
                                     type="password"
                                     value={loginPassword}

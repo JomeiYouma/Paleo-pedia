@@ -186,14 +186,14 @@ const TimelineMode = ({ cartels, onDelete, targetId, isAdmin }) => {
     const prevBtn = (positioned) => (
         <button onClick={() => goTo(prev => Math.max(0, prev - 1))} disabled={selectedIndex === 0}
             className={glowClass}
-            aria-label="Cartel précédent" style={navBtnStyle(positioned, 'left', selectedIndex === 0)}>
+            aria-label={t('timeline.prevCartel', 'Cartel précédent')} style={navBtnStyle(positioned, 'left', selectedIndex === 0)}>
             <ChevronLeft size={26} />
         </button>
     );
     const nextBtn = (positioned) => (
         <button onClick={() => goTo(prev => Math.min(validCartels.length - 1, prev + 1))} disabled={selectedIndex === validCartels.length - 1}
             className={glowClass}
-            aria-label="Cartel suivant" style={navBtnStyle(positioned, 'right', selectedIndex === validCartels.length - 1)}>
+            aria-label={t('timeline.nextCartel', 'Cartel suivant')} style={navBtnStyle(positioned, 'right', selectedIndex === validCartels.length - 1)}>
             <ChevronRight size={26} />
         </button>
     );

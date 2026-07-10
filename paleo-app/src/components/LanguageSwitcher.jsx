@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 const LanguageSwitcher = () => {
-    const { i18n } = useTranslation();
+    const { t, i18n } = useTranslation();
     const activeLanguage = i18n.language === 'gb' ? 'en' : i18n.language;
 
     const changeLanguage = (lng) => {
@@ -46,7 +46,7 @@ const LanguageSwitcher = () => {
     };
 
     return (
-        <div role="group" aria-label="Choix de la langue" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+        <div role="group" aria-label={t('languageSwitcher.aria', 'Choix de la langue')} style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
             <button
                 onClick={() => changeLanguage('fr')}
                 aria-pressed={activeLanguage === 'fr'}

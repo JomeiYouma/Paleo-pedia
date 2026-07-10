@@ -12,6 +12,7 @@
 import { EventLogModel }         from '../models/EventLog.js';
 import { EventEmailConfigModel } from '../models/EventEmailConfig.js';
 import { dispatchEvent }         from '../services/eventDispatcher.js';
+import { getDigestConfig, setDigestConfig } from '../services/clickDigest.js';
 
 // Helper local : journalisation fire-and-forget (jamais bloquante).
 const dispatch = (args) => { dispatchEvent(args).catch(() => {}); };
@@ -90,6 +91,35 @@ export const EventLogController = {
       dispatch({ type: 'event_email_config.updated', req, summary: 'destinataire global', payload: { recipient, affected } });
       const items = await EventEmailConfigModel.getAll();
       res.json({ affected, items });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  /**
+   * GET /api/logs/click-digest
+   * Config du récap quotidien des clics boutique (settings, pas un type d'event).
+   */
+  async getClickDigest(req, res) {
+    try {
+      const cfg = await getDigestConfig();
+      res.json({ enabled: cfg.enabled, recipient: cfg.recipient, lastSent: cfg.lastSent });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  /**
+   * PATCH /api/logs/click-digest  Body: { enabled?:boolean, recipient?:string }
+   */
+  async updateClickDigest(req, res) {
+    try {
+      const patch = {};
+      if ('enabled' in req.body)   patch.enabled = !!req.body.enabled;
+      if ('recipient' in req.body) patch.recipient = String(req.body.recipient ?? '').trim();
+      const cfg = await setDigestConfig(patch);
+      dispatch({ type: 'setting.updated', req, summary: 'récap quotidien clics boutique', payload: { enabled: cfg.enabled, recipient: cfg.recipient } });
+      res.json({ enabled: cfg.enabled, recipient: cfg.recipient, lastSent: cfg.lastSent });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

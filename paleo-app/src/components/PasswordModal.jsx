@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { KeyRound, X } from 'lucide-react';
 
 /**
@@ -26,6 +27,7 @@ const labelStyle = {
 };
 
 const PasswordModal = ({ mode = 'reset', targetEmail, onClose, onSubmit }) => {
+  const { t } = useTranslation();
   const isSelf = mode === 'self';
   const [current, setCurrent] = useState('');
   const [next, setNext]       = useState('');
@@ -47,7 +49,7 @@ const PasswordModal = ({ mode = 'reset', targetEmail, onClose, onSubmit }) => {
     e.preventDefault();
     setError('');
     if (isSelf && !current) { setError('Indiquez votre mot de passe actuel.'); return; }
-    if (next.length < 8) { setError('Le nouveau mot de passe doit faire 8 caractères minimum.'); return; }
+    if (next.length < 8) { setError(t('passwordModal.errMin', 'Le nouveau mot de passe doit faire 8 caractères minimum.')); return; }
     if (next !== confirm) { setError('Les deux mots de passe ne correspondent pas.'); return; }
     setLoading(true);
     try {
@@ -82,7 +84,7 @@ const PasswordModal = ({ mode = 'reset', targetEmail, onClose, onSubmit }) => {
           </h2>
           <button
             onClick={() => !loading && onClose()}
-            aria-label="Fermer"
+            aria-label={t('action.close', 'Fermer')}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}
           >
             <X size={22} />
@@ -92,7 +94,7 @@ const PasswordModal = ({ mode = 'reset', targetEmail, onClose, onSubmit }) => {
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {isSelf && (
             <div>
-              <label style={labelStyle}>Mot de passe actuel</label>
+              <label style={labelStyle}>{t('passwordModal.current', 'Mot de passe actuel')}</label>
               <input
                 type="password" value={current} autoFocus autoComplete="current-password"
                 onChange={e => setCurrent(e.target.value)} placeholder="••••••••" style={inputStyle}
@@ -100,7 +102,7 @@ const PasswordModal = ({ mode = 'reset', targetEmail, onClose, onSubmit }) => {
             </div>
           )}
           <div>
-            <label style={labelStyle}>Nouveau mot de passe (8+ car.)</label>
+            <label style={labelStyle}>{t('passwordModal.newPw', 'Nouveau mot de passe (8+ car.)')}</label>
             <input
               type="password" value={next} minLength={8} autoComplete="new-password"
               autoFocus={!isSelf}
@@ -108,7 +110,7 @@ const PasswordModal = ({ mode = 'reset', targetEmail, onClose, onSubmit }) => {
             />
           </div>
           <div>
-            <label style={labelStyle}>Confirmer le nouveau mot de passe</label>
+            <label style={labelStyle}>{t('passwordModal.confirmPw', 'Confirmer le nouveau mot de passe')}</label>
             <input
               type="password" value={confirm} minLength={8} autoComplete="new-password"
               onChange={e => setConfirm(e.target.value)} placeholder="••••••••" style={inputStyle}
@@ -138,7 +140,7 @@ const PasswordModal = ({ mode = 'reset', targetEmail, onClose, onSubmit }) => {
                 textTransform: 'uppercase', letterSpacing: '0.4px', color: 'var(--color-text-muted)',
               }}
             >
-              Annuler
+              {t('action.cancel', 'Annuler')}
             </button>
             <button
               type="submit" disabled={loading}

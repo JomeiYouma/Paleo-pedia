@@ -1,8 +1,10 @@
 import React, { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
 import { Download, Upload, Trash } from 'lucide-react';
 
 const DataManager = () => {
+    const { t } = useTranslation();
     const { isLocalMode, fetchData } = useApp();
     const fileInputRef = useRef(null);
 
@@ -56,7 +58,7 @@ const DataManager = () => {
 
     return (
         <div className="card" style={{ marginTop: '20px', border: '1px dashed orange' }}>
-            <h4> gestion des données locales </h4>
+            <h4>{t('dataManager.title', 'gestion des données locales')}</h4>
             <div style={{ display: 'flex', gap: '10px' }}>
                 <button onClick={handleExport} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 10px' }}>
                     <Download size={16} /> Exporter JSON

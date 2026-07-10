@@ -129,6 +129,28 @@ const ImportModal = ({ onClose, onDone, t }) => {
     );
 };
 
+// ── Filtres multi-valeurs dans l'URL ─────────────────────────
+// On stocke les filtres inline (catégories/ateliers) en paramètres RÉPÉTÉS
+// (?cat=A&cat=B) plutôt qu'en CSV (?cat=A,B). Le CSV cassait toute valeur
+// contenant une virgule (ex. une catégorie nommée « Bois, biomasse » était
+// re-splitée en deux → ne matchait plus rien → liste vide).
+//   - lecture (readMultiParam) : getAll() ; repli rétro-compatible → un unique
+//     paramètre contenant une virgule est éclaté (ancien ?cat=A,B), SAUF s'il
+//     correspond exactement à une valeur connue (nom comportant une virgule).
+//   - écriture (writeMultiParam) : delete puis append par valeur.
+const readMultiParam = (params, key, knownValues = null) => {
+    const all = params.getAll(key);
+    if (all.length === 1 && all[0].includes(',')) {
+        const isKnown = Array.isArray(knownValues) && knownValues.some(v => String(v) === all[0]);
+        if (!isKnown) return all[0].split(',').map(s => s.trim()).filter(Boolean);
+    }
+    return all.map(s => s.trim()).filter(Boolean);
+};
+const writeMultiParam = (params, key, values) => {
+    params.delete(key);
+    (values || []).forEach(v => { const s = String(v).trim(); if (s) params.append(key, s); });
+};
+
 // ── Composant principal ──────────────────────────────────────
 const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null } = {}) => {
     const { cartels, fetchData, isAdmin, isSuperadmin, isOwner, canExport, canExportTranslated, homeSubsiteId, categories, workshops, addWorkshop, loading: appLoading, hasFetched } = useApp();
@@ -183,12 +205,18 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     };
 
     const [search,         setSearch]         = useState('');
-    // Filtres multi-valeurs. URL legacy ?cat=A → on accepte aussi ?cat=A,B
-    // pour pouvoir partager une URL avec plusieurs catégories cochées.
-    const parseCsvParam = (raw) => (raw ? raw.split(',').map(s => s.trim()).filter(Boolean) : []);
-    const [filterCategories,   setFilterCategories]   = useState(() => parseCsvParam(searchParams.get('cat')));
+    // Filtres inline DÉRIVÉS de l'URL (source unique de vérité → aucune
+    // désynchronisation état↔URL possible). Le tableau `categories` sert de
+    // liste de valeurs connues pour le repli legacy CSV (cf. readMultiParam).
+    const filterCategories = useMemo(
+        () => readMultiParam(searchParams, 'cat', (categories || []).map(c => c.name || c)),
+        [searchParams, categories]
+    );
     const [filterCategoriesOp, setFilterCategoriesOp] = useState('OR');
-    const [filterWorkshops,    setFilterWorkshops]    = useState(() => (workshopId ? [String(workshopId)] : parseCsvParam(searchParams.get('ws'))));
+    const filterWorkshops = useMemo(
+        () => (workshopId ? [String(workshopId)] : readMultiParam(searchParams, 'ws')),
+        [searchParams, workshopId]
+    );
     const [filterWorkshopsOp,  setFilterWorkshopsOp]  = useState('OR');
     // Si intégré dans un sous-site, le filtre est verrouillé sur ce sous-site et
     // ignore le query param. Sinon on lit ?subsite= depuis l'URL.
@@ -280,35 +308,20 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
         return () => { cancelled = true; };
     }, []);
 
-    React.useEffect(() => {
-        // Le filtre atelier vient du param de route (/workshop/:id) ou de l'URL
-        // (?ws=A,B). Persisté dans l'URL → survit à l'édition d'un cartel + retour.
-        setFilterWorkshops(workshopId ? [String(workshopId)] : parseCsvParam(searchParams.get('ws')));
-    }, [workshopId, location.search]);
-
-    // Sync filterCategories avec l'URL (?cat=A,B) pour survivre aux navigations.
-    // Format CSV : compatible avec l'ancien ?cat=A (un seul nom = tableau de 1).
+    // Les filtres étant dérivés de l'URL, les handlers se contentent d'écrire
+    // dans l'URL — pas d'état local à resynchroniser (plus d'effet de sync, donc
+    // plus de désynchro). La persistance (retour d'édition, back/forward, partage
+    // d'URL) est automatique puisque le filtre EST l'URL.
     const handleSetFilterCategories = (cats) => {
-        setFilterCategories(cats);
         const next = new URLSearchParams(searchParams);
-        if (cats.length) next.set('cat', cats.join(','));
-        else next.delete('cat');
+        writeMultiParam(next, 'cat', cats);
         setSearchParams(next, { replace: true });
     };
-
-    // Idem pour les ateliers (?ws=A,B) — corrige la perte du filtre atelier au
-    // retour d'édition d'un cartel (rememberReturn capture l'URL, donc le filtre).
     const handleSetFilterWorkshops = (ws) => {
-        setFilterWorkshops(ws);
         const next = new URLSearchParams(searchParams);
-        if (ws.length) next.set('ws', ws.join(','));
-        else next.delete('ws');
+        writeMultiParam(next, 'ws', ws);
         setSearchParams(next, { replace: true });
     };
-
-    React.useEffect(() => {
-        setFilterCategories(parseCsvParam(searchParams.get('cat')));
-    }, [location.search]);
 
     const hashScrolledRef = useRef(null);
 
@@ -875,7 +888,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
             {/* ── Onglets : chaque tab est un bouton bordé pour qu'on voie tout
                   de suite que c'est cliquable, l'actif est rempli, les autres
                   restent en outline avec leur couleur sémantique. ───────── */}
-            <div role="tablist" aria-label="Statuts des cartels" style={{ display:'flex', gap:'8px', marginBottom:'24px', flexWrap:'wrap' }}>
+            <div role="tablist" aria-label={t('manageCartels.statusAria', 'Statuts des cartels')} style={{ display:'flex', gap:'8px', marginBottom:'24px', flexWrap:'wrap' }}>
                 {visibleTabs.map(tab => {
                     const Icon   = tab.icon;
                     const active = tab.key === activeTab;
@@ -1236,7 +1249,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                         <td style={{ padding:'10px', maxWidth:'280px' }}>
                                             <div style={{ fontWeight:'700', color:'#1a1a1a', lineHeight:'1.3' }}>{cartel.titre || '(sans titre)'}</div>
                                             {cartel.titre_en && <div style={{ color:'#999', fontSize:'0.82rem', marginTop:'2px' }}>{cartel.titre_en}</div>}
-                                            {!cartel.titre_en && <div style={{ color:'#f5a623', fontSize:'0.78rem', marginTop:'2px' }}>⚠ Pas de traduction EN</div>}
+                                            {!cartel.titre_en && <div style={{ color:'#f5a623', fontSize:'0.78rem', marginTop:'2px' }}>{t('manageCartels.noEnBadge', '⚠ Pas de traduction EN')}</div>}
                                             {/* Badge sous-site d'origine (affiché sur les onglets hors submissions) */}
                                             {activeTab !== 'submissions' && cartel.subsite_name && (
                                                 <span style={{ display:'inline-block', marginTop:'4px', background:'#fce4ec', color:'#c2185b', borderRadius:'10px', padding:'1px 7px', fontSize:'0.72rem', fontWeight:'700' }}>

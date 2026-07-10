@@ -83,22 +83,22 @@ const Proposals = () => {
 
         if (addSuccess) {
             await deleteCartel(String(draft.id), true);
-            alert(isVisible ? t('messages.publishSuccess') : "Publié mais masqué (Visible dans l'admin).");
+            alert(isVisible ? t('messages.publishSuccess') : t('proposals.publishedHidden', "Publié mais masqué (Visible dans l'admin)."));
         } else {
-            alert("Erreur lors de la publication. La proposition n'a pas été supprimée.");
+            alert(t('proposals.publishError', "Erreur lors de la publication. La proposition n'a pas été supprimée."));
         }
         setProcessingId(null);
     };
 
     const handleRevert = async (draft) => {
-        if (!confirm("Renvoyer ce cartel en Brouillon Public (visible et modifiable par le visiteur) ?")) return;
+        if (!confirm(t('proposals.revertConfirm', "Renvoyer ce cartel en Brouillon Public (visible et modifiable par le visiteur) ?"))) return;
 
         const entry = { ...draft };
         entry.status = 'public_draft'; // Revert status
         if (entry.titre) entry.titre = entry.titre.replace(/\s*\(Proposition\)$/i, '');
 
         await updateCartel(entry, true);
-        alert("Renvoyé en Brouillon Public !");
+        alert(t('proposals.revertSuccess', "Renvoyé en Brouillon Public !"));
     };
 
     if (!isAdmin) {
@@ -108,13 +108,13 @@ const Proposals = () => {
     return (
         <div className="container" style={{ paddingBottom: '100px' }}>
             <h2 style={{ borderBottom: '2px solid orange', paddingBottom: '10px', color: 'orange', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                📥 Propositions / Contributions ({proposals.length})
+                📥 {t('proposals.heading', { n: proposals.length, defaultValue: 'Propositions / Contributions ({{n}})' })}
             </h2>
 
             {proposals.length === 0 ? (
                 <div style={{ padding: '40px', textAlign: 'center', color: '#888', background: '#f9f9f9', borderRadius: '10px' }}>
                     <p>{t('drafts.empty')}</p>
-                    <small>Les propositions des visiteurs apparaîtront ici.</small>
+                    <small>{t('proposals.emptyHint', 'Les propositions des visiteurs apparaîtront ici.')}</small>
                 </div>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -140,17 +140,17 @@ const Proposals = () => {
 const ProposalItem = ({ draft, onPublish, onPublishHidden, onDelete, onEdit, onRevert, t, isProcessing }) => {
     const dateStr = draft.created_at
         ? new Date(draft.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
-        : (draft.date || "Date inconnue");
+        : (draft.date || t('proposals.unknownDate', 'Date inconnue'));
 
     return (
         <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', border: '1px solid orange', padding: '15px', borderRadius: '8px', background: 'white' }}>
             <div style={{ flex: 1 }}>
                 <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9em', color: '#666' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <Clock size={14} /> Reçu le : <strong>{dateStr}</strong>
+                        <Clock size={14} /> {t('proposals.receivedOn', 'Reçu le :')} <strong>{dateStr}</strong>
                     </span>
                     <span style={{ background: '#eee', padding: '2px 8px', borderRadius: '10px', fontSize: '0.85em' }}>
-                        Source : <strong>{draft.origin || 'Accès Général'}</strong>
+                        {t('proposals.source', 'Source :')} <strong>{draft.origin || t('proposals.generalAccess', 'Accès Général')}</strong>
                     </span>
                 </div>
                 <CartelPreview data={draft} isDraft showExports />
@@ -159,7 +159,7 @@ const ProposalItem = ({ draft, onPublish, onPublishHidden, onDelete, onEdit, onR
                 <button
                     onClick={onPublish}
                     disabled={isProcessing}
-                    title="Publier (Visible)"
+                    title={t('proposals.publishVisibleTitle', 'Publier (Visible)')}
                     style={{
                         color: 'white', backgroundColor: 'green', border: 'none', borderRadius: '5px',
                         padding: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -167,13 +167,13 @@ const ProposalItem = ({ draft, onPublish, onPublishHidden, onDelete, onEdit, onR
                     }}
                 >
                     <Rocket size={18} />
-                    <span style={{ fontSize: '0.65em', marginTop: '2px' }}>Publier</span>
+                    <span style={{ fontSize: '0.65em', marginTop: '2px' }}>{t('proposals.publish', 'Publier')}</span>
                 </button>
 
                 <button
                     onClick={onPublishHidden}
                     disabled={isProcessing}
-                    title="Publier (Masqué)"
+                    title={t('proposals.publishHiddenTitle', 'Publier (Masqué)')}
                     style={{
                         color: 'white', backgroundColor: '#555', border: 'none', borderRadius: '5px',
                         padding: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -181,12 +181,12 @@ const ProposalItem = ({ draft, onPublish, onPublishHidden, onDelete, onEdit, onR
                     }}
                 >
                     <span style={{ fontSize: '1.2em' }}>👁️‍🗨️</span>
-                    <span style={{ fontSize: '0.65em', marginTop: '2px' }}>Caché</span>
+                    <span style={{ fontSize: '0.65em', marginTop: '2px' }}>{t('proposals.hidden', 'Caché')}</span>
                 </button>
 
                 <button
                     onClick={onRevert}
-                    title="Renvoyer au visiteur (Brouillon Public)"
+                    title={t('proposals.revertTitle', 'Renvoyer au visiteur (Brouillon Public)')}
                     style={{
                         color: 'white', backgroundColor: 'orange', border: 'none', borderRadius: '5px',
                         padding: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer'

@@ -112,7 +112,7 @@ const MemberForm = ({ initial, onCancel, onSubmit, busy, submitLabel }) => {
                         <input type="file" accept="image/*" disabled={uploading} style={{ display: 'none' }} onChange={e => handlePhoto(e.target.files?.[0])} />
                     </label>
                     {photoPath && (
-                        <button type="button" onClick={() => setPhotoPath('')} style={ghostBtnStyle} title="Retirer la photo">
+                        <button type="button" onClick={() => setPhotoPath('')} style={ghostBtnStyle} title={t('adminTeamContent.removePhoto', 'Retirer la photo')}>
                             <X size={14} />
                         </button>
                     )}
@@ -253,7 +253,7 @@ const AdminTeamContent = ({ subsiteSlug = null }) => {
     if (!canAccess) {
         return (
             <div style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--color-text-subtle)' }}>
-                Accès réservé.
+                {t('adminTeamContent.denied', 'Accès réservé.')}
             </div>
         );
     }

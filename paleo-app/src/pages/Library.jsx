@@ -524,7 +524,7 @@ const Library = ({ fixedCategory = null, fixedSubsiteId = null, fixedWorkshopId 
                                     <button onClick={() => {
                                             const returnTo = rememberReturn(location, { scrollId: cartel.id });
                                             navigate(`/app/create?edit=${cartel.id}`, { state: { returnTo } });
-                                        }} title="Éditer" style={{ padding: '6px', border: 'none', background: 'none', cursor: 'pointer' }}>
+                                        }} title={t('library.editTitle', 'Éditer')} style={{ padding: '6px', border: 'none', background: 'none', cursor: 'pointer' }}>
                                         <Edit size={18} />
                                     </button>
                                     <button

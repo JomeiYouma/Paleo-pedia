@@ -131,7 +131,7 @@ const PaleoPedia = () => {
         // en dernier → planète la plus externe, la « place à prendre ».
         subs.push({
             slug: '__your_site__',
-            name: 'Votre site !',
+            name: t('paleoPedia.yourSite', 'Votre site !'),
             color: '#B0B7C3',                            // gris doux : une place à remplir (hex requis côté 3D)
             planetType: 'icy',                           // planète à anneau, sans décor : visuellement « spéciale »
             host: null,
@@ -160,14 +160,14 @@ const PaleoPedia = () => {
                     fontWeight: 700,
                     color: 'var(--color-text-muted)',
                 }}>
-                    Un projet de{' '}
+                    {t('paleoPedia.aProjectBy', 'Un projet de')}{' '}
                     <a
                         href="https://atelier21.org"
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{ color: 'var(--color-primary)', textDecoration: 'none' }}
                     >
-                        l'Atelier 21
+                        {t('paleoPedia.atelier21', "l'Atelier 21")}
                     </a>
                 </p>
                 <h1 id="intro-heading" style={{
@@ -197,7 +197,7 @@ const PaleoPedia = () => {
                     color: 'var(--color-text)',
                     lineHeight: 1.2,
                 }}>
-                    L'écosystème Paléo
+                    {t('paleoPedia.ecosystemHeading', "L'écosystème Paléo")}
                 </h2>
                 <p style={{
                     textAlign: 'center',
@@ -205,10 +205,13 @@ const PaleoPedia = () => {
                     color: 'var(--color-text-muted)',
                     fontSize: '0.95rem',
                 }}>
-                    Cliquez sur un domaine pour le visiter.
+                    {t('paleoPedia.clickDomainToVisit', 'Cliquez sur un domaine pour le visiter.')}
                 </p>
 
-                <EcosystemShowcase hub={HUB} orbits={orbits} />
+                <EcosystemShowcase
+                    hub={{ ...HUB, description: t('paleoPedia.hubDescription', 'Frise complète · Détail équipe, projet, museum') }}
+                    orbits={orbits}
+                />
             </section>
 
             {/* La méthodologie vient à la suite de l'écosystème (même page). */}
@@ -224,10 +227,10 @@ const PaleoPedia = () => {
                 textAlign: 'center',
             }}>
                 <h2 id="cta-heading" style={{ margin: '0 0 14px', fontSize: 'clamp(1.4rem, 3vw, 1.9rem)', color: 'var(--color-white)' }}>
-                    Participer au projet
+                    {t('paleoPedia.participateHeading', 'Participer au projet')}
                 </h2>
                 <p style={{ margin: '0 auto 28px', maxWidth: 620, color: 'rgba(255,255,255,0.82)', lineHeight: 1.6 }}>
-                    Vous êtes enseignant, formateur, collectivité ou acteur de la transition ? Démonstration, formation, frise thématique dédiée ou votre propre plateforme pédagogique : construisons-la ensemble.
+                    {t('paleoPedia.participateIntro', 'Vous êtes enseignant, formateur, collectivité ou acteur de la transition ? Démonstration, formation, frise thématique dédiée ou votre propre plateforme pédagogique : construisons-la ensemble.')}
                 </p>
                 <Link
                     to={`${pediaBasePath()}/participer-au-projet`}
@@ -245,7 +248,7 @@ const PaleoPedia = () => {
                         borderRadius: 'var(--radius-md)',
                     }}
                 >
-                    Participer au projet →
+                    {t('paleoPedia.participateHeading', 'Participer au projet')} →
                 </Link>
             </section>
 
@@ -259,6 +262,7 @@ const PaleoPedia = () => {
 // Vitrine de l'écosystème : 3D (WebGL) si possible, sinon 2D.
 // ════════════════════════════════════════════════════════════════
 const EcosystemShowcase = ({ hub, orbits }) => {
+    const { t } = useTranslation();
     const reducedMotion = usePrefersReducedMotion();
     // SPA client pur → la détection WebGL peut se faire dès l'init.
     const [canUse3D] = useState(() => supportsWebGL());
@@ -288,7 +292,7 @@ const EcosystemShowcase = ({ hub, orbits }) => {
                         </Suspense>
                     </div>
                     {/* Liens réels masqués : SEO + lecteurs d'écran (canvas non exposé). */}
-                    <nav aria-label="Domaines de l'écosystème Paléo" style={SR_ONLY}>
+                    <nav aria-label={t('paleoPedia.ecosystemNavLabel', "Domaines de l'écosystème Paléo")} style={SR_ONLY}>
                         <ul>
                             <li>
                                 <a href={hub.href} {...(hub.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
@@ -314,7 +318,7 @@ const EcosystemShowcase = ({ hub, orbits }) => {
                 <button
                     type="button"
                     onClick={() => setMode(show3D ? '2d' : '3d')}
-                    title={show3D ? 'Afficher la vue 2D simplifiée' : 'Afficher la vue 3D'}
+                    title={show3D ? t('paleoPedia.show2DTitle', 'Afficher la vue 2D simplifiée') : t('paleoPedia.show3DTitle', 'Afficher la vue 3D')}
                     style={{
                         position: 'absolute', bottom: 12, right: 12, zIndex: 5,
                         display: 'inline-flex', alignItems: 'center', gap: 7,
@@ -328,24 +332,27 @@ const EcosystemShowcase = ({ hub, orbits }) => {
                     }}
                 >
                     {show3D
-                        ? 'Vue simplifiée'
-                        : (<><Boxes size={14} aria-hidden="true" /> Vue 3D</>)}
+                        ? t('paleoPedia.simplifiedView', 'Vue simplifiée')
+                        : (<><Boxes size={14} aria-hidden="true" /> {t('paleoPedia.view3D', 'Vue 3D')}</>)}
                 </button>
             )}
         </div>
     );
 };
 
-const Loading3D = () => (
-    <div style={{
-        width: '100%', height: '100%',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem',
-        background: '#0e0e12',
-    }}>
-        Chargement de la vue 3D…
-    </div>
-);
+const Loading3D = () => {
+    const { t } = useTranslation();
+    return (
+        <div style={{
+            width: '100%', height: '100%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem',
+            background: '#0e0e12',
+        }}>
+            {t('paleoPedia.loading3D', 'Chargement de la vue 3D…')}
+        </div>
+    );
+};
 
 // ── Diagramme 2D (repli accessible) ───────────────────────────
 // Schéma cliquable : hub au centre, orbites positionnées sur un cercle

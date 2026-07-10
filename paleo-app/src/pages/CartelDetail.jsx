@@ -31,7 +31,7 @@ const resolveImage = (path) => {
 
 const CartelDetail = () => {
     const { id, slug: slugParam } = useParams();
-    const { i18n } = useTranslation();
+    const { t, i18n } = useTranslation();
     const slug = slugParam || getHostSubsiteSlug() || null;
 
     const [cartel,  setCartel]  = useState(null);
@@ -59,14 +59,14 @@ const CartelDetail = () => {
     const accent = 'var(--color-accent)';
 
     if (loading) {
-        return <div style={{ padding: '60px 24px', textAlign: 'center', color: '#999' }}>Chargement…</div>;
+        return <div style={{ padding: '60px 24px', textAlign: 'center', color: '#999' }}>{t('common.loading', 'Chargement…')}</div>;
     }
     if (error || !cartel) {
         const fallbackHref = slug ? `${subsiteBasePath(slug)}/frise` : '/app';
         return (
             <div style={{ padding: '60px 24px', textAlign: 'center' }}>
                 <p style={{ color: '#999' }}>{error || 'Cartel introuvable.'}</p>
-                <Link to={fallbackHref} style={{ color: '#555', textDecoration: 'underline' }}>← Retour</Link>
+                <Link to={fallbackHref} style={{ color: '#555', textDecoration: 'underline' }}>← {t('cartelDetail.back', 'Retour')}</Link>
             </div>
         );
     }

@@ -5,6 +5,7 @@
  * l'intérieur de /site/:slug/admin.
  */
 import { Navigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import ManageCartels from './ManageCartels';
 import { useApp } from '../context/AppContext';
 import { useSubsite } from '../layouts/SubsiteLayout';
@@ -12,6 +13,7 @@ import { subsiteBasePath } from '../utils/subsiteHost';
 
 const SubsiteAdmin = () => {
     const location = useLocation();
+    const { t } = useTranslation();
     const { isAdmin } = useApp();
     const subsite = useSubsite();
     const slug = subsite?.slug;
@@ -26,7 +28,7 @@ const SubsiteAdmin = () => {
     if (!isAdmin) {
         return (
             <div style={{ textAlign: 'center', padding: '80px 20px', color: '#aaa' }}>
-                Accès réservé à l'administration du sous-site.
+                {t('subsiteAdmin.denied', "Accès réservé à l'administration du sous-site.")}
             </div>
         );
     }

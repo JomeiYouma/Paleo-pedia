@@ -6,6 +6,7 @@
  * / supprimer n'importe quelle note (cf. cartelNoteController côté serveur).
  */
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Trash2, StickyNote, Send } from 'lucide-react';
 import api from '../services/apiClient';
 
@@ -18,6 +19,7 @@ const formatDate = (iso) => {
 };
 
 const CartelNotesPanel = ({ cartelId, subsiteSlug }) => {
+    const { t } = useTranslation();
     const [notes, setNotes]     = useState([]);
     const [loading, setLoading] = useState(true);
     const [draft, setDraft]     = useState('');
@@ -71,7 +73,7 @@ const CartelNotesPanel = ({ cartelId, subsiteSlug }) => {
                     Notes admin internes
                 </h3>
                 <span style={{ fontSize: '0.78rem', color: '#a08a4a' }}>
-                    Visibles uniquement par les admins
+                    {t('cartelNotes.adminOnly', 'Visibles uniquement par les admins')}
                 </span>
             </div>
 
@@ -79,7 +81,7 @@ const CartelNotesPanel = ({ cartelId, subsiteSlug }) => {
                 <textarea
                     value={draft}
                     onChange={e => setDraft(e.target.value)}
-                    placeholder="Ajouter une note…"
+                    placeholder={t('cartelNotes.addPlaceholder', 'Ajouter une note…')}
                     rows={2}
                     style={{
                         flex: 1, padding: '8px 10px', borderRadius: '8px',
@@ -103,10 +105,10 @@ const CartelNotesPanel = ({ cartelId, subsiteSlug }) => {
             )}
 
             {loading ? (
-                <div style={{ color: '#999', fontSize: '0.85rem', fontStyle: 'italic' }}>Chargement…</div>
+                <div style={{ color: '#999', fontSize: '0.85rem', fontStyle: 'italic' }}>{t('common.loading', 'Chargement…')}</div>
             ) : notes.length === 0 ? (
                 <div style={{ color: '#a08a4a', fontSize: '0.85rem', fontStyle: 'italic' }}>
-                    Aucune note pour le moment.
+                    {t('cartelNotes.empty', 'Aucune note pour le moment.')}
                 </div>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

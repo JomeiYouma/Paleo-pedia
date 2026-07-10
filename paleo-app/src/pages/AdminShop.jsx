@@ -5,6 +5,7 @@ import {
     ArrowUp, ArrowDown, ExternalLink,
 } from 'lucide-react';
 import api from '../services/apiClient';
+import { useTranslation } from 'react-i18next';
 import ExplainerBox from '../components/ExplainerBox';
 import {
     AdminPageHeader, AdminSection, AdminToast, AdminTabs, AdminTabDescription,
@@ -54,7 +55,8 @@ const initVersions = (initial) => {
 };
 
 // ── Formulaire ───────────────────────────────────────────────
-const ShopItemForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregistrer' }) => {
+const ShopItemForm = ({ initial, onCancel, onSubmit, busy, submitLabel }) => {
+    const { t } = useTranslation();
     const [title, setTitle]         = useState(initial?.title || '');
     const [titleEn, setTitleEn]     = useState(initial?.title_en || '');
     const [subtitle, setSubtitle]   = useState(initial?.subtitle || '');
@@ -84,7 +86,7 @@ const ShopItemForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregi
             const up = await api.media.upload(file);
             setImagePath(up?.url || '');
         } catch (e) {
-            setUploadError(e.message || "Échec de l'upload");
+            setUploadError(e.message || t('adminShop.uploadFailed', "Échec de l'upload"));
         } finally {
             setUploading(false);
         }
@@ -122,26 +124,22 @@ const ShopItemForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregi
     return (
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div>
-                <label style={labelStyle}>Titre *</label>
+                <label style={labelStyle}>{t('adminShop.titleLabel', 'Titre *')}</label>
                 <input value={title} onChange={e => setTitle(e.target.value)} required style={inputStyle}
-                    placeholder="Rétrofutur : une autre histoire des innovations énergétiques" />
+                    placeholder={t('adminShop.titlePlaceholder', 'Rétrofutur : une autre histoire des innovations énergétiques')} />
             </div>
 
             <div>
-                <label style={labelStyle}>Sous-titre / éditeur (optionnel)</label>
+                <label style={labelStyle}>{t('adminShop.subtitleLabel', 'Sous-titre / éditeur (optionnel)')}</label>
                 <input value={subtitle} onChange={e => setSubtitle(e.target.value)} style={inputStyle}
-                    placeholder="Éditions Buchet/Chastel" />
+                    placeholder={t('adminShop.subtitlePlaceholder', 'Éditions Buchet/Chastel')} />
             </div>
 
             {/* ── Variantes & options de paiement Stripe ──────────────── */}
             <div>
-                <label style={labelStyle}>Variantes & options de paiement Stripe</label>
+                <label style={labelStyle}>{t('adminShop.variantsLabel', 'Variantes & options de paiement Stripe')}</label>
                 <p style={{ margin: '0 0 10px', fontSize: '0.78rem', color: 'var(--color-text-subtle)', lineHeight: '1.5' }}>
-                    Un article se décline en <strong>variantes</strong> (ex. Papier / E-book), et chaque
-                    variante en <strong>options de paiement</strong> (ex. modes d'envoi), avec un lien
-                    Stripe par option. Sur la page produit : si tout est unique → un bouton « Acheter » ;
-                    sinon l'affichage s'adapte (choix de la variante puis de l'option). Laissez le nom
-                    d'une option vide s'il n'y en a qu'une. Une option sans lien est ignorée.
+                    {t('adminShop.variantsHelp1', 'Un article se décline en ')}<strong>{t('adminShop.variantsHelpStrong1', 'variantes')}</strong>{t('adminShop.variantsHelp2', ' (ex. Papier / E-book), et chaque variante en ')}<strong>{t('adminShop.variantsHelpStrong2', 'options de paiement')}</strong>{t('adminShop.variantsHelp3', " (ex. modes d'envoi), avec un lien Stripe par option. Sur la page produit : si tout est unique → un bouton « Acheter » ; sinon l'affichage s'adapte (choix de la variante puis de l'option). Laissez le nom d'une option vide s'il n'y en a qu'une. Une option sans lien est ignorée.")}
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {versions.map((v, vi) => (
@@ -157,32 +155,32 @@ const ShopItemForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregi
                             {/* En-tête + nom de la variante */}
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <span style={{ fontSize: '0.74rem', fontFamily: 'var(--font-heading)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-primary)' }}>
-                                    Variante {vi + 1}
+                                    {t('adminShop.variantNumber', { n: vi + 1, defaultValue: `Variante ${vi + 1}` })}
                                 </span>
                                 {versions.length > 1 && (
                                     <button type="button" onClick={() => removeVariant(vi)}
-                                        style={{ ...ghostBtnStyle, padding: '3px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }} title="Supprimer cette variante">
-                                        <Trash2 size={13} /> Variante
+                                        style={{ ...ghostBtnStyle, padding: '3px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }} title={t('adminShop.deleteVariantTitle', 'Supprimer cette variante')}>
+                                        <Trash2 size={13} /> {t('adminShop.deleteVariantBtn', 'Variante')}
                                     </button>
                                 )}
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                                 <div>
-                                    <label style={labelStyle}>Nom de la variante (FR)</label>
+                                    <label style={labelStyle}>{t('adminShop.variantNameFr', 'Nom de la variante (FR)')}</label>
                                     <input value={v.label} onChange={e => setVariant(vi, { label: e.target.value })}
-                                        style={inputStyle} placeholder="Papier" />
+                                        style={inputStyle} placeholder={t('adminShop.variantNameFrPlaceholder', 'Papier')} />
                                 </div>
                                 <div>
-                                    <label style={labelStyle}>Nom (EN, optionnel)</label>
+                                    <label style={labelStyle}>{t('adminShop.variantNameEn', 'Nom (EN, optionnel)')}</label>
                                     <input value={v.label_en} onChange={e => setVariant(vi, { label_en: e.target.value })}
-                                        style={inputStyle} placeholder="Paperback" />
+                                        style={inputStyle} placeholder={t('adminShop.variantNameEnPlaceholder', 'Paperback')} />
                                 </div>
                             </div>
 
                             {/* Options de paiement (un lien Stripe par option) */}
                             <div style={{ borderLeft: '2px solid var(--color-border)', paddingLeft: '10px', marginLeft: '2px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-heading)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text-muted)' }}>
-                                    Options de paiement — un lien Stripe par option
+                                    {t('adminShop.paymentOptionsHeading', 'Options de paiement — un lien Stripe par option')}
                                 </span>
                                 {v.options.map((o, oi) => (
                                     <div key={oi} style={{
@@ -196,76 +194,76 @@ const ShopItemForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregi
                                     }}>
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                             <span style={{ fontSize: '0.7rem', color: 'var(--color-text-subtle)', fontWeight: '700' }}>
-                                                Option {oi + 1}
+                                                {t('adminShop.optionNumber', { n: oi + 1, defaultValue: `Option ${oi + 1}` })}
                                             </span>
                                             {v.options.length > 1 && (
                                                 <button type="button" onClick={() => removeOption(vi, oi)}
-                                                    style={{ ...ghostBtnStyle, padding: '2px 6px' }} title="Supprimer cette option">
+                                                    style={{ ...ghostBtnStyle, padding: '2px 6px' }} title={t('adminShop.deleteOptionTitle', 'Supprimer cette option')}>
                                                     <Trash2 size={12} />
                                                 </button>
                                             )}
                                         </div>
                                         <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr', gap: '8px' }}>
                                             <div>
-                                                <label style={labelStyle}>Nom (FR)</label>
+                                                <label style={labelStyle}>{t('adminShop.optionNameFr', 'Nom (FR)')}</label>
                                                 <input value={o.label} onChange={e => setOption(vi, oi, { label: e.target.value })}
-                                                    style={inputStyle} placeholder="Point Relais" />
+                                                    style={inputStyle} placeholder={t('adminShop.optionNameFrPlaceholder', 'Point Relais')} />
                                             </div>
                                             <div>
-                                                <label style={labelStyle}>Nom (EN, opt.)</label>
+                                                <label style={labelStyle}>{t('adminShop.optionNameEn', 'Nom (EN, opt.)')}</label>
                                                 <input value={o.label_en} onChange={e => setOption(vi, oi, { label_en: e.target.value })}
-                                                    style={inputStyle} placeholder="Pickup point" />
+                                                    style={inputStyle} placeholder={t('adminShop.optionNameEnPlaceholder', 'Pickup point')} />
                                             </div>
                                             <div>
-                                                <label style={labelStyle}>Prix</label>
+                                                <label style={labelStyle}>{t('adminShop.priceLabel', 'Prix')}</label>
                                                 <input value={o.price} onChange={e => setOption(vi, oi, { price: e.target.value })}
-                                                    style={inputStyle} placeholder="4,15 €" />
+                                                    style={inputStyle} placeholder={t('adminShop.pricePlaceholder', '4,15 €')} />
                                             </div>
                                         </div>
                                         <div>
-                                            <label style={labelStyle}>Lien de paiement Stripe</label>
+                                            <label style={labelStyle}>{t('adminShop.stripeLinkLabel', 'Lien de paiement Stripe')}</label>
                                             <input value={o.url} onChange={e => setOption(vi, oi, { url: e.target.value })}
                                                 style={inputStyle} type="url" placeholder="https://buy.stripe.com/…" />
                                         </div>
                                     </div>
                                 ))}
                                 <button type="button" onClick={() => addOption(vi)} style={{ ...ghostBtnStyle, padding: '5px 10px', alignSelf: 'flex-start' }}>
-                                    <Plus size={13} /> Ajouter une option
+                                    <Plus size={13} /> {t('adminShop.addOption', 'Ajouter une option')}
                                 </button>
                             </div>
                         </div>
                     ))}
                 </div>
                 <button type="button" onClick={addVariant} style={{ ...ghostBtnStyle, marginTop: '10px' }}>
-                    <Plus size={14} /> Ajouter une variante
+                    <Plus size={14} /> {t('adminShop.addVariant', 'Ajouter une variante')}
                 </button>
             </div>
 
             <div>
-                <label style={labelStyle}>Description (optionnelle)</label>
+                <label style={labelStyle}>{t('adminShop.descriptionLabel', 'Description (optionnelle)')}</label>
                 <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3}
                     style={{ ...inputStyle, resize: 'vertical' }}
-                    placeholder="L'ouvrage de référence du projet — une encyclopédie visuelle…" />
+                    placeholder={t('adminShop.descriptionPlaceholder', "L'ouvrage de référence du projet — une encyclopédie visuelle…")} />
             </div>
 
             {/* Image */}
             <div>
-                <label style={labelStyle}>Visuel (couverture / vignette)</label>
+                <label style={labelStyle}>{t('adminShop.imageLabel', 'Visuel (couverture / vignette)')}</label>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     {imagePath ? (
                         <img src={imagePath} alt="" style={{ width: '80px', height: '110px', objectFit: 'cover', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }} />
                     ) : (
                         <div style={{ width: '80px', height: '110px', background: 'var(--color-primary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-subtle)', fontSize: '0.75rem', borderRadius: 'var(--radius-md)' }}>
-                            (vide)
+                            {t('adminShop.emptyPlaceholder', '(vide)')}
                         </div>
                     )}
                     <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 12px', border: '1px dashed var(--color-border-strong)', borderRadius: 'var(--radius-md)', cursor: uploading ? 'wait' : 'pointer', fontSize: '0.85rem', color: 'var(--color-text-muted)', background: 'var(--color-surface-2)' }}>
                         <Upload size={14} />
-                        {uploading ? 'Upload en cours…' : (imagePath ? "Remplacer l'image" : 'Choisir une image…')}
+                        {uploading ? t('adminShop.uploading', 'Upload en cours…') : (imagePath ? t('adminShop.replaceImage', "Remplacer l'image") : t('adminShop.chooseImage', 'Choisir une image…'))}
                         <input type="file" accept="image/*" disabled={uploading} style={{ display: 'none' }} onChange={e => handleImage(e.target.files?.[0])} />
                     </label>
                     {imagePath && (
-                        <button type="button" onClick={() => setImagePath('')} style={ghostBtnStyle} title="Retirer l'image">
+                        <button type="button" onClick={() => setImagePath('')} style={ghostBtnStyle} title={t('adminShop.removeImage', "Retirer l'image")}>
                             <X size={14} />
                         </button>
                     )}
@@ -283,7 +281,7 @@ const ShopItemForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregi
                 margin: '8px 0 4px',
             }}>
                 <legend style={{ fontFamily: 'var(--font-heading)', fontSize: '0.78rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text-muted)', padding: '0 8px' }}>
-                    Version anglaise
+                    {t('adminShop.englishVersion', 'Version anglaise')}
                 </legend>
                 <div style={{ marginBottom: '10px' }}>
                     <TranslateButton
@@ -311,13 +309,13 @@ const ShopItemForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregi
 
             <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'var(--color-text-muted)', marginTop: '4px' }}>
                 <input type="checkbox" checked={isPublished} onChange={e => setIsPublished(e.target.checked)} />
-                Item publié (visible sur la page /boutique)
+                {t('adminShop.publishedCheckbox', 'Item publié (visible sur la page /boutique)')}
             </label>
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
                 {onCancel && (
                     <button type="button" onClick={onCancel} disabled={busy} style={ghostBtnStyle}>
-                        Annuler
+                        {t('adminShop.cancel', 'Annuler')}
                     </button>
                 )}
                 <button type="submit" disabled={busy || !title.trim()} style={{
@@ -325,7 +323,7 @@ const ShopItemForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregi
                     opacity: (busy || !title.trim()) ? 0.5 : 1,
                     cursor: (busy || !title.trim()) ? 'not-allowed' : 'pointer',
                 }}>
-                    <Save size={14} /> {busy ? 'Envoi…' : submitLabel}
+                    <Save size={14} /> {busy ? t('adminShop.sending', 'Envoi…') : (submitLabel || t('adminShop.submitDefault', 'Enregistrer'))}
                 </button>
             </div>
         </form>
@@ -334,6 +332,7 @@ const ShopItemForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregi
 
 // ── Page principale ───────────────────────────────────────────
 const AdminShop = () => {
+    const { t } = useTranslation();
     const { isSuperadmin } = useApp();
     const { toast, showToast } = useAdminToast();
 
@@ -351,7 +350,7 @@ const AdminShop = () => {
             const data = await api.shopItems.getAll();
             setItems(Array.isArray(data) ? data : []);
         } catch (e) {
-            showToast('error', e.message || 'Erreur de chargement');
+            showToast('error', e.message || t('adminShop.loadError', 'Erreur de chargement'));
         } finally {
             setLoading(false);
         }
@@ -359,19 +358,29 @@ const AdminShop = () => {
 
     useEffect(() => { load(); }, []);
 
-    const currentTab = TABS.find(t => t.key === activeTab) || TABS[0];
+    const tabKeyMap = {
+        book:  ['adminShop.tabBookLabel', 'adminShop.tabBookDesc'],
+        game:  ['adminShop.tabGameLabel', 'adminShop.tabGameDesc'],
+        other: ['adminShop.tabOtherLabel', 'adminShop.tabOtherDesc'],
+    };
+    const localizedTabs = TABS.map(tab => ({
+        key: tab.key,
+        label: t(tabKeyMap[tab.key][0], tab.label),
+        description: t(tabKeyMap[tab.key][1], tab.description),
+    }));
+    const currentTab = localizedTabs.find(x => x.key === activeTab) || localizedTabs[0];
     const filteredItems = useMemo(
         () => items.filter(x => x.category === activeTab),
         [items, activeTab]
     );
     const counts = useMemo(() => Object.fromEntries(
-        TABS.map(t => [t.key, items.filter(x => x.category === t.key).length])
+        TABS.map(tab => [tab.key, items.filter(x => x.category === tab.key).length])
     ), [items]);
 
     if (!isSuperadmin) {
         return (
             <div style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--color-text-subtle)' }}>
-                Accès réservé aux superadmins.
+                {t('adminShop.superadminOnly', 'Accès réservé aux superadmins.')}
             </div>
         );
     }
@@ -387,9 +396,9 @@ const AdminShop = () => {
             });
             setItems(prev => [...prev, created]);
             setShowForm(false);
-            showToast('success', `« ${created.title} » ajouté`);
+            showToast('success', t('adminShop.itemAdded', { title: created.title, defaultValue: `« ${created.title} » ajouté` }));
         } catch (e) {
-            showToast('error', e.message || 'Erreur création');
+            showToast('error', e.message || t('adminShop.createError', 'Erreur création'));
         } finally {
             setCreating(false);
         }
@@ -401,9 +410,9 @@ const AdminShop = () => {
             const updated = await api.shopItems.update(id, data);
             setItems(prev => prev.map(x => x.id === id ? updated : x));
             setEditingId(null);
-            showToast('success', `« ${updated.title} » mis à jour`);
+            showToast('success', t('adminShop.itemUpdated', { title: updated.title, defaultValue: `« ${updated.title} » mis à jour` }));
         } catch (e) {
-            showToast('error', e.message || 'Erreur mise à jour');
+            showToast('error', e.message || t('adminShop.updateError', 'Erreur mise à jour'));
         } finally {
             setBusyId(null);
         }
@@ -414,23 +423,23 @@ const AdminShop = () => {
         try {
             const updated = await api.shopItems.update(it.id, { is_published: !it.is_published });
             setItems(prev => prev.map(x => x.id === it.id ? updated : x));
-            showToast('success', updated.is_published ? 'Item publié' : 'Item masqué');
+            showToast('success', updated.is_published ? t('adminShop.itemPublished', 'Item publié') : t('adminShop.itemHidden', 'Item masqué'));
         } catch (e) {
-            showToast('error', e.message || 'Erreur');
+            showToast('error', e.message || t('adminShop.genericError', 'Erreur'));
         } finally {
             setBusyId(null);
         }
     };
 
     const handleDelete = async (it) => {
-        if (!confirm(`Supprimer définitivement « ${it.title} » ?`)) return;
+        if (!confirm(t('adminShop.confirmDelete', { title: it.title, defaultValue: `Supprimer définitivement « ${it.title} » ?` }))) return;
         setBusyId(it.id);
         try {
             await api.shopItems.delete(it.id);
             setItems(prev => prev.filter(x => x.id !== it.id));
-            showToast('success', `« ${it.title} » supprimé`);
+            showToast('success', t('adminShop.itemDeleted', { title: it.title, defaultValue: `« ${it.title} » supprimé` }));
         } catch (e) {
-            showToast('error', e.message || 'Erreur suppression');
+            showToast('error', e.message || t('adminShop.deleteError', 'Erreur suppression'));
         } finally {
             setBusyId(null);
         }
@@ -454,7 +463,7 @@ const AdminShop = () => {
                 return x;
             }));
         } catch (e) {
-            showToast('error', e.message || 'Erreur réordonnancement');
+            showToast('error', e.message || t('adminShop.reorderError', 'Erreur réordonnancement'));
         } finally {
             setBusyId(null);
         }
@@ -466,9 +475,9 @@ const AdminShop = () => {
         try {
             const updated = await api.shopItems.update(it.id, { category });
             setItems(prev => prev.map(x => x.id === it.id ? updated : x));
-            showToast('success', `« ${updated.title} » déplacé`);
+            showToast('success', t('adminShop.itemMoved', { title: updated.title, defaultValue: `« ${updated.title} » déplacé` }));
         } catch (e) {
-            showToast('error', e.message || 'Erreur déplacement');
+            showToast('error', e.message || t('adminShop.moveError', 'Erreur déplacement'));
         } finally {
             setBusyId(null);
         }
@@ -480,22 +489,19 @@ const AdminShop = () => {
         <div style={{ maxWidth: '900px', margin: '0 auto', padding: '28px 24px 80px' }}>
             <AdminToast toast={toast} />
 
-            <AdminPageHeader icon={ShoppingBag} title="Boutique (liens Stripe)" />
+            <AdminPageHeader icon={ShoppingBag} title={t('adminShop.pageTitle', 'Boutique (liens Stripe)')} />
 
-            <ExplainerBox title="À quoi sert cette page ?">
-                Gérer les articles affichés sur la page publique /boutique. Le site ne gère ni panier ni
-                paiement : chaque article renvoie vers un ou plusieurs <strong>liens de paiement Stripe</strong>.
-                Un article peut proposer plusieurs <strong>versions</strong> (ex. Papier / E-book), chacune
-                avec son nom, son prix et son propre lien.
+            <ExplainerBox title={t('adminShop.explainerTitle', 'À quoi sert cette page ?')}>
+                {t('adminShop.explainer1', 'Gérer les articles affichés sur la page publique /boutique. Le site ne gère ni panier ni paiement : chaque article renvoie vers un ou plusieurs ')}<strong>{t('adminShop.explainerStrong1', 'liens de paiement Stripe')}</strong>{t('adminShop.explainer2', '. Un article peut proposer plusieurs ')}<strong>{t('adminShop.explainerStrong2', 'versions')}</strong>{t('adminShop.explainer3', ' (ex. Papier / E-book), chacune avec son nom, son prix et son propre lien.')}
                 <ul style={{ margin: '8px 0 0', paddingLeft: '18px', lineHeight: '1.7' }}>
-                    <li><strong>Livres</strong> — ouvrages Rétrofutur (FR/EN/JP…)</li>
-                    <li><strong>Jeux de cartes</strong> — supports ludiques</li>
-                    <li><strong>Autres</strong> — tout le reste</li>
+                    <li><strong>{t('adminShop.tabBookLabel', 'Livres')}</strong>{t('adminShop.explainerBooks', ' — ouvrages Rétrofutur (FR/EN/JP…)')}</li>
+                    <li><strong>{t('adminShop.tabGameLabel', 'Jeux de cartes')}</strong>{t('adminShop.explainerGames', ' — supports ludiques')}</li>
+                    <li><strong>{t('adminShop.tabOtherLabel', 'Autres')}</strong>{t('adminShop.explainerOther', ' — tout le reste')}</li>
                 </ul>
             </ExplainerBox>
 
             <AdminTabs
-                tabs={TABS}
+                tabs={localizedTabs}
                 active={activeTab}
                 onChange={(key) => { setActiveTab(key); setEditingId(null); setShowForm(false); }}
                 counts={counts}
@@ -509,29 +515,29 @@ const AdminShop = () => {
                     onClick={() => { setShowForm(true); setEditingId(null); }}
                     style={{ ...primaryBtnStyle, marginBottom: '16px' }}
                 >
-                    <Plus size={14} /> Ajouter un item
+                    <Plus size={14} /> {t('adminShop.addItem', 'Ajouter un item')}
                 </button>
             )}
             {showForm && (
                 <AdminSection>
                     <p style={{ margin: '0 0 14px', fontWeight: '800', fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-primary)', fontFamily: 'var(--font-heading)' }}>
-                        Nouvel article — {currentTab.label}
+                        {t('adminShop.newItem', 'Nouvel article —')} {currentTab.label}
                     </p>
                     <ShopItemForm
                         onCancel={() => setShowForm(false)}
                         onSubmit={handleCreate}
                         busy={creating}
-                        submitLabel="Ajouter"
+                        submitLabel={t('adminShop.addBtn', 'Ajouter')}
                     />
                 </AdminSection>
             )}
 
             <AdminSection>
                 {loading ? (
-                    <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0' }}>Chargement…</p>
+                    <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0' }}>{t('adminShop.loading', 'Chargement…')}</p>
                 ) : sortedItems.length === 0 ? (
                     <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0', fontSize: '0.9rem' }}>
-                        Aucun item dans cet onglet.
+                        {t('adminShop.noItems', 'Aucun item dans cet onglet.')}
                     </p>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -541,7 +547,7 @@ const AdminShop = () => {
                                 return (
                                     <div key={it.id} style={{ border: '2px solid var(--color-accent)', borderRadius: 'var(--radius-md)', padding: '16px', background: 'var(--color-surface)' }}>
                                         <p style={{ margin: '0 0 12px', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.5px', fontFamily: 'var(--font-heading)', fontWeight: '700', color: 'var(--color-text-muted)' }}>
-                                            Édition de « {it.title} »
+                                            {t('adminShop.editingItem', { title: it.title, defaultValue: `Édition de « ${it.title} »` })}
                                         </p>
                                         <ShopItemForm
                                             initial={it}
@@ -577,7 +583,7 @@ const AdminShop = () => {
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                             {it.title}
-                                            {!it.is_published && <span style={{ marginLeft: '8px', fontSize: '0.74rem', color: 'var(--color-warning)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>· masqué</span>}
+                                            {!it.is_published && <span style={{ marginLeft: '8px', fontSize: '0.74rem', color: 'var(--color-warning)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('adminShop.hiddenTag', '· masqué')}</span>}
                                         </div>
                                         {it.subtitle && (
                                             <div style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -588,7 +594,7 @@ const AdminShop = () => {
                                             <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                                                 {(vers.length > 1 || totalLinks > 1) && (
                                                     <span style={{ fontWeight: '700', color: 'var(--color-primary)' }}>
-                                                        {vers.length > 1 ? `${vers.length} variantes` : '1 variante'} · {totalLinks} lien{totalLinks > 1 ? 's' : ''} ·
+                                                        {vers.length > 1 ? t('adminShop.variantsCount', { n: vers.length, defaultValue: `${vers.length} variantes` }) : t('adminShop.oneVariant', '1 variante')} · {totalLinks} {totalLinks > 1 ? t('adminShop.linksPlural', 'liens') : t('adminShop.linkSingular', 'lien')} ·
                                                     </span>
                                                 )}
                                                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -596,14 +602,14 @@ const AdminShop = () => {
                                                 </span>
                                                 {firstUrl && (
                                                     <a href={firstUrl} target="_blank" rel="noopener noreferrer"
-                                                        title="Ouvrir le lien de paiement"
+                                                        title={t('adminShop.openPaymentLink', 'Ouvrir le lien de paiement')}
                                                         style={{ color: 'var(--color-text-subtle)', display: 'inline-flex' }}>
                                                         <ExternalLink size={11} />
                                                     </a>
                                                 )}
                                             </div>
                                         ) : (
-                                            <span style={{ fontSize: '0.78rem', color: 'var(--color-warning)' }}>Aucun lien de paiement</span>
+                                            <span style={{ fontSize: '0.78rem', color: 'var(--color-warning)' }}>{t('adminShop.noPaymentLink', 'Aucun lien de paiement')}</span>
                                         )}
                                     </div>
 
@@ -611,13 +617,13 @@ const AdminShop = () => {
                                         <button type="button" onClick={() => handleMove(it, 'up')}
                                             disabled={idx === 0 || busyId === it.id}
                                             style={{ ...ghostBtnStyle, padding: '3px 6px', opacity: idx === 0 ? 0.3 : 1 }}
-                                            title="Monter">
+                                            title={t('adminShop.moveUp', 'Monter')}>
                                             <ArrowUp size={12} />
                                         </button>
                                         <button type="button" onClick={() => handleMove(it, 'down')}
                                             disabled={idx === arr.length - 1 || busyId === it.id}
                                             style={{ ...ghostBtnStyle, padding: '3px 6px', opacity: idx === arr.length - 1 ? 0.3 : 1 }}
-                                            title="Descendre">
+                                            title={t('adminShop.moveDown', 'Descendre')}>
                                             <ArrowDown size={12} />
                                         </button>
                                     </div>
@@ -636,9 +642,9 @@ const AdminShop = () => {
                                             color: 'var(--color-text-muted)',
                                             cursor: 'pointer',
                                         }}
-                                        title="Déplacer vers une autre catégorie"
+                                        title={t('adminShop.changeCategory', 'Déplacer vers une autre catégorie')}
                                     >
-                                        {TABS.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+                                        {localizedTabs.map(tab => <option key={tab.key} value={tab.key}>{tab.label}</option>)}
                                     </select>
 
                                     <button
@@ -652,7 +658,7 @@ const AdminShop = () => {
                                             color: it.is_published ? 'var(--color-primary)' : 'var(--color-text-subtle)',
                                             borderColor: it.is_published ? 'var(--color-accent)' : 'var(--color-border)',
                                         }}
-                                        title={it.is_published ? 'Masquer' : 'Publier'}
+                                        title={it.is_published ? t('adminShop.hide', 'Masquer') : t('adminShop.publish', 'Publier')}
                                     >
                                         {it.is_published ? <Eye size={13} /> : <EyeOff size={13} />}
                                     </button>
@@ -661,7 +667,7 @@ const AdminShop = () => {
                                         onClick={() => { setEditingId(it.id); setShowForm(false); }}
                                         disabled={busyId === it.id}
                                         style={{ ...ghostBtnStyle, padding: '5px 10px' }}
-                                        title="Modifier"
+                                        title={t('adminShop.edit', 'Modifier')}
                                     >
                                         <Pencil size={13} />
                                     </button>
@@ -670,7 +676,7 @@ const AdminShop = () => {
                                         onClick={() => handleDelete(it)}
                                         disabled={busyId === it.id}
                                         style={{ ...dangerBtnStyle, padding: '5px 10px' }}
-                                        title="Supprimer"
+                                        title={t('adminShop.delete', 'Supprimer')}
                                     >
                                         <Trash2 size={13} />
                                     </button>

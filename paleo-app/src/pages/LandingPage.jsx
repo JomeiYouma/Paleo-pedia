@@ -32,7 +32,13 @@ const LandingPage = () => {
                 justifyContent: 'center',
                 alignItems: 'center',
                 position: 'relative',
-                overflow: 'visible',
+                // Les décors (persos/inventions) débordent VOLONTAIREMENT vers le
+                // bas (pieds recouverts par la section suivante) → overflowY visible.
+                // Mais leur débordement horizontal (left/right négatifs, width auto)
+                // créait un scroll latéral parasite sur toute la page : on clippe
+                // l'axe X (clip coexiste avec visible sur l'autre axe, ≠ hidden).
+                overflowX: 'clip',
+                overflowY: 'visible',
                 zIndex: 1,
             }}>
                 {/* Bande accent jaune en bas — accent visuel discret de la nouvelle DA */}

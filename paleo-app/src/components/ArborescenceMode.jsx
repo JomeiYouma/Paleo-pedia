@@ -8,7 +8,7 @@ import { X, Settings } from 'lucide-react';
 const ArborescenceMode = ({ cartels = [] }) => {
     const { isAdmin, categories = [] } = useApp();
     const svgRef = useRef(null);
-    const { i18n } = useTranslation();
+    const { t, i18n } = useTranslation();
     const isEn = i18n.language === 'en';
 
     const [selectedNode, setSelectedNode] = useState(null);
@@ -432,7 +432,7 @@ const ArborescenceMode = ({ cartels = [] }) => {
             {/* Indicateur discret mode audio */}
             {audioActive && (
                 <div
-                    title="Mode son actif — Alt + A + Vol↑ pour désactiver"
+                    title={t('arborescence.soundOnTooltip', 'Mode son actif — Alt + A + Vol↑ pour désactiver')}
                     style={{
                         position: 'absolute', top: 14, right: 14, zIndex: 30,
                         width: 10, height: 10, borderRadius: '50%',
@@ -531,7 +531,7 @@ const ArborescenceMode = ({ cartels = [] }) => {
             <div style={{ position: 'absolute', bottom: 20, right: 20, zIndex: 10 }}>
                 <div style={{ background: 'white', padding: '10px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.9em' }}>
-                        <span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: '50%', background: '#C2185B' }} /> Catégorie
+                        <span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: '50%', background: '#C2185B' }} /> {t('arborescence.categoryLabel', 'Catégorie')}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.9em' }}>
                         <span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: '50%', background: '#F48FB1' }} /> Cartel

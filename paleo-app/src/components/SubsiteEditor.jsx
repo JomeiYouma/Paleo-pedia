@@ -187,7 +187,7 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                             <div>
                                 <label style={labelStyle}>{t('subsiteEditor.nameLabel', 'Nom du sous-site *')}</label>
-                                <input value={name} onChange={e => { setName(e.target.value); setSlugManual(false); }} placeholder="ex: Paléo-H₂O" style={inputStyle} />
+                                <input value={name} onChange={e => { setName(e.target.value); setSlugManual(false); }} placeholder={t('subsiteEditor.nameExample', 'ex: Paléo-H₂O')} style={inputStyle} />
                             </div>
                             <div>
                                 <label style={labelStyle}>{t('subsiteEditor.slugLabel', 'Slug (URL) *')}</label>
@@ -263,7 +263,7 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
                                 </div>
                                 <div>
                                     <label style={labelStyle}>{t('subsiteEditor.ownerPassword', 'Mot de passe (8+ car.)')}</label>
-                                    <input type="text" value={ownerPassword} onChange={e => setOwnerPassword(e.target.value)} placeholder="à transmettre à l'équipe" style={{ ...inputStyle, fontFamily: 'monospace' }} autoComplete="new-password" />
+                                    <input type="text" value={ownerPassword} onChange={e => setOwnerPassword(e.target.value)} placeholder={t('subsiteEditor.ownerPwPlaceholder', "à transmettre à l'équipe")} style={{ ...inputStyle, fontFamily: 'monospace' }} autoComplete="new-password" />
                                 </div>
                             </div>
                             {createdSubsite && (

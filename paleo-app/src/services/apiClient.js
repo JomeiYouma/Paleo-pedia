@@ -283,6 +283,33 @@ export const shopItems = {
   create:  (data)       => post('/shop-items', data),
   update:  (id, data)   => patch(`/shop-items/${id}`, data),
   delete:  (id)         => del(`/shop-items/${id}`),
+
+  /**
+   * Journalise un clic sur un lien de paiement Stripe (fire-and-forget).
+   * On privilégie navigator.sendBeacon : non bloquant et surtout robuste si la
+   * navigation part dans la foulée (le beacon est garanti émis). Blob typé
+   * application/json pour qu'express.json() le parse. Repli sur fetch keepalive
+   * si sendBeacon indisponible. Ne jette jamais : un souci de tracking ne doit
+   * pas gêner l'achat.
+   * @param {string} id  - id de l'article
+   * @param {object} data - { variant, option, price, url }
+   */
+  recordCheckoutClick: (id, data = {}) => {
+    const url = `${BASE}/shop-items/${id}/checkout-click`;
+    try {
+      const payload = JSON.stringify(data);
+      if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+        navigator.sendBeacon(url, new Blob([payload], { type: 'application/json' }));
+        return;
+      }
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        keepalive: true,
+      }).catch(() => {});
+    } catch { /* noop : le tracking ne doit jamais casser le flux d'achat */ }
+  },
 };
 
 // ── Upload image ──────────────────────────────────────────────
@@ -432,6 +459,9 @@ export const logs = {
   updateEmailConfig: (type, body) => patch(`/logs/email-config/${encodeURIComponent(type)}`, body),
   /** Met à jour le destinataire de tous les types en une seule fois. */
   bulkSetRecipient: (recipient) => patch('/logs/email-config', { recipient }),
+  /** Récap quotidien des clics boutique : { enabled, recipient, lastSent }. */
+  getClickDigest:   () => get('/logs/click-digest'),
+  setClickDigest:   (body) => patch('/logs/click-digest', body),
 };
 
 const api = { auth, cartels, stats, submissions, team, categories, workshops, settings, users, media, translate, io, subsites, partners, teamMembers, pressArticles, missions, missionApplications, contactMessages, newsletter, prestations, shopItems, logs };

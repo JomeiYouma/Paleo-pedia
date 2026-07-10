@@ -147,7 +147,7 @@ Si rien n'arrive : voir [§ 7 Troubleshooting](#7-troubleshooting).
 
 ## 5. Liste des types d'événements
 
-> **56 types au total** : 28 seedés à l'origine (v8) + `mission_application.created` (v22) + `contact_message.created` (v23) + **26 ajoutés en v30** (audit « logs pour toutes les actions » : auth/sécurité, réglages, import, CRUD de contenu, notes). Liste canonique = seed de `event_email_config` dans `schema_mysql.sql`.
+> **59 types au total** : 28 seedés à l'origine (v8) + `mission_application.created` (v22) + `contact_message.created` (v23) + **26 ajoutés en v30** (audit « logs pour toutes les actions » : auth/sécurité, réglages, import, CRUD de contenu, notes) + **3 ajoutés en v35** (`shop_item.checkout_click` + backfill de 2 types émis mais jamais seedés). Liste canonique = seed de `event_email_config` dans `schema_mysql.sql`.
 
 | Scope | Type | Émis par |
 |---|---|---|
@@ -163,12 +163,14 @@ Si rien n'arrive : voir [§ 7 Troubleshooting](#7-troubleshooting).
 | | `cartel.subsite_submitted` | un sous-site demande publication sur le site principal |
 | | `cartel.subsite_approved` | superadmin approuve la soumission sous-site |
 | | `cartel.subsite_rejected` | superadmin rejette la soumission sous-site |
+| | `cartel.subsite_withdrawn` _(seedé v35)_ | un sous-site retire sa soumission au site principal |
 | **subsite** | `subsite.created` / `.updated` / `.deleted` | CRUD sous-sites (superadmin) |
 | **user** | `user.created` | création de compte global |
 | | `user.updated` | modification (permissions, rôle…) |
 | | `user.deleted` | suppression |
 | | `user.assigned_subsite` | ajout d'un membre à un sous-site (équipe) |
 | **partner** | `partner.created` / `.updated` / `.deleted` | CRUD partenaires |
+| | `partner.site_selection_updated` _(seedé v35)_ | modification des sites où un partenaire est affiché |
 | **category** | `category.created` / `.updated` / `.deleted` | CRUD catégories |
 | **workshop** | `workshop.created` / `.updated` / `.deleted` | CRUD ateliers (`.updated` couvre aussi ajout/retrait de cartels) |
 | **mission_application** | `mission_application.created` | candidature soumise via le formulaire public `/participer` (ajouté en v22) |
@@ -186,6 +188,7 @@ Si rien n'arrive : voir [§ 7 Troubleshooting](#7-troubleshooting).
 | **press_article** _(v30)_ | `press_article.created` / `.updated` / `.deleted` | CRUD des articles de presse (`/presse`) |
 | **prestation** _(v30)_ | `prestation.created` / `.updated` / `.deleted` | CRUD des prestations (`/prestations`) |
 | **shop_item** _(v30)_ | `shop_item.created` / `.updated` / `.deleted` | CRUD de la boutique (`/ouvrages`) |
+| **shop_item** _(v35)_ | `shop_item.checkout_click` | **clic visiteur (anonyme)** sur un lien de paiement Stripe depuis la page produit — beacon public, `payload` = { title, category, variant, option, price, url } |
 | **team_member** _(v30)_ | `team_member.created` / `.updated` / `.deleted` | CRUD des membres d'équipe (page « À propos », scopé par sous-site) |
 | **cartel_note** _(v30)_ | `cartel_note.created` / `.deleted` | notes internes admin sur un cartel |
 
@@ -224,6 +227,17 @@ Cliquer **Enregistrer** sur la ligne concernée pour appliquer.
 ### 6.3 Pourquoi le marquage "Spam" ?
 
 Certains types peuvent être bruyants (ex : `cartel.updated` sur un site très actif). Plutôt que de désactiver complètement la notification, on peut la marquer comme spam : l'email arrive quand même mais avec un en-tête `X-Spam-Flag: YES` qui permet de le filtrer automatiquement vers un dossier dédié (règle Gmail, filtre Outlook, etc.). On garde la traçabilité, on protège la boîte de réception.
+
+### 6.4 Récapitulatif quotidien des clics boutique
+
+Tout en bas de l'onglet **Configuration emails**, une carte dédiée « Récapitulatif quotidien des clics boutique ».
+
+- **Pourquoi** : `shop_item.checkout_click` est un beacon public qui peut être bruyant (voire spammé). Plutôt qu'un email par clic, on active **un seul email par jour**, groupé **par adresse IP** (« telle IP a cliqué X fois sur tel produit »). L'email **n'est envoyé que s'il y a eu au moins un clic** dans la fenêtre.
+- **Réglages** : une case *Activer* + un *Destinataire*. À l'activation, le premier récap part **le lendemain** (pas de rattrapage surprise des dernières 24 h).
+- **Quand** : un planificateur **in-process** (démarré au boot, cf. `services/clickDigest.js` + `startClickDigestScheduler` dans `server.js`) vérifie toutes les 30 min si le récap du jour est dû. Heure d'envoi = **08:00** serveur par défaut, configurable via `CLICK_DIGEST_HOUR` (0–23). Garde anti-doublon en base (`settings.shop_click_digest_last_sent`) → survit aux redémarrages, n'envoie **jamais deux fois** le même jour. **Aucun cron externe requis.**
+- **Envoi manuel / cron optionnel** : `node server/scripts/send_click_digest.js [--hours=24] [--to=email]` (ignore l'heure et le garde anti-doublon, respecte « rien si aucun clic »). Utile pour tester sans attendre 08:00, ou pour brancher un vrai cron Infomaniak si on préfère ne pas dépendre du planificateur in-process.
+- **Config stockée** dans la table `settings` (clés `shop_click_digest_enabled` / `_recipient` / `_last_sent`), **pas** dans `event_email_config` — ce n'est pas un type d'événement mais un agrégat. API superadmin : `GET`/`PATCH /api/logs/click-digest`.
+- **RGPD** : le récap contient des **adresses IP** (donnée personnelle) — stockées dans le `payload` de l'event `shop_item.checkout_click` (comme l'IP du formulaire de contact). À prendre en compte dans la politique de confidentialité / durée de rétention des logs.
 
 ---
 
@@ -298,6 +312,7 @@ Soit désactive le type concerné dans la config, soit coche `Spam` pour qu'ils 
 - Le dispatcher est **fire-and-forget** : si la BDD ou le SMTP plante, l'action métier réussit quand même (aucune corruption de données possible côté metier)
 - Aucune donnée sensible n'est stockée dans `payload` (pas de hash, pas de mots de passe — uniquement diffs de permissions, slugs, statuts)
 - Les emails contiennent l'`actor_email`, le `summary` et le `payload` sérialisé. **À surveiller** si tu actives des types qui ont des données personnelles dans le résumé (ex : `cartel.submission_pending` peut contenir le titre d'un cartel soumis)
+- **`shop_item.checkout_click` est un beacon public** (sans auth, comme le formulaire de contact) : n'importe qui peut le déclencher, et il n'y a pas de rate-limit. Il ne journalise que pour un article **existant et publié** (borne le flood sur des IDs arbitraires) et ne contient **aucune donnée personnelle**. Mais si tu **actives l'email** dessus, un bot qui martèle l'endpoint peut spammer la boîte : préfère alors le laisser désactivé (consultation via le journal) ou l'activer avec **Spam** coché + une adresse/dossier dédié. Un clic ≠ un achat : la conversion réelle reste dans le tableau de bord Stripe.
 
 ---
 

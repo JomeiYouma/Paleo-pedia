@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
 import {
     Briefcase, Plus, Trash2, Upload, Eye, EyeOff, Pencil, Save, X,
@@ -13,7 +14,8 @@ import {
 import { PRESTATION_ICON_OPTIONS, getPrestationIcon } from '../utils/prestationIcons';
 
 // ── Formulaire ───────────────────────────────────────────────
-const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregistrer' }) => {
+const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel }) => {
+    const { t } = useTranslation();
     const [title, setTitle]           = useState(initial?.title || '');
     const [titleEn, setTitleEn]       = useState(initial?.title_en || '');
     const [intro, setIntro]           = useState(initial?.intro || '');
@@ -41,7 +43,7 @@ const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enre
             const up = await api.media.upload(file);
             setImagePath(up?.url || '');
         } catch (e) {
-            setUploadError(e.message || "Échec de l'upload");
+            setUploadError(e.message || t('adminPrestations.uploadFailed', "Échec de l'upload"));
         } finally {
             setUploadingImage(false);
         }
@@ -55,7 +57,7 @@ const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enre
             const up = await api.media.upload(file);
             setPartnersImagePath(up?.url || '');
         } catch (e) {
-            setUploadError(e.message || "Échec de l'upload");
+            setUploadError(e.message || t('adminPrestations.uploadFailed', "Échec de l'upload"));
         } finally {
             setUploadingPartners(false);
         }
@@ -89,12 +91,12 @@ const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enre
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '10px' }}>
                 <div>
-                    <label style={labelStyle}>Titre *</label>
+                    <label style={labelStyle}>{t('adminPrestations.titleLabel', 'Titre *')}</label>
                     <input value={title} onChange={e => setTitle(e.target.value)} required style={inputStyle}
-                        placeholder="Challenges Rétrofutur" />
+                        placeholder={t('adminPrestations.titlePlaceholder', 'Challenges Rétrofutur')} />
                 </div>
                 <div>
-                    <label style={labelStyle}>Icône</label>
+                    <label style={labelStyle}>{t('adminPrestations.iconLabel', 'Icône')}</label>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <div style={{
                             width: '38px', height: '38px',
@@ -115,44 +117,44 @@ const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enre
             </div>
 
             <div>
-                <label style={labelStyle}>Intro (question / accroche)</label>
+                <label style={labelStyle}>{t('adminPrestations.introLabel', 'Intro (question / accroche)')}</label>
                 <textarea value={intro} onChange={e => setIntro(e.target.value)} rows={2}
                     style={{ ...inputStyle, resize: 'vertical' }}
-                    placeholder="Vous êtes une entreprise ou une collectivité et vous souhaitez remuer l'innovation ?" />
+                    placeholder={t('adminPrestations.introPlaceholder', "Vous êtes une entreprise ou une collectivité et vous souhaitez remuer l'innovation ?")} />
             </div>
 
             <div>
-                <label style={labelStyle}>Description</label>
+                <label style={labelStyle}>{t('adminPrestations.descriptionLabel', 'Description')}</label>
                 <textarea value={description} onChange={e => setDescription(e.target.value)} rows={4}
                     style={{ ...inputStyle, resize: 'vertical' }}
-                    placeholder="Description détaillée de la prestation, ses objectifs et son déroulé." />
+                    placeholder={t('adminPrestations.descriptionPlaceholder', 'Description détaillée de la prestation, ses objectifs et son déroulé.')} />
             </div>
 
             <div>
-                <label style={labelStyle}>Liste à puces (optionnelle — un item par ligne)</label>
+                <label style={labelStyle}>{t('adminPrestations.bulletsLabel', 'Liste à puces (optionnelle — un item par ligne)')}</label>
                 <textarea value={bullets} onChange={e => setBullets(e.target.value)} rows={4}
                     style={{ ...inputStyle, resize: 'vertical', fontFamily: 'monospace' }}
-                    placeholder={"Sensibilisation à l'écologie\nDécouverte de la recherche par l'exhumation d'archives\nÉtude des brevets anciens"} />
+                    placeholder={t('adminPrestations.bulletsPlaceholder', "Sensibilisation à l'écologie\nDécouverte de la recherche par l'exhumation d'archives\nÉtude des brevets anciens")} />
             </div>
 
             {/* Image / photo illustrative */}
             <div>
-                <label style={labelStyle}>Image illustrative (optionnelle)</label>
+                <label style={labelStyle}>{t('adminPrestations.imageLabel', 'Image illustrative (optionnelle)')}</label>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     {imagePath ? (
                         <img src={imagePath} alt="" style={{ width: '120px', height: '80px', objectFit: 'cover', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }} />
                     ) : (
                         <div style={{ width: '120px', height: '80px', background: 'var(--color-primary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-subtle)', fontSize: '0.75rem', borderRadius: 'var(--radius-md)' }}>
-                            (vide)
+                            {t('adminPrestations.empty', '(vide)')}
                         </div>
                     )}
                     <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 12px', border: '1px dashed var(--color-border-strong)', borderRadius: 'var(--radius-md)', cursor: uploadingImage ? 'wait' : 'pointer', fontSize: '0.85rem', color: 'var(--color-text-muted)', background: 'var(--color-surface-2)' }}>
                         <Upload size={14} />
-                        {uploadingImage ? 'Upload en cours…' : (imagePath ? "Remplacer l'image" : 'Choisir une image…')}
+                        {uploadingImage ? t('adminPrestations.uploading', 'Upload en cours…') : (imagePath ? t('adminPrestations.replaceImage', "Remplacer l'image") : t('adminPrestations.chooseImage', 'Choisir une image…'))}
                         <input type="file" accept="image/*" disabled={uploadingImage} style={{ display: 'none' }} onChange={e => handleImage(e.target.files?.[0])} />
                     </label>
                     {imagePath && (
-                        <button type="button" onClick={() => setImagePath('')} style={ghostBtnStyle} title="Retirer l'image">
+                        <button type="button" onClick={() => setImagePath('')} style={ghostBtnStyle} title={t('adminPrestations.removeImage', "Retirer l'image")}>
                             <X size={14} />
                         </button>
                     )}
@@ -164,22 +166,22 @@ const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enre
 
             {/* Bandeau logos partenaires — affiché à droite du texte sur grand écran */}
             <div>
-                <label style={labelStyle}>Bandeau logos partenaires (optionnel — « Ils nous ont fait confiance »)</label>
+                <label style={labelStyle}>{t('adminPrestations.partnersLabel', 'Bandeau logos partenaires (optionnel — « Ils nous ont fait confiance »)')}</label>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     {partnersImagePath ? (
                         <img src={partnersImagePath} alt="" style={{ width: '120px', height: '80px', objectFit: 'contain', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }} />
                     ) : (
                         <div style={{ width: '120px', height: '80px', background: 'var(--color-primary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-subtle)', fontSize: '0.75rem', borderRadius: 'var(--radius-md)' }}>
-                            (vide)
+                            {t('adminPrestations.empty', '(vide)')}
                         </div>
                     )}
                     <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 12px', border: '1px dashed var(--color-border-strong)', borderRadius: 'var(--radius-md)', cursor: uploadingPartners ? 'wait' : 'pointer', fontSize: '0.85rem', color: 'var(--color-text-muted)', background: 'var(--color-surface-2)' }}>
                         <Upload size={14} />
-                        {uploadingPartners ? 'Upload en cours…' : (partnersImagePath ? 'Remplacer le bandeau' : 'Choisir un bandeau de logos…')}
+                        {uploadingPartners ? t('adminPrestations.uploading', 'Upload en cours…') : (partnersImagePath ? t('adminPrestations.replaceBanner', 'Remplacer le bandeau') : t('adminPrestations.chooseBanner', 'Choisir un bandeau de logos…'))}
                         <input type="file" accept="image/*" disabled={uploadingPartners} style={{ display: 'none' }} onChange={e => handlePartnersImage(e.target.files?.[0])} />
                     </label>
                     {partnersImagePath && (
-                        <button type="button" onClick={() => setPartnersImagePath('')} style={ghostBtnStyle} title="Retirer le bandeau">
+                        <button type="button" onClick={() => setPartnersImagePath('')} style={ghostBtnStyle} title={t('adminPrestations.removeBanner', 'Retirer le bandeau')}>
                             <X size={14} />
                         </button>
                     )}
@@ -188,11 +190,11 @@ const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enre
 
             {/* Plaquette (URL externe ou PDF uploadé) */}
             <div>
-                <label style={labelStyle}>Plaquette — URL (Calaméo, PDF…) optionnelle</label>
+                <label style={labelStyle}>{t('adminPrestations.pdfUrlLabel', 'Plaquette — URL (Calaméo, PDF…) optionnelle')}</label>
                 <input value={pdfUrl} onChange={e => setPdfUrl(e.target.value)} style={inputStyle}
-                    placeholder="https://www.calameo.com/books/… ou /downloads/plaquette.pdf" />
+                    placeholder={t('adminPrestations.pdfUrlPlaceholder', 'https://www.calameo.com/books/… ou /downloads/plaquette.pdf')} />
                 <input value={pdfLabel} onChange={e => setPdfLabel(e.target.value)} style={{ ...inputStyle, marginTop: '6px' }}
-                    placeholder="Libellé du bouton — défaut : « Consulter la plaquette »" />
+                    placeholder={t('adminPrestations.pdfLabelPlaceholder', 'Libellé du bouton — défaut : « Consulter la plaquette »')} />
             </div>
 
             {/* ── Version anglaise ─────────────────────────────────────── */}
@@ -203,7 +205,7 @@ const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enre
                 margin: '8px 0 4px',
             }}>
                 <legend style={{ fontFamily: 'var(--font-heading)', fontSize: '0.78rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text-muted)', padding: '0 8px' }}>
-                    Version anglaise
+                    {t('adminPrestations.englishVersion', 'Version anglaise')}
                 </legend>
                 <div style={{ marginBottom: '10px' }}>
                     <TranslateButton
@@ -243,13 +245,13 @@ const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enre
 
             <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'var(--color-text-muted)', marginTop: '4px' }}>
                 <input type="checkbox" checked={isPublished} onChange={e => setIsPublished(e.target.checked)} />
-                Prestation publiée (visible sur la page /prestations)
+                {t('adminPrestations.published', 'Prestation publiée (visible sur la page /prestations)')}
             </label>
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
                 {onCancel && (
                     <button type="button" onClick={onCancel} disabled={busy} style={ghostBtnStyle}>
-                        Annuler
+                        {t('adminPrestations.cancel', 'Annuler')}
                     </button>
                 )}
                 <button type="submit" disabled={busy || !title.trim()} style={{
@@ -257,7 +259,7 @@ const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enre
                     opacity: (busy || !title.trim()) ? 0.5 : 1,
                     cursor: (busy || !title.trim()) ? 'not-allowed' : 'pointer',
                 }}>
-                    <Save size={14} /> {busy ? 'Envoi…' : submitLabel}
+                    <Save size={14} /> {busy ? t('adminPrestations.sending', 'Envoi…') : (submitLabel || t('adminPrestations.save', 'Enregistrer'))}
                 </button>
             </div>
         </form>
@@ -266,6 +268,7 @@ const PrestationForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enre
 
 // ── Page principale ───────────────────────────────────────────
 const AdminPrestations = () => {
+    const { t } = useTranslation();
     const { isSuperadmin } = useApp();
     const { toast, showToast } = useAdminToast();
 
@@ -282,7 +285,7 @@ const AdminPrestations = () => {
             const data = await api.prestations.getAll();
             setItems(Array.isArray(data) ? data : []);
         } catch (e) {
-            showToast('error', e.message || 'Erreur de chargement');
+            showToast('error', e.message || t('adminPrestations.loadError', 'Erreur de chargement'));
         } finally {
             setLoading(false);
         }
@@ -293,7 +296,7 @@ const AdminPrestations = () => {
     if (!isSuperadmin) {
         return (
             <div style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--color-text-subtle)' }}>
-                Accès réservé aux superadmins.
+                {t('adminPrestations.superadminOnly', 'Accès réservé aux superadmins.')}
             </div>
         );
     }
@@ -305,9 +308,9 @@ const AdminPrestations = () => {
             const created = await api.prestations.create({ ...data, display_order: maxOrder + 10 });
             setItems(prev => [...prev, created]);
             setShowForm(false);
-            showToast('success', `« ${created.title} » ajoutée`);
+            showToast('success', t('adminPrestations.added', { title: created.title, defaultValue: '« {{title}} » ajoutée' }));
         } catch (e) {
-            showToast('error', e.message || 'Erreur création');
+            showToast('error', e.message || t('adminPrestations.createError', 'Erreur création'));
         } finally {
             setCreating(false);
         }
@@ -319,9 +322,9 @@ const AdminPrestations = () => {
             const updated = await api.prestations.update(id, data);
             setItems(prev => prev.map(x => x.id === id ? updated : x));
             setEditingId(null);
-            showToast('success', `« ${updated.title} » mise à jour`);
+            showToast('success', t('adminPrestations.updated', { title: updated.title, defaultValue: '« {{title}} » mise à jour' }));
         } catch (e) {
-            showToast('error', e.message || 'Erreur mise à jour');
+            showToast('error', e.message || t('adminPrestations.updateError', 'Erreur mise à jour'));
         } finally {
             setBusyId(null);
         }
@@ -332,23 +335,23 @@ const AdminPrestations = () => {
         try {
             const updated = await api.prestations.update(p.id, { is_published: !p.is_published });
             setItems(prev => prev.map(x => x.id === p.id ? updated : x));
-            showToast('success', updated.is_published ? 'Prestation publiée' : 'Prestation masquée');
+            showToast('success', updated.is_published ? t('adminPrestations.servicePublished', 'Prestation publiée') : t('adminPrestations.serviceHidden', 'Prestation masquée'));
         } catch (e) {
-            showToast('error', e.message || 'Erreur');
+            showToast('error', e.message || t('adminPrestations.error', 'Erreur'));
         } finally {
             setBusyId(null);
         }
     };
 
     const handleDelete = async (p) => {
-        if (!confirm(`Supprimer définitivement « ${p.title} » ?`)) return;
+        if (!confirm(t('adminPrestations.confirmDelete', { title: p.title, defaultValue: 'Supprimer définitivement « {{title}} » ?' }))) return;
         setBusyId(p.id);
         try {
             await api.prestations.delete(p.id);
             setItems(prev => prev.filter(x => x.id !== p.id));
-            showToast('success', `« ${p.title} » supprimée`);
+            showToast('success', t('adminPrestations.deleted', { title: p.title, defaultValue: '« {{title}} » supprimée' }));
         } catch (e) {
-            showToast('error', e.message || 'Erreur suppression');
+            showToast('error', e.message || t('adminPrestations.deleteError', 'Erreur suppression'));
         } finally {
             setBusyId(null);
         }
@@ -372,7 +375,7 @@ const AdminPrestations = () => {
                 return x;
             }));
         } catch (e) {
-            showToast('error', e.message || 'Erreur réordonnancement');
+            showToast('error', e.message || t('adminPrestations.reorderError', 'Erreur réordonnancement'));
         } finally {
             setBusyId(null);
         }
@@ -384,13 +387,12 @@ const AdminPrestations = () => {
         <div style={{ maxWidth: '900px', margin: '0 auto', padding: '28px 24px 80px' }}>
             <AdminToast toast={toast} />
 
-            <AdminPageHeader icon={Briefcase} title="Prestations" />
+            <AdminPageHeader icon={Briefcase} title={t('adminPrestations.pageTitle', 'Prestations')} />
 
-            <ExplainerBox title="À quoi sert cette page ?">
-                Gérer les cards de prestation affichées sur la <strong>page publique /prestations</strong>.
-                Chaque card a un titre, une icône, une accroche, une description, éventuellement une liste à
-                puces et une plaquette PDF téléchargeable.
-                L'ordre d'affichage est défini par les flèches ↑ ↓ ci-dessous.
+            <ExplainerBox title={t('adminPrestations.explainerTitle', 'À quoi sert cette page ?')}>
+                {t('adminPrestations.explainerP1', 'Gérer les cards de prestation affichées sur la ')}
+                <strong>{t('adminPrestations.explainerStrong', 'page publique /prestations')}</strong>
+                {t('adminPrestations.explainerP2', ". Chaque card a un titre, une icône, une accroche, une description, éventuellement une liste à puces et une plaquette PDF téléchargeable. L'ordre d'affichage est défini par les flèches ↑ ↓ ci-dessous.")}
             </ExplainerBox>
 
             {!showForm && (
@@ -399,29 +401,29 @@ const AdminPrestations = () => {
                     onClick={() => { setShowForm(true); setEditingId(null); }}
                     style={{ ...primaryBtnStyle, marginBottom: '16px' }}
                 >
-                    <Plus size={14} /> Ajouter une prestation
+                    <Plus size={14} /> {t('adminPrestations.addService', 'Ajouter une prestation')}
                 </button>
             )}
             {showForm && (
                 <AdminSection>
                     <p style={{ margin: '0 0 14px', fontWeight: '800', fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-primary)', fontFamily: 'var(--font-heading)' }}>
-                        Nouvelle prestation
+                        {t('adminPrestations.newService', 'Nouvelle prestation')}
                     </p>
                     <PrestationForm
                         onCancel={() => setShowForm(false)}
                         onSubmit={handleCreate}
                         busy={creating}
-                        submitLabel="Ajouter"
+                        submitLabel={t('adminPrestations.add', 'Ajouter')}
                     />
                 </AdminSection>
             )}
 
             <AdminSection>
                 {loading ? (
-                    <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0' }}>Chargement…</p>
+                    <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0' }}>{t('adminPrestations.loading', 'Chargement…')}</p>
                 ) : sortedItems.length === 0 ? (
                     <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0', fontSize: '0.9rem' }}>
-                        Aucune prestation. Ajoutez la première ci-dessus.
+                        {t('adminPrestations.emptyList', 'Aucune prestation. Ajoutez la première ci-dessus.')}
                     </p>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -431,7 +433,7 @@ const AdminPrestations = () => {
                                 return (
                                     <div key={p.id} style={{ border: '2px solid var(--color-accent)', borderRadius: 'var(--radius-md)', padding: '16px', background: 'var(--color-surface)' }}>
                                         <p style={{ margin: '0 0 12px', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.5px', fontFamily: 'var(--font-heading)', fontWeight: '700', color: 'var(--color-text-muted)' }}>
-                                            Édition de « {p.title} »
+                                            {t('adminPrestations.editionOf', { title: p.title, defaultValue: 'Édition de « {{title}} »' })}
                                         </p>
                                         <PrestationForm
                                             initial={p}
@@ -464,7 +466,7 @@ const AdminPrestations = () => {
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--color-text)' }}>
                                             {p.title}
-                                            {!p.is_published && <span style={{ marginLeft: '8px', fontSize: '0.74rem', color: 'var(--color-warning)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>· masquée</span>}
+                                            {!p.is_published && <span style={{ marginLeft: '8px', fontSize: '0.74rem', color: 'var(--color-warning)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('adminPrestations.hidden', '· masquée')}</span>}
                                         </div>
                                         {p.intro && (
                                             <div style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -479,7 +481,7 @@ const AdminPrestations = () => {
                                             onClick={() => handleMove(p, 'up')}
                                             disabled={idx === 0 || busyId === p.id}
                                             style={{ ...ghostBtnStyle, padding: '3px 6px', opacity: idx === 0 ? 0.3 : 1 }}
-                                            title="Monter"
+                                            title={t('adminPrestations.moveUp', 'Monter')}
                                         >
                                             <ArrowUp size={12} />
                                         </button>
@@ -488,7 +490,7 @@ const AdminPrestations = () => {
                                             onClick={() => handleMove(p, 'down')}
                                             disabled={idx === arr.length - 1 || busyId === p.id}
                                             style={{ ...ghostBtnStyle, padding: '3px 6px', opacity: idx === arr.length - 1 ? 0.3 : 1 }}
-                                            title="Descendre"
+                                            title={t('adminPrestations.moveDown', 'Descendre')}
                                         >
                                             <ArrowDown size={12} />
                                         </button>
@@ -505,7 +507,7 @@ const AdminPrestations = () => {
                                             color: p.is_published ? 'var(--color-primary)' : 'var(--color-text-subtle)',
                                             borderColor: p.is_published ? 'var(--color-accent)' : 'var(--color-border)',
                                         }}
-                                        title={p.is_published ? 'Masquer' : 'Publier'}
+                                        title={p.is_published ? t('adminPrestations.hide', 'Masquer') : t('adminPrestations.publish', 'Publier')}
                                     >
                                         {p.is_published ? <Eye size={13} /> : <EyeOff size={13} />}
                                     </button>
@@ -514,7 +516,7 @@ const AdminPrestations = () => {
                                         onClick={() => { setEditingId(p.id); setShowForm(false); }}
                                         disabled={busyId === p.id}
                                         style={{ ...ghostBtnStyle, padding: '5px 10px' }}
-                                        title="Modifier"
+                                        title={t('adminPrestations.edit', 'Modifier')}
                                     >
                                         <Pencil size={13} />
                                     </button>
@@ -523,7 +525,7 @@ const AdminPrestations = () => {
                                         onClick={() => handleDelete(p)}
                                         disabled={busyId === p.id}
                                         style={{ ...dangerBtnStyle, padding: '5px 10px' }}
-                                        title="Supprimer"
+                                        title={t('adminPrestations.delete', 'Supprimer')}
                                     >
                                         <Trash2 size={13} />
                                     </button>

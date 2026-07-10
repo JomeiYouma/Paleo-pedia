@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
 import { BarChart3, Filter, RefreshCw, X, ChevronDown, ChevronUp } from 'lucide-react';
 import {
@@ -88,6 +89,17 @@ function bucketYears(byYear) {
 const AdminStats = () => {
     const { isAdmin, isSuperadmin } = useApp();
     const { toast, showToast } = useAdminToast();
+    const { t } = useTranslation();
+
+    const statusLabel = useCallback((key) => {
+        switch (key) {
+            case 'draft':          return t('adminStats.statusDraft', 'Brouillon');
+            case 'pending_review': return t('adminStats.statusPending', 'En attente');
+            case 'published':      return t('adminStats.statusPublished', 'Publié');
+            case 'archived':       return t('adminStats.statusArchived', 'Archivé');
+            default:               return key;
+        }
+    }, [t]);
 
     const [categories, setCategories] = useState([]);
     const [subsites, setSubsites] = useState([]);
@@ -124,7 +136,7 @@ const AdminStats = () => {
             const res = await api.stats.cartels(payload);
             setData(res);
         } catch (e) {
-            showToast('error', e.message || 'Erreur de chargement');
+            showToast('error', e.message || t('adminStats.loadError', 'Erreur de chargement'));
         } finally {
             setLoading(false);
         }
@@ -183,45 +195,45 @@ const AdminStats = () => {
     // "N catégories" pour ne pas déborder.
     const filterSummaryChips = useMemo(() => {
         const parts = [];
-        if (applied.subsiteId === 'main') parts.push('Site principal');
+        if (applied.subsiteId === 'main') parts.push(t('adminStats.filterMainSite', 'Site principal'));
         else if (applied.subsiteId) {
             const s = subsites.find(x => x.id === applied.subsiteId);
-            parts.push(s ? s.name : 'Sous-site');
+            parts.push(s ? s.name : t('adminStats.filterSubsite', 'Sous-site'));
         }
         if (applied.categoryIds.length) {
             const names = applied.categoryIds
                 .map(id => categories.find(c => c.id === id)?.name)
                 .filter(Boolean);
-            parts.push(names.length <= 2 ? names.join(' + ') : `${names.length} catégories`);
+            parts.push(names.length <= 2 ? names.join(' + ') : t('adminStats.nCategories', { n: names.length, defaultValue: `${names.length} catégories` }));
         }
         if (applied.statuses.length) {
-            parts.push(applied.statuses.map(s => STATUS_LABELS[s] || s).join(' + '));
+            parts.push(applied.statuses.map(s => statusLabel(s)).join(' + '));
         }
-        if (applied.createdFrom && applied.createdTo) parts.push(`Créé ${applied.createdFrom} → ${applied.createdTo}`);
-        else if (applied.createdFrom) parts.push(`Créé depuis ${applied.createdFrom}`);
-        else if (applied.createdTo)   parts.push(`Créé jusqu'au ${applied.createdTo}`);
-        if (applied.yearMin && applied.yearMax) parts.push(`Époque ${applied.yearMin}–${applied.yearMax}`);
-        else if (applied.yearMin) parts.push(`Époque ≥ ${applied.yearMin}`);
-        else if (applied.yearMax) parts.push(`Époque ≤ ${applied.yearMax}`);
-        if (applied.exhumePar) parts.push(`Exhumé par: « ${applied.exhumePar} »`);
-        if (applied.visible === 'true')  parts.push('Visibles');
-        if (applied.visible === 'false') parts.push('Masqués');
+        if (applied.createdFrom && applied.createdTo) parts.push(t('adminStats.filterCreatedBetween', { from: applied.createdFrom, to: applied.createdTo, defaultValue: `Créé ${applied.createdFrom} → ${applied.createdTo}` }));
+        else if (applied.createdFrom) parts.push(t('adminStats.filterCreatedFrom', { from: applied.createdFrom, defaultValue: `Créé depuis ${applied.createdFrom}` }));
+        else if (applied.createdTo)   parts.push(t('adminStats.filterCreatedTo', { to: applied.createdTo, defaultValue: `Créé jusqu'au ${applied.createdTo}` }));
+        if (applied.yearMin && applied.yearMax) parts.push(t('adminStats.filterEraRange', { min: applied.yearMin, max: applied.yearMax, defaultValue: `Époque ${applied.yearMin}–${applied.yearMax}` }));
+        else if (applied.yearMin) parts.push(t('adminStats.filterEraMin', { min: applied.yearMin, defaultValue: `Époque ≥ ${applied.yearMin}` }));
+        else if (applied.yearMax) parts.push(t('adminStats.filterEraMax', { max: applied.yearMax, defaultValue: `Époque ≤ ${applied.yearMax}` }));
+        if (applied.exhumePar) parts.push(t('adminStats.filterExhumePar', { name: applied.exhumePar, defaultValue: `Exhumé par: « ${applied.exhumePar} »` }));
+        if (applied.visible === 'true')  parts.push(t('adminStats.filterVisible', 'Visibles'));
+        if (applied.visible === 'false') parts.push(t('adminStats.filterHidden', 'Masqués'));
         return parts;
-    }, [applied, subsites, categories]);
+    }, [applied, subsites, categories, statusLabel, t]);
 
     // Données dérivées pour les charts
     const yearBuckets = useMemo(() => bucketYears(data?.byYear), [data?.byYear]);
 
     const statusData = useMemo(() => (data?.byStatus || []).map(s => ({
         ...s,
-        label: STATUS_LABELS[s.status] || s.status,
+        label: statusLabel(s.status),
         color: STATUS_COLORS[s.status] || '#6b7280',
-    })), [data?.byStatus]);
+    })), [data?.byStatus, statusLabel]);
 
     if (!isAdmin) {
         return (
             <div style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--color-text-subtle)' }}>
-                Accès réservé à l'administration.
+                {t('adminStats.accessRestricted', "Accès réservé à l'administration.")}
             </div>
         );
     }
@@ -230,14 +242,10 @@ const AdminStats = () => {
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '28px 24px 80px' }}>
             <AdminToast toast={toast} />
 
-            <AdminPageHeader icon={BarChart3} title="Statistiques" />
+            <AdminPageHeader icon={BarChart3} title={t('adminStats.pageTitle', 'Statistiques')} />
 
-            <ExplainerBox title="À quoi sert cette page ?">
-                Explorer la base de cartels en croisant plusieurs dimensions :
-                catégories, statut, période de création, époque de l'invention, contributeurs.
-                Les filtres en haut s'appliquent à tous les graphiques en dessous —
-                vous pouvez par exemple isoler une catégorie ou une plage d'années pour
-                voir qui contribue le plus dans ce périmètre.
+            <ExplainerBox title={t('adminStats.explainerTitle', 'À quoi sert cette page ?')}>
+                {t('adminStats.explainerBody', "Explorer la base de cartels en croisant plusieurs dimensions : catégories, statut, période de création, époque de l'invention, contributeurs. Les filtres en haut s'appliquent à tous les graphiques en dessous — vous pouvez par exemple isoler une catégorie ou une plage d'années pour voir qui contribue le plus dans ce périmètre.")}
             </ExplainerBox>
 
             {/* ─── Filtres (dépliable) ───────────────────────── */}
@@ -255,7 +263,7 @@ const AdminStats = () => {
                 >
                     <Filter size={16} color="var(--color-primary)" />
                     <span style={{ fontWeight: '800', fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-primary)', fontFamily: 'var(--font-heading)' }}>
-                        Filtres
+                        {t('adminStats.filtersLabel', 'Filtres')}
                     </span>
                     {activeFilterCount > 0 && (
                         <span style={{
@@ -264,7 +272,7 @@ const AdminStats = () => {
                             fontSize: '0.75rem', fontWeight: '800',
                             fontFamily: 'var(--font-heading)',
                         }}>
-                            {activeFilterCount} actif{activeFilterCount > 1 ? 's' : ''}
+                            {t('adminStats.activeFilterCount', { count: activeFilterCount, defaultValue: `${activeFilterCount} actif${activeFilterCount > 1 ? 's' : ''}` })}
                         </span>
                     )}
                     {!filtersOpen && filterSummaryChips.length > 0 && (
@@ -278,7 +286,7 @@ const AdminStats = () => {
                     )}
                     {!filtersOpen && filterSummaryChips.length === 0 && (
                         <span style={{ flex: 1, fontSize: '0.82rem', color: 'var(--color-text-subtle)', fontStyle: 'italic' }}>
-                            Aucun filtre — données complètes
+                            {t('adminStats.noFilters', 'Aucun filtre — données complètes')}
                         </span>
                     )}
                     <span style={{ marginLeft: 'auto', display: 'inline-flex', color: 'var(--color-text-muted)' }}>
@@ -291,21 +299,21 @@ const AdminStats = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', marginBottom: '14px' }}>
                     {isSuperadmin && (
                         <div>
-                            <label style={labelStyle}>Sous-site</label>
+                            <label style={labelStyle}>{t('adminStats.labelSubsite', 'Sous-site')}</label>
                             <select
                                 value={pending.subsiteId}
                                 onChange={e => setPending(p => ({ ...p, subsiteId: e.target.value }))}
                                 style={{ ...inputStyle, cursor: 'pointer' }}
                             >
-                                <option value="">Tous</option>
-                                <option value="main">Site principal uniquement</option>
+                                <option value="">{t('adminStats.optionAll', 'Tous')}</option>
+                                <option value="main">{t('adminStats.optionMainOnly', 'Site principal uniquement')}</option>
                                 {subsites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
                         </div>
                     )}
 
                     <div>
-                        <label style={labelStyle}>Créé entre</label>
+                        <label style={labelStyle}>{t('adminStats.labelCreatedBetween', 'Créé entre')}</label>
                         <div style={{ display: 'flex', gap: '6px' }}>
                             <input
                                 type="date"
@@ -323,18 +331,18 @@ const AdminStats = () => {
                     </div>
 
                     <div>
-                        <label style={labelStyle}>Époque (année min / max)</label>
+                        <label style={labelStyle}>{t('adminStats.labelEra', 'Époque (année min / max)')}</label>
                         <div style={{ display: 'flex', gap: '6px' }}>
                             <input
                                 type="number"
-                                placeholder="Min"
+                                placeholder={t('adminStats.placeholderMin', 'Min')}
                                 value={pending.yearMin}
                                 onChange={e => setPending(p => ({ ...p, yearMin: e.target.value }))}
                                 style={inputStyle}
                             />
                             <input
                                 type="number"
-                                placeholder="Max"
+                                placeholder={t('adminStats.placeholderMax', 'Max')}
                                 value={pending.yearMax}
                                 onChange={e => setPending(p => ({ ...p, yearMax: e.target.value }))}
                                 style={inputStyle}
@@ -343,36 +351,36 @@ const AdminStats = () => {
                     </div>
 
                     <div>
-                        <label style={labelStyle}>Exhumé par (contient)</label>
+                        <label style={labelStyle}>{t('adminStats.labelExhumePar', 'Exhumé par (contient)')}</label>
                         <input
                             type="text"
                             value={pending.exhumePar}
                             onChange={e => setPending(p => ({ ...p, exhumePar: e.target.value }))}
-                            placeholder="Nom partiel…"
+                            placeholder={t('adminStats.placeholderPartialName', 'Nom partiel…')}
                             style={inputStyle}
                         />
                     </div>
 
                     <div>
-                        <label style={labelStyle}>Visibilité publique</label>
+                        <label style={labelStyle}>{t('adminStats.labelVisibility', 'Visibilité publique')}</label>
                         <select
                             value={pending.visible}
                             onChange={e => setPending(p => ({ ...p, visible: e.target.value }))}
                             style={{ ...inputStyle, cursor: 'pointer' }}
                         >
-                            <option value="">Tous</option>
-                            <option value="true">Visible</option>
-                            <option value="false">Masqué</option>
+                            <option value="">{t('adminStats.optionAll', 'Tous')}</option>
+                            <option value="true">{t('adminStats.optionVisible', 'Visible')}</option>
+                            <option value="false">{t('adminStats.optionHidden', 'Masqué')}</option>
                         </select>
                     </div>
                 </div>
 
                 {/* Catégories — chips multi-sélection */}
                 <div style={{ marginBottom: '12px' }}>
-                    <label style={labelStyle}>Catégories</label>
+                    <label style={labelStyle}>{t('adminStats.labelCategories', 'Catégories')}</label>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                         {categories.length === 0 && (
-                            <span style={{ fontSize: '0.82rem', color: 'var(--color-text-subtle)' }}>Aucune catégorie</span>
+                            <span style={{ fontSize: '0.82rem', color: 'var(--color-text-subtle)' }}>{t('adminStats.noCategories', 'Aucune catégorie')}</span>
                         )}
                         {categories.map(c => {
                             const active = pending.categoryIds.includes(c.id);
@@ -404,7 +412,7 @@ const AdminStats = () => {
 
                 {/* Statuts — chips multi */}
                 <div style={{ marginBottom: '14px' }}>
-                    <label style={labelStyle}>Statuts</label>
+                    <label style={labelStyle}>{t('adminStats.labelStatuses', 'Statuts')}</label>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                         {STATUS_OPTIONS.map(s => {
                             const active = pending.statuses.includes(s.key);
@@ -427,7 +435,7 @@ const AdminStats = () => {
                                         cursor: 'pointer',
                                     }}
                                 >
-                                    {s.label}
+                                    {statusLabel(s.key)}
                                 </button>
                             );
                         })}
@@ -436,10 +444,10 @@ const AdminStats = () => {
 
                 <div style={{ display: 'flex', gap: '10px' }}>
                     <button type="button" onClick={apply} disabled={loading} style={{ ...primaryBtnStyle, opacity: loading ? 0.6 : 1, cursor: loading ? 'wait' : 'pointer' }}>
-                        <RefreshCw size={14} /> {loading ? 'Calcul…' : 'Appliquer'}
+                        <RefreshCw size={14} /> {loading ? t('adminStats.computing', 'Calcul…') : t('adminStats.apply', 'Appliquer')}
                     </button>
                     <button type="button" onClick={reset} disabled={loading} style={ghostBtnStyle}>
-                        <X size={14} /> Réinitialiser
+                        <X size={14} /> {t('adminStats.reset', 'Réinitialiser')}
                     </button>
                 </div>
                 </>
@@ -456,14 +464,14 @@ const AdminStats = () => {
                         {data?.total ?? '—'}
                     </span>
                     <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', fontWeight: '600' }}>
-                        cartel{(data?.total ?? 0) > 1 ? 's' : ''} dans le périmètre
+                        {t('adminStats.cartelsInScope', { count: data?.total ?? 0, defaultValue: `cartel${(data?.total ?? 0) > 1 ? 's' : ''} dans le périmètre` })}
                     </span>
                 </div>
             </AdminSection>
 
             {/* ─── Grille de graphiques ──────────────────────── */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '20px' }}>
-                <ChartCard title="Par catégorie">
+                <ChartCard title={t('adminStats.chartByCategory', 'Par catégorie')}>
                     {data?.byCategory?.length ? (() => {
                         const all = data.byCategory;
                         const visible = showAllCategories ? all : all.slice(0, 10);
@@ -476,7 +484,7 @@ const AdminStats = () => {
                                         <XAxis type="number" allowDecimals={false} stroke="var(--color-text-muted)" fontSize={12} />
                                         <YAxis type="category" dataKey="name" width={140} stroke="var(--color-text-muted)" fontSize={12} />
                                         <Tooltip cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
-                                        <Bar dataKey="count" name="Cartels">
+                                        <Bar dataKey="count" name={t('adminStats.seriesCartels', 'Cartels')}>
                                             {visible.map((c, i) => (
                                                 <Cell key={c.id} fill={c.color || FALLBACK_COLORS[i % FALLBACK_COLORS.length]} />
                                             ))}
@@ -491,8 +499,8 @@ const AdminStats = () => {
                                             style={ghostBtnStyle}
                                         >
                                             {showAllCategories
-                                                ? 'Replier au top 10'
-                                                : `Afficher tout (${hidden} de plus)`}
+                                                ? t('adminStats.collapseTop10', 'Replier au top 10')
+                                                : t('adminStats.showAll', { n: hidden, defaultValue: `Afficher tout (${hidden} de plus)` })}
                                         </button>
                                     </div>
                                 )}
@@ -502,14 +510,14 @@ const AdminStats = () => {
                 </ChartCard>
 
                 {(isSuperadmin && (data?.bySubsite?.length || 0) > 0) && (
-                    <ChartCard title="Par sous-site">
+                    <ChartCard title={t('adminStats.chartBySubsite', 'Par sous-site')}>
                         <ResponsiveContainer width="100%" height={Math.max(220, data.bySubsite.length * 36)}>
                             <BarChart data={data.bySubsite} layout="vertical" margin={{ left: 8, right: 16, top: 8, bottom: 8 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                                 <XAxis type="number" allowDecimals={false} stroke="var(--color-text-muted)" fontSize={12} />
                                 <YAxis type="category" dataKey="name" width={140} stroke="var(--color-text-muted)" fontSize={12} />
                                 <Tooltip cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
-                                <Bar dataKey="count" name="Cartels">
+                                <Bar dataKey="count" name={t('adminStats.seriesCartels', 'Cartels')}>
                                     {data.bySubsite.map((s, i) => (
                                         <Cell key={s.id || 'main'} fill={s.color || FALLBACK_COLORS[i % FALLBACK_COLORS.length]} />
                                     ))}
@@ -519,7 +527,7 @@ const AdminStats = () => {
                     </ChartCard>
                 )}
 
-                <ChartCard title="Par statut">
+                <ChartCard title={t('adminStats.chartByStatus', 'Par statut')}>
                     {statusData.length ? (
                         <ResponsiveContainer width="100%" height={260}>
                             <PieChart>
@@ -542,7 +550,7 @@ const AdminStats = () => {
                     ) : <EmptyChart />}
                 </ChartCard>
 
-                <ChartCard title="Créations dans le temps">
+                <ChartCard title={t('adminStats.chartOverTime', 'Créations dans le temps')}>
                     {data?.byMonth?.length ? (
                         <ResponsiveContainer width="100%" height={260}>
                             <LineChart data={data.byMonth} margin={{ left: 0, right: 16, top: 8, bottom: 8 }}>
@@ -550,13 +558,13 @@ const AdminStats = () => {
                                 <XAxis dataKey="month" stroke="var(--color-text-muted)" fontSize={11} />
                                 <YAxis allowDecimals={false} stroke="var(--color-text-muted)" fontSize={12} />
                                 <Tooltip />
-                                <Line type="monotone" dataKey="count" name="Cartels créés" stroke="var(--color-primary)" strokeWidth={2} dot={{ r: 3 }} />
+                                <Line type="monotone" dataKey="count" name={t('adminStats.seriesCartelsCreated', 'Cartels créés')} stroke="var(--color-primary)" strokeWidth={2} dot={{ r: 3 }} />
                             </LineChart>
                         </ResponsiveContainer>
                     ) : <EmptyChart />}
                 </ChartCard>
 
-                <ChartCard title="Distribution par époque (année de l'invention)" subtitle="Seuls les cartels avec une année numérique sont comptés">
+                <ChartCard title={t('adminStats.chartByEra', "Distribution par époque (année de l'invention)")} subtitle={t('adminStats.chartByEraSubtitle', 'Seuls les cartels avec une année numérique sont comptés')}>
                     {yearBuckets.length ? (
                         <ResponsiveContainer width="100%" height={260}>
                             <BarChart data={yearBuckets} margin={{ left: 0, right: 16, top: 8, bottom: 8 }}>
@@ -564,13 +572,13 @@ const AdminStats = () => {
                                 <XAxis dataKey="bucket" stroke="var(--color-text-muted)" fontSize={11} angle={-25} textAnchor="end" height={56} />
                                 <YAxis allowDecimals={false} stroke="var(--color-text-muted)" fontSize={12} />
                                 <Tooltip />
-                                <Bar dataKey="count" name="Cartels" fill="var(--color-primary)" />
+                                <Bar dataKey="count" name={t('adminStats.seriesCartels', 'Cartels')} fill="var(--color-primary)" />
                             </BarChart>
                         </ResponsiveContainer>
                     ) : <EmptyChart />}
                 </ChartCard>
 
-                <ChartCard title="Top contributeurs (« exhumé par »)" subtitle="20 premiers, classés par nombre de cartels">
+                <ChartCard title={t('adminStats.chartTopContributors', 'Top contributeurs (« exhumé par »)')} subtitle={t('adminStats.chartTopContributorsSubtitle', '20 premiers, classés par nombre de cartels')}>
                     {data?.topExhumePar?.length ? (
                         <ResponsiveContainer width="100%" height={Math.max(220, data.topExhumePar.length * 24)}>
                             <BarChart data={data.topExhumePar} layout="vertical" margin={{ left: 8, right: 16, top: 8, bottom: 8 }}>
@@ -578,7 +586,7 @@ const AdminStats = () => {
                                 <XAxis type="number" allowDecimals={false} stroke="var(--color-text-muted)" fontSize={12} />
                                 <YAxis type="category" dataKey="name" width={150} stroke="var(--color-text-muted)" fontSize={12} />
                                 <Tooltip cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
-                                <Bar dataKey="count" name="Cartels" fill="var(--color-primary)" />
+                                <Bar dataKey="count" name={t('adminStats.seriesCartels', 'Cartels')} fill="var(--color-primary)" />
                             </BarChart>
                         </ResponsiveContainer>
                     ) : <EmptyChart />}
@@ -604,10 +612,13 @@ const ChartCard = ({ title, subtitle, children }) => (
     </AdminSection>
 );
 
-const EmptyChart = () => (
-    <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--color-text-subtle)', fontSize: '0.85rem' }}>
-        Pas de données dans ce périmètre.
-    </div>
-);
+const EmptyChart = () => {
+    const { t } = useTranslation();
+    return (
+        <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--color-text-subtle)', fontSize: '0.85rem' }}>
+            {t('adminStats.noDataInScope', 'Pas de données dans ce périmètre.')}
+        </div>
+    );
+};
 
 export default AdminStats;

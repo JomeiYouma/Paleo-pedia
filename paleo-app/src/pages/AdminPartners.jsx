@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useBlocker } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
 import {
     Users, Plus, Trash2, Upload, ShieldCheck, Globe, Lock,
@@ -17,22 +18,29 @@ import {
 const TABS = [
     {
         key: 'mandatory', label: 'Obligatoires', icon: ShieldCheck,
+        labelKey: 'adminPartnersLib.tabMandatoryLabel',
         description: 'Ces partenaires apparaissent sur tous les sous-sites, par défaut.',
+        descKey: 'adminPartnersLib.tabMandatoryDesc',
         filter: p => !!p.is_mandatory,
     },
     {
         key: 'pool', label: 'Pool public', icon: Globe,
+        labelKey: 'adminPartnersLib.tabPoolLabel',
         description: 'Partenaires disponibles pour tous les sous-sites qui souhaitent les sélectionner.',
+        descKey: 'adminPartnersLib.tabPoolDesc',
         filter: p => !p.owner_subsite_id && !p.is_mandatory,
     },
     {
         key: 'exclusive', label: 'Exclusifs', icon: Lock,
+        labelKey: 'adminPartnersLib.tabExclusiveLabel',
         description: 'Partenaires attachés à un sous-site unique.',
+        descKey: 'adminPartnersLib.tabExclusiveDesc',
         filter: p => !!p.owner_subsite_id,
     },
 ];
 
 const AdminPartners = () => {
+    const { t } = useTranslation();
     const { isAdmin, isSuperadmin, homeSubsiteId } = useApp();
     const { toast, showToast } = useAdminToast();
 
@@ -60,7 +68,7 @@ const AdminPartners = () => {
     );
     useEffect(() => {
         if (blocker.state !== 'blocked') return;
-        if (window.confirm("Un partenaire est en cours de saisie et non enregistré. Quitter sans l'ajouter ?")) {
+        if (window.confirm(t('adminPartnersLib.unsavedConfirm', "Un partenaire est en cours de saisie et non enregistré. Quitter sans l'ajouter ?"))) {
             blocker.proceed();
         } else {
             blocker.reset();
@@ -110,7 +118,13 @@ const AdminPartners = () => {
         [subsites]
     );
 
-    const currentTab = TABS.find(t => t.key === activeTab) || TABS[0];
+    const localizedTabs = TABS.map(tab => ({
+        ...tab,
+        label: t(tab.labelKey, tab.label),
+        description: t(tab.descKey, tab.description),
+    }));
+
+    const currentTab = localizedTabs.find(tab => tab.key === activeTab) || localizedTabs[0];
 
     const filteredPartners = useMemo(() => {
         let data = partners.filter(currentTab.filter);
@@ -123,13 +137,13 @@ const AdminPartners = () => {
     }, [partners, currentTab, activeTab, isSuperadmin, homeSubsiteId, search]);
 
     const counts = useMemo(() => Object.fromEntries(
-        TABS.map(t => [t.key, partners.filter(t.filter).length])
+        TABS.map(tab => [tab.key, partners.filter(tab.filter).length])
     ), [partners]);
 
     if (!isAdmin) {
         return (
             <div style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--color-text-subtle)' }}>
-                Accès réservé à l'administration.
+                {t('adminPartnersLib.accessDenied', "Accès réservé à l'administration.")}
             </div>
         );
     }
@@ -157,7 +171,7 @@ const AdminPartners = () => {
             setNewLogoFile(null);
             if (!isSuperadmin) setNewMandatory(false);
             await load();
-            showToast('success', `« ${name} » ajouté`);
+            showToast('success', t('adminPartnersLib.partnerAdded', { name, defaultValue: `« ${name} » ajouté` }));
         } catch (e) {
             showToast('error', e.message || i18n.t('errors.creating'));
         } finally {
@@ -166,11 +180,11 @@ const AdminPartners = () => {
     };
 
     const handleDelete = async (p) => {
-        if (!confirm(`Supprimer « ${p.name} » ? Cette action est irréversible.`)) return;
+        if (!confirm(t('adminPartnersLib.deleteConfirm', { name: p.name, defaultValue: `Supprimer « ${p.name} » ? Cette action est irréversible.` }))) return;
         try {
             await api.partners.delete(p.id);
             await load();
-            showToast('success', `« ${p.name} » supprimé`);
+            showToast('success', t('adminPartnersLib.partnerDeleted', { name: p.name, defaultValue: `« ${p.name} » supprimé` }));
         } catch (e) {
             showToast('error', e.message || i18n.t('errors.deleting'));
         }
@@ -181,7 +195,9 @@ const AdminPartners = () => {
         try {
             await api.partners.update(p.id, { is_mandatory: !p.is_mandatory });
             await load();
-            showToast('success', p.is_mandatory ? 'Retiré des obligatoires' : 'Ajouté aux obligatoires');
+            showToast('success', p.is_mandatory
+                ? t('adminPartnersLib.removedFromMandatory', 'Retiré des obligatoires')
+                : t('adminPartnersLib.addedToMandatory', 'Ajouté aux obligatoires'));
         } catch (e) {
             showToast('error', e.message || i18n.t('errors.generic'));
         }
@@ -198,20 +214,19 @@ const AdminPartners = () => {
         <div style={{ maxWidth: '900px', margin: '0 auto', padding: '28px 24px 80px' }}>
             <AdminToast toast={toast} />
 
-            <AdminPageHeader icon={Users} title="Gestion des partenaires" />
+            <AdminPageHeader icon={Users} title={t('adminPartnersLib.pageTitle', 'Gestion des partenaires')} />
 
-            <ExplainerBox title="À quoi sert cette page ?">
-                Centraliser la bibliothèque de partenaires et décider où chacun s'affiche.
-                Trois catégories, mutuellement exclusives :
+            <ExplainerBox title={t('adminPartnersLib.explainerTitle', 'À quoi sert cette page ?')}>
+                {t('adminPartnersLib.explainerIntro', "Centraliser la bibliothèque de partenaires et décider où chacun s'affiche. Trois catégories, mutuellement exclusives :")}
                 <ul style={{ margin: '8px 0 0', paddingLeft: '18px', lineHeight: '1.7' }}>
-                    <li><strong>Obligatoires</strong> — apparaissent automatiquement sur tous les sous-sites, sans action de leur part. Superadmin uniquement.</li>
-                    <li><strong>Pool public</strong> — réservoir partagé : chaque sous-site peut piocher dedans depuis sa propre configuration.</li>
-                    <li><strong>Exclusifs</strong> — rattachés à un sous-site unique. Invisibles pour les autres. Un <em>owner</em> peut gérer les exclusifs de son propre sous-site.</li>
+                    <li><strong>{t('adminPartnersLib.mandatoryTerm', 'Obligatoires')}</strong> {t('adminPartnersLib.mandatoryItemDesc', '— apparaissent automatiquement sur tous les sous-sites, sans action de leur part. Superadmin uniquement.')}</li>
+                    <li><strong>{t('adminPartnersLib.poolTerm', 'Pool public')}</strong> {t('adminPartnersLib.poolItemDesc', '— réservoir partagé : chaque sous-site peut piocher dedans depuis sa propre configuration.')}</li>
+                    <li><strong>{t('adminPartnersLib.exclusiveTerm', 'Exclusifs')}</strong> {t('adminPartnersLib.exclusiveItemDescA', '— rattachés à un sous-site unique. Invisibles pour les autres. Un ')}<em>owner</em>{t('adminPartnersLib.exclusiveItemDescB', ' peut gérer les exclusifs de son propre sous-site.')}</li>
                 </ul>
             </ExplainerBox>
 
             <AdminTabs
-                tabs={TABS}
+                tabs={localizedTabs}
                 active={activeTab}
                 onChange={setActiveTab}
                 counts={counts}
@@ -223,16 +238,16 @@ const AdminPartners = () => {
             {canCreateInTab && (
                 <AdminSection>
                     <p style={{ margin: '0 0 14px', fontWeight: '800', fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-primary)', fontFamily: 'var(--font-heading)' }}>
-                        Ajouter un partenaire
+                        {t('adminPartnersLib.addPartner', 'Ajouter un partenaire')}
                     </p>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
                         <div>
-                            <label style={labelStyle}>Nom *</label>
-                            <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nom du partenaire" style={inputStyle} />
+                            <label style={labelStyle}>{t('adminPartnersLib.nameLabel', 'Nom *')}</label>
+                            <input value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('adminPartnersLib.namePlaceholder', 'Nom du partenaire')} style={inputStyle} />
                         </div>
                         <div>
-                            <label style={labelStyle}>URL</label>
+                            <label style={labelStyle}>{t('adminPartnersLib.urlLabel', 'URL')}</label>
                             <input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder="https://…" style={inputStyle} />
                         </div>
                     </div>
@@ -240,13 +255,13 @@ const AdminPartners = () => {
                     {/* Sélecteur sous-site (exclusif + superadmin) */}
                     {activeTab === 'exclusive' && isSuperadmin && (
                         <div style={{ marginBottom: '10px' }}>
-                            <label style={labelStyle}>Sous-site propriétaire</label>
+                            <label style={labelStyle}>{t('adminPartnersLib.ownerSubsiteLabel', 'Sous-site propriétaire')}</label>
                             <select
                                 value={newOwnerSubsiteId}
                                 onChange={e => setNewOwnerSubsiteId(e.target.value)}
                                 style={{ ...inputStyle, cursor: 'pointer' }}
                             >
-                                <option value="">— Choisir le sous-site —</option>
+                                <option value="">{t('adminPartnersLib.chooseSubsiteOption', '— Choisir le sous-site —')}</option>
                                 {subsites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
                         </div>
@@ -255,7 +270,7 @@ const AdminPartners = () => {
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '4px' }}>
                         <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 12px', border: '1px dashed var(--color-border-strong)', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--color-text-muted)', background: 'var(--color-surface-2)' }}>
                             <Upload size={14} />
-                            {newLogoFile ? newLogoFile.name : 'Choisir un logo…'}
+                            {newLogoFile ? newLogoFile.name : t('adminPartnersLib.chooseLogo', 'Choisir un logo…')}
                             <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => setNewLogoFile(e.target.files?.[0] || null)} />
                         </label>
                         <button
@@ -268,7 +283,7 @@ const AdminPartners = () => {
                                 cursor: (creating || !newName.trim()) ? 'not-allowed' : 'pointer',
                             }}
                         >
-                            <Plus size={14} /> {creating ? 'Envoi…' : 'Ajouter'}
+                            <Plus size={14} /> {creating ? t('adminPartnersLib.sending', 'Envoi…') : t('adminPartnersLib.addBtn', 'Ajouter')}
                         </button>
                     </div>
                 </AdminSection>
@@ -279,14 +294,14 @@ const AdminPartners = () => {
                 <input
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    placeholder="Rechercher un partenaire…"
+                    placeholder={t('adminPartnersLib.searchPlaceholder', 'Rechercher un partenaire…')}
                     style={{ ...inputStyle, marginBottom: '12px' }}
                 />
                 {loading ? (
-                    <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0' }}>Chargement…</p>
+                    <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0' }}>{t('adminPartnersLib.loading', 'Chargement…')}</p>
                 ) : filteredPartners.length === 0 ? (
                     <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0', fontSize: '0.9rem' }}>
-                        Aucun partenaire dans cet onglet.
+                        {t('adminPartnersLib.emptyTab', 'Aucun partenaire dans cet onglet.')}
                     </p>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -335,7 +350,7 @@ const AdminPartners = () => {
                                         <button
                                             type="button"
                                             onClick={() => handleToggleMandatory(p)}
-                                            title={p.is_mandatory ? 'Retirer des obligatoires' : 'Rendre obligatoire'}
+                                            title={p.is_mandatory ? t('adminPartnersLib.removeFromMandatoryTitle', 'Retirer des obligatoires') : t('adminPartnersLib.makeMandatoryTitle', 'Rendre obligatoire')}
                                             style={{
                                                 ...ghostBtnStyle,
                                                 padding: '5px 10px',
@@ -346,7 +361,7 @@ const AdminPartners = () => {
                                             }}
                                         >
                                             <ShieldCheck size={12} />
-                                            {p.is_mandatory ? 'Obligatoire' : 'Optionnel'}
+                                            {p.is_mandatory ? t('adminPartnersLib.mandatoryBadge', 'Obligatoire') : t('adminPartnersLib.optionalBadge', 'Optionnel')}
                                         </button>
                                     )}
 
@@ -355,7 +370,7 @@ const AdminPartners = () => {
                                             type="button"
                                             onClick={() => handleDelete(p)}
                                             style={{ ...dangerBtnStyle, padding: '5px 10px' }}
-                                            title="Supprimer"
+                                            title={t('adminPartnersLib.deleteTitle', 'Supprimer')}
                                         >
                                             <Trash2 size={13} />
                                         </button>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -45,6 +46,7 @@ const SubSection = ({ icon: Icon, title, children }) => (
 );
 
 const AdminCategoriesWorkshops = () => {
+    const { t } = useTranslation();
     const { isAdmin, fetchData } = useApp();
     const navigate = useNavigate();
     const { toast, showToast } = useAdminToast(3500);
@@ -70,7 +72,7 @@ const AdminCategoriesWorkshops = () => {
             setCategories(Array.isArray(cats) ? cats : []);
             setWorkshops(Array.isArray(wks) ? wks : []);
         } catch (e) {
-            showToast('error', e.message || 'Erreur de chargement');
+            showToast('error', e.message || t('adminTaxo.errorLoad', 'Erreur de chargement'));
         } finally {
             setLoading(false);
         }
@@ -81,7 +83,7 @@ const AdminCategoriesWorkshops = () => {
     // ── Catégories ────────────────────────────────────────────
     const handleCreateCategory = async () => {
         const name = newCatName.trim();
-        if (!name) return showToast('error', 'Nom requis');
+        if (!name) return showToast('error', t('adminTaxo.nameRequired', 'Nom requis'));
         try {
             const slug = name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
                 .replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
@@ -95,9 +97,9 @@ const AdminCategoriesWorkshops = () => {
             setNewCatName(''); setNewCatNameEn(''); setNewCatColor('#888888');
             await load();
             fetchData?.();
-            showToast('success', 'Catégorie créée');
+            showToast('success', t('adminTaxo.categoryCreated', 'Catégorie créée'));
         } catch (e) {
-            showToast('error', e.message || 'Erreur de création');
+            showToast('error', e.message || t('adminTaxo.errorCreate', 'Erreur de création'));
         }
     };
 
@@ -113,21 +115,21 @@ const AdminCategoriesWorkshops = () => {
             setEditingCategory(null);
             await load();
             fetchData?.();
-            showToast('success', 'Catégorie mise à jour');
+            showToast('success', t('adminTaxo.categoryUpdated', 'Catégorie mise à jour'));
         } catch (e) {
-            showToast('error', e.message || 'Erreur de mise à jour');
+            showToast('error', e.message || t('adminTaxo.errorUpdate', 'Erreur de mise à jour'));
         }
     };
 
     const handleDeleteCategory = async (cat) => {
-        if (!confirm(`Supprimer la catégorie « ${cat.name} » ? Les cartels qui la portent la perdront.`)) return;
+        if (!confirm(t('adminTaxo.confirmDeleteCategory', { name: cat.name, defaultValue: `Supprimer la catégorie « ${cat.name} » ? Les cartels qui la portent la perdront.` }))) return;
         try {
             await api.categories.delete(cat.id);
             await load();
             fetchData?.();
-            showToast('success', 'Catégorie supprimée');
+            showToast('success', t('adminTaxo.categoryDeleted', 'Catégorie supprimée'));
         } catch (e) {
-            showToast('error', e.message || 'Erreur de suppression');
+            showToast('error', e.message || t('adminTaxo.errorDelete', 'Erreur de suppression'));
         }
     };
 
@@ -142,28 +144,28 @@ const AdminCategoriesWorkshops = () => {
             setEditingWorkshop(null);
             await load();
             fetchData?.();
-            showToast('success', 'Atelier mis à jour');
+            showToast('success', t('adminTaxo.workshopUpdated', 'Atelier mis à jour'));
         } catch (e) {
-            showToast('error', e.message || 'Erreur de mise à jour');
+            showToast('error', e.message || t('adminTaxo.errorUpdate', 'Erreur de mise à jour'));
         }
     };
 
     const handleDeleteWorkshop = async (w) => {
-        if (!confirm(`Supprimer l'atelier « ${w.name} » ? Les cartels associés ne seront pas supprimés mais ne seront plus liés.`)) return;
+        if (!confirm(t('adminTaxo.confirmDeleteWorkshop', { name: w.name, defaultValue: `Supprimer l'atelier « ${w.name} » ? Les cartels associés ne seront pas supprimés mais ne seront plus liés.` }))) return;
         try {
             await api.workshops.delete(w.id);
             await load();
             fetchData?.();
-            showToast('success', 'Atelier supprimé');
+            showToast('success', t('adminTaxo.workshopDeleted', 'Atelier supprimé'));
         } catch (e) {
-            showToast('error', e.message || 'Erreur de suppression');
+            showToast('error', e.message || t('adminTaxo.errorDelete', 'Erreur de suppression'));
         }
     };
 
     if (!isAdmin) {
         return (
             <div style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--color-text-subtle)' }}>
-                Accès réservé à l'administration.
+                {t('adminTaxo.accessAdminOnly', "Accès réservé à l'administration.")}
             </div>
         );
     }
@@ -181,7 +183,7 @@ const AdminCategoriesWorkshops = () => {
         <div style={{ maxWidth: '900px', margin: '0 auto', padding: '28px 24px 80px' }}>
             <AdminToast toast={toast} />
 
-            <AdminPageHeader icon={FolderOpen} title="Catégories & ateliers" />
+            <AdminPageHeader icon={FolderOpen} title={t('adminTaxo.pageTitle', 'Catégories & ateliers')} />
 
             <p style={{
                 background: 'var(--color-surface-2)',
@@ -191,15 +193,15 @@ const AdminCategoriesWorkshops = () => {
                 color: 'var(--color-text-muted)',
                 margin: '0 0 20px',
             }}>
-                Modifier ou supprimer les catégories et ateliers existants.
+                {t('adminTaxo.pageIntro', 'Modifier ou supprimer les catégories et ateliers existants.')}
             </p>
 
             {loading ? (
-                <p style={{ textAlign: 'center', padding: '60px', color: 'var(--color-text-subtle)' }}>Chargement…</p>
+                <p style={{ textAlign: 'center', padding: '60px', color: 'var(--color-text-subtle)' }}>{t('adminTaxo.loading', 'Chargement…')}</p>
             ) : (
                 <>
                     {/* ── Catégories ──────────────────────────── */}
-                    <SubSection icon={FolderOpen} title="Catégories">
+                    <SubSection icon={FolderOpen} title={t('adminTaxo.categoriesTitle', 'Catégories')}>
                         {/* Création rapide */}
                         <div style={{
                             background: 'var(--color-accent-soft)',
@@ -210,42 +212,42 @@ const AdminCategoriesWorkshops = () => {
                             display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-end',
                         }}>
                             <div style={{ flex: '1 1 180px' }}>
-                                <label style={labelStyle}>Nom (FR)</label>
+                                <label style={labelStyle}>{t('adminTaxo.nameFr', 'Nom (FR)')}</label>
                                 <input
                                     type="text"
-                                    placeholder="Ex : Mobilité"
+                                    placeholder={t('adminTaxo.exMobilite', 'Ex : Mobilité')}
                                     value={newCatName}
                                     onChange={e => setNewCatName(e.target.value)}
                                     style={inputStyle}
                                 />
                             </div>
                             <div style={{ flex: '1 1 180px' }}>
-                                <label style={labelStyle}>Name (EN)</label>
+                                <label style={labelStyle}>{t('adminTaxo.nameEn', 'Name (EN)')}</label>
                                 <input
                                     type="text"
-                                    placeholder="Ex : Mobility"
+                                    placeholder={t('adminTaxo.exMobility', 'Ex : Mobility')}
                                     value={newCatNameEn}
                                     onChange={e => setNewCatNameEn(e.target.value)}
                                     style={inputStyle}
                                 />
                             </div>
                             <div>
-                                <label style={labelStyle}>Couleur</label>
+                                <label style={labelStyle}>{t('adminTaxo.color', 'Couleur')}</label>
                                 <input
                                     type="color"
                                     value={newCatColor}
                                     onChange={e => setNewCatColor(e.target.value)}
-                                    title="Couleur"
+                                    title={t('adminTaxo.color', 'Couleur')}
                                     style={colorInputStyle}
                                 />
                             </div>
                             <button onClick={handleCreateCategory} style={primaryBtnStyle}>
-                                <Plus size={14} /> Ajouter
+                                <Plus size={14} /> {t('adminTaxo.add', 'Ajouter')}
                             </button>
                         </div>
 
                         {categories.length === 0 ? (
-                            <p style={{ color: 'var(--color-text-subtle)', textAlign: 'center', padding: '24px 0' }}>Aucune catégorie.</p>
+                            <p style={{ color: 'var(--color-text-subtle)', textAlign: 'center', padding: '24px 0' }}>{t('adminTaxo.noCategory', 'Aucune catégorie.')}</p>
                         ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                 {categories.map(cat => {
@@ -269,26 +271,26 @@ const AdminCategoriesWorkshops = () => {
                                                         type="text"
                                                         value={editingCategory.name || ''}
                                                         onChange={e => setEditingCategory({ ...editingCategory, name: e.target.value })}
-                                                        placeholder="Nom (FR)"
+                                                        placeholder={t('adminTaxo.nameFr', 'Nom (FR)')}
                                                         style={{ ...inputStyle, flex: 1 }}
                                                     />
                                                     <input
                                                         type="text"
                                                         value={editingCategory.name_en || ''}
                                                         onChange={e => setEditingCategory({ ...editingCategory, name_en: e.target.value })}
-                                                        placeholder="Name (EN)"
+                                                        placeholder={t('adminTaxo.nameEn', 'Name (EN)')}
                                                         style={{ ...inputStyle, flex: 1 }}
                                                     />
                                                     <button
                                                         onClick={handleSaveCategory}
-                                                        title="Enregistrer"
+                                                        title={t('adminTaxo.save', 'Enregistrer')}
                                                         style={{ ...primaryBtnStyle, padding: '7px 10px' }}
                                                     >
                                                         <Save size={14} />
                                                     </button>
                                                     <button
                                                         onClick={() => setEditingCategory(null)}
-                                                        title="Annuler"
+                                                        title={t('adminTaxo.cancel', 'Annuler')}
                                                         style={{ ...ghostBtnStyle, padding: '7px 10px' }}
                                                     >
                                                         <X size={14} />
@@ -305,14 +307,14 @@ const AdminCategoriesWorkshops = () => {
                                                     </div>
                                                     <button
                                                         onClick={() => setEditingCategory({ id: cat.id, name: cat.name, name_en: cat.name_en || '', color: cat.color || '#888888', icon: cat.icon || '' })}
-                                                        title="Modifier"
+                                                        title={t('adminTaxo.edit', 'Modifier')}
                                                         style={{ ...ghostBtnStyle, padding: '5px 10px' }}
                                                     >
                                                         <Edit size={13} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteCategory(cat)}
-                                                        title="Supprimer"
+                                                        title={t('adminTaxo.delete', 'Supprimer')}
                                                         style={{ ...dangerBtnStyle, padding: '5px 10px' }}
                                                     >
                                                         <Trash2 size={13} />
@@ -327,13 +329,13 @@ const AdminCategoriesWorkshops = () => {
                     </SubSection>
 
                     {/* ── Ateliers ────────────────────────────── */}
-                    <SubSection icon={Hammer} title="Ateliers">
+                    <SubSection icon={Hammer} title={t('adminTaxo.workshopsTitle', 'Ateliers')}>
                         <p style={{ margin: '0 0 12px', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-                            Créez les ateliers depuis la page de gestion des cartels (sélection + « Créer un atelier »).
+                            {t('adminTaxo.workshopsHint', 'Créez les ateliers depuis la page de gestion des cartels (sélection + « Créer un atelier »).')}
                         </p>
 
                         {workshops.length === 0 ? (
-                            <p style={{ color: 'var(--color-text-subtle)', textAlign: 'center', padding: '24px 0' }}>Aucun atelier.</p>
+                            <p style={{ color: 'var(--color-text-subtle)', textAlign: 'center', padding: '24px 0' }}>{t('adminTaxo.noWorkshop', 'Aucun atelier.')}</p>
                         ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                 {workshops.map(w => {
@@ -351,7 +353,7 @@ const AdminCategoriesWorkshops = () => {
                                                         type="text"
                                                         value={editingWorkshop.name || ''}
                                                         onChange={e => setEditingWorkshop({ ...editingWorkshop, name: e.target.value })}
-                                                        placeholder="Nom de l'atelier"
+                                                        placeholder={t('adminTaxo.workshopName', "Nom de l'atelier")}
                                                         style={{ ...inputStyle, flex: 1 }}
                                                     />
                                                     <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
@@ -360,18 +362,18 @@ const AdminCategoriesWorkshops = () => {
                                                             checked={!!editingWorkshop.is_immersive}
                                                             onChange={e => setEditingWorkshop({ ...editingWorkshop, is_immersive: e.target.checked })}
                                                         />
-                                                        Immersif
+                                                        {t('adminTaxo.immersive', 'Immersif')}
                                                     </label>
                                                     <button
                                                         onClick={handleSaveWorkshop}
-                                                        title="Enregistrer"
+                                                        title={t('adminTaxo.save', 'Enregistrer')}
                                                         style={{ ...primaryBtnStyle, padding: '7px 10px' }}
                                                     >
                                                         <Save size={14} />
                                                     </button>
                                                     <button
                                                         onClick={() => setEditingWorkshop(null)}
-                                                        title="Annuler"
+                                                        title={t('adminTaxo.cancel', 'Annuler')}
                                                         style={{ ...ghostBtnStyle, padding: '7px 10px' }}
                                                     >
                                                         <X size={14} />
@@ -394,32 +396,32 @@ const AdminCategoriesWorkshops = () => {
                                                                     textTransform: 'uppercase',
                                                                     letterSpacing: '0.5px',
                                                                 }}>
-                                                                    Immersif
+                                                                    {t('adminTaxo.immersive', 'Immersif')}
                                                                 </span>
                                                             )}
                                                         </div>
                                                         <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.78rem' }}>
-                                                            {w.cartel_count ?? 0} cartel{(w.cartel_count ?? 0) > 1 ? 's' : ''}
+                                                            {t('adminTaxo.cartelsCount', { count: w.cartel_count ?? 0, defaultValue: `${w.cartel_count ?? 0} cartel${(w.cartel_count ?? 0) > 1 ? 's' : ''}` })}
                                                             {w.created_by_email ? ` · ${w.created_by_email}` : ''}
                                                         </div>
                                                     </div>
                                                     <button
                                                         onClick={() => navigate(`/app/admin/workshop/${w.id}`)}
-                                                        title="Gérer les cartels"
+                                                        title={t('adminTaxo.manageCartelsTitle', 'Gérer les cartels')}
                                                         style={{ ...ghostBtnStyle, padding: '6px 12px', fontSize: '0.74rem' }}
                                                     >
-                                                        Cartels
+                                                        {t('adminTaxo.cartels', 'Cartels')}
                                                     </button>
                                                     <button
                                                         onClick={() => setEditingWorkshop({ id: w.id, name: w.name, is_immersive: !!w.is_immersive })}
-                                                        title="Modifier"
+                                                        title={t('adminTaxo.edit', 'Modifier')}
                                                         style={{ ...ghostBtnStyle, padding: '5px 10px' }}
                                                     >
                                                         <Edit size={13} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteWorkshop(w)}
-                                                        title="Supprimer"
+                                                        title={t('adminTaxo.delete', 'Supprimer')}
                                                         style={{ ...dangerBtnStyle, padding: '5px 10px' }}
                                                     >
                                                         <Trash2 size={13} />

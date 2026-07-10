@@ -39,6 +39,7 @@ import Presse from './pages/Presse';
 import LandingPage from './pages/LandingPage';
 import PaleoPedia from './pages/PaleoPedia';
 import NotFound from './pages/NotFound';
+import RouteError from './pages/RouteError';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import LegalNotices from './pages/LegalNotices';
 import TermsOfSale from './pages/TermsOfSale';
@@ -138,12 +139,14 @@ const hostSubsiteSlug = getHostSubsiteSlug();
 
 const mainRouter = createBrowserRouter(
   createRoutesFromElements(
-    <Route element={<RootLayout />}>
+    <Route element={<RootLayout />} errorElement={<RouteError />}>
       {/* ── Site public ──────────────────────────────── */}
       <Route path="/" element={<SiteLayout />}>
         <Route index element={<LandingPage />} />
         <Route path="presentation" element={<Presentation />} />
         <Route path="prestations"  element={<Prestations />} />
+        {/* Ancienne URL WordPress conservée pour ne pas casser les liens externes / SEO */}
+        <Route path="nos-prestations" element={<Navigate to="/prestations" replace />} />
         <Route path="boutique"     element={<Ouvrages />} />
         <Route path="boutique/:handle" element={<ProductPage />} />
         {/* Ancienne URL conservée pour ne pas casser les liens externes */}
@@ -242,7 +245,7 @@ const mainRouter = createBrowserRouter(
 
 const subsiteHostRouter = hostSubsiteSlug ? createBrowserRouter(
   createRoutesFromElements(
-    <Route element={<RootLayout />}>
+    <Route element={<RootLayout />} errorElement={<RouteError />}>
       <Route path="/" element={<SubsiteLayout />}>
         <Route index                   element={<SubsiteHome />} />
         <Route path="frise"            element={<SubsiteFrise viewMode="timeline" />} />
@@ -279,7 +282,7 @@ const subsiteHostRouter = hostSubsiteSlug ? createBrowserRouter(
 // chemin inconnu retombe sur l'accueil de la vitrine.
 const pediaHostRouter = isPediaHost() ? createBrowserRouter(
   createRoutesFromElements(
-    <Route element={<RootLayout />}>
+    <Route element={<RootLayout />} errorElement={<RouteError />}>
       <Route path="/" element={<PediaLayout />}>
         <Route index element={<PaleoPedia />} />
         <Route path="methodologie" element={<Navigate to="/" replace />} />

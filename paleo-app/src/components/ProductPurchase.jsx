@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { toVariants } from '../utils/shopHelpers';
+import api from '../services/apiClient';
 
 /**
  * ProductPurchase — UI d'achat adaptative d'un article de boutique.
@@ -25,19 +26,34 @@ const ProductPurchase = ({ item, lang, t }) => {
     const allSingle = nV > 0 && variants.every((v) => v.options.length === 1);
     const trulySingle = nV === 1 && variants[0].options.length === 1;
 
+    // Journalise le clic sur un lien de paiement (beacon fire-and-forget côté
+    // apiClient). On envoie les libellés FR canoniques (indépendants de la
+    // langue affichée) pour un journal lisible côté admin.
+    const track = (variant, o) => {
+        if (!item?.id) return;
+        api.shopItems.recordCheckoutClick(item.id, {
+            variant: variant?.label || '',
+            option:  o?.label || '',
+            price:   o?.price || '',
+            url:     o?.url || '',
+        });
+    };
+
     // Bouton « Acheter » (prix à gauche, CTA à droite).
-    const buyButton = (o) => (
+    const buyButton = (o, variant) => (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
             {o.price && <span style={priceStyle}>{o.price}</span>}
             <a href={o.url} target="_blank" rel="noopener noreferrer" className="paleo-btn"
+                onClick={() => track(variant, o)}
                 style={{ padding: '12px 22px', fontSize: '0.9rem', marginLeft: 'auto' }}>
                 {t('pages.ouvrages.buy')} <ExternalLink size={15} />
             </a>
         </div>
     );
     // Bouton « nom — prix » (une option ou une variante à option unique).
-    const linkButton = (o, key, name) => (
+    const linkButton = (o, key, name, variant) => (
         <a key={key} href={o.url} target="_blank" rel="noopener noreferrer" className="paleo-btn"
+            onClick={() => track(variant, o)}
             style={{ padding: '12px 18px', fontSize: '0.88rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
             <span>{name}{o.price ? ` — ${o.price}` : ''}</span>
             <ExternalLink size={15} style={{ flexShrink: 0 }} />
@@ -47,11 +63,11 @@ const ProductPurchase = ({ item, lang, t }) => {
     if (nV === 0) {
         return <p style={{ color: 'var(--color-warning)', fontSize: '0.9rem', margin: 0 }}>{t('pages.ouvrages.soon', 'Bientôt disponible.')}</p>;
     }
-    if (trulySingle) return buyButton(active.options[0]);
+    if (trulySingle) return buyButton(active.options[0], active);
     if (allSingle) {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {variants.map((v, i) => linkButton(v.options[0], i, lbl(v) || t('pages.ouvrages.buy')))}
+                {variants.map((v, i) => linkButton(v.options[0], i, lbl(v) || t('pages.ouvrages.buy'), v))}
             </div>
         );
     }
@@ -85,10 +101,10 @@ const ProductPurchase = ({ item, lang, t }) => {
                         <div style={headingStyle}>{t('pages.ouvrages.delivery', 'Envoi / option')}</div>
                     )}
                     {active.options.length === 1
-                        ? buyButton(active.options[0])
+                        ? buyButton(active.options[0], active)
                         : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                {active.options.map((o, i) => linkButton(o, i, lbl(o) || t('pages.ouvrages.buy')))}
+                                {active.options.map((o, i) => linkButton(o, i, lbl(o) || t('pages.ouvrages.buy'), active))}
                             </div>
                         )}
                 </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
 import {
     Target, Plus, Trash2, Eye, EyeOff, Pencil, Save,
@@ -12,7 +13,8 @@ import {
 } from '../components/adminUI';
 
 // ── Formulaire (création + édition) ───────────────────────────
-const MissionForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregistrer' }) => {
+const MissionForm = ({ initial, onCancel, onSubmit, busy, submitLabel }) => {
+    const { t } = useTranslation();
     const [theme, setTheme]       = useState(initial?.theme || '');
     const [name, setName]         = useState(initial?.name || '');
     const [nameEn, setNameEn]     = useState(initial?.name_en || '');
@@ -41,34 +43,34 @@ const MissionForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregis
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '10px' }}>
                 <div>
-                    <label style={labelStyle}>Thème *</label>
+                    <label style={labelStyle}>{t('adminMissions.themeLabel', 'Thème *')}</label>
                     <input value={theme} onChange={e => setTheme(e.target.value)} required style={inputStyle}
-                        placeholder="Recherche, Intelligence collective, Ingénierie…" />
+                        placeholder={t('adminMissions.themePlaceholder', 'Recherche, Intelligence collective, Ingénierie…')} />
                 </div>
                 <div>
-                    <label style={labelStyle}>Nom *</label>
+                    <label style={labelStyle}>{t('adminMissions.nameLabel', 'Nom *')}</label>
                     <input value={name} onChange={e => setName(e.target.value)} required style={inputStyle}
-                        placeholder="À la recherche de femmes oubliées" />
+                        placeholder={t('adminMissions.namePlaceholder', 'À la recherche de femmes oubliées')} />
                 </div>
             </div>
 
             <div>
-                <label style={labelStyle}>Texte (HTML autorisé)</label>
+                <label style={labelStyle}>{t('adminMissions.textLabel', 'Texte (HTML autorisé)')}</label>
                 <textarea value={text} onChange={e => setText(e.target.value)} rows={8}
                     style={{ ...inputStyle, resize: 'vertical', fontFamily: 'monospace', fontSize: '0.82rem' }}
-                    placeholder="<p><strong>Mission :</strong> …</p><p><strong>Pour qui :</strong> …</p>" />
+                    placeholder={t('adminMissions.textPlaceholder', '<p><strong>Mission :</strong> …</p><p><strong>Pour qui :</strong> …</p>')} />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '10px' }}>
                 <div>
-                    <label style={labelStyle}>Lien (URL — optionnel)</label>
+                    <label style={labelStyle}>{t('adminMissions.linkLabel', 'Lien (URL — optionnel)')}</label>
                     <input value={linkUrl} onChange={e => setLinkUrl(e.target.value)} style={inputStyle}
                         placeholder="https://…" />
                 </div>
                 <div>
-                    <label style={labelStyle}>Libellé du lien</label>
+                    <label style={labelStyle}>{t('adminMissions.linkLabelLabel', 'Libellé du lien')}</label>
                     <input value={linkLabel} onChange={e => setLinkLabel(e.target.value)} style={inputStyle}
-                        placeholder="En savoir plus" />
+                        placeholder={t('adminMissions.linkLabelPlaceholder', 'En savoir plus')} />
                 </div>
             </div>
 
@@ -80,7 +82,7 @@ const MissionForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregis
                 margin: '8px 0 4px',
             }}>
                 <legend style={{ fontFamily: 'var(--font-heading)', fontSize: '0.78rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-text-muted)', padding: '0 8px' }}>
-                    Version anglaise (optionnelle)
+                    {t('adminMissions.englishVersionLegend', 'Version anglaise (optionnelle)')}
                 </legend>
                 <div style={{ marginBottom: '10px' }}>
                     <TranslateButton
@@ -104,13 +106,13 @@ const MissionForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregis
 
             <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'var(--color-text-muted)', marginTop: '4px' }}>
                 <input type="checkbox" checked={isPublished} onChange={e => setIsPublished(e.target.checked)} />
-                Mission publiée (visible sur /participer)
+                {t('adminMissions.publishedCheckbox', 'Mission publiée (visible sur /participer)')}
             </label>
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
                 {onCancel && (
                     <button type="button" onClick={onCancel} disabled={busy} style={ghostBtnStyle}>
-                        Annuler
+                        {t('adminMissions.cancel', 'Annuler')}
                     </button>
                 )}
                 <button type="submit" disabled={busy || !theme.trim() || !name.trim()} style={{
@@ -118,7 +120,7 @@ const MissionForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregis
                     opacity: (busy || !theme.trim() || !name.trim()) ? 0.5 : 1,
                     cursor: (busy || !theme.trim() || !name.trim()) ? 'not-allowed' : 'pointer',
                 }}>
-                    <Save size={14} /> {busy ? 'Envoi…' : submitLabel}
+                    <Save size={14} /> {busy ? t('adminMissions.sending', 'Envoi…') : (submitLabel || t('adminMissions.save', 'Enregistrer'))}
                 </button>
             </div>
         </form>
@@ -126,6 +128,7 @@ const MissionForm = ({ initial, onCancel, onSubmit, busy, submitLabel = 'Enregis
 };
 
 const AdminMissions = () => {
+    const { t } = useTranslation();
     const { isSuperadmin } = useApp();
     const { toast, showToast } = useAdminToast();
 
@@ -142,7 +145,7 @@ const AdminMissions = () => {
             const data = await api.missions.getAll();
             setItems(Array.isArray(data) ? data : []);
         } catch (e) {
-            showToast('error', e.message || 'Erreur de chargement');
+            showToast('error', e.message || t('adminMissions.loadError', 'Erreur de chargement'));
         } finally {
             setLoading(false);
         }
@@ -153,7 +156,7 @@ const AdminMissions = () => {
     if (!isSuperadmin) {
         return (
             <div style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--color-text-subtle)' }}>
-                Accès réservé aux superadmins.
+                {t('adminMissions.superadminOnly', 'Accès réservé aux superadmins.')}
             </div>
         );
     }
@@ -165,9 +168,9 @@ const AdminMissions = () => {
             const created = await api.missions.create({ ...data, display_order: maxOrder + 10 });
             setItems(prev => [...prev, created]);
             setShowForm(false);
-            showToast('success', `« ${created.name} » ajoutée`);
+            showToast('success', t('adminMissions.addedToast', { name: created.name, defaultValue: '« {{name}} » ajoutée' }));
         } catch (e) {
-            showToast('error', e.message || 'Erreur création');
+            showToast('error', e.message || t('adminMissions.createError', 'Erreur création'));
         } finally {
             setCreating(false);
         }
@@ -179,9 +182,9 @@ const AdminMissions = () => {
             const updated = await api.missions.update(id, data);
             setItems(prev => prev.map(x => x.id === id ? updated : x));
             setEditingId(null);
-            showToast('success', `« ${updated.name} » mise à jour`);
+            showToast('success', t('adminMissions.updatedToast', { name: updated.name, defaultValue: '« {{name}} » mise à jour' }));
         } catch (e) {
-            showToast('error', e.message || 'Erreur mise à jour');
+            showToast('error', e.message || t('adminMissions.updateError', 'Erreur mise à jour'));
         } finally {
             setBusyId(null);
         }
@@ -192,23 +195,23 @@ const AdminMissions = () => {
         try {
             const updated = await api.missions.update(m.id, { is_published: !m.is_published });
             setItems(prev => prev.map(x => x.id === m.id ? updated : x));
-            showToast('success', updated.is_published ? 'Mission publiée' : 'Mission masquée');
+            showToast('success', updated.is_published ? t('adminMissions.publishedToast', 'Mission publiée') : t('adminMissions.hiddenToast', 'Mission masquée'));
         } catch (e) {
-            showToast('error', e.message || 'Erreur');
+            showToast('error', e.message || t('adminMissions.error', 'Erreur'));
         } finally {
             setBusyId(null);
         }
     };
 
     const handleDelete = async (m) => {
-        if (!confirm(`Supprimer définitivement « ${m.name} » ?`)) return;
+        if (!confirm(t('adminMissions.deleteConfirm', { name: m.name, defaultValue: 'Supprimer définitivement « {{name}} » ?' }))) return;
         setBusyId(m.id);
         try {
             await api.missions.delete(m.id);
             setItems(prev => prev.filter(x => x.id !== m.id));
-            showToast('success', `« ${m.name} » supprimée`);
+            showToast('success', t('adminMissions.deletedToast', { name: m.name, defaultValue: '« {{name}} » supprimée' }));
         } catch (e) {
-            showToast('error', e.message || 'Erreur suppression');
+            showToast('error', e.message || t('adminMissions.deleteError', 'Erreur suppression'));
         } finally {
             setBusyId(null);
         }
@@ -232,7 +235,7 @@ const AdminMissions = () => {
                 return x;
             }));
         } catch (e) {
-            showToast('error', e.message || 'Erreur réordonnancement');
+            showToast('error', e.message || t('adminMissions.reorderError', 'Erreur réordonnancement'));
         } finally {
             setBusyId(null);
         }
@@ -244,15 +247,11 @@ const AdminMissions = () => {
         <div style={{ maxWidth: '900px', margin: '0 auto', padding: '28px 24px 80px' }}>
             <AdminToast toast={toast} />
 
-            <AdminPageHeader icon={Target} title="Missions (page Participer)" />
+            <AdminPageHeader icon={Target} title={t('adminMissions.pageTitle', 'Missions (page Participer)')} />
 
-            <ExplainerBox title="À quoi sert cette page ?">
-                Gérer les missions (appels à participation thématiques) affichées en haut de la
-                <strong> page publique /participer</strong>. Chaque mission a un thème (Recherche,
-                Intelligence collective, Ingénierie…), un nom, un texte descriptif (HTML autorisé)
-                et un lien optionnel. Sur la page publique elles sont dépliables : seul le nom est
-                visible par défaut, le texte apparaît au clic.
-                L'ordre d'affichage est défini par les flèches ↑ ↓ ci-dessous.
+            <ExplainerBox title={t('adminMissions.explainerTitle', 'À quoi sert cette page ?')}>
+                {t('adminMissions.explainerPart1', 'Gérer les missions (appels à participation thématiques) affichées en haut de la')}
+                <strong> {t('adminMissions.explainerStrong', 'page publique /participer')}</strong>{t('adminMissions.explainerPart2', '. Chaque mission a un thème (Recherche, Intelligence collective, Ingénierie…), un nom, un texte descriptif (HTML autorisé) et un lien optionnel. Sur la page publique elles sont dépliables : seul le nom est visible par défaut, le texte apparaît au clic. L\'ordre d\'affichage est défini par les flèches ↑ ↓ ci-dessous.')}
             </ExplainerBox>
 
             {!showForm && (
@@ -261,29 +260,29 @@ const AdminMissions = () => {
                     onClick={() => { setShowForm(true); setEditingId(null); }}
                     style={{ ...primaryBtnStyle, marginBottom: '16px' }}
                 >
-                    <Plus size={14} /> Ajouter une mission
+                    <Plus size={14} /> {t('adminMissions.addMission', 'Ajouter une mission')}
                 </button>
             )}
             {showForm && (
                 <AdminSection>
                     <p style={{ margin: '0 0 14px', fontWeight: '800', fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-primary)', fontFamily: 'var(--font-heading)' }}>
-                        Nouvelle mission
+                        {t('adminMissions.newMission', 'Nouvelle mission')}
                     </p>
                     <MissionForm
                         onCancel={() => setShowForm(false)}
                         onSubmit={handleCreate}
                         busy={creating}
-                        submitLabel="Ajouter"
+                        submitLabel={t('adminMissions.add', 'Ajouter')}
                     />
                 </AdminSection>
             )}
 
             <AdminSection>
                 {loading ? (
-                    <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0' }}>Chargement…</p>
+                    <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0' }}>{t('adminMissions.loading', 'Chargement…')}</p>
                 ) : sortedItems.length === 0 ? (
                     <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0', fontSize: '0.9rem' }}>
-                        Aucune mission. Ajoutez la première ci-dessus.
+                        {t('adminMissions.empty', 'Aucune mission. Ajoutez la première ci-dessus.')}
                     </p>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -293,7 +292,7 @@ const AdminMissions = () => {
                                 return (
                                     <div key={m.id} style={{ border: '2px solid var(--color-accent)', borderRadius: 'var(--radius-md)', padding: '16px', background: 'var(--color-surface)' }}>
                                         <p style={{ margin: '0 0 12px', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.5px', fontFamily: 'var(--font-heading)', fontWeight: '700', color: 'var(--color-text-muted)' }}>
-                                            Édition de « {m.name} »
+                                            {t('adminMissions.editingTitle', { name: m.name, defaultValue: 'Édition de « {{name}} »' })}
                                         </p>
                                         <MissionForm
                                             initial={m}
@@ -329,7 +328,7 @@ const AdminMissions = () => {
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                             {m.name}
-                                            {!m.is_published && <span style={{ marginLeft: '8px', fontSize: '0.74rem', color: 'var(--color-warning)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>· masquée</span>}
+                                            {!m.is_published && <span style={{ marginLeft: '8px', fontSize: '0.74rem', color: 'var(--color-warning)', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('adminMissions.hiddenBadge', '· masquée')}</span>}
                                         </div>
                                         {m.link_url && (
                                             <div style={{ fontSize: '0.78rem', color: 'var(--color-text-subtle)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -344,7 +343,7 @@ const AdminMissions = () => {
                                             onClick={() => handleMove(m, 'up')}
                                             disabled={idx === 0 || busyId === m.id}
                                             style={{ ...ghostBtnStyle, padding: '3px 6px', opacity: idx === 0 ? 0.3 : 1 }}
-                                            title="Monter"
+                                            title={t('adminMissions.moveUp', 'Monter')}
                                         >
                                             <ArrowUp size={12} />
                                         </button>
@@ -353,7 +352,7 @@ const AdminMissions = () => {
                                             onClick={() => handleMove(m, 'down')}
                                             disabled={idx === arr.length - 1 || busyId === m.id}
                                             style={{ ...ghostBtnStyle, padding: '3px 6px', opacity: idx === arr.length - 1 ? 0.3 : 1 }}
-                                            title="Descendre"
+                                            title={t('adminMissions.moveDown', 'Descendre')}
                                         >
                                             <ArrowDown size={12} />
                                         </button>
@@ -370,7 +369,7 @@ const AdminMissions = () => {
                                             color: m.is_published ? 'var(--color-primary)' : 'var(--color-text-subtle)',
                                             borderColor: m.is_published ? 'var(--color-accent)' : 'var(--color-border)',
                                         }}
-                                        title={m.is_published ? 'Masquer' : 'Publier'}
+                                        title={m.is_published ? t('adminMissions.hide', 'Masquer') : t('adminMissions.publish', 'Publier')}
                                     >
                                         {m.is_published ? <Eye size={13} /> : <EyeOff size={13} />}
                                     </button>
@@ -379,7 +378,7 @@ const AdminMissions = () => {
                                         onClick={() => { setEditingId(m.id); setShowForm(false); }}
                                         disabled={busyId === m.id}
                                         style={{ ...ghostBtnStyle, padding: '5px 10px' }}
-                                        title="Modifier"
+                                        title={t('adminMissions.edit', 'Modifier')}
                                     >
                                         <Pencil size={13} />
                                     </button>
@@ -388,7 +387,7 @@ const AdminMissions = () => {
                                         onClick={() => handleDelete(m)}
                                         disabled={busyId === m.id}
                                         style={{ ...dangerBtnStyle, padding: '5px 10px' }}
-                                        title="Supprimer"
+                                        title={t('adminMissions.delete', 'Supprimer')}
                                     >
                                         <Trash2 size={13} />
                                     </button>

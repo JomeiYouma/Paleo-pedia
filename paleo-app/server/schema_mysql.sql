@@ -315,10 +315,10 @@ INSERT IGNORE INTO `event_email_config` (`type`) VALUES
   ('cartel.draft_created'),
   ('cartel.submission_pending'), ('cartel.submission_approved'), ('cartel.submission_rejected'),
   ('cartel.subsite_submitted'), ('cartel.subsite_approved'), ('cartel.subsite_rejected'),
-  ('cartel.subsite_published'),
+  ('cartel.subsite_published'), ('cartel.subsite_withdrawn'),
   ('subsite.created'), ('subsite.updated'), ('subsite.deleted'),
   ('user.created'),    ('user.updated'),   ('user.deleted'), ('user.assigned_subsite'),
-  ('partner.created'), ('partner.updated'),('partner.deleted'),
+  ('partner.created'), ('partner.updated'),('partner.deleted'), ('partner.site_selection_updated'),
   ('category.created'),('category.updated'),('category.deleted'),
   ('workshop.created'),('workshop.updated'),('workshop.deleted'),
   ('mission_application.created'),
@@ -335,7 +335,9 @@ INSERT IGNORE INTO `event_email_config` (`type`) VALUES
   ('prestation.created'), ('prestation.updated'), ('prestation.deleted'),
   ('shop_item.created'), ('shop_item.updated'), ('shop_item.deleted'),
   ('team_member.created'), ('team_member.updated'), ('team_member.deleted'),
-  ('cartel_note.created'), ('cartel_note.deleted');
+  ('cartel_note.created'), ('cartel_note.deleted'),
+  -- v35 — clic sur un lien de paiement Stripe (conversion boutique)
+  ('shop_item.checkout_click');
 
 -- Notifications email activées par défaut pour les messages publics (formulaire
 -- /contact + « Participer au projet »). Destinataire modifiable dans l'admin

@@ -5,6 +5,7 @@
  * pour les labels/boutons, arêtes vives.
  */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AlertCircle, CheckCircle2, Languages } from 'lucide-react';
 import api from '../services/apiClient';
 import Breadcrumb from './Breadcrumb';
@@ -278,6 +279,7 @@ export const AdminTabDescription = ({ children }) => (
  * @param {boolean} [props.disabled]
  */
 export const TranslateButton = ({ getFrFields, onTranslated, target = 'en', label, disabled }) => {
+    const { t } = useTranslation();
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
 
@@ -318,7 +320,7 @@ export const TranslateButton = ({ getFrFields, onTranslated, target = 'en', labe
                     opacity: (disabled || busy) ? 0.6 : 1,
                     cursor: (disabled || busy) ? 'not-allowed' : 'pointer',
                 }}
-                title="Utilise DeepL/OpenAI selon la clé configurée"
+                title={t('adminUI.translateTooltip', 'Utilise DeepL/OpenAI selon la clé configurée')}
             >
                 <Languages size={14} /> {busy ? 'Traduction…' : (label || defaultLabel)}
             </button>

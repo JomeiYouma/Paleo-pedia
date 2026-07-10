@@ -3,9 +3,11 @@
  * Page partenaires propre à ce sous-site.
  */
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSubsite } from '../layouts/SubsiteLayout';
 
 const SubsitePartners = () => {
+    const { t } = useTranslation();
     const subsite = useSubsite();
     if (!subsite) return null;
 
@@ -50,21 +52,21 @@ const SubsitePartners = () => {
     return (
         <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '60px 24px' }}>
             <h1 style={{ fontSize: '2.4rem', fontWeight: '800', marginBottom: '8px', color: '#1a1a1a' }}>
-                Nos Partenaires
+                {t('partnersPublic.title', 'Nos Partenaires')}
             </h1>
             <p style={{ color: '#999', marginBottom: '48px' }}>
-                {subsite.name} est soutenu par les acteurs suivants.
+                {t('partnersPublic.supportedBy', { name: subsite.name, defaultValue: `${subsite.name} est soutenu par les acteurs suivants.` })}
             </p>
 
             {primaryPartners.length === 0 && partners.length === 0 ? (
                 <p style={{ color: '#bbb', textAlign: 'center', padding: '60px 0' }}>
-                    Aucun partenaire associé à ce sous-site pour le moment.
+                    {t('partnersPublic.emptyState', 'Aucun partenaire associé à ce sous-site pour le moment.')}
                 </p>
             ) : (
                 <>
                     {primaryPartners.length > 0 && (
                         <section style={{ marginBottom: '38px' }}>
-                            <h2 style={{ margin: '0 0 16px', fontSize: '1.5rem', color: color }}>Partenaires principaux</h2>
+                            <h2 style={{ margin: '0 0 16px', fontSize: '1.5rem', color: color }}>{t('partnersPublic.primaryHeading', 'Partenaires principaux')}</h2>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '24px' }}>
                                 {primaryPartners.map(renderPartnerCard)}
                             </div>
@@ -73,7 +75,7 @@ const SubsitePartners = () => {
 
                     {partners.length > 0 && (
                         <section>
-                            <h2 style={{ margin: '0 0 16px', fontSize: '1.2rem', color: '#666' }}>Partenaires</h2>
+                            <h2 style={{ margin: '0 0 16px', fontSize: '1.2rem', color: '#666' }}>{t('partnersPublic.secondaryHeading', 'Partenaires')}</h2>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '24px' }}>
                                 {partners.map(renderPartnerCard)}
                             </div>

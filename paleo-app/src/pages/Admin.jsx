@@ -191,7 +191,7 @@ const Admin = () => {
             await new Promise(r => setTimeout(r, 500));
         } catch (e) {
             console.error(e);
-            alert("Erreur export: " + e.message);
+            alert(t('adminHome.exportError', 'Erreur export: ') + e.message);
         } finally {
             setGeneratingZip(false);
             setProgress({ current: 0, total: 0 });
@@ -200,7 +200,7 @@ const Admin = () => {
 
     const handleBulkDelete = async () => {
         if (selectedIds.size === 0) return;
-        if (confirm(`Voulez-vous vraiment supprimer ces ${selectedIds.size} cartels ?`)) {
+        if (confirm(t('adminHome.confirmBulkDelete', { count: selectedIds.size, defaultValue: 'Voulez-vous vraiment supprimer ces {{count}} cartels ?' }))) {
             await deleteCartels(Array.from(selectedIds), false);
             setSelectedIds(new Set());
         }
@@ -208,7 +208,7 @@ const Admin = () => {
 
     const handleBulkPublish = async () => {
         if (selectedIds.size === 0) return;
-        const confirmMsg = `Voulez-vous publier ces ${selectedIds.size} cartels ?`;
+        const confirmMsg = t('adminHome.confirmBulkPublish', { count: selectedIds.size, defaultValue: 'Voulez-vous publier ces {{count}} cartels ?' });
         if (confirm(confirmMsg)) {
             let count = 0;
             for (const id of selectedIds) {
@@ -219,14 +219,14 @@ const Admin = () => {
                 }
             }
             await fetchData();
-            alert(`${count} cartels publiés.`);
+            alert(t('adminHome.bulkPublishDone', { count, defaultValue: '{{count}} cartels publiés.' }));
             setSelectedIds(new Set());
         }
     };
 
     const handleBulkUndisclose = async () => {
         if (selectedIds.size === 0) return;
-        if (confirm(`Voulez-vous repasser en brouillon ces ${selectedIds.size} cartels ?`)) {
+        if (confirm(t('adminHome.confirmBulkDraft', { count: selectedIds.size, defaultValue: 'Voulez-vous repasser en brouillon ces {{count}} cartels ?' }))) {
             let count = 0;
             for (const id of selectedIds) {
                 const c = cartels.find(x => x.id === id);
@@ -236,19 +236,19 @@ const Admin = () => {
                 }
             }
             await fetchData();
-            alert(`${count} cartels remis en brouillon.`);
+            alert(t('adminHome.bulkDraftDone', { count, defaultValue: '{{count}} cartels remis en brouillon.' }));
             setSelectedIds(new Set());
         }
     };
 
     const handleCreateWorkshop = async () => {
-        if (!newWorkshopName) return alert("Nom de l'atelier requis");
+        if (!newWorkshopName) return alert(t('adminHome.workshopNameRequired', "Nom de l'atelier requis"));
         const id = await addWorkshop(newWorkshopName, Array.from(selectedIds), { immersive: isImmersive });
         if (id) {
             setShowWorkshopModal(false);
             setNewWorkshopName('');
             setIsImmersive(false);
-            if (confirm(`Atelier "${newWorkshopName}" créé ! Voulez-vous y aller maintenant ?`)) {
+            if (confirm(t('adminHome.workshopCreatedGo', { name: newWorkshopName, defaultValue: 'Atelier "{{name}}" créé ! Voulez-vous y aller maintenant ?' }))) {
                 navigate(`/app/admin/workshop/${id}`);
             }
         }
@@ -271,7 +271,7 @@ const Admin = () => {
                     {activeWorkshop ? (
                         <>
                             <button onClick={() => navigate('/app/admin')} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '1.2em' }}>⬅️</button>
-                            <span>Atelier : {activeWorkshop.name}</span>
+                            <span>{t('adminHome.workshopHeading', { name: activeWorkshop.name, defaultValue: 'Atelier : {{name}}' })}</span>
                         </>
                     ) : (
                         "🛠️ " + t('admin.title')
@@ -286,7 +286,7 @@ const Admin = () => {
                             target="_blank"
                             style={{ display: 'flex', alignItems: 'center', gap: '5px', textDecoration: 'none', color: 'blue', border: '1px solid blue', padding: '5px 10px', borderRadius: '5px' }}
                         >
-                            <Globe size={16} /> Voir Version Publique
+                            <Globe size={16} /> {t('adminHome.viewPublicVersion', 'Voir Version Publique')}
                         </a>
                     )}
 
@@ -313,9 +313,9 @@ const Admin = () => {
                             cursor: selectedIds.size > 0 ? 'pointer' : 'not-allowed',
                             display: 'flex', alignItems: 'center', gap: '5px'
                         }}
-                        title="Rendre visible sur la frise générale"
+                        title={t('adminHome.publishTitle', 'Rendre visible sur la frise générale')}
                     >
-                        <Eye size={18} /> Publier ({selectedIds.size})
+                        <Eye size={18} /> {t('adminHome.publish', 'Publier')} ({selectedIds.size})
                     </button>
                     <button
                         onClick={handleBulkUndisclose}
@@ -326,9 +326,9 @@ const Admin = () => {
                             cursor: selectedIds.size > 0 ? 'pointer' : 'not-allowed',
                             display: 'flex', alignItems: 'center', gap: '5px'
                         }}
-                        title="Repasser en brouillon"
+                        title={t('adminHome.draftTitle', 'Repasser en brouillon')}
                     >
-                        <EyeOff size={18} /> Brouillon ({selectedIds.size})
+                        <EyeOff size={18} /> {t('adminHome.draft', 'Brouillon')} ({selectedIds.size})
                     </button>
 
                     <button
@@ -366,7 +366,7 @@ const Admin = () => {
                             display: 'flex', alignItems: 'center', gap: '5px'
                         }}
                     >
-                        <Trash2 size={18} /> Supprimer ({selectedIds.size})
+                        <Trash2 size={18} /> {t('adminHome.delete', 'Supprimer')} ({selectedIds.size})
                     </button>
 
                     <button
@@ -385,7 +385,7 @@ const Admin = () => {
             {/* Workshop List (Global Dashboard Only) */}
             {!activeWorkshop && workshops.length > 0 && (
                 <div style={{ marginBottom: '20px', padding: '10px', background: '#eef', borderRadius: '8px' }}>
-                    <h4>Ateliers Actifs :</h4>
+                    <h4>{t('adminHome.activeWorkshops', 'Ateliers Actifs :')}</h4>
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                         {workshops.map(w => {
                             const publicLink = `${window.location.origin}/workshop/${w.id}`;
@@ -405,20 +405,20 @@ const Admin = () => {
                                     <button
                                         onClick={() => {
                                             navigator.clipboard.writeText(publicLink);
-                                            alert("Lien public copié !");
+                                            alert(t('adminHome.publicLinkCopied', 'Lien public copié !'));
                                         }}
-                                        title="Copier le lien public"
+                                        title={t('adminHome.copyPublicLink', 'Copier le lien public')}
                                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666' }}
                                     >
                                         <Link size={14} />
                                     </button>
                                     <button
                                         onClick={async () => {
-                                            if (confirm(`Supprimer l'atelier "${w.name}" ? (Les cartels créés resteront mais ne seront plus liés)`)) {
+                                            if (confirm(t('adminHome.confirmDeleteWorkshop', { name: w.name, defaultValue: 'Supprimer l\'atelier "{{name}}" ? (Les cartels créés resteront mais ne seront plus liés)' }))) {
                                                 await deleteWorkshop(w.id);
                                             }
                                         }}
-                                        title="Supprimer l'atelier"
+                                        title={t('adminHome.deleteWorkshopTitle', "Supprimer l'atelier")}
                                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'red' }}
                                     >
                                         <Trash2 size={14} />
@@ -447,7 +447,7 @@ const Admin = () => {
                         >
                             <X size={24} />
                         </button>
-                        <h3 style={{ marginTop: 0 }}>Aperçu</h3>
+                        <h3 style={{ marginTop: 0 }}>{t('adminHome.previewHeading', 'Aperçu')}</h3>
                         <div style={{ border: '1px solid #eee', padding: '10px', borderRadius: '8px' }}>
                             <CartelPreview data={previewCartel} showExports />
                         </div>
@@ -459,9 +459,9 @@ const Admin = () => {
                                     navigate(`/app/create?edit=${id}`, { state: { returnTo } });
                                 }}
                                 style={{ background: 'blue', color: 'white', border: 'none', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer' }}>
-                                <Edit size={16} style={{ marginRight: '5px', verticalAlign: 'text-bottom' }} /> Editer
+                                <Edit size={16} style={{ marginRight: '5px', verticalAlign: 'text-bottom' }} /> {t('adminHome.edit', 'Editer')}
                             </button>
-                            <button onClick={() => setPreviewCartel(null)} style={{ padding: '10px 15px' }}>Fermer</button>
+                            <button onClick={() => setPreviewCartel(null)} style={{ padding: '10px 15px' }}>{t('common.close', 'Fermer')}</button>
                         </div>
                     </div>
                 </div>
@@ -476,10 +476,10 @@ const Admin = () => {
                 }}>
                     <div style={{ background: 'white', padding: '20px', borderRadius: '8px', minWidth: '300px' }}>
                         <h3>{t('admin.createWorkshop')}</h3>
-                        <p>{t('admin.create')} atelier avec les <b>{selectedIds.size}</b> cartels sélectionnés.</p>
+                        <p>{t('admin.create')} {t('adminHome.workshopWithPrefix', 'atelier avec les')} <b>{selectedIds.size}</b> {t('adminHome.selectedCartelsSuffix', 'cartels sélectionnés.')}</p>
                         <input
                             type="text"
-                            placeholder="Nom de l'atelier (ex: Atelier Solaire)"
+                            placeholder={t('adminHome.workshopNamePlaceholder', "Nom de l'atelier (ex: Atelier Solaire)")}
                             value={newWorkshopName}
                             onChange={(e) => setNewWorkshopName(e.target.value)}
                             style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
@@ -491,13 +491,13 @@ const Admin = () => {
                                     checked={isImmersive}
                                     onChange={(e) => setIsImmersive(e.target.checked)}
                                 />
-                                <span title="Masque le bandeau 'Mode Atelier' et le bouton 'Quitter' pour une immersion totale">
-                                    Mode Immersif (Masquer bandeau & Quitter)
+                                <span title={t('adminHome.immersiveTitle', "Masque le bandeau 'Mode Atelier' et le bouton 'Quitter' pour une immersion totale")}>
+                                    {t('adminHome.immersiveLabel', 'Mode Immersif (Masquer bandeau & Quitter)')}
                                 </span>
                             </label>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                            <button onClick={() => setShowWorkshopModal(false)}>Annuler</button>
+                            <button onClick={() => setShowWorkshopModal(false)}>{t('common.cancel', 'Annuler')}</button>
                             <button onClick={handleCreateWorkshop} style={{ background: 'blue', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '4px' }}>{t('admin.create')}</button>
                         </div>
                     </div>
@@ -513,7 +513,7 @@ const Admin = () => {
                     <Search size={16} style={{ position: 'absolute', left: '10px', color: '#888' }} />
                     <input
                         type="text"
-                        placeholder="Rechercher..."
+                        placeholder={t('library.searchPlaceholder', 'Rechercher...')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{ padding: '8px 40px 8px 32px', borderRadius: '4px', border: '1px solid #ccc', minWidth: '200px' }}
@@ -540,7 +540,7 @@ const Admin = () => {
                     onChange={(e) => setFilterCategory(e.target.value)}
                     style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
                 >
-                    <option value="">Toutes Catégories</option>
+                    <option value="">{t('adminHome.allCategories', 'Toutes Catégories')}</option>
                     {categories.map(c => <option key={c.id || c} value={c.name || c}>{c.name || c}</option>)}
                 </select>
 
@@ -549,13 +549,13 @@ const Admin = () => {
                     onChange={(e) => setFilterLocation(e.target.value)}
                     style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
                 >
-                    <option value="">Toutes Localisations</option>
+                    <option value="">{t('adminHome.allLocations', 'Toutes Localisations')}</option>
                     {uniqueLocations.map(l => <option key={l} value={l}>{l}</option>)}
                 </select>
 
                 <button onClick={selectAll} style={{ background: 'none', border: '1px solid #ccc', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
                     {selectedIds.size > 0 && selectedIds.size === filteredCartels.length ? <CheckSquare size={16} /> : <Square size={16} />}
-                    {selectedIds.size === filteredCartels.length ? 'Tout désélectionner' : 'Tout sélectionner'}
+                    {selectedIds.size === filteredCartels.length ? t('adminHome.deselectAll', 'Tout désélectionner') : t('adminHome.selectAll', 'Tout sélectionner')}
                 </button>
             </div>
 
@@ -569,36 +569,36 @@ const Admin = () => {
                                 const thSticky = { position: 'sticky', top: 0, background: '#f4f4f4', zIndex: 2, boxShadow: 'inset 0 -2px 0 #ddd' };
                                 return <>
                                     <th style={{ padding: '12px', width: '40px', ...thSticky }}></th>
-                                    <th style={{ padding: '12px', textAlign: 'left', width: '60px', ...thSticky }}>Img</th>
+                                    <th style={{ padding: '12px', textAlign: 'left', width: '60px', ...thSticky }}>{t('adminHome.colImg', 'Img')}</th>
 
                                     <th onClick={() => handleSort('date')} style={{ padding: '12px', textAlign: 'left', cursor: 'pointer', userSelect: 'none', ...thSticky }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                            Date {getSortIcon('date')}
+                                            {t('adminHome.colDate', 'Date')} {getSortIcon('date')}
                                         </div>
                                     </th>
 
                                     <th onClick={() => handleSort('titre')} style={{ padding: '12px', textAlign: 'left', cursor: 'pointer', userSelect: 'none', ...thSticky }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                            Titre (FR / EN) {getSortIcon('titre')}
+                                            {t('adminHome.colTitle', 'Titre (FR / EN)')} {getSortIcon('titre')}
                                         </div>
                                     </th>
 
-                                    <th style={{ padding: '12px', textAlign: 'left', ...thSticky }}>Catégories</th>
+                                    <th style={{ padding: '12px', textAlign: 'left', ...thSticky }}>{t('adminHome.colCategories', 'Catégories')}</th>
 
                                     <th onClick={() => handleSort('location')} style={{ padding: '12px', textAlign: 'left', cursor: 'pointer', userSelect: 'none', ...thSticky }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                            Localisation {getSortIcon('location')}
+                                            {t('adminHome.colLocation', 'Localisation')} {getSortIcon('location')}
                                         </div>
                                     </th>
 
                                     <th onClick={() => handleSort('origin')} style={{ padding: '12px', textAlign: 'center', cursor: 'pointer', userSelect: 'none', ...thSticky }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px', justifyContent: 'center' }}>
-                                            Origine {getSortIcon('origin')}
+                                            {t('adminHome.colOrigin', 'Origine')} {getSortIcon('origin')}
                                         </div>
                                     </th>
 
-                                    <th style={{ padding: '12px', textAlign: 'center', ...thSticky }}>Statut</th>
-                                    <th style={{ padding: '12px', textAlign: 'center', width: '100px', ...thSticky }}>Actions</th>
+                                    <th style={{ padding: '12px', textAlign: 'center', ...thSticky }}>{t('adminHome.colStatus', 'Statut')}</th>
+                                    <th style={{ padding: '12px', textAlign: 'center', width: '100px', ...thSticky }}>{t('adminHome.colActions', 'Actions')}</th>
                                 </>;
                             })()}
                         </tr>
@@ -641,7 +641,7 @@ const Admin = () => {
 
                                     <td style={{ padding: '10px' }}>
                                         <div style={{ fontWeight: 'bold', color: hasFr ? 'black' : 'red' }}>
-                                            {cartel.titre || "(Manquant)"}
+                                            {cartel.titre || t('adminHome.missingTitle', '(Manquant)')}
                                         </div>
                                         <div style={{ color: hasEn ? '#666' : 'red', fontSize: '0.85em', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                             <Globe size={12} /> {cartel.titre_en || "(Missing EN Translation)"}
@@ -685,7 +685,7 @@ const Admin = () => {
                                             <button
                                                 onClick={() => handleTogglePublished(cartel)}
                                                 style={{ border: 'none', background: 'none', cursor: 'pointer', color: isPublished ? '#b26a00' : '#1a7f37' }}
-                                                title={isPublished ? 'Repasser en brouillon' : 'Publier'}
+                                                title={isPublished ? t('adminHome.draftTitle', 'Repasser en brouillon') : t('adminHome.publish', 'Publier')}
                                             >
                                                 {isPublished ? <EyeOff size={18} /> : <Eye size={18} />}
                                             </button>
@@ -695,7 +695,7 @@ const Admin = () => {
                                         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
                                             <button
                                                 onClick={() => setPreviewCartel(cartel)}
-                                                title="Aperçu Rapide"
+                                                title={t('adminHome.quickPreviewTitle', 'Aperçu Rapide')}
                                                 style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#555' }}
                                             >
                                                 <ScanEye size={18} />
@@ -726,7 +726,7 @@ const Admin = () => {
                 </table>
                 {cartels.length === 0 && (
                     <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
-                        Aucun cartel dans la bibliothèque.
+                        {t('admin.noCartels', 'Aucun cartel dans la bibliothèque.')}
                     </div>
                 )}
             </div>

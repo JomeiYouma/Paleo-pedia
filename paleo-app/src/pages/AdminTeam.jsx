@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
 import {
     UserPlus, Trash2, Mail, Crown, Users as UsersIcon,
@@ -46,6 +47,7 @@ const Toggle = ({ value, onChange, label, hint, disabled }) => (
 );
 
 const AdminTeam = () => {
+    const { t } = useTranslation();
     const { user, isSuperadmin, isOwner, homeSubsiteId } = useApp();
     const { toast, showToast } = useAdminToast();
 
@@ -126,7 +128,7 @@ const AdminTeam = () => {
             setMembers(prev => [created, ...prev]);
             setNewEmail('');
             setNewPassword('');
-            showToast('success', `Compte « ${created.email} » créé`);
+            showToast('success', t('adminTeam.accountCreated', { email: created.email, defaultValue: 'Compte « {{email}} » créé' }));
         } catch (err) {
             showToast('error', err.message || i18n.t('errors.creating'));
         } finally {
@@ -147,7 +149,7 @@ const AdminTeam = () => {
     };
 
     const handleDelete = async (m) => {
-        if (!confirm(`Retirer ${m.email} ? Le compte sera supprimé.`)) return;
+        if (!confirm(t('adminTeam.confirmDelete', { email: m.email, defaultValue: 'Retirer {{email}} ? Le compte sera supprimé.' }))) return;
         try {
             if (isMain) await api.users.delete(m.id);
             else        await api.team.delete(selected.slug, m.id);
@@ -164,14 +166,14 @@ const AdminTeam = () => {
         const m = resetTarget;
         if (isMain) await api.users.setPassword(m.id, newPassword);
         else        await api.team.setPassword(selected.slug, m.id, newPassword);
-        showToast('success', `Mot de passe réinitialisé pour ${m.email}`);
+        showToast('success', t('adminTeam.passwordReset', { email: m.email, defaultValue: 'Mot de passe réinitialisé pour {{email}}' }));
     };
 
     if (!isSuperadmin && !isOwner) {
         return (
             <div style={{ textAlign: 'center', padding: '80px 20px', color: 'var(--color-text-subtle)' }}>
                 <Shield size={32} style={{ marginBottom: '12px', color: 'var(--color-border-strong)' }} />
-                <p>Accès réservé aux owners de sous-sites et aux superadmins.</p>
+                <p>{t('adminTeam.accessDenied', 'Accès réservé aux owners de sous-sites et aux superadmins.')}</p>
             </div>
         );
     }
@@ -184,15 +186,20 @@ const AdminTeam = () => {
         <div style={{ maxWidth: '900px', margin: '0 auto', padding: '28px 24px 80px' }}>
             <AdminToast toast={toast} />
 
-            <AdminPageHeader icon={UsersIcon} title="Gestion d'équipe (comptes)" />
+            <AdminPageHeader icon={UsersIcon} title={t('adminTeam.pageTitle', "Gestion d'équipe (comptes)")} />
 
-            <ExplainerBox title="À quoi sert cette page ?">
-                Gérer les comptes utilisateurs <strong>d'un sous-site précis</strong> (ou du site principal si
-                vous êtes superadmin). Chaque compte créé ici est automatiquement rattaché au contexte choisi
-                dans le sélecteur ci-dessous.<br />
-                Les <em>owners</em> de sous-site peuvent inviter et gérer les membres de leur propre équipe.
-                Les <em>superadmins</em> peuvent en plus basculer entre le site principal et n'importe quel
-                sous-site, et déléguer la permission <strong>Gérer équipe</strong>.
+            <ExplainerBox title={t('adminTeam.explainerTitle', 'À quoi sert cette page ?')}>
+                {t('adminTeam.explainerP1a', 'Gérer les comptes utilisateurs ')}
+                <strong>{t('adminTeam.explainerP1Strong', "d'un sous-site précis")}</strong>
+                {t('adminTeam.explainerP1b', ' (ou du site principal si vous êtes superadmin). Chaque compte créé ici est automatiquement rattaché au contexte choisi dans le sélecteur ci-dessous.')}
+                <br />
+                {t('adminTeam.explainerP2a', 'Les ')}
+                <em>{t('adminTeam.explainerOwners', 'owners')}</em>
+                {t('adminTeam.explainerP2b', ' de sous-site peuvent inviter et gérer les membres de leur propre équipe. Les ')}
+                <em>{t('adminTeam.explainerSuperadmins', 'superadmins')}</em>
+                {t('adminTeam.explainerP2c', " peuvent en plus basculer entre le site principal et n'importe quel sous-site, et déléguer la permission ")}
+                <strong>{t('adminTeam.explainerManageTeamPerm', 'Gérer équipe')}</strong>
+                .
             </ExplainerBox>
 
             {/* Sélecteur (chips) */}
@@ -224,7 +231,7 @@ const AdminTeam = () => {
                                 }}
                             >
                                 <Icon size={13} />
-                                {opt.name}
+                                {opt.__main ? t('adminTeam.mainSite', 'Site principal') : opt.name}
                             </button>
                         );
                     })}
@@ -241,8 +248,8 @@ const AdminTeam = () => {
                     margin: '0 0 20px',
                 }}>
                     {isMain
-                        ? <>Équipe du <strong>site principal</strong> ({members.length} membre{members.length > 1 ? 's' : ''})</>
-                        : <>Équipe du sous-site <strong>{selected.name}</strong> ({members.length} membre{members.length > 1 ? 's' : ''})</>}
+                        ? <>{t('adminTeam.teamOfMainPrefix', 'Équipe du ')}<strong>{t('adminTeam.mainSiteInline', 'site principal')}</strong>{' ('}{members.length} {members.length > 1 ? t('adminTeam.membersPlural', 'membres') : t('adminTeam.memberSingular', 'membre')}{')'}</>
+                        : <>{t('adminTeam.teamOfSubsitePrefix', 'Équipe du sous-site ')}<strong>{selected.name}</strong>{' ('}{members.length} {members.length > 1 ? t('adminTeam.membersPlural', 'membres') : t('adminTeam.memberSingular', 'membre')}{')'}</>}
                 </p>
             )}
 
@@ -250,22 +257,22 @@ const AdminTeam = () => {
             {canManageCurrent && (
                 <AdminSection>
                     <p style={{ margin: '0 0 14px', fontWeight: '800', fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--color-primary)', fontFamily: 'var(--font-heading)' }}>
-                        Inviter un membre
+                        {t('adminTeam.inviteMember', 'Inviter un membre')}
                     </p>
                     <form onSubmit={handleCreate} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
                         <div style={{ flex: '1 1 220px' }}>
-                            <label style={labelStyle}>Email</label>
+                            <label style={labelStyle}>{t('adminTeam.email', 'Email')}</label>
                             <input
                                 type="email"
                                 value={newEmail}
                                 onChange={e => setNewEmail(e.target.value)}
-                                placeholder="email@exemple.org"
+                                placeholder={t('adminTeam.emailPlaceholder', 'email@exemple.org')}
                                 required
                                 style={inputStyle}
                             />
                         </div>
                         <div style={{ flex: '1 1 180px' }}>
-                            <label style={labelStyle}>Mot de passe (8+ car.)</label>
+                            <label style={labelStyle}>{t('adminTeam.passwordLabel', 'Mot de passe (8+ car.)')}</label>
                             <input
                                 type="password"
                                 value={newPassword}
@@ -285,26 +292,26 @@ const AdminTeam = () => {
                                 cursor: creating ? 'not-allowed' : 'pointer',
                             }}
                         >
-                            <UserPlus size={14} /> {creating ? 'Envoi…' : 'Inviter'}
+                            <UserPlus size={14} /> {creating ? t('adminTeam.sending', 'Envoi…') : t('adminTeam.invite', 'Inviter')}
                         </button>
                     </form>
                     <p style={{ margin: '10px 0 0', fontSize: '0.78rem', color: 'var(--color-text-subtle)' }}>
-                        Le compte est créé avec un mot de passe temporaire. Le nouveau membre peut se connecter immédiatement ;
-                        pensez à lui demander de le changer. Par défaut, il peut seulement <strong>créer des cartels</strong>.
-                        Ajoutez d'autres permissions ci-dessous.
+                        {t('adminTeam.inviteHelpA', 'Le compte est créé avec un mot de passe temporaire. Le nouveau membre peut se connecter immédiatement ; pensez à lui demander de le changer. Par défaut, il peut seulement ')}
+                        <strong>{t('adminTeam.inviteHelpStrong', 'créer des cartels')}</strong>
+                        {t('adminTeam.inviteHelpB', ". Ajoutez d'autres permissions ci-dessous.")}
                     </p>
                 </AdminSection>
             )}
 
             {/* Légende des permissions */}
             {canManageCurrent && (
-                <ExplainerBox icon={HelpCircle} title="Permissions disponibles">
+                <ExplainerBox icon={HelpCircle} title={t('adminTeam.permsAvailableTitle', 'Permissions disponibles')}>
                     <ul style={{ margin: '8px 0 0', paddingLeft: '18px', lineHeight: '1.7' }}>
-                        <li><strong>Gérer les cartels</strong> — créer, éditer, mettre en brouillon / archive, <em>publier</em> les cartels du périmètre, et auto-traduire l'autre langue. (Les visiteurs non connectés peuvent toujours proposer un cartel : il part en attente de validation.)</li>
-                        <li><strong>Exporter (langues du site)</strong> — accès <em>lecture seule</em> au gestionnaire pour sélectionner et exporter des cartels (PDF, images, archive) dans les langues déjà saisies (FR / EN). Limité au périmètre du compte.</li>
-                        <li><strong>Exporter (autre langue)</strong> — comme ci-dessus, plus la <em>frise traduite</em> : export traduit à la volée vers une langue cible. Inclut l'export simple.</li>
-                        <li><strong>Gérer les contenus</strong> — contenus hors cartels : partenaires et équipe « à propos » du périmètre ; au niveau principal, aussi presse, missions, prestations et boutique.</li>
-                        <li><strong>Gérer l'équipe</strong> — <em>owner</em> : le membre peut inviter, modifier et supprimer d'autres comptes dans le contexte courant.</li>
+                        <li><strong>{t('adminTeam.permManageCartels', 'Gérer les cartels')}</strong>{t('adminTeam.legendCartelsDesc1', ' — créer, éditer, mettre en brouillon / archive, ')}<em>{t('adminTeam.legendPublish', 'publier')}</em>{t('adminTeam.legendCartelsDesc2', " les cartels du périmètre, et auto-traduire l'autre langue. (Les visiteurs non connectés peuvent toujours proposer un cartel : il part en attente de validation.)")}</li>
+                        <li><strong>{t('adminTeam.permExportSite', 'Exporter (langues du site)')}</strong>{t('adminTeam.legendExportSiteDesc1', ' — accès ')}<em>{t('adminTeam.legendReadOnly', 'lecture seule')}</em>{t('adminTeam.legendExportSiteDesc2', ' au gestionnaire pour sélectionner et exporter des cartels (PDF, images, archive) dans les langues déjà saisies (FR / EN). Limité au périmètre du compte.')}</li>
+                        <li><strong>{t('adminTeam.permExportOther', 'Exporter (autre langue)')}</strong>{t('adminTeam.legendExportOtherDesc1', ' — comme ci-dessus, plus la ')}<em>{t('adminTeam.legendTranslatedFrise', 'frise traduite')}</em>{t('adminTeam.legendExportOtherDesc2', " : export traduit à la volée vers une langue cible. Inclut l'export simple.")}</li>
+                        <li><strong>{t('adminTeam.permManageContent', 'Gérer les contenus')}</strong>{t('adminTeam.legendContentDesc', " — contenus hors cartels : partenaires et équipe « à propos » du périmètre ; au niveau principal, aussi presse, missions, prestations et boutique.")}</li>
+                        <li><strong>{t('adminTeam.permManageTeam', "Gérer l'équipe")}</strong>{' — '}<em>{t('adminTeam.legendOwner', 'owner')}</em>{t('adminTeam.legendTeamDesc2', " : le membre peut inviter, modifier et supprimer d'autres comptes dans le contexte courant.")}</li>
                     </ul>
                 </ExplainerBox>
             )}
@@ -312,10 +319,10 @@ const AdminTeam = () => {
             {/* Liste des membres */}
             <AdminSection>
                 {loading ? (
-                    <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0' }}>Chargement…</p>
+                    <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0' }}>{t('adminTeam.loading', 'Chargement…')}</p>
                 ) : members.length === 0 ? (
                     <p style={{ textAlign: 'center', color: 'var(--color-text-subtle)', padding: '40px 0', fontSize: '0.9rem' }}>
-                        Aucun membre dans ce contexte.
+                        {t('adminTeam.noMembers', 'Aucun membre dans ce contexte.')}
                     </p>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -334,11 +341,11 @@ const AdminTeam = () => {
                                     <div style={{ flex: '1 1 220px', minWidth: 0 }}>
                                         <div style={{ fontWeight: '700', fontSize: '0.9rem', color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                             {m.email}
-                                            {isSelf && <span style={{ color: 'var(--color-text-subtle)', fontWeight: '400', marginLeft: '6px' }}>(vous)</span>}
+                                            {isSelf && <span style={{ color: 'var(--color-text-subtle)', fontWeight: '400', marginLeft: '6px' }}>{t('adminTeam.you', '(vous)')}</span>}
                                         </div>
                                         {isSuper && (
                                             <div style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.4px', fontWeight: '700' }}>
-                                                <Crown size={11} /> Superadmin
+                                                <Crown size={11} /> {t('adminTeam.superadmin', 'Superadmin')}
                                             </div>
                                         )}
                                     </div>
@@ -348,36 +355,36 @@ const AdminTeam = () => {
                                         sûrs dans tous les contextes (principal comme sous-site). */}
                                     <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
                                         <Toggle
-                                            label="Gérer les cartels"
-                                            hint="Créer, éditer, mettre en brouillon / archive, publier les cartels du périmètre, et auto-traduire l'autre langue."
+                                            label={t('adminTeam.permManageCartels', 'Gérer les cartels')}
+                                            hint={t('adminTeam.permManageCartelsHint', "Créer, éditer, mettre en brouillon / archive, publier les cartels du périmètre, et auto-traduire l'autre langue.")}
                                             value={!!m.can_manage_cartels}
                                             onChange={() => handleTogglePerm(m, 'can_manage_cartels')}
                                             disabled={readOnly}
                                         />
                                         <Toggle
-                                            label="Exporter (langues du site)"
-                                            hint="Exporter une sélection de cartels (PDF, images, archive) dans les langues déjà saisies (FR / EN)."
+                                            label={t('adminTeam.permExportSite', 'Exporter (langues du site)')}
+                                            hint={t('adminTeam.permExportSiteHint', 'Exporter une sélection de cartels (PDF, images, archive) dans les langues déjà saisies (FR / EN).')}
                                             value={!!m.can_export_cartels}
                                             onChange={() => handleTogglePerm(m, 'can_export_cartels')}
                                             disabled={readOnly}
                                         />
                                         <Toggle
-                                            label="Exporter (autre langue)"
-                                            hint="Exporter une sélection traduite à la volée vers une langue cible (frise traduite). Inclut l'export simple."
+                                            label={t('adminTeam.permExportOther', 'Exporter (autre langue)')}
+                                            hint={t('adminTeam.permExportOtherHint', "Exporter une sélection traduite à la volée vers une langue cible (frise traduite). Inclut l'export simple.")}
                                             value={!!m.can_export_translated}
                                             onChange={() => handleTogglePerm(m, 'can_export_translated')}
                                             disabled={readOnly}
                                         />
                                         <Toggle
-                                            label="Gérer les contenus"
-                                            hint="Gérer les contenus hors cartels du périmètre (partenaires, équipe « à propos » ; + presse, missions, prestations, boutique au niveau principal)."
+                                            label={t('adminTeam.permManageContent', 'Gérer les contenus')}
+                                            hint={t('adminTeam.permManageContentHint', "Gérer les contenus hors cartels du périmètre (partenaires, équipe « à propos » ; + presse, missions, prestations, boutique au niveau principal).")}
                                             value={!!m.can_manage_content}
                                             onChange={() => handleTogglePerm(m, 'can_manage_content')}
                                             disabled={readOnly}
                                         />
                                         <Toggle
-                                            label="Gérer l'équipe"
-                                            hint="Owner : peut inviter et gérer les autres membres du contexte courant."
+                                            label={t('adminTeam.permManageTeam', "Gérer l'équipe")}
+                                            hint={t('adminTeam.permManageTeamHint', 'Owner : peut inviter et gérer les autres membres du contexte courant.')}
                                             value={!!m.can_manage_team}
                                             onChange={() => handleTogglePerm(m, 'can_manage_team')}
                                             disabled={readOnly}
@@ -388,7 +395,7 @@ const AdminTeam = () => {
                                         <button
                                             onClick={() => setResetTarget(m)}
                                             style={{ ...ghostBtnStyle, padding: '5px 10px' }}
-                                            title="Réinitialiser le mot de passe"
+                                            title={t('adminTeam.resetPasswordTitle', 'Réinitialiser le mot de passe')}
                                         >
                                             <KeyRound size={13} />
                                         </button>
@@ -397,7 +404,7 @@ const AdminTeam = () => {
                                         <button
                                             onClick={() => handleDelete(m)}
                                             style={{ ...dangerBtnStyle, padding: '5px 10px' }}
-                                            title="Supprimer ce compte"
+                                            title={t('adminTeam.deleteAccountTitle', 'Supprimer ce compte')}
                                         >
                                             <Trash2 size={13} />
                                         </button>

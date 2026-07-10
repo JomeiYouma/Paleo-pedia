@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { pediaBasePath } from '../utils/subsiteHost';
 import { useApp } from '../context/AppContext';
 
@@ -41,6 +42,7 @@ const pillStyle = {
 };
 
 const PediaHeader = () => {
+    const { t } = useTranslation();
     const { user, logout } = useApp();
     const [showLogin, setShowLogin] = useState(false);
     return (
@@ -63,7 +65,7 @@ const PediaHeader = () => {
                 <Link
                     to={pediaBasePath() || '/'}
                     style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 12 }}
-                    aria-label="Paléo-Pédia, accueil"
+                    aria-label={t('pediaLayout.headerHomeAria', 'Paléo-Pédia, accueil')}
                 >
                     <div style={{ width: 6, height: 32, background: 'var(--color-primary)', flexShrink: 0 }} />
                     <span style={{
@@ -77,18 +79,18 @@ const PediaHeader = () => {
                         Paléo-Pédia
                     </span>
                 </Link>
-                <nav aria-label="Navigation Paléo-Pédia" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <nav aria-label={t('pediaLayout.navAria', 'Navigation Paléo-Pédia')} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <Link to={`${pediaBasePath()}/participer-au-projet`} style={pillStyle}>
-                        Participer au projet
+                        {t('pediaLayout.participate', 'Participer au projet')}
                     </Link>
                     {user ? (
                         <>
-                            <Link to="/app/admin" style={pillStyle}>Admin</Link>
-                            <button type="button" onClick={logout} style={pillStyle}>Déconnexion</button>
+                            <Link to="/app/admin" style={pillStyle}>{t('pediaLayout.admin', 'Admin')}</Link>
+                            <button type="button" onClick={logout} style={pillStyle}>{t('pediaLayout.logout', 'Déconnexion')}</button>
                         </>
                     ) : (
                         <button type="button" onClick={() => setShowLogin(true)} style={pillStyle}>
-                            Se connecter
+                            {t('pediaLayout.login', 'Se connecter')}
                         </button>
                     )}
                 </nav>
@@ -101,6 +103,7 @@ const PediaHeader = () => {
 // Modale de connexion minimale (réutilise login() du contexte). La session est
 // par origine : se connecter ici crée une session propre à paleo-pedia.org.
 const PediaLoginModal = ({ onClose }) => {
+    const { t } = useTranslation();
     const { login } = useApp();
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
@@ -117,7 +120,7 @@ const PediaLoginModal = ({ onClose }) => {
             onClose();
             navigate('/app/admin');
         } catch (err) {
-            setError(err?.message || 'Identifiants invalides.');
+            setError(err?.message || t('pediaLayout.invalidCredentials', 'Identifiants invalides.'));
         } finally {
             setBusy(false);
         }
@@ -146,14 +149,14 @@ const PediaLoginModal = ({ onClose }) => {
                     boxShadow: '0 18px 48px rgba(0,0,0,0.25)',
                 }}
             >
-                <h2 style={{ margin: '0 0 16px', fontSize: '1.2rem' }}>Connexion</h2>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" autoComplete="username" required style={fieldStyle} />
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mot de passe" autoComplete="current-password" required style={fieldStyle} />
+                <h2 style={{ margin: '0 0 16px', fontSize: '1.2rem' }}>{t('pediaLayout.loginTitle', 'Connexion')}</h2>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('pediaLayout.emailPlaceholder', 'Email')} autoComplete="username" required style={fieldStyle} />
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('pediaLayout.passwordPlaceholder', 'Mot de passe')} autoComplete="current-password" required style={fieldStyle} />
                 {error && <p style={{ color: 'crimson', fontSize: '0.85rem', margin: '0 0 10px' }}>{error}</p>}
                 <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
-                    <button type="button" onClick={onClose} style={{ ...pillStyle, flex: 1, textAlign: 'center' }}>Annuler</button>
+                    <button type="button" onClick={onClose} style={{ ...pillStyle, flex: 1, textAlign: 'center' }}>{t('pediaLayout.cancel', 'Annuler')}</button>
                     <button type="submit" disabled={busy} style={{ ...pillStyle, flex: 1, textAlign: 'center', background: 'var(--color-primary)', color: '#fff', borderColor: 'var(--color-primary)', opacity: busy ? 0.6 : 1 }}>
-                        {busy ? '…' : 'Se connecter'}
+                        {busy ? '…' : t('pediaLayout.login', 'Se connecter')}
                     </button>
                 </div>
             </form>
@@ -162,6 +165,7 @@ const PediaLoginModal = ({ onClose }) => {
 };
 
 const PediaFooter = () => {
+    const { t } = useTranslation();
     const linkStyle = { color: 'var(--color-text-muted)', textDecoration: 'none' };
     return (
         <footer style={{
@@ -173,16 +177,16 @@ const PediaFooter = () => {
             color: 'var(--color-text-muted)',
             fontSize: '0.85rem',
         }}>
-            <nav aria-label="Liens légaux" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 18px', justifyContent: 'center', marginBottom: 12 }}>
-                <Link to={`${pediaBasePath()}/mentions-legales`} style={linkStyle}>Mentions légales</Link>
-                <Link to={`${pediaBasePath()}/politique-confidentialite`} style={linkStyle}>Politique de confidentialité</Link>
-                <Link to={`${pediaBasePath()}/contact`} style={linkStyle}>Contact</Link>
+            <nav aria-label={t('pediaLayout.legalLinksAria', 'Liens légaux')} style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 18px', justifyContent: 'center', marginBottom: 12 }}>
+                <Link to={`${pediaBasePath()}/mentions-legales`} style={linkStyle}>{t('pediaLayout.legalNotice', 'Mentions légales')}</Link>
+                <Link to={`${pediaBasePath()}/politique-confidentialite`} style={linkStyle}>{t('pediaLayout.privacyPolicy', 'Politique de confidentialité')}</Link>
+                <Link to={`${pediaBasePath()}/contact`} style={linkStyle}>{t('pediaLayout.contact', 'Contact')}</Link>
             </nav>
             <div>© {new Date().getFullYear()}{' '}
                 <a href="https://atelier21.org" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, textDecoration: 'underline' }}>Atelier 21</a>
             </div>
             <div style={{ marginTop: '4px', fontSize: '0.8rem' }}>
-                Plateforme créée par{' '}
+                {t('pediaLayout.platformCreatedBy', 'Plateforme créée par')}{' '}
                 <a href="https://jomeiyouma.github.io/portfolio/" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, textDecoration: 'underline' }}>Youma</a>
             </div>
         </footer>

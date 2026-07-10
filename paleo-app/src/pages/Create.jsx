@@ -759,14 +759,14 @@ const Create = () => {
                 }}>
                     <Info size={16} color="#c2185b" style={{ flexShrink: 0, marginTop: '2px' }} />
                     <div style={{ flex: 1 }}>
-                        Votre cartel sera publié sur le sous-site <strong>{homeSubsite.name}</strong>, pas sur le site principal.
+                        {t('create.subsitePublishNote', { name: homeSubsite.name, defaultValue: `Votre cartel sera publié sur le sous-site ${homeSubsite.name}, pas sur le site principal.` })}
                         {' '}
                         <button
                             type="button"
                             onClick={() => navigate(`${subsiteBasePath(homeSubsite.slug)}/create`)}
                             style={{ background: 'none', border: 'none', color: '#c2185b', textDecoration: 'underline', cursor: 'pointer', padding: 0, fontFamily: 'inherit', fontSize: '0.85rem', fontWeight: '600' }}
                         >
-                            Passer en vue sous-site →
+                            {t('create.switchSubsite', 'Passer en vue sous-site')} →
                         </button>
                     </div>
                 </div>

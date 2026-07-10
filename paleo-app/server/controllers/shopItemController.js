@@ -56,4 +56,48 @@ export const ShopItemController = {
       res.status(500).json({ error: e.message });
     }
   },
+
+  /**
+   * POST /api/shop-items/:id/checkout-click  (public, sans auth)
+   * Journalise un clic visiteur sur un lien de paiement Stripe. Point d'intérêt
+   * de conversion : on n'a AUCUNE autre trace côté plateforme (le visiteur part
+   * vers buy.stripe.com), et un superadmin peut brancher un email sur ce type.
+   *
+   * Beacon fire-and-forget : on répond 204 immédiatement, sans bloquer la
+   * navigation vers Stripe. On ne journalise que pour un article existant ET
+   * publié (borne le flood de logs sur des IDs arbitraires). Un clic ≠ un
+   * achat : la conversion réelle reste dans le tableau de bord Stripe.
+   */
+  async recordCheckoutClick(req, res) {
+    try {
+      const item = await ShopItemModel.findById(req.params.id);
+      // Article inconnu ou non publié : on ignore silencieusement (204) plutôt
+      // que 404, pour ne pas transformer l'endpoint en oracle d'existence.
+      if (!item || !item.is_published) return res.sendStatus(204);
+
+      const body = req.body || {};
+      const variant = String(body.variant || '').trim().slice(0, 120);
+      const option  = String(body.option  || '').trim().slice(0, 120);
+      const price    = String(body.price   || '').trim().slice(0, 40);
+      const url      = String(body.url     || '').trim().slice(0, 512);
+      // IP du visiteur (fiable via trust proxy) : sert au récap quotidien
+      // « telle IP a cliqué x fois ». Donnée personnelle → cf. note RGPD EMAILS.md.
+      const ip = req.ip || null;
+      // Résumé lisible dans le journal : « Titre — Papier / À domicile ».
+      const choice = [variant, option].filter(Boolean).join(' / ');
+      const summary = choice ? `${item.title} — ${choice}` : (item.title || '');
+
+      dispatch({
+        type: 'shop_item.checkout_click',
+        // pas de req.user (visiteur anonyme) → actor null, c'est voulu
+        targetId: item.id,
+        summary,
+        payload: { title: item.title, category: item.category, variant, option, price, url, ip },
+      });
+      res.sendStatus(204);
+    } catch (e) {
+      // Un souci de tracking ne doit jamais gêner l'achat : on avale.
+      res.sendStatus(204);
+    }
+  },
 };

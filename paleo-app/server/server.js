@@ -6,6 +6,7 @@ import fs from 'fs';
 import routes from './routes/index.js';
 import { UPLOADS_DIR, LEGACY_UPLOADS_DIR } from './controllers/uploadController.js';
 import { injectSocialMeta } from './lib/socialMeta.js';
+import { startClickDigestScheduler } from './services/clickDigest.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProd = process.env.NODE_ENV === 'production';
@@ -176,4 +177,6 @@ app.use((_, res) => res.status(404).json({ error: 'Route introuvable' }));
 app.listen(PORT, () => {
   console.log(`\n🌿 paleo-api démarré sur http://localhost:${PORT}`);
   console.log(`   Environnement : ${process.env.NODE_ENV ?? 'development'}\n`);
+  // Récap quotidien des clics boutique (no-op tant que non activé en admin).
+  startClickDigestScheduler();
 });
