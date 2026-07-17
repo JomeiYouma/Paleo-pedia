@@ -125,7 +125,9 @@ export async function sendClickDigest({ since, until, recipient }) {
   const digest = await buildDigest({ since, until });
   if (!digest) return { sent: false, clicks: 0 };
 
-  const subject = `[Paléo] Récap quotidien — clics boutique (${digest.clicks} clic(s), ${digest.ips} IP)`;
+  // Même convention de préfixe catégorisé que les mails d'événements, pour que
+  // les règles de tri de la boîte de réception fonctionnent uniformément.
+  const subject = `[Paléo · Boutique] Récap quotidien — ${digest.clicks} clic(s), ${digest.ips} IP`;
   await sendMail({ to: recipient, subject, text: digest.text });
   return { sent: true, clicks: digest.clicks, ips: digest.ips };
 }

@@ -194,6 +194,29 @@ Si rien n'arrive : voir [§ 7 Troubleshooting](#7-troubleshooting).
 
 > **Note sur les deux files de modération** : `cartel.submission_pending` (visiteur anonyme via le formulaire public) et `cartel.subsite_submitted` (sous-site → site principal) sont **distincts**. Ne pas les confondre — voir mémoire interne `project_submissions_vs_pending`.
 
+### 5.1 Mails dédiés vs format générique
+
+Le format générique (`Événement : … / Cible : <uuid> / Détails : <json>`) est fait pour l'**audit** : exhaustif, mais illisible dans une boîte de réception. Les types qu'une équipe lit vraiment au quotidien ont donc un **mail dédié**, défini dans `services/emailTemplates.js` :
+
+| Type | Sujet | Reply-To |
+|---|---|---|
+| `contact_message.created` | `[Paléo · Contact] Marie Dupont : « … »` | l'auteur du message |
+| `mission_application.created` | `[Paléo · Candidature] Jean Martin → Mission X` | le candidat |
+| `cartel.submission_pending` | `[Paléo · Cartel à modérer] « Titre »` | — |
+
+Tous les autres types gardent le format générique : `renderEventEmail()` retourne `null` et le dispatcher retombe dessus. Un template qui jette est rattrapé de la même façon — une notification n'est jamais perdue à cause d'un souci de mise en forme.
+
+**Le préfixe** suit une règle simple : si `subject_prefix` a été personnalisé dans l'admin, cette valeur gagne toujours ; s'il vaut le défaut `[Paléo]`, le code l'enrichit de la catégorie du template (`[Paléo · Contact]`). Le récap boutique suit la même convention (`[Paléo · Boutique]`), pour que les règles de tri de la boîte fonctionnent uniformément.
+
+**Ajouter ou modifier un mail dédié** : une entrée dans `emailTemplates.js`, rien d'autre à câbler. Pour voir le rendu sans déclencher de vrais événements :
+
+```bash
+node server/scripts/preview_emails.js               # affiche les 3 exemples
+node server/scripts/preview_emails.js --send <mail> # les envoie pour de vrai
+```
+
+**Lien vers l'app** : le mail de modération de cartel nomme la page en toutes lettres. Si `PUBLIC_BASE_URL` est renseigné dans le `.env` (ex. `https://paleo-energetique.org`), il ajoute en plus un lien direct vers `/app/manage/pending`. Optionnel.
+
 ---
 
 ## 6. Utilisation par l'admin
@@ -245,8 +268,18 @@ Tout en bas de l'onglet **Configuration emails**, une carte dédiée « Récapit
 
 ### 7.1 Aucun email n'arrive
 
-1. **Le SMTP est-il configuré ?** Lance `node -e 'console.log(process.env.MAIL_SMTP_HOST)'` côté serveur. Si vide, le `.env` n'est pas chargé ou la variable manque.
-2. **Le warning au démarrage** : si tu vois `[mailer] SMTP non configuré` dans les logs serveur, c'est qu'il manque `MAIL_SMTP_HOST`, `MAIL_SMTP_USER` ou `MAIL_SMTP_PASS`.
+**Commence par ça** — le script tranche en dix secondes entre « SMTP muet » et « config du type » :
+
+```bash
+node server/scripts/test_smtp.js ton-adresse@exemple.org
+```
+
+Il affiche la config lue dans le `.env`, teste la connexion et l'authentification **sans rien envoyer**, puis envoie un mail de test via le vrai `mailer.js`. Ce qui marche là marchera dans l'app.
+
+Ensuite, dans l'ordre :
+
+1. **Le SMTP est-il configuré ?** Si `test_smtp.js` dit « Config incomplète », le `.env` n'est pas chargé ou la variable manque.
+2. **Le warning au démarrage** : si tu vois `[mailer] SMTP non configuré` dans les logs serveur, c'est qu'il manque `MAIL_SMTP_HOST`, `MAIL_SMTP_USER` ou `MAIL_SMTP_PASS`. Le même message apparaît aussi, en `error`, à **chaque envoi tenté** — avec le sujet et le destinataire perdus.
 3. **Le type est-il activé ?** Sur la page de config, vérifie que la case `Email` est cochée ET que `Destinataire` n'est pas vide.
 4. **Vérifie les logs serveur** : si l'envoi échoue, on imprime `[mailer] Échec envoi : <message>`. Causes courantes :
    - Authentification refusée (`Invalid login`) → mauvais mot de passe, ou Gmail sans mot de passe d'application

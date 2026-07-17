@@ -48,11 +48,18 @@ function getTransporter() {
  * @param {string} args.subject
  * @param {string} args.text
  * @param {string} [args.html]
+ * @param {string|{name:string,address:string}} [args.replyTo] - adresse de réponse
  * @param {boolean} [args.markAsSpam] - ajoute X-Spam-Flag: YES (utile pour règles de tri)
  */
-export async function sendMail({ to, subject, text, html, markAsSpam = false }) {
+export async function sendMail({ to, subject, text, html, replyTo, markAsSpam = false }) {
   const transporter = getTransporter();
-  if (!transporter) return { skipped: true };
+  if (!transporter) {
+    // Bruyant volontairement : un envoi demandé mais impossible doit laisser une
+    // trace. Le warning au démarrage passe inaperçu et une notification perdue
+    // en silence peut le rester des mois.
+    console.error(`[mailer] Envoi ignoré, SMTP non configuré : « ${subject} » → ${to}`);
+    return { skipped: true };
+  }
   if (!to) return { skipped: true };
 
   try {
@@ -64,6 +71,7 @@ export async function sendMail({ to, subject, text, html, markAsSpam = false }) 
     const info = await transporter.sendMail({
       from: process.env.MAIL_FROM || process.env.MAIL_SMTP_USER,
       to,
+      replyTo: replyTo || undefined,
       subject,
       text,
       html: html || undefined,
