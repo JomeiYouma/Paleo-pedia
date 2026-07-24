@@ -262,14 +262,32 @@ export const CartelModel = {
     // (Library.jsx filtre les visiteurs anonymes sur c.visible). On la
     // synchronise avec le statut : visible=1 uniquement quand publié.
     const visible = status === 'published' ? 1 : 0;
-    if (status === 'published') {
+    if (status === 'archived') {
+      // On archive : mémoriser le statut d'origine dans archived_from pour
+      // pouvoir afficher une pastille (« Brouillon » / « En attente ») et savoir
+      // où le cartel retombera si on le désarchive. IF(...) rend l'opération
+      // idempotente : ré-archiver un cartel déjà archivé ne remplace pas la
+      // valeur d'origine par 'archived'. L'assignation à archived_from précède
+      // celle de status pour lire l'ANCIENNE valeur (MySQL évalue le SET de
+      // gauche à droite).
       await query(
-        'UPDATE cartels SET status = ?, visible = ?, published_at = NOW() WHERE id = ?',
+        `UPDATE cartels
+            SET archived_from = IF(status <> 'archived', status, archived_from),
+                status = 'archived',
+                visible = 0
+          WHERE id = ?`,
+        [id]
+      );
+    } else if (status === 'published') {
+      // Quitter l'état archivé (ou publier tout court) : on efface archived_from.
+      await query(
+        'UPDATE cartels SET status = ?, visible = ?, archived_from = NULL, published_at = NOW() WHERE id = ?',
         [status, visible, id]
       );
     } else {
+      // draft / pending_review : idem, on efface la mémoire d'archivage.
       await query(
-        'UPDATE cartels SET status = ?, visible = ? WHERE id = ?',
+        'UPDATE cartels SET status = ?, visible = ?, archived_from = NULL WHERE id = ?',
         [status, visible, id]
       );
     }

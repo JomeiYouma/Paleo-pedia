@@ -1262,6 +1262,22 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                                     Site principal · consultation
                                                 </span>
                                             )}
+                                            {/* Pastille "kind d'origine" pour un cartel archivé : rappelle qu'il
+                                                était un brouillon (ou en attente) avant archivage. Alimentée par
+                                                archived_from (cf. migration v36). Pas de pastille pour un cartel
+                                                archivé depuis l'état publié : c'était un cartel normal. */}
+                                            {cartel.status === 'archived' && (cartel.archived_from === 'draft' || cartel.archived_from === 'pending_review') && (
+                                                <span style={{
+                                                    display:'inline-block', marginTop:'4px', marginLeft: cartel.subsite_name ? '4px' : 0,
+                                                    background: cartel.archived_from === 'draft' ? '#f0f4ff' : '#fff4e0',
+                                                    color:      cartel.archived_from === 'draft' ? '#3b5bdb' : '#e67e00',
+                                                    borderRadius:'10px', padding:'1px 7px', fontSize:'0.72rem', fontWeight:'700',
+                                                }}>
+                                                    {cartel.archived_from === 'draft'
+                                                        ? t('manageCartels.archivedFromDraft', 'Brouillon')
+                                                        : t('manageCartels.archivedFromPending', 'En attente')}
+                                                </span>
+                                            )}
                                             {activeTab === 'pending' && cartel.created_at && (
                                                 <div style={{ color:'#bbb', fontSize:'0.78rem', marginTop:'3px', display:'flex', alignItems:'center', gap:'4px' }}>
                                                     <Clock size={11} />
@@ -1373,8 +1389,10 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                                                 {!readOnly && activeTab !== 'submissions' && (cartel.status === 'pending_review' || cartel.status === 'published' || cartel.status === 'archived') && (
                                                     <ActionBtn onClick={() => handleToDraft(cartel)} title={t('status.draft')} color="#e67e00" disabled={isProc}><FileText size={15} /></ActionBtn>
                                                 )}
-                                                {/* Archiver : publié → caché aux visiteurs, contenu conservé */}
-                                                {!readOnly && activeTab !== 'submissions' && cartel.status === 'published' && (
+                                                {/* Archiver : caché aux visiteurs, contenu conservé. Disponible sur
+                                                    tout cartel non déjà archivé (brouillon, en attente, publié) — on
+                                                    mémorise le statut d'origine (archived_from) pour la pastille. */}
+                                                {!readOnly && activeTab !== 'submissions' && cartel.status !== 'archived' && (
                                                     <ActionBtn onClick={() => handleArchive(cartel)} title={t('manageCartels.archive')} color="#6b7280" disabled={isProc}><Archive size={15} /></ActionBtn>
                                                 )}
 

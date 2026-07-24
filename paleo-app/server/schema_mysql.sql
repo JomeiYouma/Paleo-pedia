@@ -127,6 +127,7 @@ CREATE TABLE IF NOT EXISTS `cartels` (
 
   -- Publication
   `status`               ENUM('draft','pending_review','published','archived') NOT NULL DEFAULT 'draft',
+  `archived_from`        ENUM('draft','pending_review','published') NULL DEFAULT NULL, -- statut d'origine si archivé
   `visible`              TINYINT(1)    NOT NULL DEFAULT 0,
   `visible_on_main`      TINYINT(1)    NOT NULL DEFAULT 0,       -- validé par superadmin
   `submitted_to_main_at` DATETIME      NULL DEFAULT NULL,        -- file d'attente sous-site → principal
