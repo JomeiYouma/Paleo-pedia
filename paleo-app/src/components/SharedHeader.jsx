@@ -8,7 +8,7 @@ import {
 import LanguageSwitcher from './LanguageSwitcher';
 import { useNavigate } from 'react-router-dom';
 import { subsites as subsitesApi, auth as authApi } from '../services/apiClient';
-import { getSubsiteHostUrl, mainSitePath } from '../utils/subsiteHost';
+import { getSubsiteHostUrl, mainSitePath, isListedSubsite } from '../utils/subsiteHost';
 import { useTranslation } from 'react-i18next';
 import PasswordModal from './PasswordModal';
 
@@ -366,10 +366,11 @@ const SharedHeader = ({ currentWorkshop, quitWorkshop }) => {
                                             })}
 
                                             {/* Sous-sites / Thématiques */}
-                                            {subsites.length > 0 && (
+                                            {/* Seuls les sous-sites « listés » ; la liste complète sert aussi au badge tenant. */}
+                                            {subsites.some(isListedSubsite) && (
                                                 <div style={{ borderTop: '1px solid var(--color-border)', margin: '6px 0', paddingTop: '6px' }}>
                                                     <div style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--color-text-subtle)', padding: '2px 14px 6px', textTransform: 'uppercase', letterSpacing: '0.6px', fontFamily: 'var(--font-heading)' }}>{t('header.themes')}</div>
-                                                    {subsites.map(s => {
+                                                    {subsites.filter(isListedSubsite).map(s => {
                                                         // Si le sous-site a un domaine dédié (paleo-h2o.org, etc.),
                                                         // on génère un <a> vers son URL canonique. Sinon Link interne.
                                                         const hostUrl = getSubsiteHostUrl(s.slug);

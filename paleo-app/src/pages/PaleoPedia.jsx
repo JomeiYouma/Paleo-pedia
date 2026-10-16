@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ExternalLink, Boxes, Plus } from 'lucide-react';
-import { HOST_TO_SUBSITE_SLUG, MAIN_SITE_URL, PEDIA_SITE_URL, isPediaHost, pediaBasePath } from '../utils/subsiteHost';
+import { HOST_TO_SUBSITE_SLUG, MAIN_SITE_URL, PEDIA_SITE_URL, isPediaHost, pediaBasePath, isListedSubsite } from '../utils/subsiteHost';
 import { usePageMeta } from '../hooks/usePageMeta';
 import api from '../services/apiClient';
 import MethodoSection from '../components/pedia/MethodoSection';
@@ -97,7 +97,7 @@ const PaleoPedia = () => {
     useEffect(() => {
         let alive = true;
         api.subsites.getAll()
-            .then(list => { if (alive && Array.isArray(list)) setSubsiteList(list); })
+            .then(list => { if (alive && Array.isArray(list)) setSubsiteList(list.filter(isListedSubsite)); })
             .catch(() => { /* repli : aucun sous-site affiché */ });
         return () => { alive = false; };
     }, []);

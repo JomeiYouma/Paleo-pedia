@@ -192,7 +192,8 @@ export async function injectSocialMeta(html, req) {
   const slug = subsiteSlugForRequest(req);
   if (slug) {
     const subsite = await SubsiteModel.findMetaBySlug(slug);
-    if (subsite) return replaceHead(html, subsiteTags(subsite, pageUrl, base));
+    // Sous-site réservé aux admins : rien ne doit fuiter dans les aperçus de partage.
+    if (subsite && subsite.visibility !== 'admin') return replaceHead(html, subsiteTags(subsite, pageUrl, base));
   }
 
   // 3) Défaut : balises de index.html (site principal Paléo-Énergétique).

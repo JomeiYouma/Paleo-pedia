@@ -21,6 +21,7 @@ function buildSelectFull({ includeWorkshops = false } = {}) {
     u.email AS created_by_email,
     s.slug  AS subsite_slug,
     s.name  AS subsite_name,
+    s.visibility AS subsite_visibility,
     GROUP_CONCAT(
       DISTINCT CONCAT_WS('||', cat.id, cat.name, cat.name_en, cat.color, cat.icon)
       SEPARATOR ';;'

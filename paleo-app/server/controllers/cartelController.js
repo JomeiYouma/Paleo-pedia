@@ -2,6 +2,7 @@ import { CartelModel } from '../models/Cartel.js';
 import { WorkshopModel } from '../models/Workshop.js';
 import { SettingModel } from '../models/Setting.js';
 import { dispatchEvent } from '../services/eventDispatcher.js';
+import { maskHiddenSubsite } from '../lib/subsiteVisibility.js';
 
 // Helper local : dispatch fire-and-forget (jamais bloquant)
 const dispatch = (args) => { dispatchEvent(args).catch(() => {}); };
@@ -283,7 +284,7 @@ export const CartelController = {
       filters.includeWorkshops = true;
 
       const cartels = await CartelModel.findAll(filters);
-      res.json(cartels);
+      res.json(cartels.map(c => maskHiddenSubsite(req.user, c)));
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -295,7 +296,7 @@ export const CartelController = {
       const cartel = await loadCartelInScope(req.params.id, filter);
       // Ne pas divulguer l'existence du cartel hors scope
       if (!cartel) return res.status(404).json({ error: 'Cartel introuvable' });
-      res.json(cartel);
+      res.json(maskHiddenSubsite(req.user, cartel));
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

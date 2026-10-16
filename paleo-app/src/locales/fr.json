@@ -640,6 +640,13 @@
         "noCartels": "Aucun cartel dans la bibliothèque."
     },
     "subsiteEditor": {
+        "visibilityHeading": "Visibilité",
+        "visibilityListed": "Public et listé",
+        "visibilityListedHint": "Visible par tous et présenté sur Paléo-Pédia et dans le menu « Thématiques » du site principal.",
+        "visibilityUnlisted": "Public, non listé",
+        "visibilityUnlistedHint": "Accessible à toute personne qui a le lien, mais présenté nulle part (ni Paléo-Pédia, ni menu).",
+        "visibilityAdmin": "Réservé aux admins",
+        "visibilityAdminHint": "Visible uniquement par les superadmins et les comptes de ce sous-site. Les autres visiteurs voient « sous-site introuvable ». Les cartels déjà acceptés sur la frise principale y restent.",
         "saving": "Sauvegarde…",
         "create": "Créer le sous-site",
         "edit": "Enregistrer"

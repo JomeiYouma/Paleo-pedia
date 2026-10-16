@@ -1516,6 +1516,13 @@
         "partners": "Partners"
     },
     "subsiteEditor": {
+        "visibilityHeading": "Visibility",
+        "visibilityListed": "Public and listed",
+        "visibilityListedHint": "Visible to everyone and featured on Paléo-Pédia and in the main site's \"Themes\" menu.",
+        "visibilityUnlisted": "Public, unlisted",
+        "visibilityUnlistedHint": "Anyone with the link can open it, but it is featured nowhere (neither Paléo-Pédia nor the menu).",
+        "visibilityAdmin": "Admins only",
+        "visibilityAdminHint": "Only superadmins and this subsite's accounts can see it. Other visitors get \"subsite not found\". Cartels already accepted on the main timeline stay there.",
         "saving": "Saving...",
         "create": "Create Subsite",
         "edit": "Save",
