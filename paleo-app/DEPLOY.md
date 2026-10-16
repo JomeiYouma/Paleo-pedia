@@ -49,6 +49,31 @@ les nouveaux commits. Pour déployer du nouveau code : **`git pull` en SSH**, PU
    - Mixte (front + back) = **Build puis Arrêter → Démarrer**.
 4. **Vérifications post-déploiement** (cf. § dédié).
 
+## Savoir si la prod est à jour (SSH seul)
+
+```bash
+cd /srv/customer/sites/v2.atelier21.org
+git status --short                       # attendu : ' M paleo-app/package-lock.json' (réécrit par le Build, sans gravité)
+git fetch origin
+git --no-pager log --oneline HEAD..origin/main   # vide = code à jour
+git --no-pager diff --stat HEAD origin/main -- paleo-app/src paleo-app/server paleo-app/package.json
+cd paleo-app
+git --no-pager log -1 --format='commit en place : %h %ci'
+ls -l --time-style=full-iso dist/index.html      # build : doit être POSTÉRIEUR au commit (attention, heure en UTC)
+curl -sI https://paleo-energetique.org | head -1
+```
+
+- `--no-pager` évite que `git` ouvre un pager (`(END)` en bas d'écran → `q` pour sortir).
+- Chaque nouvelle connexion SSH repart de `~` : toujours refaire le `cd`.
+- Le diff indique quoi faire : `src/` → Build, `server/` → redémarrage, nouveau `migration_v*.sql` →
+  migration (cf. § Migrations, vérification incluse).
+- Sans le Manager, le Build peut se faire en SSH : `cd paleo-app && npm install && npm run build`.
+
+**Limite** : le process Node tourne dans le Node.js Builder, **pas** dans le conteneur de la console
+SSH (`ps` ne le voit pas). Impossible donc de vérifier ou de faire le redémarrage du back en SSH :
+**Arrêter → Démarrer reste à faire dans le Manager.** Pour contrôler que le nouveau back tourne,
+tester dans l'interface une fonctionnalité du dernier commit back.
+
 ## Migrations SQL (phpMyAdmin)
 
 - **Pas de table de suivi** : chaque `server/migration_vNN_*.sql` est joué **à la main** via
@@ -58,9 +83,35 @@ les nouveaux commits. Pour déployer du nouveau code : **`git pull` en SSH**, PU
   Les migrations récentes **ajoutent** des colonnes (rollback-safe : l'ancien code les ignore).
 - **Comment** : phpMyAdmin (base de prod) → onglet **SQL** → coller le contenu du fichier `.sql`
   → **Exécuter** (ou **Importer** le fichier).
-- **Dernière migration** : **v34** — `migration_v34_shop_item_versions.sql` ajoute la colonne
-  `shop_items.versions` (boutique à variantes / options de paiement Stripe). À jouer avant de
-  démarrer le back qui gère la boutique 3 niveaux.
+- **Sans phpMyAdmin** (SSH seul) : depuis `paleo-app/`, le script lit `paleo-app/.env` et joue
+  le fichier sur la base de prod :
+  ```bash
+  cd /srv/customer/sites/v2.atelier21.org/paleo-app
+  node server/scripts/run_migration.js server/migration_vNN_xxx.sql
+  ```
+- **Dernière migration** : **v36** — `migration_v36_cartel_archived_from.sql` ajoute la colonne
+  `cartels.archived_from` (statut d'origine d'un cartel archivé). Les précédentes :
+  v35 (`event_email_config` : types `shop_item.checkout_click`, `cartel.subsite_withdrawn`,
+  `partner.site_selection_updated`), v34 (colonne `shop_items.versions`, boutique à variantes).
+- **Vérifier en SSH ce qui est appliqué** (v34 → v36 ; ajouter une ligne à chaque nouvelle migration) :
+  ```bash
+  cd /srv/customer/sites/v2.atelier21.org/paleo-app
+  node --input-type=module <<'EOF'
+  import 'dotenv/config';
+  import mysql from 'mysql2/promise';
+  const c = await mysql.createConnection(process.env.DATABASE_URL || {
+    host: process.env.DB_HOST, port: +(process.env.DB_PORT || 3306),
+    database: process.env.DB_NAME, user: process.env.DB_USER, password: process.env.DB_PASSWORD });
+  const col = async (t, k) => (await c.query(
+    "SELECT COUNT(*) n FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=? AND COLUMN_NAME=?", [t, k]))[0][0].n > 0;
+  const [[ev]] = await c.query("SELECT COUNT(*) n FROM event_email_config WHERE type IN ('shop_item.checkout_click','cartel.subsite_withdrawn','partner.site_selection_updated')");
+  console.log('v34 shop_items.versions     :', await col('shop_items', 'versions') ? 'OK' : 'MANQUANTE');
+  console.log('v35 types event_email_config:', ev.n === 3 ? 'OK' : `MANQUANTE (${ev.n}/3)`);
+  console.log('v36 cartels.archived_from   :', await col('cartels', 'archived_from') ? 'OK' : 'MANQUANTE');
+  await c.end();
+  EOF
+  ```
+  Coller le bloc **en entier** jusqu'à la ligne `EOF` (sinon le shell reste sur une invite `>` : Ctrl+C).
 
 ## Vérifications post-déploiement
 
