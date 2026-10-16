@@ -221,6 +221,15 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     // Si intégré dans un sous-site, le filtre est verrouillé sur ce sous-site et
     // ignore le query param. Sinon on lit ?subsite= depuis l'URL.
     const filterSubsiteSlug = lockedSubsiteSlug || searchParams.get('subsite') || '';
+    // ?main=1 : ne garder que les cartels de la frise publique du site principal
+    // (même règle que le scope 'main_feed' côté serveur, cf. Cartel.findAll).
+    // Sert à imprimer la frise générale : onglet Publiés + ce filtre + Tout sélectionner.
+    const filterMainFrise = !filterSubsiteSlug && searchParams.get('main') === '1';
+    const toggleMainFrise = () => {
+        const next = new URLSearchParams(searchParams);
+        if (filterMainFrise) next.delete('main'); else next.set('main', '1');
+        setSearchParams(next, { replace: true });
+    };
     // Tri persisté dans l'URL (?sort=…&dir=…) pour survivre à un aller-retour vers Create.
     const [sortConfig, setSortConfig] = useState(() => ({
         key: searchParams.get('sort') || 'date',
@@ -336,6 +345,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
     //     principal (subsite_id NULL) qui s'affichent sur la frise via la catégorie
     //     du sous-site (consultation en lecture seule).
     const scopedCartels = useMemo(() => {
+        if (filterMainFrise) return cartels.filter(c => c.subsite_id == null || Number(c.visible_on_main) === 1);
         if (!filterSubsiteSlug) return cartels;
         return cartels.filter(c => {
             if (c.subsite_slug === filterSubsiteSlug) return true;
@@ -345,7 +355,7 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
             }
             return false;
         });
-    }, [cartels, filterSubsiteSlug, lockedSubsiteCategory]);
+    }, [cartels, filterSubsiteSlug, filterMainFrise, lockedSubsiteCategory]);
 
     // Détecte si un cartel est "du site principal" (affiché en consultation seulement)
     const isReadOnlyMainCartel = (c) => !!lockedSubsiteSlug && c.subsite_id === null;
@@ -705,13 +715,17 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                     .map(c => {
                         const tr = byId.get(String(c.id));
                         if (!tr) return c;
+                        // Clé de tri calculée sur l'année SOURCE : l'année traduite
+                        // (ex. « 3. Jahrhundert ») n'est pas forcément lisible par
+                        // getYearForSort, qui ne connaît que le FR et l'EN.
+                        const sortYear = getYearForSort(c);
                         // On remplace les champs de la langue source : generatePdf
                         // affichera ces champs traduits puisqu'on garde la même langue.
                         // `annee` est commun (pas de variante _en en BDD) : on l'écrase
                         // toujours par la version traduite par OpenAI.
                         return sourceLang === 'en'
-                            ? { ...c, titre_en: tr.titre, description_en: tr.description, location_en: tr.location, annee: tr.annee || c.annee }
-                            : { ...c, titre: tr.titre, description: tr.description, location: tr.location, annee: tr.annee || c.annee };
+                            ? { ...c, titre_en: tr.titre, description_en: tr.description, location_en: tr.location, annee: tr.annee || c.annee, sortYear }
+                            : { ...c, titre: tr.titre, description: tr.description, location: tr.location, annee: tr.annee || c.annee, sortYear };
                     });
 
                 setBusyLabel(t('translateFrise.busyGenerating', { defaultValue: 'Génération du PDF traduit…' }));
@@ -1059,6 +1073,19 @@ const ManageCartels = ({ lockedSubsiteSlug = null, lockedSubsiteCategory = null 
                     <span style={{ background:'#e8f1ff', color:'#1f6feb', padding:'8px 12px', borderRadius:'999px', fontSize:'0.82rem', fontWeight:'700' }}>
                         {t('manageCartels.workshopFilter', { name: activeWorkshops[0].name })}
                     </span>
+                )}
+
+                {/* Bascule « Frise du site principal » (hors vue sous-site). */}
+                {!filterSubsiteSlug && (
+                    <button
+                        onClick={toggleMainFrise}
+                        aria-pressed={filterMainFrise}
+                        title={t('manageCartels.mainFriseFilterHelp')}
+                        style={{ display:'flex', alignItems:'center', gap:'5px', padding:'8px 12px', borderRadius:'8px', border:`1px solid ${filterMainFrise ? '#1f6feb' : '#ddd'}`, background: filterMainFrise ? '#e8f1ff' : 'white', cursor:'pointer', fontSize:'0.85rem', color: filterMainFrise ? '#1f6feb' : '#555', fontFamily:'inherit', fontWeight: filterMainFrise ? '700' : '500' }}
+                    >
+                        <Globe size={14} />
+                        {t('manageCartels.mainFriseFilter')}
+                    </button>
                 )}
 
                 {/* Bouton "Filtres complexes" : ouvre le builder modal. */}

@@ -11,7 +11,7 @@ import { saveAs } from 'file-saver';
 import html2canvas from 'html2canvas';
 import QRCode     from 'qrcode';
 import jsPDF      from 'jspdf';
-import { formatYear } from './helpers';
+import { formatYear, getYearForSort } from './helpers';
 import { cartelDetailAbsoluteUrl } from './subsiteHost';
 
 // ── Configuration du rendu ────────────────────────────────────
@@ -20,6 +20,17 @@ const A4_HEIGHT_PX = 2480;
 const MM_TO_PX     = A4_WIDTH_PX / 297; // ~11.81 px/mm
 const PINK_HEX     = '#FCEDEC';
 const MARGIN       = Math.round(15 * MM_TO_PX); // ~177px
+// Marge blanche autour de la zone rose (haut, droite, bas) : sans elle, le rose
+// touche le bord de la feuille et l'imprimeur doit facturer des fonds perdus.
+const PINK_INSET   = Math.round(8 * MM_TO_PX);  // ~94px
+
+// Export PDF : la mise en page reste en coordonnées 300 dpi (A4_WIDTH_PX), mais
+// html2canvas rastérise à ~180 dpi (2105×1488) et le JPEG est compressé à 0.75.
+// Mesuré sur 54 cartels réels : ~785 Ko/page à 300 dpi / 0.90 (≈ 100 Mo pour
+// 136 cartels), ~265 Ko/page avec ces réglages. Les photos pèsent l'essentiel
+// de la page, d'où un gain moindre que la seule baisse de résolution.
+const PDF_RENDER_SCALE  = 0.6;
+const PDF_JPEG_QUALITY  = 0.75;
 
 const FONTS_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=PT+Sans+Narrow:wght@400;700&family=PT+Serif:wght@400;700&display=swap');
@@ -83,7 +94,7 @@ export const setupContainer = () => {
 
 // ── Rendu d'un cartel → Canvas ────────────────────────────────
 
-export const renderCartelToCanvas = async (cartel, container, lang, overrides) => {
+export const renderCartelToCanvas = async (cartel, container, lang, overrides, scale = 1) => {
   const isEn  = lang && lang.startsWith('en');
   const title = (isEn && cartel.titre_en)       ? cartel.titre_en       : cartel.titre;
   const desc  = (isEn && cartel.description_en) ? cartel.description_en : (cartel.description || '');
@@ -166,7 +177,7 @@ export const renderCartelToCanvas = async (cartel, container, lang, overrides) =
     <style>
       ${FONTS_CSS}
       .cc { width:${A4_WIDTH_PX}px; height:${A4_HEIGHT_PX}px; background:white; position:relative; overflow:hidden; }
-      .pz { position:absolute; right:0; top:0; width:50%; height:100%; background:${PINK_HEX}; z-index:0; }
+      .pz { position:absolute; right:${PINK_INSET}px; top:${PINK_INSET}px; bottom:${PINK_INSET}px; width:${mid_x - PINK_INSET}px; background:${PINK_HEX}; z-index:0; }
       .psb { font-family:'PT Sans Narrow',sans-serif; font-weight:700; color:black; }
       .psr { font-family:'PT Serif',serif;            font-weight:400; color:#141414; }
       .fi  { position:absolute; left:${footer_text_x}px; top:${qr_y}px; min-height:${qr_size}px; display:flex; flex-direction:column; justify-content:center; z-index:10; width:${footer_max_w}px; max-width:${footer_max_w}px; }
@@ -219,10 +230,25 @@ export const renderCartelToCanvas = async (cartel, container, lang, overrides) =
   }
 
   return html2canvas(container.querySelector('.cc'), {
-    scale: 1, useCORS: true, allowTaint: true, backgroundColor: '#FFFFFF',
+    scale, useCORS: true, allowTaint: true, backgroundColor: '#FFFFFF',
     width: A4_WIDTH_PX, height: A4_HEIGHT_PX,
+    // html2canvas clone TOUT le document à chaque rendu (et recharge ses
+    // images) : sur la page de gestion, c'est la liste complète des cartels.
+    // Seul le conteneur hors-écran nous intéresse, le reste du <body> est ignoré.
+    ignoreElements: (el) => el.parentElement === document.body && el !== container,
   });
 };
+
+/**
+ * Ordre chronologique d'impression (même clé que la frise, cf. TimelineMode).
+ * `sortYear`, s'il est fourni, prime : la frise traduite remplace `annee` par
+ * un texte traduit que `getYearForSort` ne sait pas forcément lire.
+ * Tri stable ; une année illisible vaut 9999 et passe donc en fin de document.
+ */
+export const sortCartelsChronologically = (cartels) => cartels
+  .map((c, i) => ({ c, i, y: c.sortYear ?? getYearForSort(c) }))
+  .sort((a, b) => a.y - b.y || a.i - b.i)
+  .map(({ c }) => c);
 
 // ── Exports publics ───────────────────────────────────────────
 
@@ -290,14 +316,15 @@ export const generateImage = async (cartel, lang = 'fr') => {
 export const generatePdf = async (cartels, lang = 'fr', onProgress, overrides) => {
   const pdf       = new jsPDF('l', 'mm', 'a4');
   const container = setupContainer();
+  const ordered   = sortCartelsChronologically(cartels);
   let   count     = 0;
 
-  for (const cartel of cartels) {
+  for (const cartel of ordered) {
     count++;
-    onProgress?.(count, cartels.length);
+    onProgress?.(count, ordered.length);
     try {
-      const canvas  = await renderCartelToCanvas(cartel, container, lang, overrides);
-      const imgData = canvas.toDataURL('image/jpeg', 0.90);
+      const canvas  = await renderCartelToCanvas(cartel, container, lang, overrides, PDF_RENDER_SCALE);
+      const imgData = canvas.toDataURL('image/jpeg', PDF_JPEG_QUALITY);
       if (count > 1) pdf.addPage('a4', 'l');
       pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
     } catch (e) {
