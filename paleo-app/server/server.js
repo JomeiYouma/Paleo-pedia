@@ -102,12 +102,24 @@ const LEGACY_HOST_301 = {
   'paleo-pedia.com':             'https://paleo-pedia.org',
   'www.paleo-pedia.com':         'https://paleo-pedia.org',
 };
+// Pages « personnage » du WP, encodées dans les QR « globe » des pancartes
+// imprimées (le QR « cube » vise /ARVR_musee/<nom>/, fichiers statiques à
+// restaurer depuis wp-files-backup.zip). Clé = chemin sans slash final, en
+// minuscules ; valeur = page détail du cartel correspondant.
+const LEGACY_PATH_301 = {
+  '/en/holy-mouchot-life':   '/cartel/c66b0845-cf53-41c5-8ea2-34e47556557a', // Concentrateur solaire de Mouchot
+  '/en/holy-kordesch-life':  '/cartel/1771927454026',                        // Piles alcalines rechargeables
+  '/en/holy-telkes-life':    '/cartel/1771861824327',                        // Maria Telkes
+  '/en/holy-maccready-life': '/cartel/6cfafcd5-ad6d-4c8f-baf0-9ce8229afd9c', // Avions à propulsion par pédales
+};
 const LEGACY_HOST_410 = new Set(['stockage.paleo-energetique.org']);
 // Spam injecté par le WP piraté : slug se terminant par "-k-<chiffres>".
 const SPAM_PATH = /-k-\d+\/?$/;
 app.use((req, res, next) => {
   const dest = LEGACY_HOST_301[req.hostname];
   if (dest) return res.redirect(301, dest);
+  const pathDest = LEGACY_PATH_301[req.path.replace(/\/+$/, '').toLowerCase()];
+  if (pathDest) return res.redirect(301, pathDest);
   if (LEGACY_HOST_410.has(req.hostname) || SPAM_PATH.test(req.path)) {
     return res.status(410).type('text/plain').send('410 Gone');
   }
