@@ -1174,6 +1174,8 @@
         "clearFilter": "Clear filter",
         "subsiteFilterBanner": "View filtered to subsite <1>{{name}}</1>",
         "removeSubsiteFilter": "Remove filter",
+        "mainFriseFilter": "Main site timeline",
+        "mainFriseFilterHelp": "Only keep cartels shown on the main site's public timeline (excludes subsite cartels not approved for it). With the Published tab then \"Select all\", this prepares printing the general timeline.",
         "backToSubsite": "Back to subsite",
         "lockedIntroTitle": "You are managing the {{name}} subsite",
         "lockedIntroPoint1": "Cartels <strong>from your subsite</strong> (created via <em>Propose a cartel</em> or <em>+ New cartel</em>) can be edited here. Each create or update is <strong>automatically submitted</strong> to the main site for validation a superadmin decides whether it also appears on the main site.",

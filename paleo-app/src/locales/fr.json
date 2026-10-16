@@ -337,6 +337,8 @@
         "clearFilter": "Effacer le filtre",
         "subsiteFilterBanner": "Vue filtrée sur le sous-site <1>{{name}}</1>",
         "removeSubsiteFilter": "Retirer le filtre",
+        "mainFriseFilter": "Frise du site principal",
+        "mainFriseFilterHelp": "Ne garder que les cartels affichés sur la frise publique du site principal (hors cartels de sous-site non validés). Avec l'onglet Publiés puis « Tout sélectionner », prépare l'impression de la frise générale.",
         "backToSubsite": "Retour au sous-site",
         "lockedIntroTitle": "Vous gérez le sous-site {{name}}",
         "lockedIntroPoint1": "Les cartels <strong>de votre sous-site</strong> (créés via <em>Proposer un cartel</em> ou <em>+ Nouveau cartel</em>) sont modifiables ici. Chaque création ou modification est <strong>automatiquement envoyée en soumission</strong> au site principal pour validation un superadmin décide si elle apparaît aussi sur le site principal.",
