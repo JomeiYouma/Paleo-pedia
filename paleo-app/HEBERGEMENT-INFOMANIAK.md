@@ -47,7 +47,9 @@ cd /srv/customer/sites/v2.atelier21.org && git pull origin main
 ```
 
 puis, selon ce qui a changé :
-- **front modifié** (`src/…`) → **Build** (régénère `dist/`).
+- **front modifié** (`src/…`) → **Build PUIS Arrêter → Démarrer** : `server.js` garde
+  `index.html` en mémoire depuis le démarrage, un Build seul donne une page blanche
+  (cf. DEPLOY.md).
 - **back modifié** (`server/…` : `server.js`, **middlewares, routes, contrôleurs**…)
   → **Arrêter → Démarrer** (le back n'est pas « buildé », il faut recharger le process).
 - **front + back modifiés** (cas courant d'un correctif) → **Build PUIS Arrêter → Démarrer** :

@@ -89,6 +89,14 @@ export function getSubsiteHostUrl(slug) {
  * → `/cartel/:id`, sinon `/site/<slug>/cartel/:id`, sinon `/cartel/:id` pour
  * un cartel du site principal.
  */
+/**
+ * Un sous-site n'est présenté (vitrine Paléo-Pédia, menu « Thématiques ») que
+ * s'il est « listé ». Les non listés restent accessibles par leur lien ; les
+ * réservés aux admins ne sont de toute façon renvoyés par l'API qu'aux ayants
+ * droit. Absence de champ (API antérieure à la v37) = listé.
+ */
+export const isListedSubsite = (s) => (s?.visibility ?? 'listed') === 'listed';
+
 export function cartelDetailPath(cartelId, subsiteSlug) {
     if (!cartelId) return '';
     const base = subsiteBasePath(subsiteSlug);

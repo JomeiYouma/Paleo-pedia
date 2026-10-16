@@ -740,8 +740,14 @@ const AdminSettings = () => {
                                             <div style={{ width: '4px', height: '32px', background: s.primary_color, flexShrink: 0 }} />
                                             <div style={{ flex: 1 }}>
                                                 <div style={{ fontWeight: '700', fontSize: '0.95rem' }}>{s.name}</div>
-                                                <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.8rem' }}>/site/{s.slug} · {s.category_name}</div>
+                                                <div style={{ color: 'var(--color-text-subtle)', fontSize: '0.8rem' }}>/site/{s.slug} · {s.category_name || s.workshop_name}</div>
                                             </div>
+                                            {s.visibility && s.visibility !== 'listed' && (
+                                                <span title={t(`subsiteEditor.visibility${s.visibility === 'admin' ? 'AdminHint' : 'UnlistedHint'}`)}
+                                                    style={{ flexShrink: 0, fontSize: '0.72rem', fontWeight: '700', padding: '3px 8px', borderRadius: '999px', background: s.visibility === 'admin' ? '#fdecea' : '#eef2f7', color: s.visibility === 'admin' ? '#b42318' : '#475467' }}>
+                                                    {s.visibility === 'admin' ? t('subsiteEditor.visibilityAdmin', 'Réservé aux admins') : t('subsiteEditor.visibilityUnlisted', 'Public, non listé')}
+                                                </span>
+                                            )}
                                             <a href={`/site/${s.slug}`} target="_blank" rel="noopener" title={t('adminSettings.openTitle', 'Ouvrir')} style={{ color: 'var(--color-text-muted)', display: 'flex' }}><ExternalLink size={14} /></a>
                                             <button onClick={() => setEditSubsite(s)} title={t('adminSettings.editTitle', 'Modifier')} aria-label={t('adminSettings.editSubsiteAria', { name: s.name, defaultValue: 'Modifier {{name}}' })}
                                                 style={{ background: 'none', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '5px 10px', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center' }}>

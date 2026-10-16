@@ -26,10 +26,16 @@ les nouveaux commits. Pour déployer du nouveau code : **`git pull` en SSH**, PU
 
 | Ce qui a changé | Action (après `git pull`) |
 |---|---|
-| **Front** seul (`src/…`, locales, styles, i18n) | **Build** (régénère `paleo-app/dist/`) |
+| **Front** seul (`src/…`, locales, styles, i18n) | **Build PUIS Arrêter → Démarrer** (cf. ⚠️ ci-dessous) |
 | **Back** seul (`server/…` : `server.js`, routes, contrôleurs, modèles, middlewares) | **Arrêter → Démarrer** (recharge le process Node) |
 | **Front + back** (cas courant d'un correctif) | **Build PUIS Arrêter → Démarrer** |
 | **Schéma SQL** (nouvelle migration) | migration phpMyAdmin **AVANT** le redémarrage (cf. § Migrations) |
+
+> ⚠️ **Un Build sans redémarrage = site blanc.** `server.js` lit `dist/index.html` **une seule
+> fois au démarrage** et le garde en mémoire. Le Build remplace les fichiers `dist/assets/*` (noms
+> hachés) : le process encore en vie sert l'ancien `index.html`, qui pointe vers des JS/CSS
+> supprimés → page blanche pour tout le monde. **Toujours enchaîner Arrêter → Démarrer après un
+> Build.** (Incident du 2026-10-16.)
 | **Nouvelle variable `.env`** | éditer `paleo-app/.env` puis **Arrêter → Démarrer** |
 
 > Le Build lance `npm install`, donc une **nouvelle dépendance** dans `package.json` est
@@ -44,9 +50,8 @@ les nouveaux commits. Pour déployer du nouveau code : **`git pull` en SSH**, PU
    git pull origin main
    ```
 3. **Manager Infomaniak → site Node.js** :
-   - **Build** si le front a changé (régénère `dist/`).
-   - **Arrêter → Démarrer** si le back a changé (recharge le process).
-   - Mixte (front + back) = **Build puis Arrêter → Démarrer**.
+   - **Build** si le front a changé (régénère `dist/`), **toujours suivi de Arrêter → Démarrer**.
+   - **Arrêter → Démarrer** seul si seul le back a changé (recharge le process).
 4. **Vérifications post-déploiement** (cf. § dédié).
 
 ## Savoir si la prod est à jour (SSH seul)
@@ -65,9 +70,19 @@ curl -sI https://paleo-energetique.org | head -1
 
 - `--no-pager` évite que `git` ouvre un pager (`(END)` en bas d'écran → `q` pour sortir).
 - Chaque nouvelle connexion SSH repart de `~` : toujours refaire le `cd`.
-- Le diff indique quoi faire : `src/` → Build, `server/` → redémarrage, nouveau `migration_v*.sql` →
-  migration (cf. § Migrations, vérification incluse).
-- Sans le Manager, le Build peut se faire en SSH : `cd paleo-app && npm install && npm run build`.
+- Le diff indique quoi faire : `src/` → Build + redémarrage, `server/` → redémarrage, nouveau
+  `migration_v*.sql` → migration (cf. § Migrations, vérification incluse).
+- **Build en SSH** : la console est limitée à ~512 Mo, `npm run build` y plante souvent
+  (`JavaScript heap out of memory`). Ne jamais builder directement dans `dist/` (Vite le vide au
+  démarrage → site cassé si le build échoue). Builder à part, puis basculer seulement si
+  `✓ built in …` s'affiche :
+  ```bash
+  cd /srv/customer/sites/v2.atelier21.org/paleo-app
+  rm -rf dist.new
+  GOMAXPROCS=1 NODE_OPTIONS=--max-old-space-size=1024 npx vite build --outDir dist.new --emptyOutDir
+  rm -rf dist.new/images && rm -rf dist.old && mv dist dist.old && mv dist.new dist
+  ```
+  puis **Arrêter → Démarrer** dans le Manager (cf. ⚠️ plus haut). Le Build du Manager reste préférable.
 
 **Limite** : le process Node tourne dans le Node.js Builder, **pas** dans le conteneur de la console
 SSH (`ps` ne le voit pas). Impossible donc de vérifier ou de faire le redémarrage du back en SSH :

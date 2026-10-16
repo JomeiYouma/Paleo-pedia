@@ -11,33 +11,41 @@
  */
 import { SubsiteModel } from '../models/Subsite.js';
 import { dispatchEvent } from '../services/eventDispatcher.js';
+import { SUBSITE_VISIBILITIES, canSeeSubsite } from '../lib/subsiteVisibility.js';
 const dispatch = (args) => { dispatchEvent(args).catch(() => {}); };
 
-const SUPERADMIN_EDITABLE = ['name', 'primary_color', 'planet_type', 'content_blocks', 'content_blocks_en', 'slug'];
+const SUPERADMIN_EDITABLE = ['name', 'primary_color', 'planet_type', 'visibility', 'content_blocks', 'content_blocks_en', 'slug'];
 const OWNER_EDITABLE      = ['primary_color', 'planet_type', 'content_blocks', 'content_blocks_en'];
+
+const invalidVisibility = (v) => v !== undefined && !SUBSITE_VISIBILITIES.includes(v);
 
 export const SubsiteController = {
 
   async getAll(req, res) {
     try {
+      // Les sous-sites réservés aux admins n'apparaissent qu'à qui y a accès
+      // (route en optionalAuth). Le tri listé / non listé est fait côté front.
       const list = await SubsiteModel.findAll();
-      res.json(list);
+      res.json(list.filter(s => canSeeSubsite(req.user, s)));
     } catch (e) { res.status(500).json({ error: e.message }); }
   },
 
   async getOne(req, res) {
     try {
       const subsite = await SubsiteModel.findBySlug(req.params.slug);
-      if (!subsite) return res.status(404).json({ error: 'Sous-site introuvable' });
+      if (!subsite || !canSeeSubsite(req.user, subsite)) return res.status(404).json({ error: 'Sous-site introuvable' });
       res.json(subsite);
     } catch (e) { res.status(500).json({ error: e.message }); }
   },
 
   async create(req, res) {
     try {
-      const { slug, name, category_id, workshop_id, primary_color, planet_type, content_blocks, content_blocks_en, partner_ids, primary_partner_ids } = req.body;
+      const { slug, name, category_id, workshop_id, primary_color, planet_type, visibility, content_blocks, content_blocks_en, partner_ids, primary_partner_ids } = req.body;
       if (!slug || !name) {
         return res.status(400).json({ error: 'slug et name sont requis' });
+      }
+      if (invalidVisibility(visibility)) {
+        return res.status(400).json({ error: `visibility doit valoir ${SUBSITE_VISIBILITIES.join(', ')}.` });
       }
       // Source = exactement un des deux. On rejette les deux cas dégénérés.
       const hasCategory = !!category_id;
@@ -51,7 +59,7 @@ export const SubsiteController = {
         slug, name,
         category_id: hasCategory ? category_id : null,
         workshop_id: hasWorkshop ? workshop_id : null,
-        primary_color, planet_type, content_blocks, content_blocks_en,
+        primary_color, planet_type, visibility, content_blocks, content_blocks_en,
       });
       if (partner_ids !== undefined || primary_partner_ids !== undefined) {
         await SubsiteModel.setPartners(subsite.id, {
@@ -64,7 +72,7 @@ export const SubsiteController = {
         type: 'subsite.created', req,
         targetId: created.id, subsiteId: created.id,
         summary: `${created.name} (${created.slug})`,
-        payload: { slug: created.slug, category_id: created.category_id, workshop_id: created.workshop_id },
+        payload: { slug: created.slug, category_id: created.category_id, workshop_id: created.workshop_id, visibility: created.visibility },
       });
       res.status(201).json(created);
     } catch (e) {
@@ -88,6 +96,9 @@ export const SubsiteController = {
       const allowed = isSuperadmin ? SUPERADMIN_EDITABLE : OWNER_EDITABLE;
 
       const { partner_ids, primary_partner_ids, ...data } = req.body;
+      if (invalidVisibility(data.visibility)) {
+        return res.status(400).json({ error: `visibility doit valoir ${SUBSITE_VISIBILITIES.join(', ')}.` });
+      }
       const updated = await SubsiteModel.update(req.params.slug, data, allowed);
       // Les partenaires sont éditables par superadmin ET owner (cohérent
       // avec « gérer le contenu de la page d'accueil »).

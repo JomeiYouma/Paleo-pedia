@@ -115,8 +115,10 @@ router.get('/export/image-check', authenticate, requireExport, ExportController.
 router.get('/export',             authenticate, requireExport, ExportController.exportArchive);
 
 // ── Sous-sites (public GET, admin write) ─────────────────────
-router.get   ('/subsites',       SubsiteController.getAll);
-router.get   ('/subsites/:slug', SubsiteController.getOne);
+// optionalAuth : un sous-site réservé aux admins (visibility = 'admin') n'est
+// renvoyé qu'à un superadmin ou à un compte rattaché (cf. lib/subsiteVisibility.js).
+router.get   ('/subsites',       optionalAuth, SubsiteController.getAll);
+router.get   ('/subsites/:slug', optionalAuth, SubsiteController.getOne);
 router.post  ('/subsites',       authenticate, requireAdmin, SubsiteController.create);
 // PATCH : permission gérée dans le controller (superadmin OU owner du subsite courant).
 router.patch ('/subsites/:slug', authenticate,                SubsiteController.update);

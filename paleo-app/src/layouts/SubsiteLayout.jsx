@@ -106,7 +106,9 @@ const SubsiteLayout = () => {
             .then(s => { setSubsite(s); setError(false); })
             .catch(() => setError(true))
             .finally(() => setLoading(false));
-    }, [slug]);
+    // `user` : un sous-site réservé aux admins répond 404 tant qu'on n'est pas
+    // connecté ; on le recharge après connexion (modale de login du layout).
+    }, [slug, user]);
 
     // Injecter la couleur primaire en CSS variable + surcharger les tokens globaux.
     // L'accent jaune du site principal est remplacé par la couleur du sous-site

@@ -1,4 +1,5 @@
 import { SubsiteModel } from '../models/Subsite.js';
+import { canSeeSubsite } from '../lib/subsiteVisibility.js';
 
 /**
  * resolveTenant — à appliquer sur toute route /s/:slug/*
@@ -6,6 +7,10 @@ import { SubsiteModel } from '../models/Subsite.js';
  * Lit req.params.slug, charge le sous-site, et injecte req.tenant.
  * Si le slug est invalide → 404. Toute logique en aval peut supposer que
  * req.tenant existe et est un sous-site légitime.
+ *
+ * Un sous-site réservé aux admins (visibility = 'admin') répond aussi 404
+ * à qui n'y a pas accès : toutes les routes /s/:slug/* passent par
+ * authenticate ou optionalAuth AVANT ce middleware, donc req.user est posé.
  */
 export async function resolveTenant(req, res, next) {
   const slug = req.params.slug;
@@ -14,7 +19,7 @@ export async function resolveTenant(req, res, next) {
   }
   try {
     const tenant = await SubsiteModel.findBySlug(slug);
-    if (!tenant) {
+    if (!tenant || !canSeeSubsite(req.user, tenant)) {
       return res.status(404).json({ error: 'Sous-site introuvable' });
     }
     req.tenant = tenant;

@@ -42,6 +42,14 @@ const PLANET_TYPE_OPTIONS = [
     { key: 'lush',   label: 'Mixte (forêt + éoliennes)' },
 ];
 
+// Visibilité du sous-site (migration v37). Doit rester synchronisé avec
+// SUBSITE_VISIBILITIES dans server/lib/subsiteVisibility.js.
+const SUBSITE_VISIBILITY_OPTIONS = [
+    { key: 'listed',   labelKey: 'subsiteEditor.visibilityListed',   label: 'Public et listé',          hintKey: 'subsiteEditor.visibilityListedHint',   hint: 'Visible par tous et présenté sur Paléo-Pédia et dans le menu « Thématiques » du site principal.' },
+    { key: 'unlisted', labelKey: 'subsiteEditor.visibilityUnlisted', label: 'Public, non listé',        hintKey: 'subsiteEditor.visibilityUnlistedHint', hint: "Accessible à toute personne qui a le lien, mais présenté nulle part (ni Paléo-Pédia, ni menu)." },
+    { key: 'admin',    labelKey: 'subsiteEditor.visibilityAdmin',    label: 'Réservé aux admins',       hintKey: 'subsiteEditor.visibilityAdminHint',    hint: "Visible uniquement par les superadmins et les comptes de ce sous-site. Les autres visiteurs voient « sous-site introuvable ». Les cartels déjà acceptés sur la frise principale y restent." },
+];
+
 const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = true }) => {
     const isEdit = !!subsite;
     const { t } = useTranslation();
@@ -53,6 +61,7 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
     const [workshopId,    setWorkshopId]    = useState(subsite?.workshop_id   ?? '');
     const [primaryColor,  setPrimaryColor]  = useState(subsite?.primary_color ?? '#4A90D9');
     const [planetType,    setPlanetType]    = useState(subsite?.planet_type   ?? '');
+    const [visibility,    setVisibility]    = useState(subsite?.visibility    ?? 'listed');
     const [blocks,        setBlocks]        = useState(subsite?.content_blocks ?? []);
     const [blocksEn,      setBlocksEn]      = useState(subsite?.content_blocks_en ?? []);
     const [blockLang,     setBlockLang]     = useState('fr');
@@ -110,7 +119,7 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
                     content_blocks: blocks,
                     content_blocks_en: blocksEn,
                 };
-                if (canEditIdentity) { payload.name = name; payload.slug = slug; }
+                if (canEditIdentity) { payload.name = name; payload.slug = slug; payload.visibility = visibility; }
                 await api.subsites.update(subsite.slug, payload);
                 onSaved?.();
                 onClose();
@@ -123,6 +132,7 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
                     name, slug,
                     primary_color: primaryColor,
                     planet_type: planetType || null,
+                    visibility,
                     content_blocks: blocks,
                     content_blocks_en: blocksEn,
                 };
@@ -245,6 +255,29 @@ const SubsiteEditor = ({ subsite = null, onClose, onSaved, canEditIdentity = tru
                             </div>
                         </div>
                     </section>
+                    )}
+
+                    {/* Visibilité — superadmin uniquement, comme l'identité */}
+                    {canEditIdentity && (
+                        <section>
+                            <h3 style={{ margin: '0 0 10px', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', color: '#aaa', letterSpacing: '0.5px' }}>
+                                {t('subsiteEditor.visibilityHeading', 'Visibilité')}
+                            </h3>
+                            <div role="radiogroup" aria-label={t('subsiteEditor.visibilityHeading', 'Visibilité')} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {SUBSITE_VISIBILITY_OPTIONS.map(o => {
+                                    const active = visibility === o.key;
+                                    return (
+                                        <label key={o.key} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '10px 12px', borderRadius: '8px', cursor: 'pointer', border: `1px solid ${active ? color : '#e5e5e5'}`, background: active ? `${color}12` : 'white' }}>
+                                            <input type="radio" name="subsite-visibility" value={o.key} checked={active} onChange={() => setVisibility(o.key)} style={{ marginTop: '3px', accentColor: color }} />
+                                            <span>
+                                                <span style={{ display: 'block', fontWeight: '700', fontSize: '0.88rem', color: '#333' }}>{t(o.labelKey, o.label)}</span>
+                                                <span style={{ display: 'block', fontSize: '0.78rem', color: '#888', lineHeight: 1.4, marginTop: '2px' }}>{t(o.hintKey, o.hint)}</span>
+                                            </span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        </section>
                     )}
 
                     {/* Compte propriétaire (owner) — création seulement, optionnel */}

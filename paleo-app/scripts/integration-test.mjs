@@ -378,6 +378,100 @@ await section('v33 traduction unitaire : capacité gérer-cartels requise', asyn
 });
 
 // ────────────────────────────────────────────────────────────────────────
+// v37 : visibilité d'un sous-site (listed / unlisted / admin)
+// ────────────────────────────────────────────────────────────────────────
+
+const setVisibility = (visibility) => req('PATCH', `/subsites/${SUBSITE_SLUG}`, { token: superToken, body: { visibility } });
+
+await section('v37 visibilité : validation et droits d\'édition', async () => {
+  // Quoi qu'il arrive, on rend le sous-site à son état listé en fin de run.
+  cleanupTasks.unshift(() => setVisibility('listed'));
+
+  const bad = await setVisibility('secret');
+  if (bad.status !== 400) return fail(`valeur inconnue attendue 400, reçu ${bad.status}`);
+  pass('valeur de visibilité inconnue refusée (400)');
+
+  const byOwner = await req('PATCH', `/subsites/${SUBSITE_SLUG}`, { token: ownerToken, body: { visibility: 'admin' } });
+  const after = await req('GET', `/subsites/${SUBSITE_SLUG}`, { token: superToken, expectStatus: 200 });
+  if (byOwner.status !== 200 || after.data.visibility !== 'listed') {
+    return fail(`l'owner ne doit pas pouvoir changer la visibilité (status ${byOwner.status}, visibilité ${after.data.visibility})`);
+  }
+  pass('owner : visibilité ignorée (réservée au superadmin)');
+});
+
+await section('v37 visibilité « non listé » : public par lien', async () => {
+  const r = await setVisibility('unlisted');
+  if (r.status !== 200 || r.data.visibility !== 'unlisted') return fail(`passage en unlisted échoué (${r.status})`);
+  const list = await req('GET', '/subsites', { expectStatus: 200 });
+  const row = list.data.find(s => s.slug === SUBSITE_SLUG);
+  if (!row || row.visibility !== 'unlisted') return fail('le sous-site non listé doit rester dans l\'API, marqué unlisted (le front le masque)');
+  pass('anonyme : présent dans GET /subsites avec visibility=unlisted');
+  await req('GET', `/subsites/${SUBSITE_SLUG}`, { expectStatus: 200 });
+  await req('GET', `/s/${SUBSITE_SLUG}/cartels`, { expectStatus: 200 });
+  pass('anonyme : page et cartels du sous-site accessibles par le lien');
+});
+
+await section('v37 visibilité « admin » : invisible hors ayants droit', async () => {
+  const r = await setVisibility('admin');
+  if (r.status !== 200 || r.data.visibility !== 'admin') return fail(`passage en admin échoué (${r.status})`);
+
+  const anonList = await req('GET', '/subsites', { expectStatus: 200 });
+  if (anonList.data.some(s => s.slug === SUBSITE_SLUG)) return fail('anonyme : le sous-site admin ne doit pas être listé');
+  pass('anonyme : absent de GET /subsites');
+
+  const checks = [
+    ['GET', `/subsites/${SUBSITE_SLUG}`],
+    ['GET', `/s/${SUBSITE_SLUG}/cartels`],
+    ['GET', `/s/${SUBSITE_SLUG}/team-members`],
+    ['POST', `/s/${SUBSITE_SLUG}/cartels`],
+  ];
+  for (const [method, path] of checks) {
+    const res = await req(method, path, { body: method === 'POST' ? { titre: `Anon ${STAMP}`, annee: '1900' } : undefined });
+    if (res.status !== 404) return fail(`anonyme ${method} ${path} attendu 404, reçu ${res.status}`);
+  }
+  pass('anonyme : 404 sur la page, les cartels, l\'équipe et la proposition de cartel');
+
+  const other = await req('GET', `/subsites/${SUBSITE_SLUG}`, { token: mainContentToken });
+  if (other.status !== 404) return fail(`compte d'un autre périmètre attendu 404, reçu ${other.status}`);
+  pass('compte connecté hors sous-site : 404');
+
+  for (const [who, token] of [['superadmin', superToken], ['owner du sous-site', ownerToken], ['contributeur du sous-site', contribToken]]) {
+    const one = await req('GET', `/subsites/${SUBSITE_SLUG}`, { token });
+    const all = await req('GET', '/subsites', { token });
+    if (one.status !== 200 || !all.data.some(s => s.slug === SUBSITE_SLUG)) {
+      return fail(`${who} : accès attendu (GET one ${one.status}, présent dans la liste : ${all.data.some(s => s.slug === SUBSITE_SLUG)})`);
+    }
+  }
+  pass('superadmin, owner et contributeur du sous-site y ont accès');
+});
+
+await section('v37 visibilité « admin » : un cartel accepté reste sur la frise principale', async () => {
+  const asSuper = await req('GET', `/cartels/${ownerCartelId}`, { token: superToken, expectStatus: 200 });
+  if (asSuper.data.status !== 'published' || !asSuper.data.visible_on_main) {
+    return info(`cartel ${ownerCartelId} plus publié/accepté à ce stade : scénario ignoré`);
+  }
+  const anon = await req('GET', `/cartels/${ownerCartelId}`);
+  if (anon.status !== 200) return fail(`cartel accepté attendu visible (200), reçu ${anon.status}`);
+  if (anon.data.subsite_slug !== null || anon.data.subsite_name !== null) {
+    return fail('anonyme : le lien vers le sous-site admin doit être masqué (subsite_slug/name null)');
+  }
+  const feed = await req('GET', '/cartels', { expectStatus: 200 });
+  const inFeed = feed.data.find(c => c.id === ownerCartelId);
+  if (!inFeed || inFeed.subsite_slug !== null) return fail('anonyme : cartel attendu dans la frise, sans lien vers le sous-site');
+  if (asSuper.data.subsite_slug !== SUBSITE_SLUG) return fail('superadmin : subsite_slug attendu intact');
+  pass('cartel accepté visible par tous ; lien vers le sous-site masqué aux visiteurs, intact pour le superadmin');
+});
+
+await section('v37 visibilité « admin » : rien dans les aperçus de partage', async () => {
+  const root = BASE.replace(/\/api$/, '');
+  const sub = await req('GET', `/subsites/${SUBSITE_SLUG}`, { token: superToken, expectStatus: 200 });
+  const html = await (await fetch(`${root}/site/${SUBSITE_SLUG}`)).text();
+  if (!html.includes('<meta')) return info('front non servi par ce serveur (hors prod) : scénario ignoré');
+  if (html.includes(sub.data.name)) return fail('le nom du sous-site admin apparaît dans le HTML servi (balises OG)');
+  pass('balises OG : le sous-site admin ne fuite pas');
+});
+
+// ────────────────────────────────────────────────────────────────────────
 // Cleanup
 // ────────────────────────────────────────────────────────────────────────
 
