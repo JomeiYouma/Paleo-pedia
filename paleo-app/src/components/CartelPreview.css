@@ -125,6 +125,7 @@
     text-transform: uppercase;
     letter-spacing: 0.02em;
     color: var(--color-text);
+    overflow-wrap: break-word;
 }
 
 .cartel-description {
@@ -136,6 +137,12 @@
     line-height: 1.5;
     flex: 1;
     overflow-y: auto;
+    /* Jamais de défilement horizontal : overflow-y: auto rend aussi l'axe X
+       défilable, et le moindre débordement (mot ou URL trop long, arrondi de la
+       justification selon le navigateur ou le zoom) faisait apparaître une
+       barre horizontale sous le texte. Les mots trop longs passent à la ligne. */
+    overflow-x: hidden;
+    overflow-wrap: break-word;
     padding-right: 10px;
     color: var(--color-text);
 }
