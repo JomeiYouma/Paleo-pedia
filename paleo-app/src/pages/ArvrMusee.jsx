@@ -142,12 +142,6 @@ export const ArvrScene = () => {
                     )}
                 </div>
 
-                <p className="arvr-hint">
-                    {isEn
-                        ? 'Drag to rotate the model, pinch to zoom. On a phone, the AR button places it in the room around you.'
-                        : 'Faites tourner le modèle du doigt, pincez pour zoomer. Sur téléphone, le bouton AR le pose dans la pièce autour de vous.'}
-                </p>
-
                 <Actions cartelId={def.cartelId} isEn={isEn} />
             </div>
         </div>

@@ -96,13 +96,6 @@
     cursor: pointer;
 }
 
-.arvr-hint {
-    font-family: var(--font-body);
-    font-size: 0.95rem;
-    color: var(--color-text-muted);
-    margin: 12px 2px 0;
-}
-
 /* ── Récit audio ────────────────────────────────────────────── */
 .arvr-audio {
     background: var(--color-surface);
