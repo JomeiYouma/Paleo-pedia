@@ -23,6 +23,12 @@ export default defineConfig({
         target: 'http://localhost:3001',
         changeOrigin: true
       },
+      // Fichiers des scènes AR / récits audio (servis par le back depuis
+      // ARVR_DIR). Les pages /ARVR_musee/… restent rendues par Vite.
+      '^/ARVR_musee/.+\\.(glb|usdz|mp3)$': {
+        target: 'http://localhost:3001',
+        changeOrigin: true
+      },
     }
   }
 })

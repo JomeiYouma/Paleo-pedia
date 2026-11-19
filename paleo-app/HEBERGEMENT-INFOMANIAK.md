@@ -107,9 +107,15 @@ TRUST_PROXY=1
   sauvegarde `~/ARVR_musee-backup-2026-11-19.tgz`), copiés sur la console Node dans
   **`/srv/customer/ARVR_musee`** (≈ 180 Mo, **hors Git**, survit aux `git pull`).
   Autre chemin possible via `ARVR_DIR` dans `.env`.
-- `server.js` sert ce dossier tel quel : `index.php` (HTML pur) servi en `text/html`,
-  `.usdz` en `model/vnd.usdz+zip` (Quick Look iPhone), autres `.php` bloqués.
-- Les scènes chargent `model-viewer` depuis unpkg **sans version figée**.
+- Les **pages** sont rendues par l'app React (`src/pages/ArvrMusee.jsx`, DA du site,
+  bouton vers la fiche liée) ; correspondances scène/audio → fiche et textes audio dans
+  `src/utils/arvrMusee.js`. Les anciens `index.html` / `index.php` du dossier ne sont plus
+  servis (301 vers la page app).
+- `server.js` ne sert du dossier que les **fichiers** `.glb`, `.usdz` (forcé en
+  `model/vnd.usdz+zip` pour Quick Look iPhone) et `.mp3`, lus à chaque requête :
+  copier de nouveaux fichiers ne demande pas de redémarrage.
+- `<model-viewer>` est chargé depuis jsDelivr en **version figée** (4.4.0) : le paquet npm
+  exige `three ^0.183` (l'app est en 0.184), ce qui ferait échouer le `npm install` du Build.
 
 ## DNS — 🔑 LEÇON CLÉ
 

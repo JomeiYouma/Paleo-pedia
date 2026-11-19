@@ -53,6 +53,7 @@ import SubsitePartners from './pages/SubsitePartners';
 import SubsiteAdmin from './pages/SubsiteAdmin';
 import SubsitePartnersAdmin from './pages/SubsitePartnersAdmin';
 import CartelDetail from './pages/CartelDetail';
+import { ArvrIndex, ArvrScene, ArvrAudio } from './pages/ArvrMusee';
 
 // Wrapper qui injecte le slug du subsite (route param OU host dédié) dans
 // AdminTeamContent. Permet à la même page d'éditer soit l'équipe principale
@@ -165,6 +166,11 @@ const mainRouter = createBrowserRouter(
         <Route path="mentions-legales" element={<LegalNotices />} />
         <Route path="conditions-generales-vente" element={<TermsOfSale />} />
         <Route path="cartel/:id" element={<CartelDetail />} />
+        {/* QR « cube » des pancartes imprimées (URLs figées) — cf. utils/arvrMusee.js */}
+        <Route path="ARVR_musee"              element={<ArvrIndex />} />
+        <Route path="ARVR_musee/audio"        element={<ArvrIndex />} />
+        <Route path="ARVR_musee/audio/:slug"  element={<ArvrAudio />} />
+        <Route path="ARVR_musee/:scene"       element={<ArvrScene />} />
         {/* 404 brandée (header + footer du site) pour toute URL inconnue */}
         <Route path="*" element={<NotFound />} />
       </Route>

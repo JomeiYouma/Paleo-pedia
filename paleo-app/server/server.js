@@ -126,36 +126,32 @@ app.use((req, res, next) => {
   next();
 });
 
-// ── Scènes AR de l'ancien WP (/ARVR_musee) ───────────────────
-// Les QR « cube » des pancartes imprimées visent /ARVR_musee/<nom>/ (scènes
-// <model-viewer> : .glb + .usdz) et /ARVR_musee/audio/<nom>/ (pages audio).
-// Fichiers statiques récupérés du WP, rangés HORS de l'arbre Git (≈ 180 Mo),
-// comme les uploads. Les QR étant imprimés, les URLs doivent rester identiques.
-// - index.php : HTML pur (aucun code PHP), servi comme index et en text/html.
+// ── Scènes AR & récits audio des pancartes (/ARVR_musee) ─────
+// Les QR « cube » des pancartes imprimées visent /ARVR_musee/<scène>/ et
+// /ARVR_musee/audio/<nom>/ (URLs figées). Les PAGES sont rendues par l'app
+// React (src/pages/ArvrMusee.jsx, via le fallback SPA) ; ici on ne sert que
+// les FICHIERS lourds (.glb, .usdz, .mp3 ≈ 180 Mo) récupérés de l'ancien WP et
+// rangés hors de l'arbre Git, comme les uploads.
 // - .usdz : Express 4 le servirait en application/octet-stream, ce qui peut
 //   empêcher Quick Look (AR iPhone) de s'ouvrir → type forcé.
-// - Tout autre .php reste bloqué ; dossier absent → route inerte.
+// - Anciennes pages statiques (index.html / index.php) → 301 vers la page app.
+// - Le dossier est lu à chaque requête : copier les fichiers ne demande pas de
+//   redémarrage ; dossier absent → fichiers en 404, pages toujours servies.
 const ARVR_DIR = process.env.ARVR_DIR || '/srv/customer/ARVR_musee';
-if (fs.existsSync(ARVR_DIR)) {
-  const arvrHeaders = (res, filePath) => {
-    const lower = filePath.toLowerCase();
-    if (lower.endsWith('.php')) res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    else if (lower.endsWith('.usdz')) res.setHeader('Content-Type', 'model/vnd.usdz+zip');
-  };
-  app.use('/ARVR_musee', (req, res, next) => {
-    const lower = req.path.toLowerCase();
-    if (lower.endsWith('.php') && !lower.endsWith('/index.php')) {
-      return res.status(404).type('text/plain').send('404 Not Found');
-    }
-    next();
-  });
-  app.use('/ARVR_musee', express.static(ARVR_DIR, {
-    index: ['index.html', 'index.php'],
-    setHeaders: arvrHeaders,
-  }));
-  // Chemin inconnu sous /ARVR_musee → vrai 404 (pas le fallback SPA).
-  app.use('/ARVR_musee', (_, res) => res.status(404).type('text/plain').send('404 Not Found'));
-}
+const ARVR_FILE = /\.(glb|usdz|mp3)$/i;
+const arvrStatic = express.static(ARVR_DIR, {
+  index: false,
+  setHeaders: (res, filePath) => {
+    if (filePath.toLowerCase().endsWith('.usdz')) res.setHeader('Content-Type', 'model/vnd.usdz+zip');
+  },
+});
+app.use('/ARVR_musee', (req, res, next) => {
+  if (/\/index\.(html|php)$/i.test(req.path)) {
+    return res.redirect(301, req.baseUrl + req.path.replace(/index\.(html|php)$/i, ''));
+  }
+  if (!ARVR_FILE.test(req.path)) return next(); // page → app React
+  arvrStatic(req, res, () => res.status(404).type('text/plain').send('404 Not Found'));
+});
 
 // ── Servir les images uploadées ───────────────────────────────
 // Neutralisation XSS : un SVG malveillant ouvert DIRECTEMENT (navigation
