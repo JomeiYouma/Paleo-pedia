@@ -17,6 +17,7 @@ import { getHostSubsiteSlug, subsiteBasePath } from '../utils/subsiteHost';
 import api from '../services/apiClient';
 import { BlockList } from '../components/blocks/BlockRenderer';
 import Breadcrumb from '../components/Breadcrumb';
+import useCopyBlock from '../hooks/useCopyBlock';
 
 // Même logique que CartelPreview.jsx : on accepte aussi bien les URLs canoniques
 // `/api/images/...` que les anciens chemins relatifs hérités du portage PHP.
@@ -37,6 +38,7 @@ const CartelDetail = () => {
     const [cartel,  setCartel]  = useState(null);
     const [loading, setLoading] = useState(true);
     const [error,   setError]   = useState('');
+    const copyBlockProps = useCopyBlock();
 
     useEffect(() => {
         if (!id) return;
@@ -92,7 +94,7 @@ const CartelDetail = () => {
         ];
 
     return (
-        <div style={{ background: 'var(--color-bg, white)', minHeight: '60vh' }}>
+        <div style={{ background: 'var(--color-bg, white)', minHeight: '60vh' }} {...copyBlockProps}>
             <div style={{ maxWidth: '860px', margin: '0 auto', padding: '40px 24px 80px' }}>
                 <Breadcrumb crumbs={crumbs} current={titre} />
 

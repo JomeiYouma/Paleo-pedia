@@ -397,3 +397,14 @@ button {
     text-shadow: 0 0 8px rgba(255, 231, 0, 0.85);
   }
 }
+
+/* ── Fiches protégées contre la copie (cf. hooks/useCopyBlock.js) ── */
+[data-no-copy],
+[data-no-copy] * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+[data-no-copy] img {
+  -webkit-user-drag: none;
+}

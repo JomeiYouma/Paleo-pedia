@@ -8,6 +8,7 @@ import { generateImage, generatePdf } from '../utils/zipGenerator';
 import { Download, Image as ImageIcon, FileText } from 'lucide-react';
 import LongOperationOverlay from './LongOperationOverlay';
 import { cartelDetailPath } from '../utils/subsiteHost';
+import useCopyBlock from '../hooks/useCopyBlock';
 
 /** Transforme **gras** et *italique* en éléments React. */
 const parseMdLine = (text, key) => {
@@ -28,6 +29,7 @@ const CartelPreview = ({ data, isDraft = false, showExports = false, variant = n
     const { t, i18n } = useTranslation();
     const [exporting, setExporting] = useState(false);
     const [exportLabel, setExportLabel] = useState('');
+    const copyBlockProps = useCopyBlock();
 
     if (!data) return null; // Safety check
     const { title, description } = getLocalizedContent(data, i18n.language);
@@ -73,7 +75,7 @@ const CartelPreview = ({ data, isDraft = false, showExports = false, variant = n
 
 
     return (
-        <div className={`cartel-container${variant === 'frise' ? ' frise' : ''}`}>
+        <div className={`cartel-container${variant === 'frise' ? ' frise' : ''}`} {...copyBlockProps}>
             <div className="cartel-image-column">
                 {imgSrc ? (
                     <div className="cartel-image-wrapper" style={{ position: 'relative' }}>
