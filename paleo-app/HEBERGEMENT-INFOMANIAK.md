@@ -71,6 +71,7 @@ DB_USER=<user>
 DB_PASSWORD=<mdp>
 UPLOADS_DIR=/srv/customer/paleo-uploads
 TRUST_PROXY=1
+# ARVR_DIR=/srv/customer/ARVR_musee   (défaut, cf. § Scènes AR)
 # MAIL_* si emails ; ALLOWED_ORIGIN si appels cross-origin
 ```
 
@@ -96,6 +97,19 @@ TRUST_PROXY=1
 - Transfert : **SFTP** (FileZilla) via le compte Node (`…@57-113333.ssh.hosting-ik.com`,
   port 22, **mot de passe** — clé privée pas encore supportée) → dépôt dans
   `/srv/customer`, puis `unzip`.
+
+## Scènes AR des pancartes (`/ARVR_musee`)
+
+- Les QR « cube » des pancartes imprimées visent `/ARVR_musee/<nom>/` (scènes
+  `<model-viewer>` : `.glb` + `.usdz`) et `/ARVR_musee/audio/<nom>/` (pages audio).
+  Les QR « globe » (`/en/holy-<nom>-life/`) sont redirigés vers les cartels (`LEGACY_PATH_301`).
+- Fichiers récupérés de l'ancien WP (console PHP : `~/sites/paleo-energetique.org/ARVR_musee`,
+  sauvegarde `~/ARVR_musee-backup-2026-11-19.tgz`), copiés sur la console Node dans
+  **`/srv/customer/ARVR_musee`** (≈ 180 Mo, **hors Git**, survit aux `git pull`).
+  Autre chemin possible via `ARVR_DIR` dans `.env`.
+- `server.js` sert ce dossier tel quel : `index.php` (HTML pur) servi en `text/html`,
+  `.usdz` en `model/vnd.usdz+zip` (Quick Look iPhone), autres `.php` bloqués.
+- Les scènes chargent `model-viewer` depuis unpkg **sans version figée**.
 
 ## DNS — 🔑 LEÇON CLÉ
 

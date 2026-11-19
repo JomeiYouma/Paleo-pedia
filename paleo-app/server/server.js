@@ -103,9 +103,9 @@ const LEGACY_HOST_301 = {
   'www.paleo-pedia.com':         'https://paleo-pedia.org',
 };
 // Pages « personnage » du WP, encodées dans les QR « globe » des pancartes
-// imprimées (le QR « cube » vise /ARVR_musee/<nom>/, fichiers statiques à
-// restaurer depuis wp-files-backup.zip). Clé = chemin sans slash final, en
-// minuscules ; valeur = page détail du cartel correspondant.
+// imprimées (le QR « cube » vise /ARVR_musee/<nom>/, servi plus bas depuis
+// ARVR_DIR). Clé = chemin sans slash final, en minuscules ; valeur = page
+// détail du cartel correspondant.
 const LEGACY_PATH_301 = {
   '/en/holy-mouchot-life':   '/cartel/c66b0845-cf53-41c5-8ea2-34e47556557a', // Concentrateur solaire de Mouchot
   '/en/holy-kordesch-life':  '/cartel/1771927454026',                        // Piles alcalines rechargeables
@@ -125,6 +125,37 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+// ── Scènes AR de l'ancien WP (/ARVR_musee) ───────────────────
+// Les QR « cube » des pancartes imprimées visent /ARVR_musee/<nom>/ (scènes
+// <model-viewer> : .glb + .usdz) et /ARVR_musee/audio/<nom>/ (pages audio).
+// Fichiers statiques récupérés du WP, rangés HORS de l'arbre Git (≈ 180 Mo),
+// comme les uploads. Les QR étant imprimés, les URLs doivent rester identiques.
+// - index.php : HTML pur (aucun code PHP), servi comme index et en text/html.
+// - .usdz : Express 4 le servirait en application/octet-stream, ce qui peut
+//   empêcher Quick Look (AR iPhone) de s'ouvrir → type forcé.
+// - Tout autre .php reste bloqué ; dossier absent → route inerte.
+const ARVR_DIR = process.env.ARVR_DIR || '/srv/customer/ARVR_musee';
+if (fs.existsSync(ARVR_DIR)) {
+  const arvrHeaders = (res, filePath) => {
+    const lower = filePath.toLowerCase();
+    if (lower.endsWith('.php')) res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    else if (lower.endsWith('.usdz')) res.setHeader('Content-Type', 'model/vnd.usdz+zip');
+  };
+  app.use('/ARVR_musee', (req, res, next) => {
+    const lower = req.path.toLowerCase();
+    if (lower.endsWith('.php') && !lower.endsWith('/index.php')) {
+      return res.status(404).type('text/plain').send('404 Not Found');
+    }
+    next();
+  });
+  app.use('/ARVR_musee', express.static(ARVR_DIR, {
+    index: ['index.html', 'index.php'],
+    setHeaders: arvrHeaders,
+  }));
+  // Chemin inconnu sous /ARVR_musee → vrai 404 (pas le fallback SPA).
+  app.use('/ARVR_musee', (_, res) => res.status(404).type('text/plain').send('404 Not Found'));
+}
 
 // ── Servir les images uploadées ───────────────────────────────
 // Neutralisation XSS : un SVG malveillant ouvert DIRECTEMENT (navigation
